@@ -5,23 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
-
-func init() {
-	// Set descriptions to support markdown syntax, this will be used in document generation
-	// and the language server.
-	schema.DescriptionKind = schema.StringMarkdown
-
-	// Customize the content of descriptions when output. For example you can add defaults on
-	// to the exported descriptions if present.
-	// schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
-	// 	desc := s.Description
-	// 	if s.Default != nil {
-	// 		desc += fmt.Sprintf(" Defaults to `%v`.", s.Default)
-	// 	}
-	// 	return strings.TrimSpace(desc)
-	// }
-}
 
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
@@ -32,6 +17,32 @@ func New(version string) func() *schema.Provider {
 			ResourcesMap: map[string]*schema.Resource{
 				"scaffolding_resource": resourceScaffolding(),
 			},
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_ID", nil),
+					Description: "The OAuth2 Client ID for API operations.",
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Required:    true,
+					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_SECRET", nil),
+					Description: "The OAuth2 Client Secret for API operations.",
+				},
+				"organization_id": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc("HCP_ORGANIZATION_ID", ""),
+					Description: "The id of the organization for API operations.",
+				},
+				"project_id": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", ""),
+					Description: "The id of the project for API operations.",
+				},
+			},
 		}
 
 		p.ConfigureContextFunc = configure(version, p)
@@ -40,18 +51,19 @@ func New(version string) func() *schema.Provider {
 	}
 }
 
-type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
-}
-
 func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		// Setup a User-Agent for your API client (replace the provider name for yours):
-		// userAgent := p.UserAgent("terraform-provider-scaffolding", version)
-		// TODO: myClient.UserAgent = userAgent
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		// Construct a new HCP api client with clients and configuration.
+		client, err := clients.NewClient(ctx, clients.ClientConfig{
+			ClientID:       d.Get("client_id").(string),
+			ClientSecret:   d.Get("client_secret").(string),
+			OrganizationID: d.Get("organization_id").(string),
+			ProjectID:      d.Get("project_id").(string),
+		})
+		if err != nil {
+			return nil, diag.Errorf("unable to create HCP api client: %+v", err)
+		}
 
-		return &apiClient{}, nil
+		return client, nil
 	}
 }
