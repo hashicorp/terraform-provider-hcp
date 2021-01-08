@@ -1,3 +1,4 @@
-provider "scaffolding" {
-  # example configuration here
+provider "hcp" {
+  client_id     = "example-id"
+  client_secret = "example-secret"
 }
