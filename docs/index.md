@@ -27,6 +27,5 @@ provider "hcp" {
 
 ### Optional
 
-- **api_host** (String) HashiCorp Cloud Platform API host.
-- **organization_id** (String) The id of the organization for API operations.
-- **project_id** (String) The id of the project for API operations.
+- **organization_id** (String) The ID of the organization for API operations.
+- **project_id** (String) The ID of the project for API operations.
