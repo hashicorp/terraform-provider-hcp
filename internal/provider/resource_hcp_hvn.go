@@ -1,0 +1,252 @@
+package provider
+
+import (
+	"context"
+	"errors"
+	"log"
+	"time"
+
+	"github.com/go-openapi/runtime"
+	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
+	networkmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+)
+
+var hvnDefaultTimeout = time.Minute * 1
+var hvnCreateTimeout = time.Minute * 10
+var hvnDeleteTimeout = time.Minute * 10
+
+func resourceHcpHvn() *schema.Resource {
+	return &schema.Resource{
+		Description: "The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.",
+
+		CreateContext: resourceHcpHvnCreate,
+		ReadContext:   resourceHcpHvnRead,
+		UpdateContext: schema.NoopContext,
+		DeleteContext: resourceHcpHvnDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Default: &hvnDefaultTimeout,
+			Create:  &hvnCreateTimeout,
+			Delete:  &hvnDeleteTimeout,
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		// TODO: validate fields
+		Schema: map[string]*schema.Schema{
+			"hvn_id": {
+				Description: "The ID of the HashiCorp Virtual Network.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			"cidr_block": {
+				Description: "The CIDR range of the HVN.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the HVN is located.",
+				Type:        schema.TypeString,
+				// TODO: needs to be optional
+				Required: true,
+				ForceNew: true,
+			},
+			"cloud_provider": {
+				Description: "The provider where the HVN is located. Only 'aws' is available at this time.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			"region": {
+				Description: "The region where the HVN is located.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+		},
+	}
+}
+
+func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	// TODO: pull project id from config if not passed in
+
+	hvnID := d.Get("hvn_id").(string)
+	cidrBlock := d.Get("cidr_block").(string)
+	projectID := d.Get("project_id").(string)
+	provider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
+
+	// Get the project. We need information from it to build fully qualified requests.
+	project, err := clients.GetProjectByID(ctx, client, projectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: project.Parent.ID,
+		ProjectID:      project.ID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: provider,
+			Region:   region,
+		},
+	}
+
+	createNetworkParams := network_service.NewCreateParams()
+	createNetworkParams.Context = ctx
+	createNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateRequest{
+		Network: &networkmodels.HashicorpCloudNetwork20200907Network{
+			ID:        hvnID,
+			CidrBlock: cidrBlock,
+			Location:  loc,
+		},
+	}
+	createNetworkParams.NetworkLocationOrganizationID = loc.OrganizationID
+	createNetworkParams.NetworkLocationProjectID = loc.ProjectID
+	log.Printf("[INFO] Creating HVN (%s)", hvnID)
+	createNetworkResponse, err := client.Network.Create(createNetworkParams, nil)
+	if err != nil {
+		return diag.Errorf("unable to create HVN [id=%s]: %+v", hvnID, err)
+	}
+
+	d.SetId(createNetworkResponse.Payload.Network.ID)
+
+	// Get the updated HVN
+	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve HVN [id=%s]: %+v", createNetworkResponse.Payload.Network.ID, err)
+	}
+	if err := setHvnResourceData(d, hvn); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Wait for HVN to be created
+	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create HVN [id=%s]: %+v", hvn.ID, err)
+	}
+
+	log.Printf("[INFO] Created HVN (%s)", hvn.ID)
+
+	return nil
+}
+
+func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	// TODO: pull project id from config if not passed in?
+
+	hvnID := d.Id()
+	projectID := d.Get("project_id").(string)
+	provider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
+
+	// Get the project. We need information from it to build fully qualified requests.
+	project, err := clients.GetProjectByID(ctx, client, projectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: project.Parent.ID,
+		ProjectID:      project.ID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: provider,
+			Region:   region,
+		},
+	}
+
+	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
+
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		// Is the hvn not found
+		var apiErr *runtime.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Printf("[WARN] HVN (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to retrieve HVN [id=%s]: %+v", hvnID, err)
+	}
+
+	// HVN found, update resource data
+	if err := setHvnResourceData(d, hvn); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	// TODO: pull project id from config if not passed in?
+
+	hvnID := d.Id()
+	projectID := d.Get("project_id").(string)
+	provider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
+
+	// Get the project. We need information from it to build fully qualified requests.
+	project, err := clients.GetProjectByID(ctx, client, projectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: project.Parent.ID,
+		ProjectID:      project.ID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: provider,
+			Region:   region,
+		},
+	}
+
+	deleteParams := network_service.NewDeleteParams()
+	deleteParams.Context = ctx
+	deleteParams.ID = hvnID
+	deleteParams.LocationOrganizationID = loc.OrganizationID
+	deleteParams.LocationProjectID = loc.ProjectID
+	deleteParams.LocationRegionProvider = &loc.Region.Provider
+	deleteParams.LocationRegionRegion = &loc.Region.Region
+	log.Printf("[INFO] Deleting HVN: [id=%s]", hvnID)
+	deleteResponse, err := client.Network.Delete(deleteParams, nil)
+	if err != nil {
+		return diag.Errorf("unable to delete HVN [id=%s]: %+v", hvnID, err)
+	}
+
+	// Wait for delete hvn operation
+	if err := clients.WaitForOperation(ctx, client, "delete HVN", loc, deleteResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete HVN [id=%s]: %+v", hvnID, err)
+	}
+
+	log.Printf("[INFO] HVN (%s) deleted, removing from state", d.Id())
+	d.SetId("")
+
+	return nil
+}
+
+func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpCloudNetwork20200907Network) error {
+	d.SetId(hvn.ID)
+	if err := d.Set("cidr_block", hvn.CidrBlock); err != nil {
+		return err
+	}
+	if err := d.Set("project_id", hvn.Location.ProjectID); err != nil {
+		return err
+	}
+	if err := d.Set("cloud_provider", hvn.Location.Region.Provider); err != nil {
+		return err
+	}
+	if err := d.Set("region", hvn.Location.Region.Region); err != nil {
+		return err
+	}
+	return nil
+}
