@@ -34,13 +34,13 @@ func New(version string) func() *schema.Provider {
 					Type:        schema.TypeString,
 					Optional:    true,
 					DefaultFunc: schema.EnvDefaultFunc("HCP_ORGANIZATION_ID", ""),
-					Description: "The id of the organization for API operations.",
+					Description: "The ID of the organization for API operations.",
 				},
 				"project_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", ""),
-					Description: "The id of the project for API operations.",
+					Description: "The ID of the project for API operations.",
 				},
 			},
 		}
@@ -54,7 +54,7 @@ func New(version string) func() *schema.Provider {
 func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		// Construct a new HCP api client with clients and configuration.
-		client, err := clients.NewClient(ctx, clients.ClientConfig{
+		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
 			ClientSecret:   d.Get("client_secret").(string),
 			OrganizationID: d.Get("organization_id").(string),

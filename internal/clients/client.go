@@ -1,8 +1,6 @@
 package clients
 
 import (
-	"context"
-
 	sdk "github.com/hashicorp/cloud-sdk-go"
 	cloud_network "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
@@ -36,7 +34,7 @@ type ClientConfig struct {
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
-func NewClient(ctx context.Context, config ClientConfig) (*Client, error) {
+func NewClient(config ClientConfig) (*Client, error) {
 	httpClient, err := sdk.New(sdk.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
