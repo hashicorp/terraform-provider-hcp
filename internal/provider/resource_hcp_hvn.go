@@ -38,31 +38,12 @@ func resourceHcpHvn() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			// Required inputs
 			"hvn_id": {
 				Description: "The ID of the HashiCorp Virtual Network.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-			},
-			"cidr_block": {
-				Description:  "The CIDR range of the HVN.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-				Computed:     true,
-			},
-			"organization_id": {
-				Description: "The ID of the HCP organization where the HVN is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the HVN is located.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
 			},
 			"cloud_provider": {
 				Description: "The provider where the HVN is located. Only 'aws' is available at this time.",
@@ -78,6 +59,28 @@ func resourceHcpHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+			},
+			// Optional inputs
+			"cidr_block": {
+				Description:  "The CIDR range of the HVN.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
+				Computed:     true,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the HVN is located.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+			},
+			// Computed outputs
+			"organization_id": {
+				Description: "The ID of the HCP organization where the HVN is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
