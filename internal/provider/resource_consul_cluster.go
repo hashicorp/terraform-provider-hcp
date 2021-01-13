@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
 )
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
@@ -90,6 +92,47 @@ func resourceConsulCluster() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
+			},
+			// optional fields
+			"public_endpoint": {
+				Description: "Denotes that the cluster has an public endpoint for the Consul UI. Defaults to false.",
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				ForceNew:    true,
+			},
+			"project_id": {
+				Description: "The ID of the project this HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+			},
+			"min_consul_version": {
+				Description:      "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validateSemVer,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					// Suppress diff is normalized versions match OR min_consul_version is removed from the resource
+					// since min_consul_version is required in order to upgrade the cluster to a new Consul version.
+					return consul.NormalizeVersion(old) == consul.NormalizeVersion(new) || new == ""
+				},
+			},
+			"datacenter": {
+				Description: "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `id`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+			},
+			"connect_enabled": {
+				Description: "Denotes the Consul connect feature should be enabled for this cluster.  Default to true.",
+				Type:        schema.TypeBool,
+				Default:     true,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
 			},
 		},
 	}

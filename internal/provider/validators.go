@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -51,4 +52,21 @@ func validateStringInSlice(valid []string, ignoreCase bool) schema.SchemaValidat
 		})
 		return diagnostics
 	}
+}
+
+// validateSemVer ensures a specified string is a SemVer.
+func validateSemVer(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	if !regexp.MustCompile(`^v?\d+.\d+.\d+$`).MatchString(v.(string)) {
+		msg := "must be a valid semver"
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
 }
