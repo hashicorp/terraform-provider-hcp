@@ -12,6 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -25,7 +26,6 @@ func resourceHcpHvn() *schema.Resource {
 
 		CreateContext: resourceHcpHvnCreate,
 		ReadContext:   resourceHcpHvnRead,
-		UpdateContext: schema.NoopContext,
 		DeleteContext: resourceHcpHvnDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnDefaultTimeout,
@@ -36,7 +36,6 @@ func resourceHcpHvn() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		// TODO: validate fields
 		Schema: map[string]*schema.Schema{
 			"hvn_id": {
 				Description: "The ID of the HashiCorp Virtual Network.",
@@ -45,10 +44,11 @@ func resourceHcpHvn() *schema.Resource {
 				ForceNew:    true,
 			},
 			"cidr_block": {
-				Description: "The CIDR range of the HVN.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Description:  "The CIDR range of the HVN.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			"project_id": {
 				Description: "The ID of the HCP project where the HVN is located.",
@@ -62,6 +62,9 @@ func resourceHcpHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"aws",
+				}, true),
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
