@@ -50,6 +50,7 @@ func resourceHcpHvn() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
+				Computed:     true,
 			},
 			"organization_id": {
 				Description: "The ID of the HCP organization where the HVN is located.",
@@ -61,6 +62,7 @@ func resourceHcpHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			"cloud_provider": {
 				Description: "The provider where the HVN is located. Only 'aws' is available at this time.",
