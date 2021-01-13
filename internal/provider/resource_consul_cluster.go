@@ -55,7 +55,7 @@ func resourceConsulCluster() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// required inputs
-			"id": {
+			"cluster_id": {
 				Description:      "The ID of the HCP Consul cluster.",
 				Type:             schema.TypeString,
 				Required:         true,
@@ -132,7 +132,6 @@ func resourceConsulCluster() *schema.Resource {
 				Default:     true,
 				Optional:    true,
 				ForceNew:    true,
-				Computed:    true,
 			},
 			// computed outputs
 			"state": {
