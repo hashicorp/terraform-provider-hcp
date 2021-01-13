@@ -19,3 +19,13 @@ func GetProjectByID(ctx context.Context, client *Client, projectID string) (*res
 
 	return getResponse.Payload.Project, nil
 }
+
+// GetParentOrganizationIDByProjectID gets the parent organization ID of a project
+func GetParentOrganizationIDByProjectID(ctx context.Context, client *Client, projectID string) (string, error) {
+	project, err := GetProjectByID(ctx, client, projectID)
+	if err != nil {
+		return "", err
+	}
+
+	return project.Parent.ID, nil
+}

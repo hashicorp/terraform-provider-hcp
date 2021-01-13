@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -50,12 +51,16 @@ func resourceHcpHvn() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
+			"organization_id": {
+				Description: "The ID of the HCP organization where the HVN is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"project_id": {
 				Description: "The ID of the HCP project where the HVN is located.",
 				Type:        schema.TypeString,
-				// TODO: needs to be optional
-				Required: true,
-				ForceNew: true,
+				Optional:    true,
+				ForceNew:    true,
 			},
 			"cloud_provider": {
 				Description: "The provider where the HVN is located. Only 'aws' is available at this time.",
@@ -79,27 +84,12 @@ func resourceHcpHvn() *schema.Resource {
 func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	// TODO: pull project id from config if not passed in
-
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
-	projectID := d.Get("project_id").(string)
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
 
-	// Get the project. We need information from it to build fully qualified requests.
-	project, err := clients.GetProjectByID(ctx, client, projectID)
+	loc, err := buildHvnResourceLocation(ctx, d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: project.Parent.ID,
-		ProjectID:      project.ID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
+		return diag.FromErr(err)
 	}
 
 	createNetworkParams := network_service.NewCreateParams()
@@ -143,26 +133,11 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	// TODO: pull project id from config if not passed in?
-
 	hvnID := d.Id()
-	projectID := d.Get("project_id").(string)
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
 
-	// Get the project. We need information from it to build fully qualified requests.
-	project, err := clients.GetProjectByID(ctx, client, projectID)
+	loc, err := buildHvnResourceLocation(ctx, d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: project.Parent.ID,
-		ProjectID:      project.ID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
@@ -191,26 +166,11 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	// TODO: pull project id from config if not passed in?
-
 	hvnID := d.Id()
-	projectID := d.Get("project_id").(string)
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
 
-	// Get the project. We need information from it to build fully qualified requests.
-	project, err := clients.GetProjectByID(ctx, client, projectID)
+	loc, err := buildHvnResourceLocation(ctx, d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project [id=%s]: %+v", projectID, err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: project.Parent.ID,
-		ProjectID:      project.ID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
+		return diag.FromErr(err)
 	}
 
 	deleteParams := network_service.NewDeleteParams()
@@ -242,6 +202,9 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 	if err := d.Set("cidr_block", hvn.CidrBlock); err != nil {
 		return err
 	}
+	if err := d.Set("organization_id", hvn.Location.OrganizationID); err != nil {
+		return err
+	}
 	if err := d.Set("project_id", hvn.Location.ProjectID); err != nil {
 		return err
 	}
@@ -252,4 +215,39 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	return nil
+}
+
+func buildHvnResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client) (*sharedmodels.HashicorpCloudLocationLocation, error) {
+	provider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
+
+	projectID := client.Config.ProjectID
+	organizationID := client.Config.OrganizationID
+	projectIDVal, ok := d.GetOk("project_id")
+	if ok {
+		projectID = projectIDVal.(string)
+		// Try to get organization_id from state, since project_id might have come from state
+		organizationID = d.Get("organization_id").(string)
+	}
+
+	if projectID == "" {
+		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the HVN resource or the provider")
+	}
+
+	if organizationID == "" {
+		var err error
+		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve organization ID for project [project_id=%s]: %+v", projectID, err)
+		}
+	}
+
+	return &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: organizationID,
+		ProjectID:      projectID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: provider,
+			Region:   region,
+		},
+	}, nil
 }
