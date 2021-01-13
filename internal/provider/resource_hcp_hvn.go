@@ -21,6 +21,10 @@ var hvnDefaultTimeout = time.Minute * 1
 var hvnCreateTimeout = time.Minute * 10
 var hvnDeleteTimeout = time.Minute * 10
 
+var hvnResourceCloudProviders = []string{
+	"aws",
+}
+
 func resourceHcpHvn() *schema.Resource {
 	return &schema.Resource{
 		Description: "The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.",
@@ -46,13 +50,11 @@ func resourceHcpHvn() *schema.Resource {
 				ForceNew:    true,
 			},
 			"cloud_provider": {
-				Description: "The provider where the HVN is located. Only 'aws' is available at this time.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"aws",
-				}, true),
+				Description:  "The provider where the HVN is located. Only 'aws' is available at this time.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(hvnResourceCloudProviders, true),
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
