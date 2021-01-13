@@ -116,7 +116,12 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("unable to create HVN [id=%s]: %+v", hvnID, err)
 	}
 
-	d.SetId(createNetworkResponse.Payload.Network.ID)
+	// Wait for HVN to be created
+	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
+	}
+
+	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
@@ -126,13 +131,6 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := setHvnResourceData(d, hvn); err != nil {
 		return diag.FromErr(err)
 	}
-
-	// Wait for HVN to be created
-	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create HVN [id=%s]: %+v", hvn.ID, err)
-	}
-
-	log.Printf("[INFO] Created HVN (%s)", hvn.ID)
 
 	return nil
 }
