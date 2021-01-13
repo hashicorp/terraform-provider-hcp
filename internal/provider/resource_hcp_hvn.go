@@ -99,6 +99,20 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
+	// Check for an existing HVN
+	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		var apiErr *runtime.APIError
+		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
+			return diag.Errorf("unable to check for presence of an existing HVN (%s): %+v", hvnID, err)
+		}
+
+		// A 404 error indicates the HVN was not found
+		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
+	} else {
+		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
+	}
+
 	createNetworkParams := network_service.NewCreateParams()
 	createNetworkParams.Context = ctx
 	createNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateRequest{
