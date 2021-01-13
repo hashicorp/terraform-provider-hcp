@@ -113,7 +113,7 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Creating HVN (%s)", hvnID)
 	createNetworkResponse, err := client.Network.Create(createNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create HVN [id=%s]: %+v", hvnID, err)
+		return diag.Errorf("unable to create HVN (%s): %+v", hvnID, err)
 	}
 
 	// Wait for HVN to be created
@@ -126,8 +126,9 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve HVN [id=%s]: %+v", createNetworkResponse.Payload.Network.ID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
 	}
+
 	if err := setHvnResourceData(d, hvn); err != nil {
 		return diag.FromErr(err)
 	}
@@ -157,7 +158,7 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return diag.Errorf("unable to retrieve HVN [id=%s]: %+v", hvnID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %+v", hvnID, err)
 	}
 
 	// HVN found, update resource data
@@ -188,12 +189,12 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Deleting HVN: [id=%s]", hvnID)
 	deleteResponse, err := client.Network.Delete(deleteParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to delete HVN [id=%s]: %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
 	}
 
 	// Wait for delete hvn operation
 	if err := clients.WaitForOperation(ctx, client, "delete HVN", loc, deleteResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to delete HVN [id=%s]: %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
 	}
 
 	log.Printf("[INFO] HVN (%s) deleted, removing from state", d.Id())
