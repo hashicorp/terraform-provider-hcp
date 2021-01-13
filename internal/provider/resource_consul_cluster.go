@@ -134,6 +134,68 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 				Computed:    true,
 			},
+			// computed outputs
+			"state": {
+				Description: "The state of the cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_automatic_upgrades": {
+				Description: "Denotes that automatic Consul upgrades are enabled.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+			"consul_snapshot_interval": {
+				Description: "The Consul snapshot interval.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_snapshot_retention": {
+				Description: "The retention policy for Consul snapshots.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_config_file": {
+				Description: "The cluster config encoded as a Base64 string.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_ca_file": {
+				Description: "The cluster CA file encoded as a Base64 string.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_connect": {
+				Description: "Denotes that Consul connect is enabled.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+			"consul_version": {
+				Description: "The Consul version of the cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_public_endpoint_url": {
+				Description: "The public URL for the Consul UI. This will be empty if `public_endpoint` is `true`.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_private_endpoint_url": {
+				Description: "The private URL for the Consul UI.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_root_token_accessor_id": {
+				Description: "The accessor ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_root_token_secret_id": {
+				Description: "The secret ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
+			},
 		},
 	}
 }
