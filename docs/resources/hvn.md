@@ -27,14 +27,20 @@ resource "hcp_hvn" "example" {
 
 - **cloud_provider** (String) The provider where the HVN is located. Only 'aws' is available at this time.
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network.
-- **project_id** (String) The ID of the HCP project where the HVN is located.
 - **region** (String) The region where the HVN is located.
 
 ### Optional
 
 - **cidr_block** (String) The CIDR range of the HVN.
 - **id** (String) The ID of this resource.
+- **project_id** (String) The ID of the HCP project where the HVN is located.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
+### Read-only
+
+- **created_at** (String) The time that the HVN was created.
+- **organization_id** (String) The ID of the HCP organization where the HVN is located.
+- **state** (String) The current state of the HVN (eg. STABLE).
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
