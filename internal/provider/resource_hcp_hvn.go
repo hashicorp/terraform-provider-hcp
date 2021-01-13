@@ -84,6 +84,16 @@ func resourceHcpHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The current state of the HVN (eg. STABLE).",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "The time that the HVN was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -232,6 +242,12 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	if err := d.Set("region", hvn.Location.Region.Region); err != nil {
+		return err
+	}
+	if err := d.Set("state", hvn.State); err != nil {
+		return err
+	}
+	if err := d.Set("created_at", hvn.CreatedAt.String()); err != nil {
 		return err
 	}
 	return nil
