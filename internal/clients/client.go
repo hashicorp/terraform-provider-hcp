@@ -2,6 +2,8 @@ package clients
 
 import (
 	sdk "github.com/hashicorp/cloud-sdk-go"
+	cloud_consul "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client"
+	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
 	cloud_network "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	cloud_operation "github.com/hashicorp/cloud-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
@@ -19,6 +21,7 @@ type Client struct {
 	Operation    operation_service.ClientService
 	Project      project_service.ClientService
 	Organization organization_service.ClientService
+	Consul		 consul_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -50,6 +53,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Operation:    cloud_operation.New(httpClient, nil).OperationService,
 		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
+		Consul:		  cloud_consul.New(httpClient, nil).ConsulService,
 	}
 
 	return client, nil
