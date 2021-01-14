@@ -21,7 +21,7 @@ type Client struct {
 	Operation    operation_service.ClientService
 	Project      project_service.ClientService
 	Organization organization_service.ClientService
-	Consul		 consul_service.ClientService
+	Consul       consul_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -34,6 +34,9 @@ type ClientConfig struct {
 
 	// ProjectID (optional) is the project unique identifier to launch resources in.
 	ProjectID string
+
+	// HCPApiDomain is the domain of the HashiCorp Cloud Platform API.
+	HCPApiDomain string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
@@ -53,7 +56,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Operation:    cloud_operation.New(httpClient, nil).OperationService,
 		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Consul:		  cloud_consul.New(httpClient, nil).ConsulService,
+		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 	}
 
 	return client, nil
