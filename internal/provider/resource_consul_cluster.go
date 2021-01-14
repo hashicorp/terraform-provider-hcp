@@ -44,6 +44,13 @@ var consulClusterResourceTierLevels = []string{
 	"Production",
 }
 
+// tierToClusterNumServer is a map from cluster tier level to the
+// number of servers configured in the capacity configuration.
+var tierToClusterNumServer = map[string]int{
+	"Development": 1,
+	"Production":  3,
+}
+
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
@@ -249,11 +256,41 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %+v", consulVersion, availableConsulVersions)
 	}
 
+	datacenter := clusterID
+	v, ok = d.GetOk("datacenter")
+	if ok {
+		datacenter = v.(string)
+	}
+
+	connectEnabled := d.Get("connect_enabled").(bool)
+	publicEndpoint := d.Get("public_endpoint").(bool)
+
+	clusterTier := d.Get("cluster_tier").(string)
+	numServers, ok := tierToClusterNumServer[clusterTier]
+	if !ok {
+		numServers = 1
+	}
+
+	hvnID := d.Get("hvn_id").(string)
+
 	createConsulClusterParams := consul_service.NewCreateParams()
 	createConsulClusterParams.Context = ctx
 	createConsulClusterParams.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
 		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
-			Config:        nil,
+			Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
+				CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
+					NumServers: int32(numServers),
+				},
+				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
+					ConnectEnabled: connectEnabled,
+					Datacenter:     datacenter,
+				},
+				MaintenanceConfig: nil,
+				NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
+					Network: newLink(loc, "hvn", hvnID),
+					Private: !publicEndpoint,
+				},
+			},
 			ConsulVersion: consulVersion,
 			ID:            clusterID,
 			Location:      loc,
@@ -262,6 +299,35 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	createConsulClusterParams.ClusterLocationOrganizationID = loc.OrganizationID
 	createConsulClusterParams.ClusterLocationProjectID = loc.ProjectID
+
+	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
+
+	createClusterResp, err := client.Consul.Create(createConsulClusterParams, nil)
+	if err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %+v", clusterID, err)
+	}
+
+	// wait for the Consul cluster to be created
+	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, createClusterResp.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+	}
+
+	log.Printf("[INFO] Created Consul cluster (%s)", createClusterResp.Payload.Cluster.ID)
+
+	// get the created Consul cluster
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+	}
+
+	if err := setConsulClusterResourceData(d, cluster); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster) error {
 
 	return nil
 }
