@@ -163,15 +163,15 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	hvnID := d.Id()
-
-	loc, err := buildHvnResourceLocation(ctx, d, client)
+	link, err := parseLinkURL(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
+	hvnID := link.ID
+	loc := link.Location
 
+	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
 	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		// Is the hvn not found
@@ -196,12 +196,13 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	hvnID := d.Id()
-
-	loc, err := buildHvnResourceLocation(ctx, d, client)
+	link, err := parseLinkURL(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	hvnID := link.ID
+	loc := link.Location
 
 	deleteParams := network_service.NewDeleteParams()
 	deleteParams.Context = ctx
@@ -228,7 +229,13 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpCloudNetwork20200907Network) error {
-	d.SetId(hvn.ID)
+	link := newLink(hvn.Location, "hvn", hvn.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	d.SetId(url)
+
 	if err := d.Set("cidr_block", hvn.CidrBlock); err != nil {
 		return err
 	}
