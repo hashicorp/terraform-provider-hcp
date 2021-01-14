@@ -27,3 +27,51 @@ func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels
 
 	return getResp.Payload.Cluster, nil
 }
+
+// GetConsulClientConfigFiles gets a Consul cluster set of client config files.
+//
+// The files will be returned in base64-encoded format and will get passed in
+// that format.
+func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse, error) {
+
+	p := consul_service.NewGetClientConfigParams()
+	p.Context = ctx
+	p.ID = consulClusterID
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+	p.LocationRegionProvider = &loc.Region.Provider
+	p.LocationRegionRegion = &loc.Region.Region
+
+	resp, err := client.Consul.GetClientConfig(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
+
+// CreateCustomerMasterACLToken invokes the consul-service endpoint to create
+// privileged tokens for a Consul cluster.
+// Example token: After cluster create, a customer would want a master token
+// (or "bootstrap token") so they can continue to set-up their cluster.
+func CreateCustomerMasterACLToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse, error) {
+
+	p := consul_service.NewCreateCustomerMasterACLTokenParams()
+	p.Context = ctx
+	p.ID = consulClusterID
+	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenRequest{
+		ID:       consulClusterID,
+		Location: loc,
+	}
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+
+	resp, err := client.Consul.CreateCustomerMasterACLToken(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
