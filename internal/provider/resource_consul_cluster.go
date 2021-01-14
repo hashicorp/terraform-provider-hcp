@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime"
+	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
+	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -228,6 +230,38 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	} else {
 		return diag.Errorf("a Consul cluster with cluster_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State.  Please see the resource documentation for hcp_consul_cluster for more information.", clusterID, loc.ProjectID)
 	}
+
+	// fetch available version from HCP
+	availableConsulVersions, err := consul.GetAvailableHCPConsulVersions(ctx, meta.(*clients.Client).Config.HCPApiDomain)
+	if err != nil || availableConsulVersions == nil {
+		return diag.Errorf("error fetching available HCP Consul versions: %+v", err)
+	}
+
+	// determine recommended version
+	consulVersion := consul.RecommendedVersion(availableConsulVersions)
+	v, ok := d.GetOk("min_consul_version")
+	if ok {
+		consulVersion = consul.NormalizeVersion(v.(string))
+	}
+
+	// check if version is valid and available
+	if !consul.IsValidVersion(consulVersion, availableConsulVersions) {
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %+v", consulVersion, availableConsulVersions)
+	}
+
+	createConsulClusterParams := consul_service.NewCreateParams()
+	createConsulClusterParams.Context = ctx
+	createConsulClusterParams.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
+		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
+			Config:        nil,
+			ConsulVersion: consulVersion,
+			ID:            clusterID,
+			Location:      loc,
+		},
+	}
+
+	createConsulClusterParams.ClusterLocationOrganizationID = loc.OrganizationID
+	createConsulClusterParams.ClusterLocationProjectID = loc.ProjectID
 
 	return nil
 }
