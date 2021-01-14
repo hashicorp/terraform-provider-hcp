@@ -19,6 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
 )
 
+const (
+	clusterTierDevelopment = "Development"
+	clusterTierProduction  = "Production"
+)
+
 // defaultClusterTimeoutDuration is the amount of time that can elapse
 // before a cluster read operation should timeout.
 var defaultClusterTimeoutDuration = time.Minute * 5
@@ -40,15 +45,22 @@ var consulCusterResourceCloudProviders = []string{
 // consulClusterResourceTierLevels is the list of different tier
 // levels that an HCP Consul cluster can be as.
 var consulClusterResourceTierLevels = []string{
-	"Development",
-	"Production",
+	clusterTierDevelopment,
+	clusterTierProduction,
 }
 
 // tierToClusterNumServer is a map from cluster tier level to the
 // number of servers configured in the capacity configuration.
-var tierToClusterNumServer = map[string]int{
-	"Development": 1,
-	"Production":  3,
+var tierToClusterNumServer = map[string]int32{
+	clusterTierDevelopment: 1,
+	clusterTierProduction:  3,
+}
+
+// clusterNumServersToTier is a map from num servers to
+// a cluster tier level.
+var clusterNumServersToTier = map[int32]string{
+	1: clusterTierDevelopment,
+	3: clusterTierProduction,
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -190,7 +202,7 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"consul_public_endpoint_url": {
-				Description: "The public URL for the Consul UI. This will be empty if `public_endpoint` is `true`.",
+				Description: "The public URL for the Consul UI. This will be empty if `public_endpoint` is `false`.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -279,7 +291,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
 			Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
 				CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
-					NumServers: int32(numServers),
+					NumServers: numServers,
 				},
 				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
 					ConnectEnabled: connectEnabled,
@@ -320,14 +332,124 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to retrieve Consul cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
-	if err := setConsulClusterResourceData(d, cluster); err != nil {
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+	}
+
+	// create customer master ACL token
+	masterACLToken, err := clients.CreateCustomerMasterACLToken(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	if err != nil {
+		return diag.Errorf("unable to create master ACL token for cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+	}
+
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles, masterACLToken); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster) error {
+func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse,
+	masterACLToken *consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse) error {
+	link := newLink(cluster.Location, "consul-service", cluster.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(url)
+
+	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
+		return err
+	}
+
+	val, ok := clusterNumServersToTier[cluster.Config.CapacityConfig.NumServers]
+	if !ok {
+		val = clusterTierDevelopment
+	}
+	if err := d.Set("cluster_tier", val); err != nil {
+		return err
+	}
+
+	if err := d.Set("cloud_provider", cluster.Location.Region.Provider); err != nil {
+		return err
+	}
+
+	if err := d.Set("region", cluster.Location.Region.Region); err != nil {
+		return err
+	}
+
+	publicEndpoint := !cluster.Config.NetworkConfig.Private
+	if err := d.Set("public_endpoint", publicEndpoint); err != nil {
+		return err
+	}
+
+	if err := d.Set("project_id", cluster.Location.ProjectID); err != nil {
+		return err
+	}
+
+	// min_consul_version?
+
+	if err := d.Set("datacenter", cluster.Config.ConsulConfig.Datacenter); err != nil {
+		return err
+	}
+
+	// connect_enabled?
+
+	if err := d.Set("state", cluster.State); err != nil {
+		return err
+	}
+
+	// where do we get this from?
+	if err := d.Set("consul_automatic_upgrades", true); err != nil {
+		return err
+	}
+
+	// is this exposed
+	if err := d.Set("consul_snapshot_interval", "24h"); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_snapshot_retention", "30d"); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_connect", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_version", cluster.ConsulVersion); err != nil {
+		return err
+	}
+
+	if publicEndpoint {
+		if err := d.Set("consul_public_endpoint_url", cluster.DNSNames.Public); err != nil {
+			return err
+		}
+	}
+
+	if err := d.Set("consul_private_endpoint_url", cluster.DNSNames.Private); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_root_token_accessor_id", masterACLToken.ACLToken.AccessorID); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_root_token_secret_id", masterACLToken.ACLToken.SecretID); err != nil {
+		return err
+	}
 
 	return nil
 }
