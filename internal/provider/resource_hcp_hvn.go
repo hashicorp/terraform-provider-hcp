@@ -62,7 +62,7 @@ func resourceHcpHvn() *schema.Resource {
 			},
 			// Optional inputs
 			"cidr_block": {
-				Description:  "The CIDR range of the HVN.",
+				Description:  "The CIDR range of the HVN. If this is not provided, the service will provide a default value.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
