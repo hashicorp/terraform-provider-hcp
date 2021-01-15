@@ -15,7 +15,7 @@ func New(version string) func() *schema.Provider {
 				"scaffolding_data_source": dataSourceScaffolding(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"scaffolding_resource": resourceScaffolding(),
+				"hcp_hvn": resourceHcpHvn(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {
