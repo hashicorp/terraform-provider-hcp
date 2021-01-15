@@ -435,7 +435,7 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Wait for the delete cluster operation
-	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Payload.Operation.ID); err != nil {
 		return diag.Errorf("unable to delete Consul cluster (%s): %+v", clusterID, err)
 	}
 
