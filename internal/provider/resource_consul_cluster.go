@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/go-openapi/runtime"
@@ -17,11 +16,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
-)
-
-const (
-	clusterTierDevelopment = "Development"
-	clusterTierProduction  = "Production"
 )
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
@@ -40,27 +34,6 @@ var deleteTimeoutDuration = time.Minute * 25
 // where a HCP Consul cluster can be provisioned.
 var consulCusterResourceCloudProviders = []string{
 	"aws",
-}
-
-// consulClusterResourceTierLevels is the list of different tier
-// levels that an HCP Consul cluster can be as.
-var consulClusterResourceTierLevels = []string{
-	clusterTierDevelopment,
-	clusterTierProduction,
-}
-
-// tierToClusterNumServer is a map from cluster tier level to the
-// number of servers configured in the capacity configuration.
-var tierToClusterNumServer = map[string]int32{
-	clusterTierDevelopment: 1,
-	clusterTierProduction:  3,
-}
-
-// clusterNumServersToTier is a map from num servers to
-// a cluster tier level.
-var clusterNumServersToTier = map[int32]string{
-	1: clusterTierDevelopment,
-	3: clusterTierProduction,
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -95,16 +68,6 @@ func resourceConsulCluster() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
-			},
-			"cluster_tier": {
-				Description:      "The cluster tier of this HCP Consul cluster.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validateStringInSlice(consulClusterResourceTierLevels, true),
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
-				},
 			},
 			"cloud_provider": {
 				Description:      "The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.",
@@ -277,11 +240,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	clusterTier := d.Get("cluster_tier").(string)
-	numServers, ok := tierToClusterNumServer[clusterTier]
-	if !ok {
-		numServers = 1
-	}
+	// TODO more explicit logic once tier levels are fleshed out
+	numServers := int32(1)
 
 	hvnID := d.Get("hvn_id").(string)
 
@@ -363,14 +323,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	d.SetId(url)
 
 	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
-		return err
-	}
-
-	val, ok := clusterNumServersToTier[cluster.Config.CapacityConfig.NumServers]
-	if !ok {
-		val = clusterTierDevelopment
-	}
-	if err := d.Set("cluster_tier", val); err != nil {
 		return err
 	}
 
