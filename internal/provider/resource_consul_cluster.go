@@ -241,7 +241,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		var apiErr *runtime.APIError
 		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
-			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %+v")
+			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %+v", clusterID, err)
 		}
 
 		// a 404 indicates a Consul cluster was not found
@@ -417,11 +417,11 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile); err != nil {
+	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
 		return err
 	}
 
-	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile); err != nil {
+	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
 		return err
 	}
 
@@ -479,13 +479,15 @@ func buildConsulClusterResourceLocation(ctx context.Context, d *schema.ResourceD
 	region := d.Get("region").(string)
 
 	projectID := client.Config.ProjectID
-	organizationID := client.Config.OrganizationID
 	projectIDVal, ok := d.GetOk("project_id")
 	if ok {
 		projectID = projectIDVal.(string)
+	}
 
-		// Try to get organization_id from state, since project_id might have come from state.
-		organizationID = d.Get("organization_id").(string)
+	organizationID := client.Config.OrganizationID
+	organizationIDVal, ok := d.GetOk("organization_id")
+	if ok {
+		organizationID = organizationIDVal.(string)
 	}
 
 	if projectID == "" {
