@@ -309,16 +309,27 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to create master ACL token for cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles, masterACLToken); err != nil {
+	// Only set root token keys after create
+	if err := d.Set("consul_root_token_accessor_id", masterACLToken.ACLToken.AccessorID); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("consul_root_token_secret_id", masterACLToken.ACLToken.SecretID); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
+// setConsulClusterResourceData sets the KV pairs of the Consul cluster resource schema.
+// We do not set consul_root_token_accessor_id and consul_root_token_secret_id here since
+// the original root token is only available during cluster creation.
 func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
-	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse,
-	masterACLToken *consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse) error {
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
 	link := newLink(cluster.Location, "consul-service", cluster.ID)
 	url, err := linkURL(link)
 	if err != nil {
@@ -351,10 +362,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	if err := d.Set("datacenter", cluster.Config.ConsulConfig.Datacenter); err != nil {
 		return err
 	}
-	//
-	//if err := d.Set("connect_enabled", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
-	//	return err
-	//}
 
 	if err := d.Set("state", cluster.State); err != nil {
 		return err
@@ -395,14 +402,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("consul_private_endpoint_url", cluster.DNSNames.Private); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_root_token_accessor_id", masterACLToken.ACLToken.AccessorID); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_root_token_secret_id", masterACLToken.ACLToken.SecretID); err != nil {
 		return err
 	}
 
