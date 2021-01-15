@@ -171,7 +171,7 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] HVN (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] HVN (%s) not found, removing from state", hvnID)
 			d.SetId("")
 			return nil
 		}
@@ -205,11 +205,11 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	deleteParams.LocationProjectID = loc.ProjectID
 	deleteParams.LocationRegionProvider = &loc.Region.Provider
 	deleteParams.LocationRegionRegion = &loc.Region.Region
-	log.Printf("[INFO] Deleting HVN: [id=%s]", hvnID)
+	log.Printf("[INFO] Deleting HVN (%s)", hvnID)
 	deleteResponse, err := client.Network.Delete(deleteParams, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] HVN (%s) not found, so no action was taken", d.Id())
+			log.Printf("[WARN] HVN (%s) not found, so no action was taken", hvnID)
 			return nil
 		}
 
@@ -221,7 +221,7 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
 	}
 
-	log.Printf("[INFO] HVN (%s) deleted, removing from state", d.Id())
+	log.Printf("[INFO] HVN (%s) deleted, removing from state", hvnID)
 	d.SetId("")
 
 	return nil
