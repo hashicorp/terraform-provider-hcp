@@ -14,10 +14,10 @@ The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 ```terraform
 resource "hcp_hvn" "example" {
   hvn_id         = "hvn"
-  cidr_block     = "172.25.16.0/20"
   cloud_provider = "aws"
   region         = "us-west-2"
   project_id     = var.project_id
+  cidr_block     = "172.25.16.0/20"
 }
 ```
 
@@ -31,7 +31,7 @@ resource "hcp_hvn" "example" {
 
 ### Optional
 
-- **cidr_block** (String) The CIDR range of the HVN.
+- **cidr_block** (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
 - **id** (String) The ID of this resource.
 - **project_id** (String) The ID of the HCP project where the HVN is located.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
