@@ -11,13 +11,9 @@ import (
 )
 
 // BuildResourceLocation builds a Hashicorp Cloud Location based off of the resource data's
-// org, project, region, and provider details
+// org and project details
 func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client, resType string) (
 	*sharedmodels.HashicorpCloudLocationLocation, error) {
-
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
-
 	projectID := client.Config.ProjectID
 	projectIDVal, ok := d.GetOk("project_id")
 	if ok {
@@ -34,10 +30,10 @@ func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *
 		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the %s resource or the provider", resType)
 	}
 
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-
 	if organizationID == "" {
-		if organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID); err != nil {
+		var err error
+		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
+		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve organization ID for project [project_id=%s]: %v", projectID, err)
 		}
 	}
@@ -45,9 +41,26 @@ func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *
 	return &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
 		ProjectID:      projectID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
 	}, nil
+}
+
+// BuildResourceLocationWithRegion builds a Hashicorp Cloud Location based off
+// of the resource data's org, project, region, and provider details
+func BuildResourceLocationWithRegion(ctx context.Context, d *schema.ResourceData, client *clients.Client, resType string) (
+	*sharedmodels.HashicorpCloudLocationLocation, error) {
+
+	provider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
+
+	loc, err := BuildResourceLocation(ctx, d, client, resType)
+	if err != nil {
+		return nil, err
+	}
+
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: provider,
+		Region:   region,
+	}
+
+	return loc, nil
 }
