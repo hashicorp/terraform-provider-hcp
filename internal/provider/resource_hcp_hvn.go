@@ -2,12 +2,10 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/go-openapi/runtime"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
@@ -112,12 +110,10 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Check for an existing HVN
 	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
-		var apiErr *runtime.APIError
-		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
+		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing HVN (%s): %+v", hvnID, err)
 		}
 
-		// A 404 error indicates the HVN was not found
 		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
 	} else {
 		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
@@ -174,9 +170,7 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
 	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
-		// Is the hvn not found
-		var apiErr *runtime.APIError
-		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] HVN (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -214,6 +208,11 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Deleting HVN: [id=%s]", hvnID)
 	deleteResponse, err := client.Network.Delete(deleteParams, nil)
 	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] HVN (%s) not found, so no action was taken", d.Id())
+			return nil
+		}
+
 		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
 	}
 
