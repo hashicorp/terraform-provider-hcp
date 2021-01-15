@@ -231,6 +231,11 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %+v", consulVersion, availableConsulVersions)
 	}
 
+	// explicitly set min_consul_version so it will be populated in resource data if not specified as an input
+	if err := d.Set("min_consul_version", consulVersion); err != nil {
+		return diag.Errorf("error determining min_consul_version: %+v", err)
+	}
+
 	datacenter := clusterID
 	v, ok = d.GetOk("datacenter")
 	if ok {
@@ -343,24 +348,22 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	// min_consul_version?
-
 	if err := d.Set("datacenter", cluster.Config.ConsulConfig.Datacenter); err != nil {
 		return err
 	}
-
-	// connect_enabled?
+	//
+	//if err := d.Set("connect_enabled", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
+	//	return err
+	//}
 
 	if err := d.Set("state", cluster.State); err != nil {
 		return err
 	}
 
-	// where do we get this from?
 	if err := d.Set("consul_automatic_upgrades", true); err != nil {
 		return err
 	}
 
-	// is this exposed
 	if err := d.Set("consul_snapshot_interval", "24h"); err != nil {
 		return err
 	}
