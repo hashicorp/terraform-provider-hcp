@@ -46,7 +46,7 @@ func New(version string) func() *schema.Provider {
 				"hcp_api_domain": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_DOMAIN_OVERRIDE", "api.cloud.hashicorp.com"),
+					DefaultFunc: schema.EnvDefaultFunc("HCP_API_HOST", "api.cloud.hashicorp.com"),
 					Description: "The HashiCorp Cloud Platform API domain.",
 				},
 			},
