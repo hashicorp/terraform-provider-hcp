@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"net/http"
+
 	sdk "github.com/hashicorp/cloud-sdk-go"
 	cloud_consul "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
@@ -34,6 +36,10 @@ type ClientConfig struct {
 
 	// ProjectID (optional) is the project unique identifier to launch resources in.
 	ProjectID string
+
+	// SourceChannel denotes the client (channel) that originated the HCP cluster request.
+	// this is synonymous to a user-agent.
+	SourceChannel string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
@@ -46,6 +52,10 @@ func NewClient(config ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
+	rt := WithHeader(httpClient.Transport)
+	rt.Set("X-HCP-SOURCE-CHANNEL", config.SourceChannel)
+	httpClient.Transport = rt
+
 	client := &Client{
 		Config: config,
 
@@ -57,4 +67,20 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	return client, nil
+}
+
+type withHeader struct {
+	http.Header
+	rt http.RoundTripper
+}
+
+func WithHeader(rt http.RoundTripper) withHeader {
+	return withHeader{Header: make(http.Header), rt: rt}
+}
+
+func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k, v := range h.Header {
+		req.Header[k] = v
+	}
+	return h.rt.RoundTrip(req)
 }
