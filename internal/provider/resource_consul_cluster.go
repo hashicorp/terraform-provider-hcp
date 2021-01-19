@@ -2,12 +2,10 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/go-openapi/runtime"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
@@ -202,8 +200,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// Check for an existing Consul cluster
 	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
-		var apiErr *runtime.APIError
-		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
+		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %+v", clusterID, err)
 		}
 
