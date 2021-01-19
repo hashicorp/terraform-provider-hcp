@@ -41,11 +41,11 @@ func GetAvailableHCPConsulVersions(ctx context.Context, hcpApiDomain string) ([]
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", "terraform-provider-hcs")
+	req.Header.Add("User-Agent", "terraform-provider-hcp")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve avaialable Consul versions from HCP: %+v", err)
+		return nil, fmt.Errorf("unable to retrieve available Consul versions from HCP: %+v", err)
 	}
 	var availableVersionsBody availableVersionsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&availableVersionsBody); err != nil {
