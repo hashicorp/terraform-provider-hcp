@@ -237,7 +237,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
-	payload, err := clients.CreateConsulCluster(ctx, client, loc, clusterID, hvnID, datacenter, consulVersion,
+	payload, err := clients.CreateConsulCluster(ctx, client, loc, clusterID, datacenter, consulVersion,
 		numServers, !publicEndpoint, connectEnabled, newLink(loc, "hvn", hvnID))
 	if err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
