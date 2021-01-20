@@ -255,6 +255,14 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
+	link := NewLink(loc, "consul-service", clusterID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(url)
+
 	// get the created Consul cluster
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
@@ -294,13 +302,6 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 // the original root token is only available during cluster creation.
 func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
 	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
-	link := NewLink(cluster.Location, "consul-service", cluster.ID)
-	url, err := linkURL(link)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(url)
 
 	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
 		return err
