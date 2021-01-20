@@ -352,6 +352,10 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
+	if err := d.Set("connect_enabled", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
+		return err
+	}
+
 	if err := d.Set("consul_version", cluster.ConsulVersion); err != nil {
 		return err
 	}
