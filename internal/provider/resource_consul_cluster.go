@@ -2,18 +2,17 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
+	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
@@ -187,7 +186,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := buildConsulClusterResourceLocation(ctx, d, client)
+	loc, err := helper.BuildResourceLocation(ctx, d, client, "Consul cluster")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -410,47 +409,4 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 
 func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	return nil, nil
-}
-
-// buildConsulClusterResourceLocation builds a Hashicorp Cloud Location based off of the resource data's
-// org, project, region, and provider details
-func buildConsulClusterResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client) (
-	*sharedmodels.HashicorpCloudLocationLocation, error) {
-
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
-
-	projectID := client.Config.ProjectID
-	projectIDVal, ok := d.GetOk("project_id")
-	if ok {
-		projectID = projectIDVal.(string)
-	}
-
-	organizationID := client.Config.OrganizationID
-	organizationIDVal, ok := d.GetOk("organization_id")
-	if ok {
-		organizationID = organizationIDVal.(string)
-	}
-
-	if projectID == "" {
-		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the Consul cluster resource or the provider")
-	}
-
-	if organizationID == "" {
-		var err error
-		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-
-		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve organization ID for proejct [project_id=%s]: %v", projectID, err)
-		}
-	}
-
-	return &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
-		ProjectID:      projectID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
-	}, nil
 }
