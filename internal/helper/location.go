@@ -34,11 +34,10 @@ func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *
 		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the %s resource or the provider", resType)
 	}
 
-	if organizationID == "" {
-		var err error
-		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
+	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
 
-		if err != nil {
+	if organizationID == "" {
+		if organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID); err != nil {
 			return nil, fmt.Errorf("unable to retrieve organization ID for project [project_id=%s]: %v", projectID, err)
 		}
 	}
