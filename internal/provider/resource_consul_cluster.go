@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -241,63 +240,37 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	hvnID := d.Get("hvn_id").(string)
 
-	createConsulClusterParams := consul_service.NewCreateParams()
-	createConsulClusterParams.Context = ctx
-	createConsulClusterParams.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
-		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
-			Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
-				CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
-					NumServers: numServers,
-				},
-				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
-					ConnectEnabled: connectEnabled,
-					Datacenter:     datacenter,
-				},
-				MaintenanceConfig: nil,
-				NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
-					Network: newLink(loc, "hvn", hvnID),
-					Private: !publicEndpoint,
-				},
-			},
-			ConsulVersion: consulVersion,
-			ID:            clusterID,
-			Location:      loc,
-		},
-	}
-
-	createConsulClusterParams.ClusterLocationOrganizationID = loc.OrganizationID
-	createConsulClusterParams.ClusterLocationProjectID = loc.ProjectID
-
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
-	createClusterResp, err := client.Consul.Create(createConsulClusterParams, nil)
+	payload, err := clients.CreateConsulCluster(ctx, client, loc, clusterID, hvnID, datacenter, consulVersion,
+		numServers, !publicEndpoint, connectEnabled)
 	if err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// wait for the Consul cluster to be created
-	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, createClusterResp.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Consul cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
+	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %v", payload.Cluster.ID, err)
 	}
 
-	log.Printf("[INFO] Created Consul cluster (%s)", createClusterResp.Payload.Cluster.ID)
+	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
 	// get the created Consul cluster
-	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", payload.Cluster.ID, err)
 	}
 
 	// get the cluster's Consul client config files
-	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", payload.Cluster.ID, err)
 	}
 
 	// create customer root ACL token
-	RootACLToken, err := clients.CreateCustomerRootACLToken(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	RootACLToken, err := clients.CreateCustomerRootACLToken(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to create root ACL token for cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to create root ACL token for cluster (%s): %v", payload.Cluster.ID, err)
 	}
 
 	// Only set root token keys after create
@@ -321,7 +294,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 // the original root token is only available during cluster creation.
 func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
 	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
-	link := newLink(cluster.Location, "consul-service", cluster.ID)
+	link := NewLink(cluster.Location, "consul-service", cluster.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return err

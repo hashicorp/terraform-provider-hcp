@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 )
 
 // GetConsulClusterByID gets an Consul cluster by its ID
@@ -69,6 +71,44 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 	p.LocationProjectID = loc.ProjectID
 
 	resp, err := client.Consul.CreateCustomerMasterACLToken(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
+
+func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID, hvnID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
+
+	p := consul_service.NewCreateParams()
+	p.Context = ctx
+	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
+		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
+			Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
+				CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
+					NumServers: numServers,
+				},
+				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
+					ConnectEnabled: connectEnabled,
+					Datacenter:     datacenter,
+				},
+				MaintenanceConfig: nil,
+				NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
+					Network: provider.NewLink(loc, "hvn", hvnID),
+					Private: private,
+				},
+			},
+			ConsulVersion: consulVersion,
+			ID:            clusterID,
+			Location:      loc,
+		},
+	}
+
+	p.ClusterLocationOrganizationID = loc.OrganizationID
+	p.ClusterLocationProjectID = loc.ProjectID
+
+	resp, err := client.Consul.Create(p, nil)
 	if err != nil {
 		return nil, err
 	}
