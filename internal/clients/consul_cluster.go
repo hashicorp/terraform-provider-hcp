@@ -113,3 +113,17 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 
 	return resp.Payload, nil
 }
+
+// GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
+func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+	p := consul_service.NewListVersionsParams()
+	p.Context = ctx
+
+	resp, err := client.Consul.ListVersions(p, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload.Versions, nil
+}
