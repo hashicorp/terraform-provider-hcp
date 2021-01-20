@@ -122,11 +122,6 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			// computed outputs
-			"state": {
-				Description: "The state of the cluster.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"consul_automatic_upgrades": {
 				Description: "Denotes that automatic Consul upgrades are enabled.",
 				Type:        schema.TypeBool,
@@ -357,10 +352,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("datacenter", cluster.Config.ConsulConfig.Datacenter); err != nil {
-		return err
-	}
-
-	if err := d.Set("state", cluster.State); err != nil {
 		return err
 	}
 
