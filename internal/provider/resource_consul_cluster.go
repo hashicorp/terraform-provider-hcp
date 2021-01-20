@@ -145,11 +145,6 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"consul_connect": {
-				Description: "Denotes that Consul connect is enabled.",
-				Type:        schema.TypeBool,
-				Computed:    true,
-			},
 			"consul_version": {
 				Description: "The Consul version of the cluster.",
 				Type:        schema.TypeString,
@@ -345,10 +340,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_connect", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
 		return err
 	}
 
