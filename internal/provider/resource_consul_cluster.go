@@ -294,18 +294,18 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
-	// create customer master ACL token
-	masterACLToken, err := clients.CreateCustomerMasterACLToken(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
+	// create customer root ACL token
+	RootACLToken, err := clients.CreateCustomerRootACLToken(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to create master ACL token for cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to create root ACL token for cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
 	// Only set root token keys after create
-	if err := d.Set("consul_root_token_accessor_id", masterACLToken.ACLToken.AccessorID); err != nil {
+	if err := d.Set("consul_root_token_accessor_id", RootACLToken.ACLToken.AccessorID); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("consul_root_token_secret_id", masterACLToken.ACLToken.SecretID); err != nil {
+	if err := d.Set("consul_root_token_secret_id", RootACLToken.ACLToken.SecretID); err != nil {
 		return diag.FromErr(err)
 	}
 
