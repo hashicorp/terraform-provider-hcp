@@ -36,7 +36,7 @@ var consulCusterResourceCloudProviders = []string{
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The Consul cluster resource allow you to manage an HCP Consul cluster.",
+		Description:   "The Consul cluster resource allows you to manage an HCP Consul cluster.",
 		CreateContext: resourceConsulClusterCreate,
 		ReadContext:   resourceConsulClusterRead,
 		UpdateContext: resourceConsulClusterUpdate,
