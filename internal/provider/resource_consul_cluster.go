@@ -21,7 +21,7 @@ var defaultClusterTimeoutDuration = time.Minute * 5
 
 // createUpdateTimeoutDuration is the amount of time that can elapse
 // before a cluster create or update operation should timeout.
-var createUpdateTimeoutDuration = time.Minute * 30
+var createUpdateTimeoutDuration = time.Minute * 35
 
 // deleteTimeoutDuration is the amount of time that can elapse
 // before a cluster delete operation should timeout.
