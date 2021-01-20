@@ -34,9 +34,6 @@ type ClientConfig struct {
 
 	// ProjectID (optional) is the project unique identifier to launch resources in.
 	ProjectID string
-
-	// HCPApiDomain is the domain of the HashiCorp Cloud Platform API.
-	HCPApiDomain string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests

@@ -3,16 +3,17 @@ package consul
 import (
 	"testing"
 
+	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_RecommendedVersion(t *testing.T) {
 	tcs := map[string]struct {
 		expected string
-		input    []Version
+		input    []*consulmodels.HashicorpCloudConsul20200826Version
 	}{
 		"with a recommended version": {
-			input: []Version{
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -29,7 +30,7 @@ func Test_RecommendedVersion(t *testing.T) {
 			expected: "v1.9.0",
 		},
 		"without a recommended version": {
-			input: []Version{
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
 				{
 					Version: "v1.9.0",
 					Status:  "AVAILABLE",
@@ -61,11 +62,11 @@ func Test_IsValidVersion(t *testing.T) {
 	tcs := map[string]struct {
 		expected      bool
 		version       string
-		validVersions []Version
+		validVersions []*consulmodels.HashicorpCloudConsul20200826Version
 	}{
 		"with a valid version": {
 			version: "v1.9.0",
-			validVersions: []Version{
+			validVersions: []*consulmodels.HashicorpCloudConsul20200826Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -83,7 +84,7 @@ func Test_IsValidVersion(t *testing.T) {
 		},
 		"with an invalid version": {
 			version: "v1.8.0",
-			validVersions: []Version{
+			validVersions: []*consulmodels.HashicorpCloudConsul20200826Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
