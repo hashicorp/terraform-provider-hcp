@@ -9,11 +9,11 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 )
 
-// NewLink constructs a new Link from the passed arguments. ID should be the
+// newLink constructs a new Link from the passed arguments. ID should be the
 // user specified resource ID.
 //
 // Adapted from https://github.com/hashicorp/cloud-api-internal/blob/master/helper/hashicorp/cloud/location/link.go#L10-L23
-func NewLink(loc *sharedmodels.HashicorpCloudLocationLocation, svcType string, id string) *sharedmodels.HashicorpCloudLocationLink {
+func newLink(loc *sharedmodels.HashicorpCloudLocationLocation, svcType string, id string) *sharedmodels.HashicorpCloudLocationLink {
 	return &sharedmodels.HashicorpCloudLocationLink{
 		Type:     svcType,
 		ID:       id,

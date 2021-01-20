@@ -228,7 +228,7 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpCloudNetwork20200907Network) error {
-	link := NewLink(hvn.Location, "hvn", hvn.ID)
+	link := newLink(hvn.Location, "hvn", hvn.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return err
