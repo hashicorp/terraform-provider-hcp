@@ -83,7 +83,7 @@ func resourceConsulCluster() *schema.Resource {
 			},
 			// optional fields
 			"public_endpoint": {
-				Description: "Denotes that the cluster has an public endpoint for the Consul UI. Defaults to false.",
+				Description: "Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.",
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
@@ -108,7 +108,7 @@ func resourceConsulCluster() *schema.Resource {
 				},
 			},
 			"datacenter": {
-				Description: "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `id`.",
+				Description: "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -201,19 +201,19 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %+v", clusterID, err)
+			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
 		}
 
 		// a 404 indicates a Consul cluster was not found
 		log.Printf("[INFO] Consul cluster (%s) not found, proceeding with create", clusterID)
 	} else {
-		return diag.Errorf("a Consul cluster with cluster_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State.  Please see the resource documentation for hcp_consul_cluster for more information.", clusterID, loc.ProjectID)
+		return diag.Errorf("a Consul cluster with cluster_id=%q in project_id=%q already exists - to be managed via Terraform this resource needs to be imported into the State.  Please see the resource documentation for hcp_consul_cluster for more information.", clusterID, loc.ProjectID)
 	}
 
 	// fetch available version from HCP
 	availableConsulVersions, err := consul.GetAvailableHCPConsulVersions(ctx, meta.(*clients.Client).Config.HCPApiDomain)
 	if err != nil || availableConsulVersions == nil {
-		return diag.Errorf("error fetching available HCP Consul versions: %+v", err)
+		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
 	}
 
 	// determine recommended version
@@ -225,12 +225,12 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	// check if version is valid and available
 	if !consul.IsValidVersion(consulVersion, availableConsulVersions) {
-		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %+v", consulVersion, availableConsulVersions)
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", consulVersion, availableConsulVersions)
 	}
 
 	// explicitly set min_consul_version so it will be populated in resource data if not specified as an input
 	if err := d.Set("min_consul_version", consulVersion); err != nil {
-		return diag.Errorf("error determining min_consul_version: %+v", err)
+		return diag.Errorf("error determining min_consul_version: %v", err)
 	}
 
 	datacenter := clusterID
@@ -278,12 +278,12 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	createClusterResp, err := client.Consul.Create(createConsulClusterParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create Consul cluster (%s): %+v", clusterID, err)
+		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// wait for the Consul cluster to be created
 	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, createClusterResp.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Consul cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to create Consul cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
 	log.Printf("[INFO] Created Consul cluster (%s)", createClusterResp.Payload.Cluster.ID)
@@ -291,19 +291,19 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// get the created Consul cluster
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
 	// create customer master ACL token
 	masterACLToken, err := clients.CreateCustomerMasterACLToken(ctx, client, loc, createClusterResp.Payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to create master ACL token for cluster (%s): %+v", createClusterResp.Payload.Cluster.ID, err)
+		return diag.Errorf("unable to create master ACL token for cluster (%s): %v", createClusterResp.Payload.Cluster.ID, err)
 	}
 
 	// Only set root token keys after create
@@ -450,7 +450,7 @@ func buildConsulClusterResourceLocation(ctx context.Context, d *schema.ResourceD
 		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
 
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve organization ID for proejct [project_id=%s]: %+v", projectID, err)
+			return nil, fmt.Errorf("unable to retrieve organization ID for proejct [project_id=%s]: %v", projectID, err)
 		}
 	}
 
