@@ -51,11 +51,11 @@ func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *shared
 	return resp.Payload, nil
 }
 
-// CreateCustomerMasterACLToken invokes the consul-service endpoint to create
+// CreateCustomerRootACLToken invokes the consul-service endpoint to create
 // privileged tokens for a Consul cluster.
-// Example token: After cluster create, a customer would want a master token
+// Example token: After cluster create, a customer would want a root token
 // (or "bootstrap token") so they can continue to set-up their cluster.
-func CreateCustomerMasterACLToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse, error) {
 
 	p := consul_service.NewCreateCustomerMasterACLTokenParams()
