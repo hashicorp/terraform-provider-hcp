@@ -43,12 +43,6 @@ func New(version string) func() *schema.Provider {
 					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", ""),
 					Description: "The ID of the project for API operations.",
 				},
-				"hcp_api_domain": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_API_HOST", "api.cloud.hashicorp.com"),
-					Description: "The HashiCorp Cloud Platform API domain.",
-				},
 			},
 		}
 
@@ -66,7 +60,6 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 			ClientSecret:   d.Get("client_secret").(string),
 			OrganizationID: d.Get("organization_id").(string),
 			ProjectID:      d.Get("project_id").(string),
-			HCPApiDomain:   d.Get("hcp_api_domain").(string),
 		})
 		if err != nil {
 			return nil, diag.Errorf("unable to create HCP api client: %+v", err)
