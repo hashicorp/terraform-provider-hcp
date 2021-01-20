@@ -415,16 +415,9 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	clusterID := link.ID
 	loc := link.Location
 
-	p := consul_service.NewDeleteParams()
-	p.Context = ctx
-	p.ID = clusterID
-	p.LocationOrganizationID = loc.OrganizationID
-	p.LocationProjectID = loc.ProjectID
-	p.LocationRegionProvider = &loc.Region.Provider
-	p.LocationRegionRegion = &loc.Region.Region
-
 	log.Printf("[INFO] Deleting Consul cluster (%s)", clusterID)
-	deleteResp, err := client.Consul.Delete(p, nil)
+
+	deleteResp, err := clients.DeleteConsulCluster(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] Consul cluster (%s) not found, so no action was taken", clusterID)
@@ -435,7 +428,7 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Wait for the delete cluster operation
-	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to delete Consul cluster (%s): %+v", clusterID, err)
 	}
 
