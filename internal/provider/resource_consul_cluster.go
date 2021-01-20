@@ -57,14 +57,14 @@ func resourceConsulCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateStringNotEmpty,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"hvn_id": {
 				Description:      "The ID of the HVN this HCP Consul cluster is associated to.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateStringNotEmpty,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
 				Description:      "The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.",
