@@ -271,17 +271,17 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// create customer root ACL token
-	RootACLToken, err := clients.CreateCustomerRootACLToken(ctx, client, loc, payload.Cluster.ID)
+	rootACLToken, err := clients.CreateCustomerRootACLToken(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
 		return diag.Errorf("unable to create root ACL token for cluster (%s): %v", payload.Cluster.ID, err)
 	}
 
 	// Only set root token keys after create
-	if err := d.Set("consul_root_token_accessor_id", RootACLToken.ACLToken.AccessorID); err != nil {
+	if err := d.Set("consul_root_token_accessor_id", rootACLToken.ACLToken.AccessorID); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("consul_root_token_secret_id", RootACLToken.ACLToken.SecretID); err != nil {
+	if err := d.Set("consul_root_token_secret_id", rootACLToken.ACLToken.SecretID); err != nil {
 		return diag.FromErr(err)
 	}
 
