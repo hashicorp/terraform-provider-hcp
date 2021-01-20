@@ -77,7 +77,7 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 }
 
 func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID, hvnID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
+	clusterID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
 
 	p := consul_service.NewCreateParams()
 	p.Context = ctx
