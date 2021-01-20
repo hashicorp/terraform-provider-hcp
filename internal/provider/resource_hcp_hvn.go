@@ -2,17 +2,17 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/models"
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 var hvnDefaultTimeout = time.Minute * 1
@@ -102,7 +102,7 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := buildHvnResourceLocation(ctx, d, client)
+	loc, err := helper.BuildResourceLocation(ctx, d, client, "HVN")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -257,39 +257,4 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	return nil
-}
-
-func buildHvnResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client) (*sharedmodels.HashicorpCloudLocationLocation, error) {
-	provider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
-
-	projectID := client.Config.ProjectID
-	organizationID := client.Config.OrganizationID
-	projectIDVal, ok := d.GetOk("project_id")
-	if ok {
-		projectID = projectIDVal.(string)
-		// Try to get organization_id from state, since project_id might have come from state
-		organizationID = d.Get("organization_id").(string)
-	}
-
-	if projectID == "" {
-		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the HVN resource or the provider")
-	}
-
-	if organizationID == "" {
-		var err error
-		organizationID, err = clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve organization ID for project [project_id=%s]: %+v", projectID, err)
-		}
-	}
-
-	return &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
-		ProjectID:      projectID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: provider,
-			Region:   region,
-		},
-	}, nil
 }
