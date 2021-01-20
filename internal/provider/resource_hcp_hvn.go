@@ -23,7 +23,7 @@ var hvnResourceCloudProviders = []string{
 	"aws",
 }
 
-func resourceHcpHvn() *schema.Resource {
+func resourceHvn() *schema.Resource {
 	return &schema.Resource{
 		Description: "The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.",
 
