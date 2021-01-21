@@ -11,6 +11,7 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
@@ -38,10 +39,11 @@ func resourceAwsNetworkPeering() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_id": {
-				Description: "The ID of the HashiCorp Virtual Network.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:      "The ID of the HashiCorp Virtual Network.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"target_account_id": {
 				Description: "The account ID of the target VPC in AWS.",
@@ -62,10 +64,11 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				ForceNew:    true,
 			},
 			"target_vpc_cidr_block": {
-				Description: "The CIDR range of the target VPC in AWS.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The CIDR range of the target VPC in AWS.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			// Optional inputs
 			"project_id": {
@@ -76,11 +79,12 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"peering_id": {
-				Description: "The ID of the network peering.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
+				Description:      "The ID of the network peering.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
 			"organization_id": {
