@@ -140,8 +140,6 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	p.ID = clusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
-	p.LocationRegionProvider = &loc.Region.Provider
-	p.LocationRegionRegion = &loc.Region.Region
 
 	deleteResp, err := client.Consul.Delete(p, nil)
 	if err != nil {
