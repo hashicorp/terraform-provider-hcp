@@ -272,14 +272,12 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 		// and when deleting the HVN is deleted can cause an already started error.
 		// It would be nicer if we could return a better error message or tie the operations together.
 		if strings.Contains(err.Error(), "execution already started") {
-			d.SetId("")
 			return nil
 		}
 		return diag.Errorf("unable to delete network peering (%s): %v", peeringID, err)
 	}
 
 	log.Printf("[INFO] Network peering (%s) deleted, removing from state", peeringID)
-	d.SetId("")
 
 	return nil
 }
