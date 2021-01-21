@@ -24,7 +24,8 @@ func newLink(loc *sharedmodels.HashicorpCloudLocationLocation, svcType string, i
 // linkURL generates a URL from the passed link. If the link is invalid, an
 // error is returned. The Link URL is a globally unique, human readable string
 // identifying a resource.
-// This version of the function includes all location data (org, project, provider, and region).
+// This version of the function includes org and project data, but not provider
+// and region.
 //
 // Adapted from https://github.com/hashicorp/cloud-api-internal/blob/master/helper/hashicorp/cloud/location/link.go#L25-L60
 func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
@@ -41,10 +42,6 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 		return "", errors.New("link missing project ID")
 	} else if l.Location.OrganizationID == "" {
 		return "", errors.New("link missing organization ID")
-	} else if l.Location.Region.Provider == "" {
-		return "", errors.New("link missing provider")
-	} else if l.Location.Region.Region == "" {
-		return "", errors.New("link missing region")
 	} else if l.Type == "" {
 		return "", errors.New("link missing resource type")
 	}
@@ -56,11 +53,9 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 	}
 
 	// Generate the URL
-	urn := fmt.Sprintf("/organization/%s/project/%s/provider/%s/region/%s/%s/%s",
+	urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
 		l.Location.OrganizationID,
 		l.Location.ProjectID,
-		l.Location.Region.Provider,
-		l.Location.Region.Region,
 		l.Type,
 		id)
 
@@ -70,23 +65,19 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 // parseLinkURL parses a link URL into a link. If the URL is malformed, an
 // error is returned.
 func parseLinkURL(urn string) (*sharedmodels.HashicorpCloudLocationLink, error) {
-	match, _ := regexp.MatchString("^/organization/.+/project/.+/provider/.+/region/.+/.+/.+$", urn)
+	match, _ := regexp.MatchString("^/organization/.+/project/.+/.+/.+$", urn)
 	if !match {
-		return nil, errors.New("url is not in the correct format: /organization/{org_id}/project/{project_id}/provider/{provider}/region/{region}/{type}/{id}")
+		return nil, errors.New("url is not in the correct format: /organization/{org_id}/project/{project_id}/{type}/{id}")
 	}
 
 	components := strings.Split(urn, "/")
 
 	return &sharedmodels.HashicorpCloudLocationLink{
-		Type: components[9],
-		ID:   components[10],
+		Type: components[5],
+		ID:   components[6],
 		Location: &sharedmodels.HashicorpCloudLocationLocation{
 			OrganizationID: components[2],
 			ProjectID:      components[4],
-			Region: &sharedmodels.HashicorpCloudLocationRegion{
-				Provider: components[6],
-				Region:   components[8],
-			},
 		},
 	}, nil
 }
