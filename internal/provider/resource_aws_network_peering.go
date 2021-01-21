@@ -179,12 +179,24 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("unable to create network peering (%s) between HVN (%s) and target (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
 	}
 
+	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and target (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
+
+	// Set the globally unique id of this peering in the state now since it has
+	// been created, and from this point forward should be deletable
+	// TODO: This needs to be changed to include hvn_id, in order to be globally unique
+	link := newLink(peering.Hvn.Location, "peering", peering.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
 	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and target (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
+	log.Printf("[INFO] Network peering (%s) is now in PENDING_ACCEPTANCE state", peering.ID)
 
 	if err := setPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
@@ -273,14 +285,6 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.HashicorpCloudNetwork20200907Peering) error {
-	// TODO: This needs to be changed to include hvn_id, in order to be globally unique
-	link := newLink(peering.Hvn.Location, "peering", peering.ID)
-	url, err := linkURL(link)
-	if err != nil {
-		return err
-	}
-	d.SetId(url)
-
 	if err := d.Set("peering_id", peering.ID); err != nil {
 		return err
 	}
