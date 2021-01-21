@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
+const featureTierDev = "dev"
+const featureTierGood = "good"
+
 // defaultClusterTimeoutDuration is the amount of time that can elapse
 // before a cluster read operation should timeout.
 var defaultClusterTimeoutDuration = time.Minute * 5
@@ -30,6 +33,20 @@ var deleteTimeoutDuration = time.Minute * 25
 // where a HCP Consul cluster can be provisioned.
 var consulCusterResourceCloudProviders = []string{
 	"aws",
+}
+
+// consulClusterResourceFeatureTiers is the list of tiers
+// that an HCP Consul cluster can be provisioned as.
+var consulClusterResourceFeatureTiers = []string{
+	featureTierDev,
+	featureTierGood,
+}
+
+// featureTierToNumServices maps the set of feature tiers
+// to the number of servers to be provisioned for that cluster.
+var featureTierToNumServices = map[string]int32{
+	featureTierDev:  int32(1),
+	featureTierGood: int32(3),
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -78,6 +95,13 @@ func resourceConsulCluster() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
+			},
+			"feature_tier": {
+				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'good' are available at this time.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateStringInSlice(consulClusterResourceFeatureTiers, true),
 			},
 			// optional fields
 			"public_endpoint": {
@@ -230,8 +254,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	// TODO more explicit logic once tier levels are fleshed out
-	numServers := int32(1)
+	featureTier := d.Get("feature_tier").(string)
+	numServers := featureTierToNumServices[featureTier]
 
 	hvnID := d.Get("hvn_id").(string)
 
