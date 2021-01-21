@@ -365,6 +365,38 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 }
 
 func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+	}
+
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %+v", clusterID, err)
+	}
+
+	// Cluster found, update resource data
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
