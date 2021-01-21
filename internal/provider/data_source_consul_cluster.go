@@ -2,9 +2,13 @@ package provider
 
 import (
 	"context"
+	"log"
 
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 func dataSourceConsulCluster() *schema.Resource {
@@ -22,7 +26,17 @@ func dataSourceConsulCluster() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			// Computed outputs
+			"project_id": {
+				Description: "The ID of the project this HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			"organization_id": {
+				Description: "The ID of the organization the project for this HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			// computed outputs
 			"hvn_id": {
 				Description: "The ID of the HVN this HCP Consul cluster is associated to.",
 				Type:        schema.TypeString,
@@ -38,19 +52,14 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.",
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
-			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"min_consul_version": {
 				Description: "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"datacenter": {
@@ -108,5 +117,47 @@ func dataSourceConsulCluster() *schema.Resource {
 }
 
 func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	clusterID := d.Get("cluster_id").(string)
+	organizationID := d.Get("organization_id").(string)
+	projectID := d.Get("project_id").(string)
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: organizationID,
+		ProjectID:      projectID,
+	}
+
+	client := meta.(*clients.Client)
+
+	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+	}
+
+	// build the id for this Consul cluster
+	link := newLink(loc, "consul-service", clusterID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(url)
+
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+	}
+
+	// Cluster found, update resource data
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
