@@ -16,8 +16,8 @@ import (
 )
 
 var peeringDefaultTimeout = time.Minute * 1
-var peeringCreateTimeout = time.Minute * 30
-var peeringDeleteTimeout = time.Minute * 30
+var peeringCreateTimeout = time.Minute * 35
+var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
