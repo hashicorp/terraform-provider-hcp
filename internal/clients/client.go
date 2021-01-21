@@ -1,10 +1,6 @@
 package clients
 
 import (
-	"log"
-
-	"context"
-
 	sdk "github.com/hashicorp/cloud-sdk-go"
 	cloud_consul "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client"
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
@@ -64,19 +60,6 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 	}
-
-	p := consul_service.NewListVersions2Params()
-	p.Context = context.Background()
-
-	log.Printf("***********************")
-	log.Printf("FETCHING CONSUL VERSION TEST")
-	log.Printf("config.SourceChannel")
-	log.Printf(config.SourceChannel)
-	resp, err := client.Consul.ListVersions2(p, nil)
-	log.Printf("**********************")
-	log.Printf("CONSUL LIST VERSION ERROR")
-	log.Printf("%+v", resp)
-	log.Printf("%+v", err)
 
 	return client, nil
 }
