@@ -505,5 +505,10 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	return nil, nil
+	diags := resourceConsulClusterRead(ctx, d, meta)
+	if err := helper.ToError(diags); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
