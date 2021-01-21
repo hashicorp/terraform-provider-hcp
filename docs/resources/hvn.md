@@ -40,7 +40,6 @@ resource "hcp_hvn" "example" {
 
 - **created_at** (String) The time that the HVN was created.
 - **organization_id** (String) The ID of the HCP organization where the HVN is located.
-- **state** (String) The current state of the HVN (eg. STABLE).
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
