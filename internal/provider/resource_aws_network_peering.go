@@ -138,15 +138,17 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	log.Printf("[INFO] HVN (%s) found, proceeding with create", hvnID)
 
 	// Check if peering already exists
-	_, err = clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
-	if err != nil {
-		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing network peering (%s): %v", peeringID, err)
-		}
+	if peeringID != "" {
+		_, err = clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
+		if err != nil {
+			if !clients.IsResponseCodeNotFound(err) {
+				return diag.Errorf("unable to check for presence of an existing network peering (%s): %v", peeringID, err)
+			}
 
-		log.Printf("[INFO] Network peering (%s) not found, proceeding with create", peeringID)
-	} else {
-		return diag.Errorf("a network peering with peering_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_aws_network_peering for more information", peeringID, hvnID, loc.ProjectID)
+			log.Printf("[INFO] Network peering (%s) not found, proceeding with create", peeringID)
+		} else {
+			return diag.Errorf("a network peering with peering_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_aws_network_peering for more information", peeringID, hvnID, loc.ProjectID)
+		}
 	}
 
 	peerNetworkParams := network_service.NewCreatePeeringParams()
