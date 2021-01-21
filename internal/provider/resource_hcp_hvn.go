@@ -198,8 +198,6 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	deleteParams.ID = hvnID
 	deleteParams.LocationOrganizationID = loc.OrganizationID
 	deleteParams.LocationProjectID = loc.ProjectID
-	deleteParams.LocationRegionProvider = &loc.Region.Provider
-	deleteParams.LocationRegionRegion = &loc.Region.Region
 	log.Printf("[INFO] Deleting HVN (%s)", hvnID)
 	deleteResponse, err := client.Network.Delete(deleteParams, nil)
 	if err != nil {

@@ -17,8 +17,6 @@ func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels
 	getParams.ID = consulClusterID
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
-	getParams.LocationRegionProvider = &loc.Region.Provider
-	getParams.LocationRegionRegion = &loc.Region.Region
 
 	getResp, err := client.Consul.Get(getParams, nil)
 	if err != nil {
@@ -40,8 +38,6 @@ func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *shared
 	p.ID = consulClusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
-	p.LocationRegionProvider = &loc.Region.Provider
-	p.LocationRegionRegion = &loc.Region.Region
 
 	resp, err := client.Consul.GetClientConfig(p, nil)
 	if err != nil {
