@@ -76,6 +76,8 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 	return resp.Payload, nil
 }
 
+// CreateConsulCluster will make a call to the Consul service to initiate the create Consul
+// cluster workflow.
 func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
 
@@ -126,4 +128,23 @@ func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*cons
 	}
 
 	return resp.Payload.Versions, nil
+}
+
+// DeleteConsulCluster will make a call to the Consul service to initiate the delete Consul
+// cluster workflow.
+func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string) (*consulmodels.HashicorpCloudConsul20200826DeleteResponse, error) {
+
+	p := consul_service.NewDeleteParams()
+	p.Context = ctx
+	p.ID = clusterID
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+
+	deleteResp, err := client.Consul.Delete(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResp.Payload, nil
 }
