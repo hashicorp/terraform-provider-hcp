@@ -148,3 +148,58 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 
 	return deleteResp.Payload, nil
 }
+
+// GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
+func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+
+	p := consul_service.NewListUpgradeVersionsParams()
+	p.Context = ctx
+	p.ID = clusterID
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+	p.LocationRegionProvider = &loc.Region.Provider
+	p.LocationRegionRegion = &loc.Region.Region
+
+	resp, err := client.Consul.ListUpgradeVersions(p, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload.Versions, nil
+}
+
+// UpdateConsulCluster will make a call to the Consul service to initiate the update Consul
+// cluster workflow.
+func UpdateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID, newConsulVersion string) (*consulmodels.HashicorpCloudConsul20200826UpdateResponse, error) {
+
+	cluster := consulmodels.HashicorpCloudConsul20200826Cluster{
+		ConsulVersion: newConsulVersion,
+		ID:            clusterID,
+		Location: &sharedmodels.HashicorpCloudLocationLocation{
+			ProjectID:      loc.ProjectID,
+			OrganizationID: loc.OrganizationID,
+			Region: &sharedmodels.HashicorpCloudLocationRegion{
+				Region:   loc.Region.Region,
+				Provider: loc.Region.Provider,
+			},
+		},
+	}
+
+	updateParams := consul_service.NewUpdateParams()
+	updateParams.Context = ctx
+	updateParams.ClusterID = cluster.ID
+	updateParams.ClusterLocationProjectID = loc.ProjectID
+	updateParams.ClusterLocationOrganizationID = loc.OrganizationID
+	updateParams.Body = &cluster
+
+	// Invoke update cluster endpoint
+	updateResp, err := client.Consul.Update(updateParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResp.Payload, nil
+}
