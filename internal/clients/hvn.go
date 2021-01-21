@@ -15,8 +15,6 @@ func GetHvnByID(ctx context.Context, client *Client, loc *sharedmodels.Hashicorp
 	getParams.ID = hvnID
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
-	getParams.LocationRegionProvider = &loc.Region.Provider
-	getParams.LocationRegionRegion = &loc.Region.Region
 	getResponse, err := client.Network.Get(getParams, nil)
 	if err != nil {
 		return nil, err
