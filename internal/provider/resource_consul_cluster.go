@@ -389,7 +389,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %+v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
 	}
 
 	// Cluster found, update resource data
@@ -424,12 +424,12 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			return nil
 		}
 
-		return diag.Errorf("unable to delete Consul cluster (%s): %+v", clusterID, err)
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// Wait for the delete cluster operation
 	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
-		return diag.Errorf("unable to delete Consul cluster (%s): %+v", clusterID, err)
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
 	}
 
 	log.Printf("[INFO] Consul cluster (%s) deleted, removing from state", clusterID)
