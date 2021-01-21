@@ -389,7 +389,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %+v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
 	}
 
 	// Cluster found, update resource data
@@ -405,6 +405,36 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Deleting Consul cluster (%s)", clusterID)
+
+	deleteResp, err := clients.DeleteConsulCluster(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, so no action was taken", clusterID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the delete cluster operation
+	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
+	}
+
+	log.Printf("[INFO] Consul cluster (%s) deleted, removing from state", clusterID)
+	d.SetId("")
+
 	return nil
 }
 

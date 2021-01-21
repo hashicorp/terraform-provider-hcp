@@ -62,7 +62,7 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 			ProjectID:      d.Get("project_id").(string),
 		})
 		if err != nil {
-			return nil, diag.Errorf("unable to create HCP api client: %+v", err)
+			return nil, diag.Errorf("unable to create HCP api client: %v", err)
 		}
 
 		return client, nil
