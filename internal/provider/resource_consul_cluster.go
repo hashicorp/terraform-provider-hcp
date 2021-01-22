@@ -199,7 +199,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// fetch available version from HCP
-	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, client)
+	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, loc, client)
 	if err != nil || availableConsulVersions == nil {
 		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
 	}
@@ -447,18 +447,18 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Invoke update cluster endpoint
-	updateResp, err := clients.UpdateConsulCluster(ctx, client, loc, clusterID, newConsulVersion)
+	updateResp, err := clients.UpdateConsulCluster(ctx, client, cluster.Location, clusterID, newConsulVersion)
 	if err != nil {
 		return diag.Errorf("error updating Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// Wait for the update cluster operation
-	if err := clients.WaitForOperation(ctx, client, "update Consul cluster", loc, updateResp.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "update Consul cluster", cluster.Location, updateResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to update Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// get the cluster's Consul client config files
-	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
 	}
