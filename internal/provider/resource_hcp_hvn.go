@@ -27,9 +27,9 @@ func resourceHvn() *schema.Resource {
 	return &schema.Resource{
 		Description: "The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.",
 
-		CreateContext: resourceHcpHvnCreate,
-		ReadContext:   resourceHcpHvnRead,
-		DeleteContext: resourceHcpHvnDelete,
+		CreateContext: resourceHvnCreate,
+		ReadContext:   resourceHvnRead,
+		DeleteContext: resourceHvnDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnDefaultTimeout,
 			Create:  &hvnCreateTimeout,
@@ -91,7 +91,7 @@ func resourceHvn() *schema.Resource {
 	}
 }
 
-func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
@@ -151,7 +151,7 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := parseLinkURL(d.Id())
@@ -182,7 +182,7 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := parseLinkURL(d.Id())
