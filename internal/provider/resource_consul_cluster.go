@@ -438,7 +438,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	// Check that there are any valid upgrade versions
 	if upgradeVersions == nil {
-		return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCS")
+		return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCP")
 	}
 
 	// Validate that the upgrade version is valid
