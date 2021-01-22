@@ -42,17 +42,18 @@ func resourceHvn() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_id": {
-				Description: "The ID of the HashiCorp Virtual Network.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:      "The ID of the HashiCorp Virtual Network.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description:  "The provider where the HVN is located. Only 'aws' is available at this time.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(hvnResourceCloudProviders, true),
+				Description:      "The provider where the HVN is located. Only 'aws' is available at this time.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateStringInSlice(hvnResourceCloudProviders, true),
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
