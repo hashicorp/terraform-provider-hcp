@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -109,11 +110,23 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get("snapshot_name").(string)
 
+	log.Printf("[INFO] Creating Consul snapshot (%s)", name)
+
 	// make the call to kick off the workflow
 	createResp, err := clients.CreateSnapshot(ctx, client, newLink(cluster.Location, "hashicorp.consul.cluster", cluster.ID), name)
 	if err != nil {
 		return diag.Errorf("unable to create Consul snapshot (%s): %v", clusterID, err)
 	}
+
+	log.Printf("[INFO] Created Consul snapshot name:%q; id:%q", name, createResp.SnapshotID)
+
+	link := newLink(loc, "hashicorp.consul.snapshot", createResp.SnapshotID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(url)
 
 	// wait for the Consul snapshot to be created
 	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", cluster.Location, createResp.Operation.ID); err != nil {
