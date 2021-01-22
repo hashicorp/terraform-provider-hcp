@@ -127,11 +127,7 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
-			d.SetId("")
-			return nil
-		}
+		return diag.FromErr(err)
 	}
 
 	// build the id for this Consul cluster
