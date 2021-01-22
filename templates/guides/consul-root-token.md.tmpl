@@ -1,0 +1,14 @@
+---
+subcategory: ""
+page_title: "Create a new ACL root token - HCP Provider"
+description: |-
+    An example of creating a new ACL root token.
+---
+
+# Create a new Consul ACL root token
+
+Creating a new root token is useful if your HCP Consul cluster has been imported into Terraform
+or is managed outside of Terraform. It is important to note that when creating a new root token,
+the existing root token will be invalidated.
+
+{{ tffile "examples/consul_cluster_root_token/main.tf" }}
