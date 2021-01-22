@@ -277,6 +277,8 @@ github.com/hashicorp/cloud-sdk-go v0.0.0-20210108213651-365382b906bd h1:k+FN6S9N
 github.com/hashicorp/cloud-sdk-go v0.0.0-20210108213651-365382b906bd/go.mod h1:ElnT9FYQXhs9FINaz0wpL0PXl2c0tVFxFytgZ18NhUA=
 github.com/hashicorp/cloud-sdk-go v0.0.0-20210119195551-8261217d9294 h1:wp4xJtEwA4WiVEzi0k1MEoLHazNxNt437TUTP6FU8qs=
 github.com/hashicorp/cloud-sdk-go v0.0.0-20210119195551-8261217d9294/go.mod h1:K9LujRDkCF+r7ob+h/Rg6HAkD2UqURveX//EhzxVigA=
+github.com/hashicorp/cloud-sdk-go v0.0.0-20210122215247-ff03dfb79d5d h1:O7GsqECD0qAUj91SwHwtYG1ke7qD5SHHdFPNi1qPDhk=
+github.com/hashicorp/cloud-sdk-go v0.0.0-20210122215247-ff03dfb79d5d/go.mod h1:K9LujRDkCF+r7ob+h/Rg6HAkD2UqURveX//EhzxVigA=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-checkpoint v0.5.0 h1:MFYpPZCnQqQTE18jFwSII6eUQrD/oxMFp3mlgcqk5mU=
