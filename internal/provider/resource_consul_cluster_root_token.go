@@ -104,6 +104,14 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 
 	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to create root ACL token; no HCP Consul Cluster found with (cluster_id %q) (project_id %q)",
+				clusterID,
+				projectID,
+			)
+
+		}
+
 		return diag.Errorf("error checking for presence of existing HCP Consul Cluster (cluster_id %q) (project_id %q): %+v",
 			clusterID,
 			projectID,
