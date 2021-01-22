@@ -107,12 +107,12 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing HVN (%s): %+v", hvnID, err)
+			return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
 		}
 
 		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
 	} else {
-		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
+		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
 	}
 
 	createNetworkParams := network_service.NewCreateParams()
@@ -129,12 +129,12 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	log.Printf("[INFO] Creating HVN (%s)", hvnID)
 	createNetworkResponse, err := client.Network.Create(createNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to create HVN (%s): %v", hvnID, err)
 	}
 
 	// Wait for HVN to be created
 	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
+		return diag.Errorf("unable to create HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
 	}
 
 	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
@@ -149,7 +149,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
 	}
 
 	if err := setHvnResourceData(d, hvn); err != nil {
@@ -179,7 +179,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 			return nil
 		}
 
-		return diag.Errorf("unable to retrieve HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
 	}
 
 	// HVN found, update resource data
@@ -214,12 +214,12 @@ func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 			return nil
 		}
 
-		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %v", hvnID, err)
 	}
 
 	// Wait for delete hvn operation
 	if err := clients.WaitForOperation(ctx, client, "delete HVN", loc, deleteResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %v", hvnID, err)
 	}
 
 	log.Printf("[INFO] HVN (%s) deleted, removing from state", hvnID)
