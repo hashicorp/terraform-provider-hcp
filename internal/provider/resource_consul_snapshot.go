@@ -6,6 +6,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 // defaultSnapshotTimeoutDuration is the amount of time that can elapse
@@ -83,18 +86,52 @@ func resourceConsulSnapshot() *schema.Resource {
 	}
 }
 
-func resourceConsulSnapshotCreate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	clusterID := d.Get("cluster_id").(string)
+
+	loc, err := helper.BuildResourceLocation(ctx, d, client, "Consul cluster")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Check for an existing Consul cluster
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if !clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
+		}
+
+		// a 404 indicates a Consul cluster was not found
+		return diag.Errorf("unable to create snapshot; no HCS Cluster found for Consul cluster (%s)", clusterID)
+	}
+
+	name := d.Get("snapshot_name").(string)
+
+	// make the call to kick off the workflow
+	createResp, err := clients.CreateSnapshot(ctx, client, newLink(cluster.Location, "hashicorp.consul.cluster", cluster.ID), name)
+	if err != nil {
+		return diag.Errorf("unable to create Consul snapshot (%s): %v", clusterID, err)
+	}
+
+	// wait for the Consul snapshot to be created
+	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", cluster.Location, createResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %v", cluster.ID, err)
+	}
+
+	// return resourceSnapshotRead
+	return resourceConsulSnapshotRead(ctx, d, meta)
+}
+
+func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceConsulSnapshotRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceConsulSnapshotUpdate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
-}
-
-func resourceConsulSnapshotDelete(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
