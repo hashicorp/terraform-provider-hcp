@@ -57,11 +57,6 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
-			"min_consul_version": {
-				Description: "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"datacenter": {
 				Description: "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.",
 				Type:        schema.TypeString,
