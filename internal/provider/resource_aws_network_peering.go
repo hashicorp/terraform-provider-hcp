@@ -72,7 +72,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			},
 			// Optional inputs
 			"project_id": {
-				Description: "The ID of the HCP project where the HVN is located.",
+				Description: "The ID of the HCP project where the network peering is located. Must match the HVN's project.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -88,7 +88,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the HVN is located.",
+				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
