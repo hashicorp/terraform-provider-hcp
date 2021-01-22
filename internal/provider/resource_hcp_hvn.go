@@ -97,7 +97,7 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "HVN")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "HVN")
 	if err != nil {
 		return diag.FromErr(err)
 	}
