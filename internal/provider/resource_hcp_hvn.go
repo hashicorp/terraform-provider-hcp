@@ -223,7 +223,6 @@ func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[INFO] HVN (%s) deleted, removing from state", hvnID)
-	d.SetId("")
 
 	return nil
 }
