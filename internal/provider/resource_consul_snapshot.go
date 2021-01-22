@@ -3,13 +3,20 @@ package provider
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
+	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
+)
+
+const (
+	// defaultRestoredAt is the default string returned when a snapshot has not been restored
+	defaultRestoredAt = "0001-01-01T00:00:00.000Z"
 )
 
 // defaultSnapshotTimeoutDuration is the amount of time that can elapse
@@ -138,6 +145,31 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	snapshotLink, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	snapshotID := snapshotLink.ID
+	loc := snapshotLink.Location
+
+	client := meta.(*clients.Client)
+
+	snapshot, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul snapshot (%s) not found, removing from state", snapshotID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Consul snapshot (%s): %v", snapshotID, err)
+	}
+
+	if err := setConsulSnapshotResourceData(d, snapshot.Snapshot); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -146,5 +178,42 @@ func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodels.HashicorpCloudConsul20200826Snapshot) error {
+
+	if err := d.Set("project_id", snapshot.Location.ProjectID); err != nil {
+		return err
+	}
+
+	if err := d.Set("snapshot_id", snapshot.ID); err != nil {
+		return err
+	}
+
+	if err := d.Set("state", snapshot.State); err != nil {
+		return err
+	}
+
+	// TODO get consul version
+	//if err := d.Set("consul_version", snapshot); err != nil {
+	//	return err
+	//}
+
+	if snapshot.Meta != nil {
+		size, err := strconv.Atoi(snapshot.Meta.Size)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("size", size); err != nil {
+			return err
+		}
+
+		if snapshot.Meta.RestoredAt.String() != defaultRestoredAt {
+			if err := d.Set("restored_at", snapshot.Meta.RestoredAt.String()); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
