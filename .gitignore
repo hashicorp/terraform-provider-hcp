@@ -3,7 +3,8 @@
 .DS_Store
 example.tf
 terraform.tfplan
-terraform.tfstate
+terraform.tfstate*
+terraform.lock.hcl
 bin/
 dist/
 modules-dev/
