@@ -24,11 +24,11 @@ data "aws_arn" "peer" {
 }
 
 resource "hcp_aws_network_peering" "peer" {
-  hvn_id                = hcp_hvn.main.hvn_id
-  target_vpc_id         = aws_vpc.peer.id
-  target_account_id     = aws_vpc.peer.owner_id
-  target_vpc_region     = data.aws_arn.peer.region
-  target_vpc_cidr_block = aws_vpc.peer.cidr_block
+  hvn_id              = hcp_hvn.main.hvn_id
+  peer_vpc_id         = aws_vpc.peer.id
+  peer_account_id     = aws_vpc.peer.owner_id
+  peer_vpc_region     = data.aws_arn.peer.region
+  peer_vpc_cidr_block = aws_vpc.peer.cidr_block
 }
 
 resource "aws_vpc_peering_connection_accepter" "peer" {

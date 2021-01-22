@@ -22,7 +22,7 @@ var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Network Peering resource allows you to manage a peering connection between an HVN and a target AWS VPC.",
+		Description: "The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.",
 
 		CreateContext: resourceAwsNetworkPeeringCreate,
 		ReadContext:   resourceAwsNetworkPeeringRead,
@@ -45,26 +45,26 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"target_account_id": {
-				Description: "The account ID of the target VPC in AWS.",
+			"peer_account_id": {
+				Description: "The account ID of the peer VPC in AWS.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
-			"target_vpc_id": {
-				Description: "The ID of the target VPC in AWS.",
+			"peer_vpc_id": {
+				Description: "The ID of the peer VPC in AWS.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
-			"target_vpc_region": {
-				Description: "The region of the target VPC in AWS.",
+			"peer_vpc_region": {
+				Description: "The region of the peer VPC in AWS.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
-			"target_vpc_cidr_block": {
-				Description:  "The CIDR range of the target VPC in AWS.",
+			"peer_vpc_cidr_block": {
+				Description:  "The CIDR range of the peer VPC in AWS.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -116,10 +116,10 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	peeringID := d.Get("peering_id").(string)
 	hvnID := d.Get("hvn_id").(string)
-	targetAccountID := d.Get("target_account_id").(string)
-	targetVpcID := d.Get("target_vpc_id").(string)
-	targetVpcRegion := d.Get("target_vpc_region").(string)
-	targetVpcCidr := d.Get("target_vpc_cidr_block").(string)
+	peerAccountID := d.Get("peer_account_id").(string)
+	peerVpcID := d.Get("peer_vpc_id").(string)
+	peerVpcRegion := d.Get("peer_vpc_region").(string)
+	peerVpcCidr := d.Get("peer_vpc_cidr_block").(string)
 
 	loc, err := helper.BuildResourceLocation(ctx, d, client, "network peering")
 	if err != nil {
@@ -164,28 +164,28 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 			},
 			Target: &networkmodels.HashicorpCloudNetwork20200907PeeringTarget{
 				AwsTarget: &networkmodels.HashicorpCloudNetwork20200907AWSPeeringTarget{
-					AccountID: targetAccountID,
-					VpcID:     targetVpcID,
-					Region:    targetVpcRegion,
-					Cidr:      targetVpcCidr,
+					AccountID: peerAccountID,
+					VpcID:     peerVpcID,
+					Region:    peerVpcRegion,
+					Cidr:      peerVpcCidr,
 				},
 			},
 		},
 	}
-	log.Printf("[INFO] Creating network peering between HVN (%s) and target (%s)", hvnID, targetVpcID)
+	log.Printf("[INFO] Creating network peering between HVN (%s) and peer (%s)", hvnID, peerVpcID)
 	peeringResponse, err := client.Network.CreatePeering(peerNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create network peering between HVN (%s) and target (%s): %v", hvnID, targetVpcID, err)
+		return diag.Errorf("unable to create network peering between HVN (%s) and peer (%s): %v", hvnID, peerVpcID, err)
 	}
 
 	peering := peeringResponse.Payload.Peering
 
 	// Wait for network peering to be created
 	if err := clients.WaitForOperation(ctx, client, "create network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create network peering (%s) between HVN (%s) and target (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
+		return diag.Errorf("unable to create network peering (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
 	}
 
-	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and target (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
+	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
 
 	// Set the globally unique id of this peering in the state now since it has
 	// been created, and from this point forward should be deletable
@@ -292,16 +292,16 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 	if err := d.Set("peering_id", peering.ID); err != nil {
 		return err
 	}
-	if err := d.Set("target_account_id", peering.Target.AwsTarget.AccountID); err != nil {
+	if err := d.Set("peer_account_id", peering.Target.AwsTarget.AccountID); err != nil {
 		return err
 	}
-	if err := d.Set("target_vpc_id", peering.Target.AwsTarget.VpcID); err != nil {
+	if err := d.Set("peer_vpc_id", peering.Target.AwsTarget.VpcID); err != nil {
 		return err
 	}
-	if err := d.Set("target_vpc_region", peering.Target.AwsTarget.Region); err != nil {
+	if err := d.Set("peer_vpc_region", peering.Target.AwsTarget.Region); err != nil {
 		return err
 	}
-	if err := d.Set("target_vpc_cidr_block", peering.Target.AwsTarget.Cidr); err != nil {
+	if err := d.Set("peer_vpc_cidr_block", peering.Target.AwsTarget.Cidr); err != nil {
 		return err
 	}
 	if err := d.Set("organization_id", peering.Hvn.Location.OrganizationID); err != nil {

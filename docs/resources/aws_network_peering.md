@@ -2,12 +2,12 @@
 page_title: "hcp_aws_network_peering Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The AWS Network Peering resource allows you to manage a peering connection between an HVN and a target AWS VPC.
+  The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.
 ---
 
 # Resource `hcp_aws_network_peering`
 
-The AWS Network Peering resource allows you to manage a peering connection between an HVN and a target AWS VPC.
+The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.
 
 ## Example Usage
 
@@ -38,11 +38,11 @@ data "aws_arn" "peer" {
 }
 
 resource "hcp_aws_network_peering" "peer" {
-  hvn_id                = hcp_hvn.main.hvn_id
-  target_vpc_id         = aws_vpc.peer.id
-  target_account_id     = aws_vpc.peer.owner_id
-  target_vpc_region     = data.aws_arn.peer.region
-  target_vpc_cidr_block = aws_vpc.peer.cidr_block
+  hvn_id              = hcp_hvn.main.hvn_id
+  peer_vpc_id         = aws_vpc.peer.id
+  peer_account_id     = aws_vpc.peer.owner_id
+  peer_vpc_region     = data.aws_arn.peer.region
+  peer_vpc_cidr_block = aws_vpc.peer.cidr_block
 }
 
 resource "aws_vpc_peering_connection_accepter" "peer" {
@@ -56,10 +56,10 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 ### Required
 
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network.
-- **target_account_id** (String) The account ID of the target VPC in AWS.
-- **target_vpc_cidr_block** (String) The CIDR range of the target VPC in AWS.
-- **target_vpc_id** (String) The ID of the target VPC in AWS.
-- **target_vpc_region** (String) The region of the target VPC in AWS.
+- **peer_account_id** (String) The account ID of the peer VPC in AWS.
+- **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
+- **peer_vpc_id** (String) The ID of the peer VPC in AWS.
+- **peer_vpc_region** (String) The region of the peer VPC in AWS.
 
 ### Optional
 
