@@ -31,12 +31,12 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization the project for this HCP Consul cluster is located.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
-			// computed outputs
 			"hvn_id": {
 				Description: "The ID of the HVN this HCP Consul cluster is associated to.",
 				Type:        schema.TypeString,
@@ -113,15 +113,19 @@ func dataSourceConsulCluster() *schema.Resource {
 
 func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
-	organizationID := d.Get("organization_id").(string)
 	projectID := d.Get("project_id").(string)
+	client := meta.(*clients.Client)
+
+	// fetch organizationID by project ID
+	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
 		ProjectID:      projectID,
 	}
-
-	client := meta.(*clients.Client)
 
 	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
