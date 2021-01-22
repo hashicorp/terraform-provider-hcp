@@ -425,7 +425,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Fetch available upgrade versions
-	upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, loc, clusterID)
+	upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
 	}
