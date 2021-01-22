@@ -158,8 +158,6 @@ func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedm
 	p.ID = clusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
-	p.LocationRegionProvider = &loc.Region.Provider
-	p.LocationRegionRegion = &loc.Region.Region
 
 	resp, err := client.Consul.ListUpgradeVersions(p, nil)
 
