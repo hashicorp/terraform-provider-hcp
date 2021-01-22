@@ -36,7 +36,7 @@ func resourceHvn() *schema.Resource {
 			Delete:  &hvnDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceHvnImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -250,4 +250,15 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	return nil
+}
+
+// resourceHvnImport implements the logic necessary to import an un-tracked
+// (by Terraform) HVN resource into Terraform state.
+func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	diags := resourceHvnRead(ctx, d, meta)
+	if err := helper.ToError(diags); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
