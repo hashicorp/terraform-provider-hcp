@@ -213,7 +213,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), "hashicorp.network.peering")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -245,7 +245,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), "hashicorp.network.peering")
 	if err != nil {
 		return diag.FromErr(err)
 	}

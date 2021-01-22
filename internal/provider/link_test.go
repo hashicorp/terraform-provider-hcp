@@ -11,7 +11,7 @@ import (
 
 func Test_linkURL(t *testing.T) {
 	baseLink := &sharedmodels.HashicorpCloudLocationLink{
-		Type: "hvn",
+		Type: "hashicorp.network.hvn",
 		ID:   "test-hvn",
 		Location: &sharedmodels.HashicorpCloudLocationLocation{
 			OrganizationID: uuid.New().String(),
@@ -75,7 +75,7 @@ func Test_linkURL(t *testing.T) {
 }
 
 func Test_parseLinkURL(t *testing.T) {
-	svcType := "hvn"
+	svcType := "hashicorp.network.hvn"
 	id := "test-hvn"
 	orgID := uuid.New().String()
 	projID := uuid.New().String()
@@ -87,7 +87,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		l, err := parseLinkURL(urn)
+		l, err := parseLinkURL(urn, svcType)
 		require.NoError(t, err)
 
 		require.Equal(t, orgID, l.Location.OrganizationID)
@@ -103,7 +103,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -114,7 +114,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -125,7 +125,18 @@ func Test_parseLinkURL(t *testing.T) {
 			"",
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
+		require.Error(t, err)
+	})
+
+	t.Run("mismatched resource type", func(t *testing.T) {
+		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
+			orgID,
+			projID,
+			"other.hvn",
+			id)
+
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -136,7 +147,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			"")
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -146,7 +157,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -157,7 +168,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 
@@ -168,7 +179,7 @@ func Test_parseLinkURL(t *testing.T) {
 			svcType,
 			id)
 
-		_, err := parseLinkURL(urn)
+		_, err := parseLinkURL(urn, svcType)
 		require.Error(t, err)
 	})
 }
