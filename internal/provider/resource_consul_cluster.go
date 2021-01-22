@@ -298,6 +298,10 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
 	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
 
+	if err := d.Set("cluster_id", cluster.ID); err != nil {
+		return err
+	}
+
 	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
 		return err
 	}
