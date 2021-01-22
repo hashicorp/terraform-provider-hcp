@@ -29,3 +29,21 @@ func CreateSnapshot(ctx context.Context, client *Client, res *sharedmodels.Hashi
 
 	return resp.Payload, nil
 }
+
+// GetSnapshotByID gets an Consul snapshot by its ID
+func GetSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	snapshotID string) (*consulmodels.HashicorpCloudConsul20200826GetSnapshotResponse, error) {
+
+	p := consul_service.NewGetSnapshotParams()
+	p.Context = ctx
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+	p.SnapshotID = snapshotID
+
+	resp, err := client.Consul.GetSnapshot(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
