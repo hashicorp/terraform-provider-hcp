@@ -150,8 +150,19 @@ func Test_parseLinkURL(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("too many fields", func(t *testing.T) {
+	t.Run("too many fields before", func(t *testing.T) {
 		urn := fmt.Sprintf("/extra/value/organization/%s/project/%s/%s/%s",
+			orgID,
+			projID,
+			svcType,
+			id)
+
+		_, err := parseLinkURL(urn)
+		require.Error(t, err)
+	})
+
+	t.Run("too many fields after", func(t *testing.T) {
+		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s/extra/value",
 			orgID,
 			projID,
 			svcType,

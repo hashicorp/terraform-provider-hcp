@@ -65,7 +65,7 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 // parseLinkURL parses a link URL into a link. If the URL is malformed, an
 // error is returned.
 func parseLinkURL(urn string) (*sharedmodels.HashicorpCloudLocationLink, error) {
-	match, _ := regexp.MatchString("^/organization/.+/project/.+/.+/.+$", urn)
+	match, _ := regexp.MatchString("^/organization/[^/]+/project/[^/]+/[^/]+/[^/]+$", urn)
 	if !match {
 		return nil, errors.New("url is not in the correct format: /organization/{org_id}/project/{project_id}/{type}/{id}")
 	}
