@@ -401,6 +401,72 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Fetch available upgrade versions
+	upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
+	}
+
+	v, ok := d.GetOk("min_consul_version")
+	if !ok {
+		return diag.Errorf("min_consul_version is required in order to upgrade the cluster")
+	}
+	newConsulVersion := consul.NormalizeVersion(v.(string))
+
+	// Check that there are any valid upgrade versions
+	if upgradeVersions == nil {
+		return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCP")
+	}
+
+	// Validate that the upgrade version is valid
+	if !consul.IsValidVersion(newConsulVersion, upgradeVersions) {
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", newConsulVersion, upgradeVersions)
+	}
+
+	// Invoke update cluster endpoint
+	updateResp, err := clients.UpdateConsulCluster(ctx, client, loc, clusterID, newConsulVersion)
+	if err != nil {
+		return diag.Errorf("error updating Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the update cluster operation
+	if err := clients.WaitForOperation(ctx, client, "update Consul cluster", loc, updateResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to update Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+	}
+
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
