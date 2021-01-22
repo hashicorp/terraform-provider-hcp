@@ -5,10 +5,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
-func New(version string) func() *schema.Provider {
+func New() func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
@@ -46,15 +48,15 @@ func New(version string) func() *schema.Provider {
 			},
 		}
 
-		p.ConfigureContextFunc = configure(version, p)
+		p.ConfigureContextFunc = configure(p)
 
 		return p
 	}
 }
 
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		userAgent := p.UserAgent("terraform-provider-hcp", "")
+		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
 		// Construct a new HCP api client with clients and configuration.
 		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
