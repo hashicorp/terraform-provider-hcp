@@ -30,6 +30,56 @@ func resourceConsulSnapshot() *schema.Resource {
 			Delete:  &snapshotCreateUpdateDeleteTimeoutDuration,
 			Default: &defaultSnapshotTimeoutDuration,
 		},
+		Schema: map[string]*schema.Schema{
+			// Required inputs
+			"cluster_id": {
+				Description:      "The ID of the HCP Consul cluster.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
+			},
+			"snapshot_name": {
+				Description:      "The name of the snapshot.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validateStringNotEmpty,
+			},
+			// optional fields
+			"project_id": {
+				Description: "The ID of the project the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+			},
+			// computed outputs
+			"snapshot_id": {
+				Description: "The ID of the Consul snapshot",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"state": {
+				Description: "The state of the snapshot.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"size": {
+				Description: "The size of the snapshot in bytes.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
+			"consul_version": {
+				Description: "The version of Consul at the time of snapshot creation.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"restored_at": {
+				Description: "Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+		},
 	}
 }
 
