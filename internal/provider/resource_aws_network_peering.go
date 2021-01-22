@@ -189,8 +189,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	// Set the globally unique id of this peering in the state now since it has
 	// been created, and from this point forward should be deletable
-	// TODO: This needs to be changed to include hvn_id, in order to be globally unique
-	link := newLink(peering.Hvn.Location, "peering", peering.ID)
+	link := newLink(peering.Hvn.Location, "hashicorp.network.peering", peering.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
