@@ -15,8 +15,9 @@ func New(version string) func() *schema.Provider {
 				"hcp_consul_cluster": dataSourceConsulCluster(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"hcp_hvn":            resourceHvn(),
-				"hcp_consul_cluster": resourceConsulCluster(),
+				"hcp_aws_network_peering": resourceAwsNetworkPeering(),
+				"hcp_consul_cluster":      resourceConsulCluster(),
+				"hcp_hvn":                 resourceHvn(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {
