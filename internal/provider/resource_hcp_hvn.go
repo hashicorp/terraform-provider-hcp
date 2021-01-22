@@ -139,6 +139,13 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
+	link := newLink(loc, "hashicorp.network.hvn", hvnID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
 	if err != nil {
@@ -222,13 +229,9 @@ func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpCloudNetwork20200907Network) error {
-	link := newLink(hvn.Location, "hvn", hvn.ID)
-	url, err := linkURL(link)
-	if err != nil {
+	if err := d.Set("hvn_id", hvn.ID); err != nil {
 		return err
 	}
-	d.SetId(url)
-
 	if err := d.Set("cidr_block", hvn.CidrBlock); err != nil {
 		return err
 	}
