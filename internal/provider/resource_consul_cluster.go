@@ -388,6 +388,8 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 			d.SetId("")
 			return nil
 		}
+
+		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
 	}
 
 	// get the cluster's Consul client config files
