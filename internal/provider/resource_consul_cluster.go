@@ -250,7 +250,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
-	link := newLink(loc, "consul-service", clusterID)
+	link := newLink(loc, "hashicorp.consul.cluster", clusterID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
