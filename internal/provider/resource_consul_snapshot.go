@@ -178,6 +178,36 @@ func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	snapshotID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Deleting Consul snapshot (%s)", snapshotID)
+
+	deleteResp, err := clients.DeleteSnapshotByID(ctx, client, loc, snapshotID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul snapshot (%s) not found, so no action was taken", snapshotID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete Consul snapshot (%s): %v", snapshotID, err)
+	}
+
+	// Wait for the delete snapshot operation
+	if err := clients.WaitForOperation(ctx, client, "delete Consul snapshot", loc, deleteResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete Consul snapshot (%s): %v", snapshotID, err)
+	}
+
+	log.Printf("[INFO] Consul snapshot (%s) deleted, removing from state", snapshotID)
+	d.SetId("")
+
 	return nil
 }
 
