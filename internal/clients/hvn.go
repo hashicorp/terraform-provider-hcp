@@ -8,7 +8,7 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 )
 
-// GetHvnByID gets an HVN by its ID
+// GetHvnByID gets an HVN by its ID and location
 func GetHvnByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, hvnID string) (*networkmodels.HashicorpCloudNetwork20200907Network, error) {
 	getParams := network_service.NewGetParams()
 	getParams.Context = ctx
