@@ -135,7 +135,7 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// build the id for this Consul cluster
-	link := newLink(loc, consulClusterResourceType, clusterID)
+	link := newLink(loc, ConsulClusterResourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)

@@ -10,9 +10,14 @@ import (
 )
 
 const (
-	consulClusterResourceType = "hashicorp.consul.cluster"
-	hvnResourceType           = "hashicorp.network.hvn"
-	peeringResourceType       = "hashicorp.network.peering"
+	// ConsulClusterResourceType is the resource type of a Consul cluster
+	ConsulClusterResourceType = "hashicorp.consul.cluster"
+
+	// HvnResourceType is the resource type of an HVN
+	HvnResourceType = "hashicorp.network.hvn"
+
+	// PeeringResourceType is the resource type of a network peering
+	PeeringResourceType = "hashicorp.network.peering"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the

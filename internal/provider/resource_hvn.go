@@ -139,7 +139,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
-	link := newLink(loc, hvnResourceType, hvnID)
+	link := newLink(loc, HvnResourceType, hvnID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -162,7 +162,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), hvnResourceType)
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -193,7 +193,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), hvnResourceType)
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}

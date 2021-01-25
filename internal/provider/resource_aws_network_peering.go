@@ -189,7 +189,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	// Set the globally unique id of this peering in the state now since it has
 	// been created, and from this point forward should be deletable
-	link := newLink(peering.Hvn.Location, peeringResourceType, peering.ID)
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -213,7 +213,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), peeringResourceType)
+	link, err := parseLinkURL(d.Id(), PeeringResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -245,7 +245,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), peeringResourceType)
+	link, err := parseLinkURL(d.Id(), PeeringResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
