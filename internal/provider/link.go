@@ -9,13 +9,19 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 )
 
+const (
+	consulClusterResourceType = "hashicorp.consul.cluster"
+	hvnResourceType           = "hashicorp.network.hvn"
+	peeringResourceType       = "hashicorp.network.peering"
+)
+
 // newLink constructs a new Link from the passed arguments. ID should be the
 // user specified resource ID.
 //
 // Adapted from https://github.com/hashicorp/cloud-api-internal/blob/master/helper/hashicorp/cloud/location/link.go#L10-L23
-func newLink(loc *sharedmodels.HashicorpCloudLocationLocation, svcType string, id string) *sharedmodels.HashicorpCloudLocationLink {
+func newLink(loc *sharedmodels.HashicorpCloudLocationLocation, resourceType string, id string) *sharedmodels.HashicorpCloudLocationLink {
 	return &sharedmodels.HashicorpCloudLocationLink{
-		Type:     svcType,
+		Type:     resourceType,
 		ID:       id,
 		Location: loc,
 	}
@@ -64,11 +70,11 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 
 // parseLinkURL parses a link URL into a link. If the URL is malformed, an
 // error is returned.
-func parseLinkURL(urn string, svcType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
-	pattern := fmt.Sprintf("^/organization/[^/]+/project/[^/]+/%s/[^/]+$", svcType)
+func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
+	pattern := fmt.Sprintf("^/organization/[^/]+/project/[^/]+/%s/[^/]+$", resourceType)
 	match, _ := regexp.MatchString(pattern, urn)
 	if !match {
-		return nil, fmt.Errorf("url is not in the correct format: /organization/{org_id}/project/{project_id}/%s/{id}", svcType)
+		return nil, fmt.Errorf("url is not in the correct format: /organization/{org_id}/project/{project_id}/%s/{id}", resourceType)
 	}
 
 	components := strings.Split(urn, "/")

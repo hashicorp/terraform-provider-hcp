@@ -250,7 +250,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
-	link := newLink(loc, "hashicorp.consul.cluster", clusterID)
+	link := newLink(loc, consulClusterResourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -371,7 +371,7 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), "hashicorp.consul.cluster")
+	link, err := parseLinkURL(d.Id(), consulClusterResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -409,7 +409,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), "hashicorp.consul.cluster")
+	link, err := parseLinkURL(d.Id(), consulClusterResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -479,7 +479,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), "hashicorp.consul.cluster")
+	link, err := parseLinkURL(d.Id(), consulClusterResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
