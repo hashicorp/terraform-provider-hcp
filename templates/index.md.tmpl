@@ -1,0 +1,19 @@
+---
+layout: ""
+page_title: "Provider: HCP (HashiCorp Cloud Platform)"
+description: |-
+  The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://www.hashicorp.com/cloud-platform) (HCP) resources.
+---
+
+# HashiCorp Cloud Platform (HCP) Provider
+
+The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://www.hashicorp.com/cloud-platform) (HCP) resources.
+
+## Authenticating with HCP
+The HCP provider accepts client credentials, which can be obtained on the creation of a service principle key. Service principles and service principle keys can be created on the Access Control (IAM) page.
+
+## Example Usage
+
+{{tffile "examples/provider/provider.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}
