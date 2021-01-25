@@ -75,8 +75,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 	}
 }
 
-// return pointer to HashicorpCloudResourcemanagerProject and err (2 tuple return)
-// HashicorpCloudResourcemanagerResourceID is the org id because only orgs are allowed to be project parents currently, although it may change in the future
+// getProject returns the HashicorpCloudResourcemanagerProject model instance using the
+// clientID and clientSecret.
 func getProject(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
 	cl, err := clients.NewClient(clients.ClientConfig{
 		ClientID:     clientID,
@@ -92,13 +92,14 @@ func getProject(ctx context.Context, clientID string, clientSecret string) (*mod
 		return nil, fmt.Errorf("unable to fetch organization list: %+v", err)
 	}
 
-	// Service principles, from which the client credentials are obtained, are scoped to a single org,
-	// so this list should never have more than one org.
+	// Service principles, from which the client credentials are obtained,
+	// are scoped to a single org, so this list should never have more
+	// than one org.
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
 	listProjParams := project_service.NewProjectServiceListParams()
 	listProjParams.ScopeID = &orgID
-	scopeType := "ORGANIZATION" // TODO use the enum
+	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
 
 	listProjResp, err := cl.Project.ProjectServiceList(listProjParams, nil)
