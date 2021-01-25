@@ -1,0 +1,12 @@
+---
+subcategory: ""
+page_title: "Create resources in HCP - HCP Provider"
+description: |-
+    An example of creating HCP resources with optional fields defaulted.
+---
+
+# Create an HCP HVN, Peering, and Consul cluster
+
+TODO: summarize creating an HVN, peering, and cluster. resource names, how peering and clusters require existing HVN
+
+{{ tffile "examples/guides/quick_start/main.tf" }}
