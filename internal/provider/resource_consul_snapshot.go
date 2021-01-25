@@ -17,6 +17,8 @@ import (
 const (
 	// defaultRestoredAt is the default string returned when a snapshot has not been restored
 	defaultRestoredAt = "0001-01-01T00:00:00.000Z"
+
+	resourceType = "hashicorp.consul.snapshot"
 )
 
 // defaultSnapshotTimeoutDuration is the amount of time that can elapse
@@ -127,7 +129,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Created Consul snapshot name:%q; id:%q", name, createResp.SnapshotID)
 
-	link := newLink(loc, "hashicorp.consul.snapshot", createResp.SnapshotID)
+	link := newLink(loc, resourceType, createResp.SnapshotID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -148,7 +150,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	snapshotLink, err := parseLinkURL(d.Id())
+	snapshotLink, err := parseLinkURL(d.Id(), resourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -177,7 +179,7 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	snapshotLink, err := parseLinkURL(d.Id())
+	snapshotLink, err := parseLinkURL(d.Id(), resourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -214,7 +216,7 @@ func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), resourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
