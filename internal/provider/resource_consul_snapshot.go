@@ -135,6 +135,9 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(url)
 
+	// set the consul_version based on the cluster's Consul version
+	d.Set("consul_version", cluster.ConsulVersion)
+
 	// wait for the Consul snapshot to be created
 	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", cluster.Location, createResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", cluster.ID, err)
@@ -255,11 +258,6 @@ func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodel
 	if err := d.Set("state", snapshot.State); err != nil {
 		return err
 	}
-
-	// TODO get consul version
-	//if err := d.Set("consul_version", snapshot); err != nil {
-	//	return err
-	//}
 
 	if snapshot.Meta != nil {
 		size, err := strconv.Atoi(snapshot.Meta.Size)
