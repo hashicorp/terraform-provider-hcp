@@ -180,7 +180,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "Consul cluster")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "Consul cluster")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -199,7 +199,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// fetch available version from HCP
-	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, client)
+	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, loc, client)
 	if err != nil || availableConsulVersions == nil {
 		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
 	}
@@ -250,7 +250,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
-	link := newLink(loc, "consul-service", clusterID)
+	link := newLink(loc, ConsulClusterResourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -297,6 +297,10 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 // the original root token is only available during cluster creation.
 func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
 	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
+
+	if err := d.Set("cluster_id", cluster.ID); err != nil {
+		return err
+	}
 
 	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
 		return err
@@ -365,17 +369,152 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 }
 
 func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+	}
+
+	// Cluster found, update resource data
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
 func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Fetch available upgrade versions
+	upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
+	}
+
+	v, ok := d.GetOk("min_consul_version")
+	if !ok {
+		return diag.Errorf("min_consul_version is required in order to upgrade the cluster")
+	}
+	newConsulVersion := consul.NormalizeVersion(v.(string))
+
+	// Check that there are any valid upgrade versions
+	if upgradeVersions == nil {
+		return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCP")
+	}
+
+	// Validate that the upgrade version is valid
+	if !consul.IsValidVersion(newConsulVersion, upgradeVersions) {
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", newConsulVersion, upgradeVersions)
+	}
+
+	// Invoke update cluster endpoint
+	updateResp, err := clients.UpdateConsulCluster(ctx, client, cluster.Location, clusterID, newConsulVersion)
+	if err != nil {
+		return diag.Errorf("error updating Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the update cluster operation
+	if err := clients.WaitForOperation(ctx, client, "update Consul cluster", cluster.Location, updateResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to update Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// get the cluster's Consul client config files
+	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+	}
+
+	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
 func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Deleting Consul cluster (%s)", clusterID)
+
+	deleteResp, err := clients.DeleteConsulCluster(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul cluster (%s) not found, so no action was taken", clusterID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the delete cluster operation
+	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
+	}
+
+	log.Printf("[INFO] Consul cluster (%s) deleted, removing from state", clusterID)
+	d.SetId("")
+
 	return nil
 }
 
 func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	return nil, nil
+	diags := resourceConsulClusterRead(ctx, d, meta)
+	if err := helper.ToError(diags); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

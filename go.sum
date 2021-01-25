@@ -273,10 +273,8 @@ github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5 h1:sjZBwGj9Jlw33ImPtvFviGYvseOtDM7hkSKB7+Tv3SM=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
-github.com/hashicorp/cloud-sdk-go v0.0.0-20210108213651-365382b906bd h1:k+FN6S9Nzh7wSQ7jtDsaMY996VlYiuc4CaeTi4xn7u8=
-github.com/hashicorp/cloud-sdk-go v0.0.0-20210108213651-365382b906bd/go.mod h1:ElnT9FYQXhs9FINaz0wpL0PXl2c0tVFxFytgZ18NhUA=
-github.com/hashicorp/cloud-sdk-go v0.0.0-20210121222318-16093a6a23d5 h1:1vEGfoq73DeGS3THB0tRuhOi6VCqTKPImUNvMAhc2eE=
-github.com/hashicorp/cloud-sdk-go v0.0.0-20210121222318-16093a6a23d5/go.mod h1:K9LujRDkCF+r7ob+h/Rg6HAkD2UqURveX//EhzxVigA=
+github.com/hashicorp/cloud-sdk-go v0.0.0-20210122215247-ff03dfb79d5d h1:O7GsqECD0qAUj91SwHwtYG1ke7qD5SHHdFPNi1qPDhk=
+github.com/hashicorp/cloud-sdk-go v0.0.0-20210122215247-ff03dfb79d5d/go.mod h1:K9LujRDkCF+r7ob+h/Rg6HAkD2UqURveX//EhzxVigA=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-checkpoint v0.5.0 h1:MFYpPZCnQqQTE18jFwSII6eUQrD/oxMFp3mlgcqk5mU=

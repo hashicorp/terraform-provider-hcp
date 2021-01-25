@@ -12,11 +12,16 @@ The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 ## Example Usage
 
 ```terraform
+provider "hcp" {
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  project_id    = var.project_id
+}
+
 resource "hcp_hvn" "example" {
-  hvn_id         = "hvn"
+  hvn_id         = "main-hvn"
   cloud_provider = "aws"
   region         = "us-west-2"
-  project_id     = var.project_id
   cidr_block     = "172.25.16.0/20"
 }
 ```
@@ -40,7 +45,6 @@ resource "hcp_hvn" "example" {
 
 - **created_at** (String) The time that the HVN was created.
 - **organization_id** (String) The ID of the HCP organization where the HVN is located.
-- **state** (String) The current state of the HVN (eg. STABLE).
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -51,4 +55,11 @@ Optional:
 - **default** (String)
 - **delete** (String)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# The import ID is /organization/{org_id}/project/{project_id}/hashicorp.network.hvn/{hvn_id}
+terraform import hcp_hvn.example /organization/11eb5cc0-3197-e2f7-9b98-0242ac12002e/project/11eb5cc0-31ba-505d-9b98-0242ac12002e/hashicorp.network.hvn/main-hvn
+```

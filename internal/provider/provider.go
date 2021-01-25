@@ -14,11 +14,13 @@ func New() func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
+				"hcp_consul_cluster": dataSourceConsulCluster(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"hcp_hvn":            resourceHvn(),
-				"hcp_consul_cluster": resourceConsulCluster(),
+				"hcp_aws_network_peering":       resourceAwsNetworkPeering(),
+				"hcp_consul_cluster":            resourceConsulCluster(),
+				"hcp_consul_cluster_root_token": resourceConsulClusterRootToken(),
+				"hcp_hvn":                       resourceHvn(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {
@@ -57,6 +59,7 @@ func New() func() *schema.Provider {
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
+
 		// Construct a new HCP api client with clients and configuration.
 		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
@@ -66,7 +69,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			SourceChannel:  userAgent,
 		})
 		if err != nil {
-			return nil, diag.Errorf("unable to create HCP api client: %+v", err)
+			return nil, diag.Errorf("unable to create HCP api client: %v", err)
 		}
 
 		return client, nil
