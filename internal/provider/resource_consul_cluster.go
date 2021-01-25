@@ -15,7 +15,7 @@ import (
 )
 
 const featureTierDev = "dev"
-const featureTierGood = "good"
+const featureTierStandard = "standard"
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
 // before a cluster read operation should timeout.
@@ -39,14 +39,14 @@ var consulCusterResourceCloudProviders = []string{
 // that an HCP Consul cluster can be provisioned as.
 var consulClusterResourceFeatureTiers = []string{
 	featureTierDev,
-	featureTierGood,
+	featureTierStandard,
 }
 
-// featureTierToNumServices maps the set of feature tiers
+// featureTierToNumServers maps the set of feature tiers
 // to the number of servers to be provisioned for that cluster.
-var featureTierToNumServices = map[string]int32{
-	featureTierDev:  int32(1),
-	featureTierGood: int32(3),
+var featureTierToNumServers = map[string]int32{
+	featureTierDev:      int32(1),
+	featureTierStandard: int32(3),
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -96,11 +96,13 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
-			"feature_tier": {
-				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'good' are available at this time.",
+			"tier": {
+				// TODO: link to HCP Consul feature tier page when it is available
+				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.",
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ForceNew:         true,
+				Default:          featureTierDev,
 				ValidateDiagFunc: validateStringInSlice(consulClusterResourceFeatureTiers, true),
 			},
 			// optional fields
@@ -195,6 +197,11 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 				Sensitive:   true,
 			},
+			"num_servers": {
+				Description: "The the number of Consul server nodes in the cluster.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -240,11 +247,6 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", consulVersion, availableConsulVersions)
 	}
 
-	// explicitly set min_consul_version so it will be populated in resource data if not specified as an input
-	if err := d.Set("min_consul_version", consulVersion); err != nil {
-		return diag.Errorf("error determining min_consul_version: %v", err)
-	}
-
 	datacenter := clusterID
 	v, ok = d.GetOk("datacenter")
 	if ok {
@@ -254,8 +256,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	featureTier := d.Get("feature_tier").(string)
-	numServers := featureTierToNumServices[featureTier]
+	featureTier := d.Get("tier").(string)
+	numServers := featureTierToNumServers[featureTier]
 
 	hvnID := d.Get("hvn_id").(string)
 
@@ -351,8 +353,18 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	if err := d.Set("consul_automatic_upgrades", true); err != nil {
+	if err := d.Set("num_servers", cluster.Config.CapacityConfig.NumServers); err != nil {
 		return err
+	}
+
+	// TODO: Update this logic when tier becomes a first class value on the cluster
+	for t, numServers := range featureTierToNumServers {
+		if numServers == cluster.Config.CapacityConfig.NumServers {
+			if err := d.Set("tier", t); err != nil {
+				return err
+			}
+			break
+		}
 	}
 
 	if err := d.Set("consul_snapshot_interval", "24h"); err != nil {
