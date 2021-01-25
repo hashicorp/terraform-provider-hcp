@@ -18,7 +18,8 @@ func New() func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
-				"hcp_consul_cluster": dataSourceConsulCluster(),
+				"hcp_consul_cluster":           dataSourceConsulCluster(),
+				"hcp_consul_agent_helm_config": dataSourceConsulAgentHelmConfig(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":       resourceAwsNetworkPeering(),
