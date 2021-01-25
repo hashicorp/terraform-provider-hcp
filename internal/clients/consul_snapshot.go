@@ -30,7 +30,7 @@ func CreateSnapshot(ctx context.Context, client *Client, res *sharedmodels.Hashi
 	return resp.Payload, nil
 }
 
-// GetSnapshotByID gets an Consul snapshot by its ID
+// GetSnapshotByID gets a Consul snapshot by its ID
 func GetSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	snapshotID string) (*consulmodels.HashicorpCloudConsul20200826GetSnapshotResponse, error) {
 
@@ -41,6 +41,24 @@ func GetSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.Hash
 	p.SnapshotID = snapshotID
 
 	resp, err := client.Consul.GetSnapshot(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
+
+// DeleteSnapshotByID deletes a Consul snapshot by its ID
+func DeleteSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	snapshotID string) (*consulmodels.HashicorpCloudConsul20200826DeleteSnapshotResponse, error) {
+
+	p := consul_service.NewDeleteSnapshotParams()
+	p.Context = ctx
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+	p.SnapshotID = snapshotID
+
+	resp, err := client.Consul.DeleteSnapshot(p, nil)
 	if err != nil {
 		return nil, err
 	}
