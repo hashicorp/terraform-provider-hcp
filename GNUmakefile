@@ -25,3 +25,10 @@ all:
 	GOOS=darwin go build -o $(BUILD_ALL_PATH)/terraform-provider-hcp_darwin-amd64 main.go
 	GOOS=windows go build -o $(BUILD_ALL_PATH)/terraform-provider-hcp_windows-amd64 main.go
 	GOOS=linux go build -o $(BUILD_ALL_PATH)/terraform-provider-hcp_linux-amd64 main.go
+
+# these are just assumed to exist by the build system
+fmtcheck:
+	echo "Placeholder"
+
+test:
+	echo "Placeholder"
