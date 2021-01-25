@@ -14,7 +14,7 @@ import (
 // from the operation wait endpoint.
 const maxConsecutiveWaitErrors = 4
 
-const operationWaitTimeout = time.Minute * 1
+const operationWaitTimeout = time.Second * 5
 
 // WaitForOperation will poll the operation wait endpoint until an operation
 // is DONE, ctx is canceled, or consecutive errors occur waiting for operation to complete.
