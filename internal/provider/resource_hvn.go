@@ -27,32 +27,33 @@ func resourceHvn() *schema.Resource {
 	return &schema.Resource{
 		Description: "The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.",
 
-		CreateContext: resourceHcpHvnCreate,
-		ReadContext:   resourceHcpHvnRead,
-		DeleteContext: resourceHcpHvnDelete,
+		CreateContext: resourceHvnCreate,
+		ReadContext:   resourceHvnRead,
+		DeleteContext: resourceHvnDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnDefaultTimeout,
 			Create:  &hvnCreateTimeout,
 			Delete:  &hvnDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceHvnImport,
 		},
 
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_id": {
-				Description: "The ID of the HashiCorp Virtual Network.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:      "The ID of the HashiCorp Virtual Network.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description:  "The provider where the HVN is located. Only 'aws' is available at this time.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(hvnResourceCloudProviders, true),
+				Description:      "The provider where the HVN is located. Only 'aws' is available at this time.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateStringInSlice(hvnResourceCloudProviders, true),
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
@@ -82,11 +83,6 @@ func resourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"state": {
-				Description: "The current state of the HVN (eg. STABLE).",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"created_at": {
 				Description: "The time that the HVN was created.",
 				Type:        schema.TypeString,
@@ -96,13 +92,13 @@ func resourceHvn() *schema.Resource {
 	}
 }
 
-func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "HVN")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "HVN")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -111,12 +107,12 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing HVN (%s): %+v", hvnID, err)
+			return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
 		}
 
 		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
 	} else {
-		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
+		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
 	}
 
 	createNetworkParams := network_service.NewCreateParams()
@@ -133,20 +129,27 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Creating HVN (%s)", hvnID)
 	createNetworkResponse, err := client.Network.Create(createNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to create HVN (%s): %v", hvnID, err)
 	}
 
 	// Wait for HVN to be created
 	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
+		return diag.Errorf("unable to create HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
 	}
 
 	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
+	link := newLink(loc, HvnResourceType, hvnID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve HVN (%s): %+v", createNetworkResponse.Payload.Network.ID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
 	}
 
 	if err := setHvnResourceData(d, hvn); err != nil {
@@ -156,10 +159,10 @@ func resourceHcpHvnCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -176,7 +179,7 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return diag.Errorf("unable to retrieve HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
 	}
 
 	// HVN found, update resource data
@@ -187,10 +190,10 @@ func resourceHcpHvnRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -203,8 +206,6 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	deleteParams.ID = hvnID
 	deleteParams.LocationOrganizationID = loc.OrganizationID
 	deleteParams.LocationProjectID = loc.ProjectID
-	deleteParams.LocationRegionProvider = &loc.Region.Provider
-	deleteParams.LocationRegionRegion = &loc.Region.Region
 	log.Printf("[INFO] Deleting HVN (%s)", hvnID)
 	deleteResponse, err := client.Network.Delete(deleteParams, nil)
 	if err != nil {
@@ -213,28 +214,23 @@ func resourceHcpHvnDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			return nil
 		}
 
-		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %v", hvnID, err)
 	}
 
 	// Wait for delete hvn operation
 	if err := clients.WaitForOperation(ctx, client, "delete HVN", loc, deleteResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to delete HVN (%s): %+v", hvnID, err)
+		return diag.Errorf("unable to delete HVN (%s): %v", hvnID, err)
 	}
 
 	log.Printf("[INFO] HVN (%s) deleted, removing from state", hvnID)
-	d.SetId("")
 
 	return nil
 }
 
 func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpCloudNetwork20200907Network) error {
-	link := newLink(hvn.Location, "hvn", hvn.ID)
-	url, err := linkURL(link)
-	if err != nil {
+	if err := d.Set("hvn_id", hvn.ID); err != nil {
 		return err
 	}
-	d.SetId(url)
-
 	if err := d.Set("cidr_block", hvn.CidrBlock); err != nil {
 		return err
 	}
@@ -250,11 +246,19 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 	if err := d.Set("region", hvn.Location.Region.Region); err != nil {
 		return err
 	}
-	if err := d.Set("state", hvn.State); err != nil {
-		return err
-	}
 	if err := d.Set("created_at", hvn.CreatedAt.String()); err != nil {
 		return err
 	}
 	return nil
+}
+
+// resourceHvnImport implements the logic necessary to import an un-tracked
+// (by Terraform) HVN resource into Terraform state.
+func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	diags := resourceHvnRead(ctx, d, meta)
+	if err := helper.ToError(diags); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
