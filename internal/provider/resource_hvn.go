@@ -36,7 +36,7 @@ func resourceHvn() *schema.Resource {
 			Delete:  &hvnDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceHvnImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -139,7 +139,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
-	link := newLink(loc, "hashicorp.network.hvn", hvnID)
+	link := newLink(loc, HvnResourceType, hvnID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -162,7 +162,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -193,7 +193,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id())
+	link, err := parseLinkURL(d.Id(), HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -250,4 +250,15 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	return nil
+}
+
+// resourceHvnImport implements the logic necessary to import an un-tracked
+// (by Terraform) HVN resource into Terraform state.
+func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	diags := resourceHvnRead(ctx, d, meta)
+	if err := helper.ToError(diags); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
