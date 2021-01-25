@@ -1,0 +1,17 @@
+---
+subcategory: ""
+page_title: "Authenticate with HCP - HCP Provider"
+description: |-
+    A guide to obtaining client credentials and adding them to provider configuration.
+---
+
+# Authenticate with HCP using service principle credentials
+
+TODO: walk through steps in UI to:
+
+1. create service principle
+2. create service principle key
+3. save the client ID and client secret
+4. configure the provider 
+
+{{ tffile "examples/guides/auth/_config.tf" }}
