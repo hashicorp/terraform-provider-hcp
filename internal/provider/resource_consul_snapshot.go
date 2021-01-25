@@ -174,6 +174,37 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	snapshotLink, err := parseLinkURL(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	snapshotID := snapshotLink.ID
+	loc := snapshotLink.Location
+
+	client := meta.(*clients.Client)
+
+	snapshot, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Consul snapshot (%s) not found, removing from state", snapshotID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Consul snapshot (%s): %v", snapshotID, err)
+	}
+
+	name := d.Get("snapshot_name").(string)
+	updateResp, err := clients.RenameSnapshotByID(ctx, client, loc, snapshot.Snapshot.ID, name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := setConsulSnapshotResourceData(d, updateResp.Snapshot); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
