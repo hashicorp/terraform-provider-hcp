@@ -27,8 +27,6 @@ func WaitForOperation(ctx context.Context, client *Client, operationName string,
 	waitParams.Timeout = &waitTimeout
 	waitParams.LocationOrganizationID = loc.OrganizationID
 	waitParams.LocationProjectID = loc.ProjectID
-	waitParams.LocationRegionProvider = &loc.Region.Provider
-	waitParams.LocationRegionRegion = &loc.Region.Region
 
 	// Start with no consecutive errors.
 	consecutiveErrors := 0
