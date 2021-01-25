@@ -34,13 +34,18 @@ type ClientConfig struct {
 
 	// ProjectID (optional) is the project unique identifier to launch resources in.
 	ProjectID string
+
+	// SourceChannel denotes the client (channel) that originated the HCP cluster request.
+	// this is synonymous to a user-agent.
+	SourceChannel string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
 	httpClient, err := sdk.New(sdk.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
+		ClientID:      config.ClientID,
+		ClientSecret:  config.ClientSecret,
+		SourceChannel: config.SourceChannel,
 	})
 	if err != nil {
 		return nil, err
