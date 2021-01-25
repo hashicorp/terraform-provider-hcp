@@ -78,6 +78,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 // getProject returns the HashicorpCloudResourcemanagerProject model instance using the
 // clientID and clientSecret.
 func getProject(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
+	// Create a client to use for querying organization.
 	cl, err := clients.NewClient(clients.ClientConfig{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -86,22 +87,21 @@ func getProject(ctx context.Context, clientID string, clientSecret string) (*mod
 		return nil, fmt.Errorf("unable to create HCP api client: %v", err)
 	}
 
+	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
 	listOrgResp, err := cl.Organization.OrganizationServiceList(listOrgParams, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch organization list: %+v", err)
+	} else if orgLen := len(listOrgResp.Payload.Organizations); orgLen != 1 {
+		return nil, fmt.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)
 	}
-
-	// Service principles, from which the client credentials are obtained,
-	// are scoped to a single org, so this list should never have more
-	// than one org.
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
+	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
 	listProjParams.ScopeID = &orgID
 	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
-
 	listProjResp, err := cl.Project.ProjectServiceList(listProjParams, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch project id: %+v", err)
