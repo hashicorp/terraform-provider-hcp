@@ -65,3 +65,25 @@ func DeleteSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	return resp.Payload, nil
 }
+
+// RenameSnapshotByID renames a Consul snapshot by its ID
+func RenameSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	snapshotID string, snapshotName string) (*consulmodels.HashicorpCloudConsul20200826UpdateSnapshotResponse, error) {
+
+	p := consul_service.NewUpdateSnapshotParams()
+	p.Context = ctx
+	p.SnapshotLocationOrganizationID = loc.OrganizationID
+	p.SnapshotLocationProjectID = loc.ProjectID
+	p.SnapshotID = snapshotID
+
+	p.Body = &consulmodels.HashicorpCloudConsul20200826Snapshot{
+		Name: snapshotName,
+	}
+
+	resp, err := client.Consul.UpdateSnapshot(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
