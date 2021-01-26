@@ -68,6 +68,11 @@ func resourceConsulSnapshot() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"organization_id": {
+				Description: "The ID of the HCP organization where the project the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"size": {
 				Description: "The size of the snapshot in bytes.",
 				Type:        schema.TypeInt,
@@ -238,6 +243,10 @@ func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodels.HashicorpCloudConsul20200826Snapshot) error {
+
+	if err := d.Set("organization_id", snapshot.Location.OrganizationID); err != nil {
+		return err
+	}
 
 	if err := d.Set("project_id", snapshot.Location.ProjectID); err != nil {
 		return err
