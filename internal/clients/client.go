@@ -51,6 +51,12 @@ func NewClient(config ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
+	httpClient.SetLogger(logger{})
+
+	if ShouldLog() {
+		httpClient.Debug = true
+	}
+
 	client := &Client{
 		Config: config,
 
