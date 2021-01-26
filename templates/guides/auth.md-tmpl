@@ -13,14 +13,16 @@ Service principals and service principal keys can be created in the HCP Portal w
 
 ## Create a service principal
 
-Navigate to the Access Control (IAM) page. Select the Service principals tab and create a new service principal.
+Navigate to the Access Control (IAM) page. Select the Service Principals tab and create a new service principal. Give it the role Contributor, since it will be writing resources.
 
 ## Create a service principal key
 
 Once the service principal is created, navigate to its detail page by selecting its name in the list. Create a new service principal key.
 
--> **Note:** Save the Client ID and Client Secret returned on successful key creation. The Client Secret will not be available after creation.
+-> **Note:** Save the client ID and secret returned on successful key creation. The client secret will not be available after creation.
 
-## Configure the provider with the Client ID and Client Secret
+## Two options to configure the provider 
+
+Save the client ID and secret as the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET. Or, configure the provider with the client ID and secret by copy-pasting the values directly into provider config.
 
 {{ tffile "examples/guides/auth/_config.tf" }} 
