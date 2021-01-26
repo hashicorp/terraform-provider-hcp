@@ -54,6 +54,11 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
 
+		// For the initial release, since only one project is allowed per organization, the
+		// provider handles fetching the organization's single project, instead of requiring the
+		// user to set it. When multiple projects are supported, this helper will be deprecated
+		// with a warning: when multiple projects exist within the org, a project ID must be set
+		// on the provider or on each resource.
 		project, err := getProject(ctx, clientID, clientSecret)
 		if err != nil {
 			return nil, diag.FromErr(err)
