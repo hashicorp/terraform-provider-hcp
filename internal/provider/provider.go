@@ -97,7 +97,9 @@ func getProject(ctx context.Context, clientID string, clientSecret string) (*mod
 	listOrgResp, err := cl.Organization.OrganizationServiceList(listOrgParams, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch organization list: %+v", err)
-	} else if orgLen := len(listOrgResp.Payload.Organizations); orgLen != 1 {
+	}
+	orgLen := len(listOrgResp.Payload.Organizations)
+	if orgLen != 1 {
 		return nil, fmt.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)
 	}
 	orgID := listOrgResp.Payload.Organizations[0].ID
