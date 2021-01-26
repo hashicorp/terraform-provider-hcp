@@ -59,7 +59,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// user to set it. When multiple projects are supported, this helper will be deprecated
 		// with a warning: when multiple projects exist within the org, a project ID must be set
 		// on the provider or on each resource.
-		project, err := getProject(ctx, clientID, clientSecret)
+		project, err := getProjectFromCredentials(ctx, clientID, clientSecret)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -80,9 +80,10 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 	}
 }
 
-// getProject uses the configured client credentials to fetch the associated
-// organization and returns that organization's single project.
-func getProject(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
+// getProjectFromCredentials uses the configured client credentials to
+//  fetch the associated organization and returns that organization's
+// single project.
+func getProjectFromCredentials(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Create a client to use for querying organization.
 	cl, err := clients.NewClient(clients.ClientConfig{
 		ClientID:     clientID,
