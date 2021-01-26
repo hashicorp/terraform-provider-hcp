@@ -1,8 +1,5 @@
 // Configure the provider
-provider "hcp" {
-  client_id     = "example-id"
-  client_secret = "example-secret"
-}
+provider "hcp" {}
 
 // Use the cloud provider AWS to provision resources that will be connected to HCP
 provider "aws" {
