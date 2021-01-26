@@ -15,8 +15,8 @@ resource "hcp_consul_cluster" "example_consul_cluster" {
 resource "hcp_aws_network_peering" "example_peering" {
   hvn_id = hcp_hvn.example_hvn.hvn_id
 
-  target_vpc_id         = "vpc-2f09a348"
-  target_account_id     = "1234567890"
-  target_vpc_region     = "us-west-2"
-  target_vpc_cidr_block = "10.0.1.0/24"
+  peer_vpc_id         = "vpc-2f09a348"
+  peer_account_id     = "1234567890"
+  peer_vpc_region     = "us-west-2"
+  peer_vpc_cidr_block = "10.0.1.0/24"
 }
