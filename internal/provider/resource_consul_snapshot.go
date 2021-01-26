@@ -72,11 +72,6 @@ func resourceConsulSnapshot() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"state": {
-				Description: "The state of the snapshot.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"size": {
 				Description: "The size of the snapshot in bytes.",
 				Type:        schema.TypeInt,
@@ -254,10 +249,6 @@ func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodel
 	}
 
 	if err := d.Set("snapshot_id", snapshot.ID); err != nil {
-		return err
-	}
-
-	if err := d.Set("state", snapshot.State); err != nil {
 		return err
 	}
 
