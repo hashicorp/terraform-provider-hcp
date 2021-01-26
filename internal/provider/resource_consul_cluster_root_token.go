@@ -49,13 +49,6 @@ func resourceConsulClusterRootToken() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
-			},
 			// Computed outputs
 			"accessor_id": {
 				Description: "The accessor ID of the root ACL token.",
@@ -82,19 +75,11 @@ func resourceConsulClusterRootToken() *schema.Resource {
 func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	projectID := client.Config.ProjectID
-
 	clusterID := d.Get("cluster_id").(string)
-	v, ok := d.GetOk("project_id")
-	if ok {
-		projectID = v.(string)
-	}
 
 	// fetch organizationID by project ID
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	organizationID := client.Config.OrganizationID
+	projectID := client.Config.ProjectID
 
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
@@ -103,7 +88,7 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to create root ACL token; no HCP Consul Cluster found with (cluster_id %q) (project_id %q)",
@@ -130,11 +115,6 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Set root token resource data here since 'read' is a no-op
-	err = d.Set("project_id", projectID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
 	err = d.Set("accessor_id", rootTokenResp.ACLToken.AccessorID)
 	if err != nil {
 		return diag.FromErr(err)
@@ -161,19 +141,9 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	projectID := client.Config.ProjectID
-
 	clusterID := d.Get("cluster_id").(string)
-	v, ok := d.GetOk("project_id")
-	if ok {
-		projectID = v.(string)
-	}
-
-	// fetch organizationID by project ID
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	organizationID := client.Config.OrganizationID
+	projectID := client.Config.ProjectID
 
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
@@ -182,7 +152,7 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state
@@ -209,19 +179,9 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	projectID := client.Config.ProjectID
-
 	clusterID := d.Get("cluster_id").(string)
-	v, ok := d.GetOk("project_id")
-	if ok {
-		projectID = v.(string)
-	}
-
-	// fetch organizationID by project ID
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	organizationID := client.Config.OrganizationID
+	projectID := client.Config.ProjectID
 
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
@@ -230,7 +190,7 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state

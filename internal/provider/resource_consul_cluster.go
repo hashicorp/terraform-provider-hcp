@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -113,13 +115,6 @@ func resourceConsulCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
-			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
-			},
 			"min_consul_version": {
 				Description:      "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
@@ -146,6 +141,16 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			// computed outputs
+			"organization_id": {
+				Description: "The ID of the organization this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the project this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"consul_automatic_upgrades": {
 				Description: "Denotes that automatic Consul upgrades are enabled.",
 				Type:        schema.TypeBool,
@@ -211,13 +216,17 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "Consul cluster")
-	if err != nil {
-		return diag.FromErr(err)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: d.Get("cloud_provider").(string),
+			Region:   d.Get("region").(string),
+		},
 	}
 
 	// Check for an existing Consul cluster
-	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
@@ -332,6 +341,14 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
+	if err := d.Set("organization_id", cluster.Location.OrganizationID); err != nil {
+		return err
+	}
+
+	if err := d.Set("project_id", cluster.Location.ProjectID); err != nil {
+		return err
+	}
+
 	if err := d.Set("cloud_provider", cluster.Location.Region.Provider); err != nil {
 		return err
 	}
@@ -342,10 +359,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 
 	publicEndpoint := !cluster.Config.NetworkConfig.Private
 	if err := d.Set("public_endpoint", publicEndpoint); err != nil {
-		return err
-	}
-
-	if err := d.Set("project_id", cluster.Location.ProjectID); err != nil {
 		return err
 	}
 
@@ -539,9 +552,6 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	if err := clients.WaitForOperation(ctx, client, "delete Consul cluster", loc, deleteResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to delete Consul cluster (%s): %v", clusterID, err)
 	}
-
-	log.Printf("[INFO] Consul cluster (%s) deleted, removing from state", clusterID)
-	d.SetId("")
 
 	return nil
 }

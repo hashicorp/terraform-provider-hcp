@@ -16,7 +16,6 @@ The cluster data source provides information about an existing HCP Consul cluste
 ### Required
 
 - **cluster_id** (String) The ID of the HCP Consul cluster.
-- **project_id** (String) The ID of the project this HCP Consul cluster is located.
 
 ### Optional
 
@@ -39,6 +38,7 @@ The cluster data source provides information about an existing HCP Consul cluste
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
 - **num_servers** (Number) The the number of Consul server nodes in the cluster.
 - **organization_id** (String) The ID of the organization the project for this HCP Consul cluster is located.
+- **project_id** (String) The ID of the project this HCP Consul cluster is located.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - **region** (String) The region where the HCP Consul cluster is located.
 - **tier** (String) The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.
