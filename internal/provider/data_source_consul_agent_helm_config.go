@@ -103,19 +103,14 @@ func dataSourceConsulAgentHelmConfig() *schema.Resource {
 // Consul agent Helm config for an HCP cluster.
 func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
+	clusterID := d.Get("cluster_id").(string)
 
+	organizationID := client.Config.OrganizationID
 	projectID := client.Config.ProjectID
 
-	clusterID := d.Get("cluster_id").(string)
 	v, ok := d.GetOk("project_id")
 	if ok {
 		projectID = v.(string)
-	}
-
-	// fetch organizationID by project ID
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-	if err != nil {
-		return diag.FromErr(err)
 	}
 
 	loc := &models.HashicorpCloudLocationLocation{
