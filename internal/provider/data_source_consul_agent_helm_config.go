@@ -23,6 +23,7 @@ var defaultConsulAgentHelmConfigTimeoutDuration = time.Minute * 5
 // decoded from a base64 formatted string.
 type ConsulConfig struct {
 	Datacenter string   `json:"datacenter"`
+	Encrypt    string   `json:"encrypt"`
 	RetryJoin  []string `json:"retry_join"`
 }
 
