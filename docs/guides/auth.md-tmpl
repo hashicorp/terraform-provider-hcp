@@ -1,0 +1,26 @@
+---
+subcategory: ""
+page_title: "Authenticate with HCP - HCP Provider"
+description: |-
+    A guide to obtaining client credentials and adding them to provider configuration.
+---
+
+# Authenticate with HCP using service principal credentials
+
+The HCP provider accepts client credentials, which are obtained on the creation of a service principal key. 
+
+Service principals and service principal keys can be created in the HCP Portal with an existing user account.
+
+## Create a service principal
+
+Navigate to the Access Control (IAM) page. Select the Service principals tab and create a new service principal.
+
+## Create a service principal key
+
+Once the service principal is created, navigate to its detail page by selecting its name in the list. Create a new service principal key.
+
+-> **Note:** Save the Client ID and Client Secret returned on successful key creation. The Client Secret will not be available after creation.
+
+## Configure the provider with the Client ID and Client Secret
+
+{{ tffile "examples/guides/auth/_config.tf" }} 
