@@ -23,7 +23,7 @@ var defaultAgentConfigKubernetesSecretTimeoutDuration = time.Minute * 5
 const agentConfigKubernetesSecretTemplate = `apiVersion: v1
 kind: Secret
 metadata:
-  name: %s-hcs
+  name: %s-hcp
 type: Opaque
 data:
   gossipEncryptionKey: %s
