@@ -21,6 +21,10 @@ const (
 
 	// ConsulSnapshotResourceType is the resource type of a Consul snapshot
 	ConsulSnapshotResourceType = "hashicorp.consul.snapshot"
+
+	// ConsulClusterHelmConfigDataSourceType is the data source type of a Consul
+	// cluster Helm config
+	ConsulClusterHelmConfigDataSourceType = ConsulClusterResourceType + ".helm-config"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the

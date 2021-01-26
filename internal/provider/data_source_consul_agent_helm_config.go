@@ -173,7 +173,7 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 	}
 
 	// build ID and set it
-	link := newLink(loc, "hashicorp.consul.cluster.helm-config", clusterID)
+	link := newLink(loc, ConsulClusterHelmConfigDataSourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
