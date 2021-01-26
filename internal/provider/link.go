@@ -18,6 +18,9 @@ const (
 
 	// PeeringResourceType is the resource type of a network peering
 	PeeringResourceType = "hashicorp.network.peering"
+
+	// ConsulSnapshotResourceType is the resource type of a Consul snapshot
+	ConsulSnapshotResourceType = "hashicorp.consul.snapshot"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the
