@@ -7,7 +7,6 @@ import (
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -30,9 +29,8 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 			"peering_id": {
 				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
-				Computed:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
@@ -49,27 +47,22 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 			"peer_account_id": {
 				Description: "The account ID of the peer VPC in AWS.",
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Computed:    true,
 			},
 			"peer_vpc_id": {
 				Description: "The ID of the peer VPC in AWS.",
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Computed:    true,
 			},
 			"peer_vpc_region": {
 				Description: "The region of the peer VPC in AWS.",
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Computed:    true,
 			},
 			"peer_vpc_cidr_block": {
-				Description:  "The CIDR range of the peer VPC in AWS.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
+				Description: "The CIDR range of the peer VPC in AWS.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"provider_peering_id": {
 				Description: "The peering connection ID used by AWS.",
