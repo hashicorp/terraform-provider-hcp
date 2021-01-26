@@ -60,14 +60,9 @@ func dataSourceConsulAgentKubernetesSecretRead(ctx context.Context, d *schema.Re
 	client := meta.(*clients.Client)
 
 	projectID := client.Config.ProjectID
+	organizationID := client.Config.OrganizationID
 
 	clusterID := d.Get("cluster_id").(string)
-
-	// fetch organizationID by project ID
-	organizationID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, projectID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
