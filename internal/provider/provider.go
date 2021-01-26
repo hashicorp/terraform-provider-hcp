@@ -54,27 +54,26 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
 
+		client, err := clients.NewClient(clients.ClientConfig{
+			ClientID:      clientID,
+			ClientSecret:  clientSecret,
+			SourceChannel: userAgent,
+		})
+		if err != nil {
+			return nil, diag.Errorf("unable to create HCP api client: %v", err)
+		}
+
 		// For the initial release, since only one project is allowed per organization, the
 		// provider handles fetching the organization's single project, instead of requiring the
 		// user to set it. When multiple projects are supported, this helper will be deprecated
 		// with a warning: when multiple projects exist within the org, a project ID must be set
 		// on the provider or on each resource.
-		project, err := getProjectFromCredentials(ctx, clientID, clientSecret)
+		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
-
-		// Construct a new HCP api client with clients and configuration.
-		client, err := clients.NewClient(clients.ClientConfig{
-			ClientID:       clientID,
-			ClientSecret:   clientSecret,
-			OrganizationID: project.Parent.ID,
-			ProjectID:      project.ID,
-			SourceChannel:  userAgent,
-		})
-		if err != nil {
-			return nil, diag.Errorf("unable to create HCP api client: %v", err)
-		}
+		client.Config.OrganizationID = project.Parent.ID
+		client.Config.ProjectID = project.ID
 
 		return client, nil
 	}
@@ -83,21 +82,12 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 // getProjectFromCredentials uses the configured client credentials to
 //  fetch the associated organization and returns that organization's
 // single project.
-func getProjectFromCredentials(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
-	// Create a client to use for querying organization.
-	cl, err := clients.NewClient(clients.ClientConfig{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to create HCP api client: %v", err)
-	}
-
+func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
-	listOrgResp, err := cl.Organization.OrganizationServiceList(listOrgParams, nil)
+	listOrgResp, err := client.Organization.OrganizationServiceList(listOrgParams, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch organization list: %+v", err)
+		return nil, fmt.Errorf("unable to fetch organization list: %v", err)
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
 	if orgLen != 1 {
@@ -110,12 +100,12 @@ func getProjectFromCredentials(ctx context.Context, clientID string, clientSecre
 	listProjParams.ScopeID = &orgID
 	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
-	listProjResp, err := cl.Project.ProjectServiceList(listProjParams, nil)
+	listProjResp, err := client.Project.ProjectServiceList(listProjParams, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch project id: %+v", err)
+		return nil, fmt.Errorf("unable to fetch project id: %v", err)
 	}
 	if len(listProjResp.Payload.Projects) > 1 {
-		return nil, fmt.Errorf("this version of the provider does not support multiple projects. Upgrade to a later provider version and set a project ID on the provider/resources.")
+		return nil, fmt.Errorf("this version of the provider does not support multiple projects, upgrade to a later provider version and set a project ID on the provider/resources")
 	}
 
 	project := listProjResp.Payload.Projects[0]
