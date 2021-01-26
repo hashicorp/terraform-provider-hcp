@@ -233,7 +233,6 @@ func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[INFO] Consul snapshot (%s) deleted, removing from state", snapshotID)
-	d.SetId("")
 
 	return nil
 }
