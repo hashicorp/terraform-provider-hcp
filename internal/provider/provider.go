@@ -80,7 +80,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 }
 
 // getProjectFromCredentials uses the configured client credentials to
-//  fetch the associated organization and returns that organization's
+// fetch the associated organization and returns that organization's
 // single project.
 func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Get the organization ID.
