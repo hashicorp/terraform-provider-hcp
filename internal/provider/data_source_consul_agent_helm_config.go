@@ -77,7 +77,7 @@ func dataSourceConsulAgentHelmConfig() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"kubernetes_endpoint": {
-				Description:      "The FQDN for the Kubernetes auth method endpoint.",
+				Description:      "The FQDN for the Kubernetes API.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
