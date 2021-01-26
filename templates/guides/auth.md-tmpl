@@ -19,7 +19,7 @@ Navigate to the Access Control (IAM) page. Select the Service principals tab and
 
 Once the service principal is created, navigate to its detail page by selecting its name in the list. Create a new service principal key.
 
-**Note:** Save the Client ID and Client Secret returned on successful key creation. The Client Secret will not be available after creation.
+-> **Note:** Save the Client ID and Client Secret returned on successful key creation. The Client Secret will not be available after creation.
 
 ## Configure the provider with the Client ID and Client Secret
 
