@@ -7,6 +7,6 @@ description: |-
 
 # Create an HCP HVN, Peering, and Consul cluster
 
-TODO: summarize creating an HVN, peering, and cluster. resource names, how peering and clusters require existing HVN
+Everything in HCP starts with the HashiCorp Virtual Network (HVN). Consul clusters and peering connections require an existing HVN.
 
 {{ tffile "examples/guides/quick_start/main.tf" }}
