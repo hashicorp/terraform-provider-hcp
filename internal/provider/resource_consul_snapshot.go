@@ -132,7 +132,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 	d.Set("consul_version", cluster.ConsulVersion)
 
 	// wait for the Consul snapshot to be created
-	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", cluster.Location, createResp.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, ConsulSnapshotResourceType+".create", cluster.Location, createResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", cluster.ID, err)
 	}
 
@@ -228,7 +228,7 @@ func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Wait for the delete snapshot operation
-	if err := clients.WaitForOperation(ctx, client, "delete Consul snapshot", loc, deleteResp.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, ConsulSnapshotResourceType+".delete", loc, deleteResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to delete Consul snapshot (%s): %v", snapshotID, err)
 	}
 
