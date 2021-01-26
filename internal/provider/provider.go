@@ -75,7 +75,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 	}
 }
 
-// getProject returns the HashicorpCloudResourcemanagerProject model instance using the
+// getProject uses the configured client credentials to fetch their associated organization and returns that organization's single project
 // clientID and clientSecret.
 func getProject(ctx context.Context, clientID string, clientSecret string) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Create a client to use for querying organization.
