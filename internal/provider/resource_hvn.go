@@ -170,6 +170,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	hvnID := link.ID
 	loc := link.Location
@@ -201,6 +202,7 @@ func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	hvnID := link.ID
 	loc := link.Location

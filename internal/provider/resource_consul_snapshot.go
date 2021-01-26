@@ -146,15 +146,16 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
 	snapshotLink, err := parseLinkURL(d.Id(), ConsulSnapshotResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	snapshotLink.Location.OrganizationID = client.Config.OrganizationID
 
 	snapshotID := snapshotLink.ID
 	loc := snapshotLink.Location
-
-	client := meta.(*clients.Client)
 
 	snapshot, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
 	if err != nil {
@@ -175,15 +176,16 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceConsulSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
 	snapshotLink, err := parseLinkURL(d.Id(), ConsulSnapshotResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	snapshotLink.Location.OrganizationID = client.Config.OrganizationID
 
 	snapshotID := snapshotLink.ID
 	loc := snapshotLink.Location
-
-	client := meta.(*clients.Client)
 
 	snapshot, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
 	if err != nil {
@@ -216,6 +218,7 @@ func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	snapshotID := link.ID
 	loc := link.Location

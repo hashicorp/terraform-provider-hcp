@@ -214,6 +214,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	peeringID := link.ID
 	loc := link.Location
@@ -246,6 +247,7 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	peeringID := link.ID
 	loc := link.Location

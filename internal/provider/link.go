@@ -54,8 +54,6 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 	// Validate that the link contains the necessary information
 	if l.Location.ProjectID == "" {
 		return "", errors.New("link missing project ID")
-	} else if l.Location.OrganizationID == "" {
-		return "", errors.New("link missing organization ID")
 	} else if l.Type == "" {
 		return "", errors.New("link missing resource type")
 	}
@@ -67,8 +65,7 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 	}
 
 	// Generate the URL
-	urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-		l.Location.OrganizationID,
+	urn := fmt.Sprintf("/project/%s/%s/%s",
 		l.Location.ProjectID,
 		l.Type,
 		id)
@@ -78,21 +75,23 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 
 // parseLinkURL parses a link URL into a link. If the URL is malformed, an
 // error is returned.
+//
+// The resulting link location does not include an organization, which is
+// typically required for requests.
 func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
-	pattern := fmt.Sprintf("^/organization/[^/]+/project/[^/]+/%s/[^/]+$", resourceType)
+	pattern := fmt.Sprintf("^/project/[^/]+/%s/[^/]+$", resourceType)
 	match, _ := regexp.MatchString(pattern, urn)
 	if !match {
-		return nil, fmt.Errorf("url is not in the correct format: /organization/{org_id}/project/{project_id}/%s/{id}", resourceType)
+		return nil, fmt.Errorf("url is not in the correct format: /project/{project_id}/%s/{id}", resourceType)
 	}
 
 	components := strings.Split(urn, "/")
 
 	return &sharedmodels.HashicorpCloudLocationLink{
-		Type: components[5],
-		ID:   components[6],
+		Type: components[3],
+		ID:   components[4],
 		Location: &sharedmodels.HashicorpCloudLocationLocation{
-			OrganizationID: components[2],
-			ProjectID:      components[4],
+			ProjectID: components[2],
 		},
 	}, nil
 }

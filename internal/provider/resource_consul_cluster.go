@@ -424,6 +424,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location
@@ -462,6 +463,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location
@@ -532,6 +534,7 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location
