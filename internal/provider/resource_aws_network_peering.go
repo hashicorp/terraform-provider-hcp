@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 var peeringDefaultTimeout = time.Minute * 1
@@ -71,13 +70,6 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				ValidateFunc: validation.IsCIDR,
 			},
 			// Optional inputs
-			"project_id": {
-				Description: "The ID of the HCP project where the network peering is located. Must match the HVN's project.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
-			},
 			"peering_id": {
 				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
@@ -89,6 +81,11 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the network peering is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -121,13 +118,13 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	peerVpcRegion := d.Get("peer_vpc_region").(string)
 	peerVpcCidr := d.Get("peer_vpc_cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "network peering")
-	if err != nil {
-		return diag.FromErr(err)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	// Check for an existing HVN
-	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
+	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to find the HVN (%s) for the network peering", hvnID)
