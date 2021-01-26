@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+
 	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -70,16 +72,14 @@ func resourceHvn() *schema.Resource {
 				ValidateFunc: validation.IsCIDR,
 				Computed:     true,
 			},
-			"project_id": {
-				Description: "The ID of the HCP project where the HVN is located.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
-			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the HVN is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the HVN is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -98,13 +98,17 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client)
-	if err != nil {
-		return diag.FromErr(err)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: d.Get("cloud_provider").(string),
+			Region:   d.Get("region").(string),
+		},
 	}
 
 	// Check for an existing HVN
-	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
+	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
@@ -259,9 +263,9 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Id()
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client)
-	if err != nil {
-		return nil, err
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	link := newLink(loc, HvnResourceType, hvnID)

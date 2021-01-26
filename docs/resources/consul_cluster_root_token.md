@@ -27,7 +27,6 @@ resource "hcp_consul_cluster_root_token" "example" {
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **project_id** (String) The ID of the project this HCP Consul cluster is located.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only
