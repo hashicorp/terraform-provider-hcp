@@ -12,7 +12,7 @@ import (
 
 // BuildResourceLocation builds a Hashicorp Cloud Location based off of the resource data's
 // org and project details
-func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client, resourceType string) (
+func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *clients.Client) (
 	*sharedmodels.HashicorpCloudLocationLocation, error) {
 	projectID := client.Config.ProjectID
 	projectIDVal, ok := d.GetOk("project_id")
@@ -27,7 +27,7 @@ func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *
 	}
 
 	if projectID == "" {
-		return nil, fmt.Errorf("missing project_id: a project_id must be specified on the %s resource or the provider", resourceType)
+		return nil, fmt.Errorf("missing project_id: a project_id must be specified on this resource or the provider")
 	}
 
 	if organizationID == "" {
@@ -46,13 +46,13 @@ func BuildResourceLocation(ctx context.Context, d *schema.ResourceData, client *
 
 // BuildResourceLocationWithRegion builds a Hashicorp Cloud Location based off
 // of the resource data's org, project, region, and provider details
-func BuildResourceLocationWithRegion(ctx context.Context, d *schema.ResourceData, client *clients.Client, resourceType string) (
+func BuildResourceLocationWithRegion(ctx context.Context, d *schema.ResourceData, client *clients.Client) (
 	*sharedmodels.HashicorpCloudLocationLocation, error) {
 
 	provider := d.Get("cloud_provider").(string)
 	region := d.Get("region").(string)
 
-	loc, err := BuildResourceLocation(ctx, d, client, resourceType)
+	loc, err := BuildResourceLocation(ctx, d, client)
 	if err != nil {
 		return nil, err
 	}

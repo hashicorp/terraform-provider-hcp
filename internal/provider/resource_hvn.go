@@ -98,7 +98,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "HVN")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -259,7 +259,7 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Id()
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "HVN")
+	loc, err := helper.BuildResourceLocation(ctx, d, client)
 	if err != nil {
 		return nil, err
 	}

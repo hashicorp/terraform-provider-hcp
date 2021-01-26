@@ -180,7 +180,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "Consul cluster")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -515,7 +515,7 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Id()
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "Consul cluster")
+	loc, err := helper.BuildResourceLocation(ctx, d, client)
 	if err != nil {
 		return nil, err
 	}
