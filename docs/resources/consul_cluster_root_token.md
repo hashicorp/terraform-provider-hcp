@@ -2,12 +2,12 @@
 page_title: "hcp_consul_cluster_root_token Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The Consul cluster resource allows you to manage an HCP Consul cluster.
+  The cluster root token resource is the token used to bootstrap the cluster's ACL system. Using this resource to create a new root token for a cluster will invalidate the consul root token accessor id and Consul root token secret id properties of the cluster.
 ---
 
 # Resource `hcp_consul_cluster_root_token`
 
-The Consul cluster resource allows you to manage an HCP Consul cluster.
+The cluster root token resource is the token used to bootstrap the cluster's ACL system. Using this resource to create a new root token for a cluster will invalidate the consul root token accessor id and Consul root token secret id properties of the cluster.
 
 ## Example Usage
 
