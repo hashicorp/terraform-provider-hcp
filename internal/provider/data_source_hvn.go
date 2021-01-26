@@ -2,9 +2,13 @@ package provider
 
 import (
 	"context"
+	"log"
 
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 func dataSourceHvn() *schema.Resource {
@@ -61,5 +65,36 @@ func dataSourceHvn() *schema.Resource {
 // dataSourceHvnRead is the func to implement reading of an
 // HashiCorp Virtual Network (HVN)
 func dataSourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	hvnID := d.Get("hvn_id").(string)
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: d.Get("cloud_provider").(string),
+			Region:   d.Get("region").(string),
+		},
+	}
+
+	// Check for an existing HVN
+	log.Printf("[INFO] Reading HVN (%s) [project_id=%s, organization_id=%s]", hvnID, loc.ProjectID, loc.OrganizationID)
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	link := newLink(loc, HvnResourceType, hvnID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
+	if err := setHvnResourceData(d, hvn); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
