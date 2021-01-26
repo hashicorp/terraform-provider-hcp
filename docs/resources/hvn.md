@@ -38,13 +38,13 @@ resource "hcp_hvn" "example" {
 
 - **cidr_block** (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
 - **id** (String) The ID of this resource.
-- **project_id** (String) The ID of the HCP project where the HVN is located.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only
 
 - **created_at** (String) The time that the HVN was created.
 - **organization_id** (String) The ID of the HCP organization where the HVN is located.
+- **project_id** (String) The ID of the HCP project where the HVN is located.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -60,6 +60,6 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-# The import ID is /organization/{org_id}/project/{project_id}/hashicorp.network.hvn/{hvn_id}
-terraform import hcp_hvn.example /organization/11eb5cc0-3197-e2f7-9b98-0242ac12002e/project/11eb5cc0-31ba-505d-9b98-0242ac12002e/hashicorp.network.hvn/main-hvn
+# The import ID is {hvn_id}
+terraform import hcp_hvn.example main-hvn
 ```
