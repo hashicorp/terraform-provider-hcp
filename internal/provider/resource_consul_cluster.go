@@ -557,6 +557,22 @@ func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	clusterID := d.Id()
+
+	loc, err := helper.BuildResourceLocation(ctx, d, client)
+	if err != nil {
+		return nil, err
+	}
+
+	link := newLink(loc, ConsulClusterResourceType, clusterID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+	d.SetId(url)
+
 	diags := resourceConsulClusterRead(ctx, d, meta)
 	if err := helper.ToError(diags); err != nil {
 		return nil, err
