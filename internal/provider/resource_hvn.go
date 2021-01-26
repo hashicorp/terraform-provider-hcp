@@ -263,9 +263,9 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Id()
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client)
-	if err != nil {
-		return nil, err
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	link := newLink(loc, HvnResourceType, hvnID)

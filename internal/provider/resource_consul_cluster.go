@@ -561,9 +561,9 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := d.Id()
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client)
-	if err != nil {
-		return nil, err
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	link := newLink(loc, ConsulClusterResourceType, clusterID)
