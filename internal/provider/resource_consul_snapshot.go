@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+
 	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 const (
@@ -56,15 +57,12 @@ func resourceConsulSnapshot() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
-			// optional fields
+			// computed outputs
 			"project_id": {
 				Description: "The ID of the project the HCP Consul cluster is located.",
 				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
 				Computed:    true,
 			},
-			// computed outputs
 			"snapshot_id": {
 				Description: "The ID of the Consul snapshot",
 				Type:        schema.TypeString,
@@ -94,9 +92,9 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, ConsulClusterResourceType)
-	if err != nil {
-		return diag.FromErr(err)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	// Check for an existing Consul cluster
