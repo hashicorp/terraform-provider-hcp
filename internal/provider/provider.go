@@ -106,7 +106,7 @@ func getProject(ctx context.Context, clientID string, clientSecret string) (*mod
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch project id: %+v", err)
 	} else if len(listProjResp.Payload.Projects) > 1 {
-		return nil, fmt.Errorf("more than one project detected - this version of the provider does not support multiple projects")
+		return nil, fmt.Errorf("This version does not support multiple projects. Upgrade and set a project ID on the provider or resources.")
 	}
 
 	project := listProjResp.Payload.Projects[0]
