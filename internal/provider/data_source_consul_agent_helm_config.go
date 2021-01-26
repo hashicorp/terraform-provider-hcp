@@ -185,7 +185,7 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 }
 
 // generateHelmConfig will generate a helm config based on the passed in
-// name, data center, retry join, and fqdn.
+// name, data center, retry join, fqdn and expose gossip ports flag.
 func generateHelmConfig(name, datacenter, fqdn string, retryJoin []string, exposeGossipPorts bool) string {
 	// lowercase the name
 	lower := strings.ToLower(name)
