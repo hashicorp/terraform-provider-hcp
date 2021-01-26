@@ -28,6 +28,7 @@ The Consul cluster resource allows you to manage an HCP Consul cluster.
 - **min_consul_version** (String) The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **project_id** (String) The ID of the project this HCP Consul cluster is located.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
+- **tier** (String) The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only
@@ -42,6 +43,7 @@ The Consul cluster resource allows you to manage an HCP Consul cluster.
 - **consul_snapshot_interval** (String) The Consul snapshot interval.
 - **consul_snapshot_retention** (String) The retention policy for Consul snapshots.
 - **consul_version** (String) The Consul version of the cluster.
+- **num_servers** (Number) The the number of Consul server nodes in the cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
