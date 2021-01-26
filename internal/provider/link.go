@@ -25,6 +25,10 @@ const (
 	// ConsulClusterHelmConfigDataSourceType is the data source type of a Consul
 	// cluster Helm config
 	ConsulClusterHelmConfigDataSourceType = ConsulClusterResourceType + ".helm-config"
+
+	// ConsulClusterAgentKubernetesSecretDataSourceType is the data source
+	// type of a Consul cluster agent Kubernetes secret
+	ConsulClusterAgentKubernetesSecretDataSourceType = ConsulClusterResourceType + ".agent-kubernetes-secret"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the
