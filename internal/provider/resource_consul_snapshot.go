@@ -96,7 +96,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 
 	clusterID := d.Get("cluster_id").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "Consul cluster")
+	loc, err := helper.BuildResourceLocation(ctx, d, client, ConsulClusterResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -117,7 +117,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[INFO] Creating Consul snapshot (%s)", name)
 
 	// make the call to kick off the workflow
-	createResp, err := clients.CreateSnapshot(ctx, client, newLink(cluster.Location, "hashicorp.consul.cluster", cluster.ID), name)
+	createResp, err := clients.CreateSnapshot(ctx, client, newLink(cluster.Location, ConsulClusterResourceType, cluster.ID), name)
 	if err != nil {
 		return diag.Errorf("unable to create Consul snapshot (%s): %v", clusterID, err)
 	}
