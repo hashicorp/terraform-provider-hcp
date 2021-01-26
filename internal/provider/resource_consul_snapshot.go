@@ -31,7 +31,7 @@ var snapshotCreateUpdateDeleteTimeoutDuration = time.Minute * 15
 
 func resourceConsulSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Consul snapshot resource allows users to managed Consul snapshots of an HCP Consul cluster. " +
+		Description: "The Consul snapshot resource allows users to manage Consul snapshots of an HCP Consul cluster. " +
 			"Snapshots currently have a retention policy of 30 days.",
 		CreateContext: resourceConsulSnapshotCreate,
 		ReadContext:   resourceConsulSnapshotRead,
