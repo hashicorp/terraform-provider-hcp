@@ -194,7 +194,6 @@ func generateHelmConfig(name, datacenter, fqdn string, retryJoin []string, expos
 	rj := fmt.Sprintf("%q", retryJoin)
 
 	// replace any escaped double-quotes with single quotes
-	// this is to match the format the the HCS CLI is outputting
 	rj = strings.Replace(rj, "\"", "'", -1)
 
 	return fmt.Sprintf(helmConfigTemplate,
