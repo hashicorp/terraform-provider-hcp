@@ -98,7 +98,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client, "HVN")
+	loc, err := helper.BuildResourceLocationWithRegion(ctx, d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -255,6 +255,22 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 // resourceHvnImport implements the logic necessary to import an un-tracked
 // (by Terraform) HVN resource into Terraform state.
 func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	hvnID := d.Id()
+
+	loc, err := helper.BuildResourceLocation(ctx, d, client)
+	if err != nil {
+		return nil, err
+	}
+
+	link := newLink(loc, HvnResourceType, hvnID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+	d.SetId(url)
+
 	diags := resourceHvnRead(ctx, d, meta)
 	if err := helper.ToError(diags); err != nil {
 		return nil, err

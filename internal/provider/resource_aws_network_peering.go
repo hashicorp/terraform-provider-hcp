@@ -121,7 +121,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	peerVpcRegion := d.Get("peer_vpc_region").(string)
 	peerVpcCidr := d.Get("peer_vpc_cidr_block").(string)
 
-	loc, err := helper.BuildResourceLocation(ctx, d, client, "network peering")
+	loc, err := helper.BuildResourceLocation(ctx, d, client)
 	if err != nil {
 		return diag.FromErr(err)
 	}
