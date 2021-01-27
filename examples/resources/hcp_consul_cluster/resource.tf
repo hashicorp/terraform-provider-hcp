@@ -6,9 +6,8 @@ resource "hcp_hvn" "example" {
 }
 
 resource "hcp_consul_cluster" "example" {
-  cluster_id     = "consul-cluster"
-  hvn_id         = hcp_hvn.example.hvn_id
-  cloud_provider = hcp_hvn.example.cloud_provider
-  region         = hcp_hvn.example.region
+  cluster_id = "consul-cluster"
+  hvn_id     = hcp_hvn.example.hvn_id
+  tier       = "development"
 }
 
