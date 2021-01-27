@@ -210,11 +210,10 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), PeeringResourceType)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	peeringID := link.ID
 	loc := link.Location
@@ -243,11 +242,10 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), PeeringResourceType)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	peeringID := link.ID
 	loc := link.Location

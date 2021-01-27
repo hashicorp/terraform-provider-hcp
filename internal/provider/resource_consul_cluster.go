@@ -420,11 +420,10 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	link, err := buildLinkFromURL(d.Id(), ConsulClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location
@@ -459,11 +458,10 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	link, err := buildLinkFromURL(d.Id(), ConsulClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location
@@ -530,11 +528,10 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceConsulClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), ConsulClusterResourceType)
+	link, err := buildLinkFromURL(d.Id(), ConsulClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	clusterID := link.ID
 	loc := link.Location

@@ -77,7 +77,8 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 // error is returned.
 //
 // The resulting link location does not include an organization, which is
-// typically required for requests.
+// typically required for requests. If organization is needed, use
+// `buildLinkFromURL()`.
 func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
 	pattern := fmt.Sprintf("^/project/[^/]+/%s/[^/]+$", resourceType)
 	match, _ := regexp.MatchString(pattern, urn)
@@ -94,4 +95,18 @@ func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloud
 			ProjectID: components[2],
 		},
 	}, nil
+}
+
+// buildLinkFromURL builds a full link from a link URL. In particular, a link
+// URL only contains the project ID of its location, so this function populates
+// the organization ID, which is required for most requests.
+func buildLinkFromURL(urn string, resourceType string, organizationID string) (*sharedmodels.HashicorpCloudLocationLink, error) {
+	link, err := parseLinkURL(urn, resourceType)
+	if err != nil {
+		return nil, err
+	}
+
+	link.Location.OrganizationID = organizationID
+
+	return link, nil
 }

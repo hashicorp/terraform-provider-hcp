@@ -166,11 +166,10 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), HvnResourceType)
+	link, err := buildLinkFromURL(d.Id(), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	hvnID := link.ID
 	loc := link.Location
@@ -198,11 +197,10 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceHvnDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := parseLinkURL(d.Id(), HvnResourceType)
+	link, err := buildLinkFromURL(d.Id(), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	link.Location.OrganizationID = client.Config.OrganizationID
 
 	hvnID := link.ID
 	loc := link.Location
