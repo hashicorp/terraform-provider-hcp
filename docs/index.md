@@ -77,7 +77,7 @@ resource "hcp_consul_cluster" "example" {
 
 ## Schema
 
-### Optional
+### Required
 
 - **client_id** (String) The OAuth2 Client ID for API operations.
 - **client_secret** (String) The OAuth2 Client Secret for API operations.
