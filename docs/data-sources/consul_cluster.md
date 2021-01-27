@@ -9,7 +9,13 @@ description: |-
 
 The cluster data source provides information about an existing HCP Consul cluster
 
+## Example Usage
 
+```terraform
+resource "hcp_consul_cluster" "example" {
+  cluster_id = var.cluster_id
+}
+```
 
 ## Schema
 
