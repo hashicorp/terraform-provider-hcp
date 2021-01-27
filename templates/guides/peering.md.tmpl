@@ -12,4 +12,6 @@ This is accomplished by using the `hcp_aws_network_peering` resource to create a
 The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection_accepter) resource is useful for accepting the peering connection that is initiated from the `hcp_aws_network_peering`.
 -> **Note** The CIDR blocks of the HVN and the peer VPC cannot overlap.
 
+For more details about deploying Consul on HCP, check out the [Deploy HashiCorp Cloud Platform (HCP) Consul](https://learn.hashicorp.com/tutorials/cloud/consul-deploy?in=consul/cloud) guide.
+
 {{ tffile "examples/guides/peering/main.tf" }}
