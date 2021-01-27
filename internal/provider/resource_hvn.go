@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 var hvnDefaultTimeout = time.Minute * 1
@@ -262,10 +261,8 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 	client := meta.(*clients.Client)
 
 	hvnID := d.Id()
-
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID: client.Config.ProjectID,
 	}
 
 	link := newLink(loc, HvnResourceType, hvnID)
@@ -273,12 +270,8 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err != nil {
 		return nil, err
 	}
-	d.SetId(url)
 
-	diags := resourceHvnRead(ctx, d, meta)
-	if err := helper.ToError(diags); err != nil {
-		return nil, err
-	}
+	d.SetId(url)
 
 	return []*schema.ResourceData{d}, nil
 }
