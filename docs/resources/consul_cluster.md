@@ -31,10 +31,8 @@ resource "hcp_consul_cluster" "example" {
 
 ### Required
 
-- **cloud_provider** (String) The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.
 - **cluster_id** (String) The ID of the HCP Consul cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
-- **region** (String) The region where the HCP Consul cluster is located.
 
 ### Optional
 
@@ -48,6 +46,7 @@ resource "hcp_consul_cluster" "example" {
 
 ### Read-only
 
+- **cloud_provider** (String) The provider where the HCP Consul cluster is located.
 - **consul_automatic_upgrades** (Boolean) Denotes that automatic Consul upgrades are enabled.
 - **consul_ca_file** (String) The cluster CA file encoded as a Base64 string.
 - **consul_config_file** (String) The cluster config encoded as a Base64 string.
@@ -61,6 +60,7 @@ resource "hcp_consul_cluster" "example" {
 - **num_servers** (Number) The the number of Consul server nodes in the cluster.
 - **organization_id** (String) The ID of the organization this HCP Consul cluster is located in.
 - **project_id** (String) The ID of the project this HCP Consul cluster is located in.
+- **region** (String) The region where the HCP Consul cluster is located.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
