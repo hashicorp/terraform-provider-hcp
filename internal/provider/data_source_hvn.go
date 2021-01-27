@@ -26,18 +26,17 @@ func dataSourceHvn() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Computed outputs
 			"cloud_provider": {
-				Description:      "The provider where the HVN is located.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validateStringInSlice(hvnResourceCloudProviders, true),
+				Description: "The provider where the HVN is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
-			// Computed outputs
 			"cidr_block": {
 				Description: "The CIDR range of the HVN.",
 				Type:        schema.TypeString,
@@ -72,10 +71,6 @@ func dataSourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: d.Get("cloud_provider").(string),
-			Region:   d.Get("region").(string),
-		},
 	}
 
 	// Check for an existing HVN
