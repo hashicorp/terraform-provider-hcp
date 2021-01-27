@@ -138,7 +138,7 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"cloud_provider": {
-				Description: "The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.",
+				Description: "The provider where the HCP Consul cluster is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
