@@ -46,7 +46,7 @@ resource "hcp_consul_cluster" "example" {
 
 ### Read-only
 
-- **cloud_provider** (String) The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.
+- **cloud_provider** (String) The provider where the HCP Consul cluster is located.
 - **consul_automatic_upgrades** (Boolean) Denotes that automatic Consul upgrades are enabled.
 - **consul_ca_file** (String) The cluster CA file encoded as a Base64 string.
 - **consul_config_file** (String) The cluster config encoded as a Base64 string.
