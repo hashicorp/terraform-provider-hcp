@@ -20,10 +20,9 @@ resource "hcp_hvn" "example" {
 }
 
 resource "hcp_consul_cluster" "example" {
-  cluster_id     = "consul-cluster"
-  hvn_id         = hcp_hvn.example.hvn_id
-  cloud_provider = hcp_hvn.example.cloud_provider
-  region         = hcp_hvn.example.region
+  cluster_id = "consul-cluster"
+  hvn_id     = hcp_hvn.example.hvn_id
+  tier       = "development"
 }
 ```
 
@@ -33,6 +32,7 @@ resource "hcp_consul_cluster" "example" {
 
 - **cluster_id** (String) The ID of the HCP Consul cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
+- **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
 
 ### Optional
 
