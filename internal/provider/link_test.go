@@ -25,8 +25,7 @@ func Test_linkURL(t *testing.T) {
 		urn, err := linkURL(&l)
 		require.NoError(t, err)
 
-		expected := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			l.Location.OrganizationID,
+		expected := fmt.Sprintf("/project/%s/%s/%s",
 			l.Location.ProjectID,
 			l.Type,
 			l.ID)
@@ -38,7 +37,7 @@ func Test_linkURL(t *testing.T) {
 		l.Location.OrganizationID = ""
 
 		_, err := linkURL(&l)
-		require.Error(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("missing project ID", func(t *testing.T) {
@@ -77,12 +76,10 @@ func Test_linkURL(t *testing.T) {
 func Test_parseLinkURL(t *testing.T) {
 	svcType := "hashicorp.network.hvn"
 	id := "test-hvn"
-	orgID := uuid.New().String()
 	projID := uuid.New().String()
 
 	t.Run("valid URL", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s",
 			projID,
 			svcType,
 			id)
@@ -90,26 +87,13 @@ func Test_parseLinkURL(t *testing.T) {
 		l, err := parseLinkURL(urn, svcType)
 		require.NoError(t, err)
 
-		require.Equal(t, orgID, l.Location.OrganizationID)
 		require.Equal(t, projID, l.Location.ProjectID)
 		require.Equal(t, svcType, l.Type)
 		require.Equal(t, id, l.ID)
 	})
 
-	t.Run("missing organization ID", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			"",
-			projID,
-			svcType,
-			id)
-
-		_, err := parseLinkURL(urn, svcType)
-		require.Error(t, err)
-	})
-
 	t.Run("missing project ID", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s",
 			"",
 			svcType,
 			id)
@@ -119,8 +103,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("missing resource type", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s",
 			projID,
 			"",
 			id)
@@ -130,8 +113,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("mismatched resource type", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s",
 			projID,
 			"other.hvn",
 			id)
@@ -141,8 +123,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("missing resource id", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s",
 			projID,
 			svcType,
 			"")
@@ -152,8 +133,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("missing a field", func(t *testing.T) {
-		urn := fmt.Sprintf("/project/%s/%s/%s",
-			projID,
+		urn := fmt.Sprintf("/%s/%s",
 			svcType,
 			id)
 
@@ -162,8 +142,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("too many fields before", func(t *testing.T) {
-		urn := fmt.Sprintf("/extra/value/organization/%s/project/%s/%s/%s",
-			orgID,
+		urn := fmt.Sprintf("/extra/value/project/%s/%s/%s",
 			projID,
 			svcType,
 			id)
@@ -173,8 +152,7 @@ func Test_parseLinkURL(t *testing.T) {
 	})
 
 	t.Run("too many fields after", func(t *testing.T) {
-		urn := fmt.Sprintf("/organization/%s/project/%s/%s/%s/extra/value",
-			orgID,
+		urn := fmt.Sprintf("/project/%s/%s/%s/extra/value",
 			projID,
 			svcType,
 			id)
