@@ -11,7 +11,7 @@ The HCP provider provides resources to manage [HashiCorp Cloud Platform](https:/
 
 ## Authenticating with HCP
 
-The HCP provider supports authentication via a Client ID and a Client Secret. The [authentication guide](guides/auth.html) describes how to obtain client credentials.
+The HCP provider supports authentication via a Client ID and a Client Secret. The [authentication guide](guides/auth.md) describes how to obtain client credentials.
 
 ## Example Usage
 
