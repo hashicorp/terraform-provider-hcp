@@ -113,7 +113,7 @@ func dataSourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"tier": {
-				Description: "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
+				Description: "The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
