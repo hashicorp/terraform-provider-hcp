@@ -9,7 +9,14 @@ description: |-
 
 The Consul agent Helm config data source provides Helm values for a Consul agent running in Kubernetes.
 
+## Example Usage
 
+```terraform
+data "hcp_consul_agent_helm_config" "example" {
+  cluster_id          = var.cluster_id
+  kubernetes_endpoint = var.kubernetes_endpoint
+}
+```
 
 ## Schema
 
