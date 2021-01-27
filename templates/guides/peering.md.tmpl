@@ -10,6 +10,6 @@ description: |-
 In order to connect AWS workloads to an HCP Consul cluster, you must peer the VPC in which the workloads reside to the HVN in which the HCP cluster resides.
 This is accomplished by using the `hcp_aws_network_peering` resource to create a peering connection between the HVN's VPC and your own VPC.
 The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection_accepter) resource is useful for accepting the peering connection that is initiated from the `hcp_aws_network_peering`.
-*NOTE* The CIDR blocks of the HVN and the peer VPC cannot overlap.
+-> **Note** The CIDR blocks of the HVN and the peer VPC cannot overlap.
 
 {{ tffile "examples/guides/peering/main.tf" }}
