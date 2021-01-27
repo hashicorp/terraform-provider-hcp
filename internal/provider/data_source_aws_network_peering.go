@@ -23,14 +23,12 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Description:      "The ID of the HashiCorp Virtual Network.",
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			"peering_id": {
 				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
@@ -98,19 +96,21 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	log.Printf("[INFO] Reading network peering (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] Network peering (%s) not found, removing from state", peeringID)
-			d.SetId("")
-			return nil
-		}
-
 		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
-	// Network peering found, update resource data
+	// Network peering found, update resource data.
 	if err := setPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Set the globally unique id of this peering in the state.
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
 
 	return nil
 }
