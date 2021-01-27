@@ -1,19 +1,26 @@
-// Configure the provider
-provider "hcp" {
-  client_id     = "example-id"
-  client_secret = "example-secret"
+// Pin the version
+terraform {
+  required_providers {
+    hcp = {
+      source  = "hashicorp/hcp"
+      version = "~> 0.1"
+    }
+  }
 }
 
-// Use your desired cloud provider to provision resources that will be connected to HCP
+// Configure the provider
+provider "hcp" {}
+
+// Use the cloud provider AWS to provision resources that will be connected to HCP
 provider "aws" {
-  region = "us-west-2"
+  region = var.region
 }
 
 // Create an HVN
 resource "hcp_hvn" "example_hvn" {
   hvn_id         = "hcp-tf-example-hvn"
-  cloud_provider = "aws"
-  region         = data.aws_arn.main.region
+  cloud_provider = var.cloud_provider
+  region         = var.region
   cidr_block     = "172.25.16.0/20"
 }
 
@@ -31,7 +38,7 @@ resource "aws_vpc_peering_connection_accepter" "main" {
   auto_accept               = true
 }
 
-// Create a network peering connection between the HVN and the VPC
+// Create a network peering connection between the HVN and the AWS VPC
 resource "hcp_aws_network_peering" "example_peering" {
   hvn_id = hcp_hvn.example_hvn.hvn_id
 
@@ -41,10 +48,10 @@ resource "hcp_aws_network_peering" "example_peering" {
   peer_vpc_cidr_block = aws_vpc.main.cidr_block
 }
 
-// Create a Consul cluster
+// Create a Consul cluster in the same region and cloud provider as the HVN
 resource "hcp_consul_cluster" "example" {
-  hvn_id         = hcp_hvn.example.hvn_id
-  cluster_id     = var.cluster_id
+  hvn_id         = hcp_hvn.example_hvn.hvn_id
+  cluster_id     = "hcp-tf-example-consul-cluster"
   cloud_provider = var.cloud_provider
   region         = var.region
 }

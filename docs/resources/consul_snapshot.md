@@ -26,6 +26,7 @@ The Consul snapshot resource allows users to manage Consul snapshots of an HCP C
 ### Read-only
 
 - **consul_version** (String) The version of Consul at the time of snapshot creation.
+- **organization_id** (String) The ID of the HCP organization where the project the HCP Consul cluster is located.
 - **project_id** (String) The ID of the project the HCP Consul cluster is located.
 - **restored_at** (String) Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.
 - **size** (Number) The size of the snapshot in bytes.
