@@ -13,9 +13,7 @@ The HVN data source provides information about an existing HashiCorp Virtual Net
 
 ```terraform
 data "hcp_hvn" "example" {
-  hvn_id         = var.hvn_id
-  cloud_provider = var.cloud_provider
-  region         = var.region
+  hvn_id = var.hvn_id
 }
 ```
 
@@ -23,9 +21,7 @@ data "hcp_hvn" "example" {
 
 ### Required
 
-- **cloud_provider** (String) The provider where the HVN is located.
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network.
-- **region** (String) The region where the HVN is located.
 
 ### Optional
 
@@ -35,9 +31,11 @@ data "hcp_hvn" "example" {
 ### Read-only
 
 - **cidr_block** (String) The CIDR range of the HVN.
+- **cloud_provider** (String) The provider where the HVN is located.
 - **created_at** (String) The time that the HVN was created.
 - **organization_id** (String) The ID of the HCP organization where the HVN is located.
 - **project_id** (String) The ID of the HCP project where the HVN is located.
+- **region** (String) The region where the HVN is located.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
