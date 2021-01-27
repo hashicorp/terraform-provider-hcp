@@ -84,20 +84,6 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"cloud_provider": {
-				Description:      "The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validateStringInSlice(consulCusterResourceCloudProviders, true),
-			},
-			"region": {
-				Description:      "The region where the HCP Consul cluster is located.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validateStringNotEmpty,
-			},
 			"tier": {
 				// TODO: link to HCP Consul feature tier page when it is available
 				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.",
@@ -148,6 +134,16 @@ func resourceConsulCluster() *schema.Resource {
 			},
 			"project_id": {
 				Description: "The ID of the project this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"cloud_provider": {
+				Description: "The provider where the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"region": {
+				Description: "The region where the HCP Consul cluster is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -215,18 +211,24 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
-
+	hvnID := d.Get("hvn_id").(string)
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: d.Get("cloud_provider").(string),
-			Region:   d.Get("region").(string),
-		},
+	}
+
+	// Use the hvn to get provider and region.
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.Errorf("unable to find existing HVN (%s): %v", hvnID, err)
+	}
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
 	}
 
 	// Check for an existing Consul cluster
-	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
@@ -267,8 +269,6 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	featureTier := d.Get("tier").(string)
 	numServers := featureTierToNumServers[featureTier]
-
-	hvnID := d.Get("hvn_id").(string)
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
