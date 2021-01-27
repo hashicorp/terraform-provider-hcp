@@ -21,6 +21,7 @@ func New() func() *schema.Provider {
 				"hcp_consul_agent_helm_config":       dataSourceConsulAgentHelmConfig(),
 				"hcp_consul_agent_kubernetes_secret": dataSourceConsulAgentKubernetesSecret(),
 				"hcp_consul_cluster":                 dataSourceConsulCluster(),
+				"hcp_hvn":                            dataSourceHvn(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":       resourceAwsNetworkPeering(),
