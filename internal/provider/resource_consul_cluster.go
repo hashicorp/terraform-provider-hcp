@@ -13,7 +13,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
-	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
 const featureTierDev = "dev"
@@ -560,10 +559,8 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*clients.Client)
 
 	clusterID := d.Id()
-
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID: client.Config.ProjectID,
 	}
 
 	link := newLink(loc, ConsulClusterResourceType, clusterID)
@@ -571,12 +568,8 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return nil, err
 	}
-	d.SetId(url)
 
-	diags := resourceConsulClusterRead(ctx, d, meta)
-	if err := helper.ToError(diags); err != nil {
-		return nil, err
-	}
+	d.SetId(url)
 
 	return []*schema.ResourceData{d}, nil
 }

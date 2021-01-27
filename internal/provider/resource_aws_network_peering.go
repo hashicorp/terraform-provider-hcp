@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -32,7 +33,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			Delete:  &peeringDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: resourceAwsNetworkPeeringImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -317,4 +318,33 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 	}
 
 	return nil
+}
+
+// resourceAwsNetworkPeeringImport implements the logic necessary to import an
+// un-tracked (by Terraform) network peering resource into Terraform state.
+func resourceAwsNetworkPeeringImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	idParts := strings.SplitN(d.Id(), ":", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{peering_id}", d.Id())
+	}
+	hvnID := idParts[0]
+	peeringID := idParts[1]
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		ProjectID: client.Config.ProjectID,
+	}
+
+	link := newLink(loc, PeeringResourceType, peeringID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(url)
+	if err := d.Set("hvn_id", hvnID); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
