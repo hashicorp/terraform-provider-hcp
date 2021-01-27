@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/helper"
 )
 
-const featureTierDev = "dev"
+const featureTierDevelopment = "development"
 const featureTierStandard = "standard"
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
@@ -40,15 +41,15 @@ var consulCusterResourceCloudProviders = []string{
 // consulClusterResourceFeatureTiers is the list of tiers
 // that an HCP Consul cluster can be provisioned as.
 var consulClusterResourceFeatureTiers = []string{
-	featureTierDev,
+	featureTierDevelopment,
 	featureTierStandard,
 }
 
 // featureTierToNumServers maps the set of feature tiers
 // to the number of servers to be provisioned for that cluster.
 var featureTierToNumServers = map[string]int32{
-	featureTierDev:      int32(1),
-	featureTierStandard: int32(3),
+	featureTierDevelopment: int32(1),
+	featureTierStandard:    int32(3),
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -100,12 +101,15 @@ func resourceConsulCluster() *schema.Resource {
 			},
 			"tier": {
 				// TODO: link to HCP Consul feature tier page when it is available
-				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.",
+				Description:      "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          featureTierDev,
+				Default:          featureTierDevelopment,
 				ValidateDiagFunc: validateStringInSlice(consulClusterResourceFeatureTiers, true),
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 			// optional fields
 			"public_endpoint": {
@@ -202,8 +206,8 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 				Sensitive:   true,
 			},
-			"num_servers": {
-				Description: "The the number of Consul server nodes in the cluster.",
+			"scale": {
+				Description: "The number of Consul server nodes in the cluster.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
@@ -265,7 +269,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	featureTier := d.Get("tier").(string)
+	featureTier := strings.ToLower(d.Get("tier").(string))
 	numServers := featureTierToNumServers[featureTier]
 
 	hvnID := d.Get("hvn_id").(string)
@@ -366,7 +370,7 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	if err := d.Set("num_servers", cluster.Config.CapacityConfig.NumServers); err != nil {
+	if err := d.Set("scale", cluster.Config.CapacityConfig.NumServers); err != nil {
 		return err
 	}
 

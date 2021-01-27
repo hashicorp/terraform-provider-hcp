@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
@@ -56,12 +57,18 @@ func resourceHvn() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringInSlice(hvnResourceCloudProviders, true),
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 			"region": {
 				Description: "The region where the HVN is located.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 			// Optional inputs
 			"cidr_block": {
