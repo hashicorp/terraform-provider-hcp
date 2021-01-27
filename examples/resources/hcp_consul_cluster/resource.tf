@@ -1,9 +1,3 @@
-provider "hcp" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  project_id    = var.project_id
-}
-
 resource "hcp_hvn" "example" {
   hvn_id         = "hvn"
   cloud_provider = "aws"
@@ -13,8 +7,8 @@ resource "hcp_hvn" "example" {
 
 resource "hcp_consul_cluster" "example" {
   cluster_id     = "consul-cluster"
-  hvn_id         = hcp_hvn.main.hvn_id
-  cloud_provider = hcp_hvn.main.cloud_provider
-  region         = hcp_hvn.main.region
+  hvn_id         = hcp_hvn.example.hvn_id
+  cloud_provider = hcp_hvn.example.cloud_provider
+  region         = hcp_hvn.example.region
 }
 
