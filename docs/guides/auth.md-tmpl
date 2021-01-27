@@ -9,7 +9,7 @@ description: |-
 
 The HCP provider accepts client credentials, which are obtained on the creation of a service principal key. 
 
-Service principals and service principal keys can be created in the HCP Portal with an existing user account.
+Service principals and service principal keys can be created in the HCP portal with an existing user account.
 
 ## Create a service principal
 
