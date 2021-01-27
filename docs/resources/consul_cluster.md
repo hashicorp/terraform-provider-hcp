@@ -35,6 +35,7 @@ resource "hcp_consul_cluster" "example" {
 - **cluster_id** (String) The ID of the HCP Consul cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
 - **region** (String) The region where the HCP Consul cluster is located.
+- **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
 
 ### Optional
 
@@ -43,7 +44,6 @@ resource "hcp_consul_cluster" "example" {
 - **id** (String) The ID of this resource.
 - **min_consul_version** (String) The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
-- **tier** (String) The feature tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only

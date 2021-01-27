@@ -41,7 +41,7 @@ The cluster data source provides information about an existing HCP Consul cluste
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - **region** (String) The region where the HCP Consul cluster is located.
 - **scale** (Number) The the number of Consul server nodes in the cluster.
-- **tier** (String) The feature tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
+- **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
