@@ -74,7 +74,7 @@ resource "hcp_consul_cluster" "example" {
   hvn_id         = hcp_hvn.example.hvn_id
   cluster_id     = "consul-cluster"
   cloud_provider = hcp_hvn.example.cloud_provider
-  region         = hcp_hvn.example.region
+  tier           = "development"
 }
 
 // If you have not already, create a VPC within your AWS account that will
