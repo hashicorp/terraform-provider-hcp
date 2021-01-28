@@ -9,7 +9,13 @@ description: |-
 
 The agent config Kubernetes secret data source provides Consul agents running in Kubernetes the configuration needed to connect to the Consul cluster.
 
+## Example Usage
 
+```terraform
+data "hcp_consul_agent_kubernetes_secret" "test" {
+  cluster_id = var.cluster_id
+}
+```
 
 ## Schema
 
