@@ -270,7 +270,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	tier := d.Get("tier").(string)
+	tier := strings.ToLower(d.Get("tier").(string))
 	numServers := consulTierToNumServers[tier]
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
