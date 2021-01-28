@@ -27,10 +27,9 @@ resource "hcp_hvn" "example_hvn" {
 }
 
 resource "hcp_consul_cluster" "example_consul_cluster" {
-  hvn_id         = hcp_hvn.example_hvn.hvn_id
-  cluster_id     = "hcp-tf-example-consul-cluster"
-  cloud_provider = "aws"
-  region         = "us-west-2"
+  hvn_id     = hcp_hvn.example_hvn.hvn_id
+  cluster_id = "hcp-tf-example-consul-cluster"
+  tier       = "development"
 }
 
 resource "hcp_aws_network_peering" "example_peering" {

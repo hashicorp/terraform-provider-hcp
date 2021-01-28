@@ -62,6 +62,9 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 			"peer_vpc_cidr_block": {
 				Description:  "The CIDR range of the peer VPC in AWS.",

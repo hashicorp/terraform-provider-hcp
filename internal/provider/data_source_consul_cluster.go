@@ -107,13 +107,13 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"num_servers": {
+			"scale": {
 				Description: "The the number of Consul server nodes in the cluster.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 			"tier": {
-				Description: "The feature tier that the HCP Consul cluster will be provisioned as.  Only 'dev' and 'standard' are available at this time.",
+				Description: "The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

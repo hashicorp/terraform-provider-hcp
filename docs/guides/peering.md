@@ -25,10 +25,9 @@ resource "hcp_hvn" "example" {
 
 // Create an HCP Consul cluster within the HVN.
 resource "hcp_consul_cluster" "example" {
-  hvn_id         = hcp_hvn.example.hvn_id
-  cluster_id     = var.cluster_id
-  cloud_provider = var.cloud_provider
-  region         = var.region
+  hvn_id     = hcp_hvn.example.hvn_id
+  cluster_id = var.cluster_id
+  tier       = "development"
 }
 
 // If you have not already, create a VPC within your AWS account that will

@@ -20,10 +20,9 @@ resource "hcp_hvn" "example" {
 }
 
 resource "hcp_consul_cluster" "example" {
-  hvn_id         = hcp_hvn.example.hvn_id
-  cluster_id     = var.cluster_id
-  cloud_provider = var.cloud_provider
-  region         = var.region
+  hvn_id     = hcp_hvn.example.hvn_id
+  cluster_id = var.cluster_id
+  tier       = "development"
 }
 
 resource "hcp_consul_snapshot" "example" {
