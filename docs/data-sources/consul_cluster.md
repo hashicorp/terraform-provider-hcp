@@ -12,7 +12,7 @@ The cluster data source provides information about an existing HCP Consul cluste
 ## Example Usage
 
 ```terraform
-resource "hcp_consul_cluster" "example" {
+data "hcp_consul_cluster" "example" {
   cluster_id = var.cluster_id
 }
 ```
