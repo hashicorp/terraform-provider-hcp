@@ -28,7 +28,7 @@ func GetPeeringByID(ctx context.Context, client *Client, peeringID string, hvnID
 
 // WaitForPeeringToBePendingAcceptance will poll the GET peering endpoint until
 // the state is PENDING_ACCEPTANCE, ctx is canceled, or an error occurs. This
-// is required because AWS can return a newly created peering connection before
+// is required because AWS can return a newly created network peering before
 // it is ready to be accepted.
 // See https://hashicorp.atlassian.net/browse/HCP-1658
 func WaitForPeeringToBePendingAcceptance(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
