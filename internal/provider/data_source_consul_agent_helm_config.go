@@ -122,16 +122,14 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to read Consul agent Helm config; no HCP Consul Cluster found with (cluster_id %q) (project_id %q)",
+			return diag.Errorf("unable to read Consul agent Helm config; Consul cluster (%s) not found",
 				clusterID,
-				projectID,
 			)
 
 		}
 
-		return diag.Errorf("error checking for presence of existing HCP Consul Cluster (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v",
 			clusterID,
-			projectID,
 			err,
 		)
 	}
@@ -139,7 +137,7 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
 	// pull off the config string
@@ -148,7 +146,7 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 	// decode it
 	consulConfigJSON, err := base64.StdEncoding.DecodeString(configStr)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("failed to base64 decode consul config (%v): %w", configStr, err))
+		return diag.FromErr(fmt.Errorf("unable to base64 decode Consul config (%v): %v", configStr, err))
 	}
 
 	// unmarshal from JSON
