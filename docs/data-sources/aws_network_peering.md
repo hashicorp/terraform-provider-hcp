@@ -22,7 +22,7 @@ data "hcp_aws_network_peering" "test" {
 
 ### Required
 
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network.
+- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **peering_id** (String) The ID of the network peering.
 
 ### Optional

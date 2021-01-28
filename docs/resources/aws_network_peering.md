@@ -49,7 +49,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ### Required
 
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network.
+- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **peer_account_id** (String) The account ID of the peer VPC in AWS.
 - **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.

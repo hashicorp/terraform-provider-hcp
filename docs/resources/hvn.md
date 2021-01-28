@@ -25,7 +25,7 @@ resource "hcp_hvn" "example" {
 ### Required
 
 - **cloud_provider** (String) The provider where the HVN is located. Only 'aws' is available at this time.
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network.
+- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **region** (String) The region where the HVN is located.
 
 ### Optional

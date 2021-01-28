@@ -1,5 +1,5 @@
 variable "hvn_id" {
-  description = "The ID of the HashiCorp Virtual Network."
+  description = "The ID of the HashiCorp Virtual Network (HVN)."
   type        = string
 }
 
