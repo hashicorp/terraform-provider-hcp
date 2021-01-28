@@ -13,7 +13,7 @@ The cluster root token resource is the token used to bootstrap the cluster's ACL
 
 ```terraform
 resource "hcp_consul_cluster_root_token" "example" {
-  cluster_id = var.cluster_id
+  cluster_id = "consul-cluster"
 }
 ```
 
