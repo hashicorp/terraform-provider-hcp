@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Network Peering data source provides information about an existing peering connection between an HVN and a peer AWS VPC.",
+		Description: "The AWS Network Peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.",
 		ReadContext: dataSourceAwsNetworkPeeringRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &peeringDefaultTimeout,
@@ -63,7 +63,7 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"provider_peering_id": {
-				Description: "The peering connection ID used by AWS.",
+				Description: "The network peering ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -82,7 +82,7 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 }
 
 // dataSourceAwsNetworkPeeringRead is the func to implement reading of the
-// AWS Network Peering connection between an HVN and a peer AWS VPC.
+// AWS Network Network peering between an HVN and a peer AWS VPC.
 func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 

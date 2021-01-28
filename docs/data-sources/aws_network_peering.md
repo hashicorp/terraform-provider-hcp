@@ -2,12 +2,12 @@
 page_title: "hcp_aws_network_peering Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The AWS Network Peering data source provides information about an existing peering connection between an HVN and a peer AWS VPC.
+  The AWS Network Peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.
 ---
 
 # Data Source `hcp_aws_network_peering`
 
-The AWS Network Peering data source provides information about an existing peering connection between an HVN and a peer AWS VPC.
+The AWS Network Peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.
 
 ## Example Usage
 
@@ -40,7 +40,7 @@ data "hcp_aws_network_peering" "test" {
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.
 - **peer_vpc_region** (String) The region of the peer VPC in AWS.
 - **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
-- **provider_peering_id** (String) The peering connection ID used by AWS.
+- **provider_peering_id** (String) The network peering ID used by AWS.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

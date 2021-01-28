@@ -22,7 +22,7 @@ var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.",
+		Description: "The AWS Network Peering resource allows you to manage a network peering between an HVN and a peer AWS VPC.",
 
 		CreateContext: resourceAwsNetworkPeeringCreate,
 		ReadContext:   resourceAwsNetworkPeeringRead,
@@ -94,7 +94,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"provider_peering_id": {
-				Description: "The peering connection ID used by AWS.",
+				Description: "The network peering ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
