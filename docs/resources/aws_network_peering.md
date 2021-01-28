@@ -12,12 +12,6 @@ The AWS Network Peering resource allows you to manage a peering connection betwe
 ## Example Usage
 
 ```terraform
-provider "hcp" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  project_id    = var.project_id
-}
-
 provider "aws" {
   region = "us-west-2"
 }
