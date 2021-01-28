@@ -4,6 +4,6 @@ variable "cluster_id" {
 }
 
 variable "kubernetes_endpoint" {
-  description = "The FQDN for the Kubernetes API."
+  description = "The FQDN of the Kubernetes API."
   type        = string
 }
