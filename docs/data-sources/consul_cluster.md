@@ -2,12 +2,12 @@
 page_title: "hcp_consul_cluster Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The cluster data source provides information about an existing HCP Consul cluster
+  The cluster data source provides information about an existing HCP Consul cluster.
 ---
 
 # Data Source `hcp_consul_cluster`
 
-The cluster data source provides information about an existing HCP Consul cluster
+The cluster data source provides information about an existing HCP Consul cluster.
 
 ## Example Usage
 

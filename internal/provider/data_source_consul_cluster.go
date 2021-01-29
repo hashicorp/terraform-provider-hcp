@@ -13,7 +13,7 @@ import (
 
 func dataSourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
-		Description: "The cluster data source provides information about an existing HCP Consul cluster",
+		Description: "The cluster data source provides information about an existing HCP Consul cluster.",
 		ReadContext: dataSourceConsulClusterRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultClusterTimeoutDuration,

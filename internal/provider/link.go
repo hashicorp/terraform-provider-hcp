@@ -16,7 +16,7 @@ const (
 	// HvnResourceType is the resource type of an HVN
 	HvnResourceType = "hashicorp.network.hvn"
 
-	// PeeringResourceType is the resource type of a network peering
+	// PeeringResourceType is the resource type of a Network peering
 	PeeringResourceType = "hashicorp.network.peering"
 
 	// ConsulSnapshotResourceType is the resource type of a Consul snapshot

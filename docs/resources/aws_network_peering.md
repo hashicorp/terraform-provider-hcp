@@ -2,22 +2,16 @@
 page_title: "hcp_aws_network_peering Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.
+  The AWS Network peering resource allows you to manage a Network peering between an HVN and a peer AWS VPC.
 ---
 
 # Resource `hcp_aws_network_peering`
 
-The AWS Network Peering resource allows you to manage a peering connection between an HVN and a peer AWS VPC.
+The AWS Network peering resource allows you to manage a Network peering between an HVN and a peer AWS VPC.
 
 ## Example Usage
 
 ```terraform
-provider "hcp" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  project_id    = var.project_id
-}
-
 provider "aws" {
   region = "us-west-2"
 }
@@ -55,7 +49,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ### Required
 
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network.
+- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **peer_account_id** (String) The account ID of the peer VPC in AWS.
 - **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.
@@ -64,15 +58,15 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **peering_id** (String) The ID of the network peering.
+- **peering_id** (String) The ID of the Network peering.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only
 
-- **created_at** (String) The time that the network peering was created.
-- **expires_at** (String) The time after which the network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
-- **organization_id** (String) The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.
-- **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
+- **created_at** (String) The time that the Network peering was created.
+- **expires_at** (String) The time after which the Network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
+- **organization_id** (String) The ID of the HCP organization where the Network peering is located. Always matches the HVN's organization.
+- **project_id** (String) The ID of the HCP project where the Network peering is located. Always matches the HVN's project.
 - **provider_peering_id** (String) The peering connection ID used by AWS.
 
 <a id="nestedblock--timeouts"></a>
