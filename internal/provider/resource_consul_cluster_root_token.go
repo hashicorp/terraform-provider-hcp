@@ -162,7 +162,7 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 			return nil
 		}
 
-		return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v",
+		return diag.Errorf("unable to check for presence of an existing Consul cluster (cluster_id %q) (project_id %q): %v",
 			clusterID,
 			projectID,
 			err,
