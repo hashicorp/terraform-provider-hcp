@@ -106,11 +106,11 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
+			return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v", clusterID, err)
 		}
 
 		// a 404 indicates a Consul cluster was not found
-		return diag.Errorf("unable to create snapshot; no HCS Cluster found for Consul cluster (%s)", clusterID)
+		return diag.Errorf("unable to create snapshot; Consul cluster (%s) not found", clusterID)
 	}
 
 	name := d.Get("snapshot_name").(string)

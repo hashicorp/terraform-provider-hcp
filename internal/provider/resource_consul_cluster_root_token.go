@@ -91,16 +91,14 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to create root ACL token; no HCP Consul Cluster found with (cluster_id %q) (project_id %q)",
+			return diag.Errorf("unable to create root ACL token; Consul cluster (%s) not found",
 				clusterID,
-				projectID,
 			)
 
 		}
 
-		return diag.Errorf("error checking for presence of existing HCP Consul Cluster (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v",
 			clusterID,
-			projectID,
 			err,
 		)
 	}
@@ -164,7 +162,7 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 			return nil
 		}
 
-		return diag.Errorf("error checking for presence of existing HCP Consul Cluster (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v",
 			clusterID,
 			projectID,
 			err,
@@ -201,9 +199,8 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 			return nil
 		}
 
-		return diag.Errorf("error checking for presence of existing HCP Consul Cluster (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v",
 			clusterID,
-			projectID,
 			err,
 		)
 	}
@@ -211,9 +208,8 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 	// generate a new token to invalidate the previous one, but discard the response
 	_, err = clients.CreateCustomerRootACLToken(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("error deleting HCP Consul Cluster root ACL token (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("unable to delete Consul cluster (%s) root ACL token: %v",
 			clusterID,
-			projectID,
 			err,
 		)
 	}
