@@ -65,7 +65,7 @@ provider "aws" {
 resource "hcp_hvn" "example" {
   hvn_id         = "hvn"
   cloud_provider = "aws"
-  region         = "us-west-1"
+  region         = "us-west-2"
   cidr_block     = "172.25.16.0/20"
 }
 
@@ -73,7 +73,6 @@ resource "hcp_hvn" "example" {
 resource "hcp_consul_cluster" "example" {
   hvn_id         = hcp_hvn.example.hvn_id
   cluster_id     = "consul-cluster"
-  cloud_provider = hcp_hvn.example.cloud_provider
   tier           = "development"
 }
 
