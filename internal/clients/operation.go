@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/cloud-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // maxConsecutiveWaitErrors is the maximum number of consecutive http response errors
