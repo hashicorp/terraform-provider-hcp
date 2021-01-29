@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/cloud-sdk-go v0.0.0-20210122215247-ff03dfb79d5d
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/hcp-sdk-go v0.0.0-20210129141849-e4c24b3fd32a
 	github.com/hashicorp/terraform-plugin-docs v0.3.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.0
 	github.com/stretchr/testify v1.6.1

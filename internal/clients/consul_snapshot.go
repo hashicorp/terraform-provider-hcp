@@ -3,9 +3,9 @@ package clients
 import (
 	"context"
 
-	"github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
-	consulmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // CreateSnapshot  will make a call to the Consul service to initiate the create Consul

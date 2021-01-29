@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
-	networkmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-network/preview/2020-09-07/models"
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
+	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // GetPeeringByID gets a peering by its ID, hvnID, and location

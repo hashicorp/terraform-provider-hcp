@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	sharedmodels "github.com/hashicorp/cloud-sdk-go/clients/cloud-shared/v1/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 const (
