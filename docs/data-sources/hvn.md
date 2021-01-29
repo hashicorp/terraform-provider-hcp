@@ -21,7 +21,7 @@ data "hcp_hvn" "example" {
 
 ### Required
 
-- **hvn_id** (String) The ID of the Network Peering.
+- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 
 ### Optional
 
