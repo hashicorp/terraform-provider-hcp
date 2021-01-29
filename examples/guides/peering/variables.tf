@@ -9,17 +9,7 @@ variable "cluster_id" {
 }
 
 variable "region" {
-  description = "The region of the HCP HVN and Consul cluster."
-  type        = string
-}
-
-variable "cloud_provider" {
-  description = "The cloud provider of the HCP HVN and Consul cluster."
-  type        = string
-}
-
-variable "peer_vpc_region" {
-  description = "The region of the peer VPC."
+  description = "The region of the HCP HVN and peer VPC."
   type        = string
 }
 

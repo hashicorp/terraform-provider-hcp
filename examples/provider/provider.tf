@@ -19,7 +19,7 @@ provider "aws" {
 // Create an HVN
 resource "hcp_hvn" "example_hvn" {
   hvn_id         = "hcp-tf-example-hvn"
-  cloud_provider = var.cloud_provider
+  cloud_provider = "aws"
   region         = var.region
   cidr_block     = "172.25.16.0/20"
 }
@@ -41,7 +41,6 @@ resource "aws_vpc_peering_connection_accepter" "main" {
 // Create a Network peering between the HVN and the AWS VPC
 resource "hcp_aws_network_peering" "example_peering" {
   hvn_id = hcp_hvn.example_hvn.hvn_id
-
   peer_vpc_id         = aws_vpc.main.id
   peer_account_id     = aws_vpc.main.owner_id
   peer_vpc_region     = data.aws_arn.main.region
@@ -52,6 +51,5 @@ resource "hcp_aws_network_peering" "example_peering" {
 resource "hcp_consul_cluster" "example" {
   hvn_id         = hcp_hvn.example_hvn.hvn_id
   cluster_id     = "hcp-tf-example-consul-cluster"
-  cloud_provider = var.cloud_provider
-  region         = var.region
+  tier           = "development"
 }
