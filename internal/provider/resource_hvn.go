@@ -44,7 +44,7 @@ func resourceHvn() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_id": {
-				Description:      "The ID of the HashiCorp Virtual Network.",
+				Description:      "The ID of the HashiCorp Virtual Network (HVN).",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,

@@ -71,12 +71,12 @@ func validateSemVer(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-// validateSlugID validates that the string value matches the HCS requirements for
+// validateSlugID validates that the string value matches the HCP requirements for
 // a user-settable slug, as well as the Azure requirements for a Managed Application name.
 func validateSlugID(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	// HCS supports a max of 36 chars for the cluster name which is defaulted to
+	// HCP supports a max of 36 chars for the cluster name which is defaulted to
 	// the value of of the Managed App name so we must enforce a max of 36 even though
 	// Azure supports a max of 64 chars for the Managed App name
 	if !regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`).MatchString(v.(string)) {
