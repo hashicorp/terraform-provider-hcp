@@ -149,7 +149,7 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
 	// Cluster found, update resource data

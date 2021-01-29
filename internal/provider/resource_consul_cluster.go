@@ -233,7 +233,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing Consul Cluster (%s): %v", clusterID, err)
+			return diag.Errorf("unable to check for presence of an existing Consul cluster (%s): %v", clusterID, err)
 		}
 
 		// a 404 indicates a Consul cluster was not found
@@ -304,7 +304,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", payload.Cluster.ID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", payload.Cluster.ID, err)
 	}
 
 	// create customer root ACL token
@@ -446,7 +446,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
 	// Cluster found, update resource data
@@ -517,7 +517,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster client config files (%s): %v", clusterID, err)
+		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
 	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {

@@ -131,7 +131,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to find the HVN (%s) for the network peering", hvnID)
+			return diag.Errorf("unable to find HVN (%s) for network peering", hvnID)
 		}
 
 		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)

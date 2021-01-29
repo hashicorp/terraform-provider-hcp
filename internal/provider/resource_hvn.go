@@ -122,7 +122,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
 	} else {
-		return diag.Errorf("an HVN with hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_hvn for more information", hvnID, loc.ProjectID)
+		return diag.Errorf("unable to create HVN (%s) - an HVN with this ID already exists; see resouce documentation for hcp_hvn for instructions on how to add an already existing HVN to the state", hvnID, loc.ProjectID)
 	}
 
 	createNetworkParams := network_service.NewCreateParams()
