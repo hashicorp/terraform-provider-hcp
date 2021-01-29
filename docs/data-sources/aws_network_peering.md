@@ -2,12 +2,12 @@
 page_title: "hcp_aws_network_peering Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The AWS Network Peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.
+  The AWS Network peering data source provides information about an existing Network peering between an HVN and a peer AWS VPC.
 ---
 
 # Data Source `hcp_aws_network_peering`
 
-The AWS Network Peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.
+The AWS Network peering data source provides information about an existing Network peering between an HVN and a peer AWS VPC.
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ data "hcp_aws_network_peering" "test" {
 ### Required
 
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
-- **peering_id** (String) The ID of the network peering.
+- **peering_id** (String) The ID of the Network peering.
 
 ### Optional
 
@@ -32,14 +32,14 @@ data "hcp_aws_network_peering" "test" {
 
 ### Read-only
 
-- **created_at** (String) The time that the network peering was created.
-- **expires_at** (String) The time after which the network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
-- **organization_id** (String) The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.
+- **created_at** (String) The time that the Network peering was created.
+- **expires_at** (String) The time after which the Network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
+- **organization_id** (String) The ID of the HCP organization where the Network peering is located. Always matches the HVN's organization.
 - **peer_account_id** (String) The account ID of the peer VPC in AWS.
 - **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.
 - **peer_vpc_region** (String) The region of the peer VPC in AWS.
-- **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
+- **project_id** (String) The ID of the HCP project where the Network peering is located. Always matches the HVN's project.
 - **provider_peering_id** (String) The peering connection ID used by AWS.
 
 <a id="nestedblock--timeouts"></a>

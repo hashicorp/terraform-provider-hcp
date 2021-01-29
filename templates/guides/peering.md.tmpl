@@ -8,8 +8,8 @@ description: |-
 # Peer an AWS VPC to a HashiCorp Virtual Network (HVN)
 
 In order to connect AWS workloads to an HCP Consul cluster, you must peer the VPC in which the workloads reside to the HVN in which the HCP cluster resides.
-This is accomplished by using the `hcp_aws_network_peering` resource to create a network peering between the HVN's VPC and your own VPC.
-The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection_accepter) resource is useful for accepting the network peering that is initiated from the `hcp_aws_network_peering`.
+This is accomplished by using the `hcp_aws_network_peering` resource to create a Network peering between the HVN's VPC and your own VPC.
+The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection_accepter) resource is useful for accepting the Network peering that is initiated from the `hcp_aws_network_peering`.
 -> **Note** The CIDR blocks of the HVN and the peer VPC cannot overlap.
 
 For more details about deploying Consul on HCP, check out the [Deploy HashiCorp Cloud Platform (HCP) Consul](https://learn.hashicorp.com/tutorials/cloud/consul-deploy?in=consul/cloud) guide.
