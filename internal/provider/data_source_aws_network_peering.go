@@ -82,7 +82,7 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 }
 
 // dataSourceAwsNetworkPeeringRead is the func to implement reading of the
-// AWS Network Network peering between an HVN and a peer AWS VPC.
+// AWS Network peering between an HVN and a peer AWS VPC.
 func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
