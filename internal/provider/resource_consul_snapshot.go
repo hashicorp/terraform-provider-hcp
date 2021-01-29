@@ -110,7 +110,7 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// a 404 indicates a Consul cluster was not found
-		return diag.Errorf("unable to create snapshot; Consul cluster (%s) not found", clusterID)
+		return diag.Errorf("unable to create snapshot; no HCP Cluster found for Consul cluster (%s)", clusterID)
 	}
 
 	name := d.Get("snapshot_name").(string)

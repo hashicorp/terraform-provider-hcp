@@ -7,7 +7,7 @@ description: |-
 
 # Create Consul cluster snapshots
 
-The snapshot resource allows users to manage Consul snapshots of an HCS cluster. Snapshots currently have a retention policy of 30 days.
+The snapshot resource allows users to manage Consul snapshots of an HCP cluster. Snapshots currently have a retention policy of 30 days.
 
 Restoring snapshots via Terraform is not supported.  If you would like to restore a snapshot for your Consul cluster, navigate to the snapshots page via the HCP UI.
 
