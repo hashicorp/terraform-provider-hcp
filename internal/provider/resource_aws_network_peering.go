@@ -94,7 +94,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"provider_peering_id": {
-				Description: "The network peering ID used by AWS.",
+				Description: "The peering connection ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
