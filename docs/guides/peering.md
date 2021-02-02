@@ -10,7 +10,8 @@ description: |-
 In order to connect AWS workloads to an HCP Consul cluster, you must peer the VPC in which the workloads reside to the HVN in which the HCP cluster resides.
 This is accomplished by using the `hcp_aws_network_peering` resource to create a Network peering between the HVN's VPC and your own VPC.
 The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_peering_connection_accepter) resource is useful for accepting the Network peering that is initiated from the `hcp_aws_network_peering`.
--> **Note** The CIDR blocks of the HVN and the peer VPC cannot overlap.
+
+-> **Note:** The CIDR blocks of the HVN and the peer VPC cannot overlap.
 
 For more details about deploying Consul on HCP, check out the [Deploy HashiCorp Cloud Platform (HCP) Consul](https://learn.hashicorp.com/tutorials/cloud/consul-deploy?in=consul/cloud) guide.
 
@@ -18,7 +19,7 @@ For more details about deploying Consul on HCP, check out the [Deploy HashiCorp 
 // Create a HashiCorp Virtual Network (HVN).
 resource "hcp_hvn" "example" {
   hvn_id         = var.hvn_id
-  cloud_provider = var.cloud_provider
+  cloud_provider = "aws"
   region         = var.region
   cidr_block     = "172.25.16.0/20"
 }
@@ -44,7 +45,7 @@ resource "hcp_aws_network_peering" "example" {
   hvn_id              = hcp_hvn.example.hvn_id
   peer_vpc_id         = aws_vpc.peer.id
   peer_account_id     = aws_vpc.peer.owner_id
-  peer_vpc_region     = var.peer_vpc_region
+  peer_vpc_region     = var.region
   peer_vpc_cidr_block = aws_vpc.peer.cidr_block
 }
 
