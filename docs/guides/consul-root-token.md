@@ -14,8 +14,8 @@ the existing root token will be invalidated.
 ```terraform
 resource "hcp_hvn" "example" {
   hvn_id         = var.hvn_id
-  cloud_provider = var.cloud_provider
-  region         = var.region
+  cloud_provider = "aws"
+  region         = "us-west-2"
 }
 
 // The root_token_accessor_id and root_token_secret_id properties will

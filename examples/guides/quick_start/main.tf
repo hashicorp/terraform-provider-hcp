@@ -12,7 +12,7 @@ resource "hcp_consul_cluster" "example_consul_cluster" {
 }
 
 resource "hcp_aws_network_peering" "example_peering" {
-  hvn_id = hcp_hvn.example_hvn.hvn_id
+  hvn_id              = hcp_hvn.example_hvn.hvn_id
   peer_vpc_id         = "vpc-2f09a348"
   peer_account_id     = "1234567890"
   peer_vpc_region     = "us-west-2"
