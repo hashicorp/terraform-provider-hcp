@@ -185,3 +185,79 @@ func Test_validateSlugID(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateDatacenter(t *testing.T) {
+	tcs := map[string]struct {
+		expected diag.Diagnostics
+		input    string
+	}{
+		"valid datacenter": {
+			input:    "hello-123_456",
+			expected: nil,
+		},
+		"empty string": {
+			input: "",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					Detail:        "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					AttributePath: nil,
+				},
+			},
+		},
+		"invalid characters": {
+			input: "test@123",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					Detail:        "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					AttributePath: nil,
+				},
+			},
+		},
+		"uppercase characters": {
+			input: "Test123",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					Detail:        "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					AttributePath: nil,
+				},
+			},
+		},
+		"too short": {
+			input: "ab",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					Detail:        "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					AttributePath: nil,
+				},
+			},
+		},
+		"too long": {
+			input: "abcdefghi1abcdefghi1abcdefghi12345678",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					Detail:        "must be between 3 and 36 characters in length and contains only lowercase letters, numbers, hyphens, or underscores",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+
+			result := validateDatacenter(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}

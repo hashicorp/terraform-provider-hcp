@@ -115,11 +115,12 @@ func resourceConsulCluster() *schema.Resource {
 				},
 			},
 			"datacenter": {
-				Description: "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
+				Description:      "The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				ValidateDiagFunc: validateDatacenter,
 			},
 			"connect_enabled": {
 				Description: "Denotes the Consul connect feature should be enabled for this cluster.  Default to true.",
@@ -260,7 +261,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", consulVersion, availableConsulVersions)
 	}
 
-	datacenter := clusterID
+	datacenter := strings.ToLower(clusterID)
 	v, ok = d.GetOk("datacenter")
 	if ok {
 		datacenter = v.(string)
