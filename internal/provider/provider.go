@@ -34,13 +34,13 @@ func New() func() *schema.Provider {
 			Schema: map[string]*schema.Schema{
 				"client_id": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_ID", nil),
 					Description: "The OAuth2 Client ID for API operations.",
 				},
 				"client_secret": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_SECRET", nil),
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
