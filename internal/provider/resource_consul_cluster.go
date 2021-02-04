@@ -444,6 +444,14 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
 	}
 
+	// The Consul cluster failed to provision properly so we want to let the user know and
+	// remove it from state
+	if cluster.State == consulmodels.HashicorpCloudConsul20200826ClusterStateFAILED {
+		log.Printf("[WARN] Consul cluster (%s) failed to provision, removing from state", clusterID)
+		d.SetId("")
+		return nil
+	}
+
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {

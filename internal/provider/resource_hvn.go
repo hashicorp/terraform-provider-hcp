@@ -192,6 +192,14 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
 	}
 
+	// The HVN failed to provision properly so we want to let the user know and remove it from
+	// state
+	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateFAILED {
+		log.Printf("[WARN] HVN (%s) failed to provision, removing from state", hvnID)
+		d.SetId("")
+		return nil
+	}
+
 	// HVN found, update resource data
 	if err := setHvnResourceData(d, hvn); err != nil {
 		return diag.FromErr(err)
