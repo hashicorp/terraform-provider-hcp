@@ -281,13 +281,6 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
 
-	// wait for the Consul cluster to be created
-	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Consul cluster (%s): %v", payload.Cluster.ID, err)
-	}
-
-	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
-
 	link := newLink(loc, ConsulClusterResourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
@@ -295,6 +288,13 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(url)
+
+	// wait for the Consul cluster to be created
+	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %v", payload.Cluster.ID, err)
+	}
+
+	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
 	// get the created Consul cluster
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, payload.Cluster.ID)
