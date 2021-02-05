@@ -1,0 +1,315 @@
+package provider
+
+import (
+	"context"
+	"log"
+
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
+	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+)
+
+// var tgwDefaultTimeout = time.Minute * 1
+// var tgwCreateTimeout = time.Minute * 35
+// var tgwDeleteTimeout = time.Minute * 35
+
+func resourceTGWAttachment() *schema.Resource {
+	return &schema.Resource{
+		Description: "???",
+
+		CreateContext: resourceTGWAttachmentCreate,
+		ReadContext:   resourceTGWAttachmentRead,
+		DeleteContext: resourceTGWAttachmentDelete,
+		// Timeouts: &schema.ResourceTimeout{
+		// 	Default: &tgwDefaultTimeout,
+		// 	Create:  &tgwCreateTimeout,
+		// 	Delete:  &tgwDeleteTimeout,
+		// },
+		// Importer: &schema.ResourceImporter{
+		// 	State: schema.ImportStatePassthrough,
+		// },
+
+		Schema: map[string]*schema.Schema{
+			// Required inputs
+			"hvn_id": {
+				Description:      "The ID of the HashiCorp Virtual Network (HVN).",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
+			},
+			"tgw_attachment_id": {
+				Description: "The ID of the Transit Gateway (TGW) attachment.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				// ValidateDiagFunc: validateSlugID,
+			},
+			"tgw_id": {
+				Description: "??????",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			"resource_share_arn": {
+				Description: "??????",
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+			},
+			"destination_cidrs": {
+				Description: "??????",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Required: true,
+				ForceNew: true,
+			},
+			// Computed outputs
+			"organization_id": {
+				Description: "The ID of the HCP organization where the TGW attachment is located. Always matches the HVN's organization.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the TGW attachment is located. Always matches the HVN's project.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"provider_tgw_attachment_id": {
+				Description: "??????",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"state": {
+				Description: "??????",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "The time that the TGW attachment was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"expires_at": {
+				Description: "The time after which the TGW attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+		},
+	}
+}
+
+func resourceTGWAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	hvnID := d.Get("hvn_id").(string)
+	tgwAttachmentID := d.Get("tgw_attachment_id").(string)
+	tgwID := d.Get("tgw_id").(string)
+	resourceShareARN := d.Get("resource_share_arn").(string)
+	rawCIDRs := d.Get("destination_cidrs").([]interface{})
+
+	destinationCIDRs := make([]string, len(rawCIDRs))
+	for i, cidr := range rawCIDRs {
+		strCidr, ok := cidr.(string)
+		if !ok {
+			return diag.Errorf("unable to convert cidr: %v to string", cidr)
+		}
+		destinationCIDRs[i] = strCidr
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	// Check for an existing HVN
+	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to find the HVN (%s) for the TGW attachment", hvnID)
+		}
+
+		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
+	}
+	log.Printf("[INFO] HVN (%s) found, proceeding with create", hvnID)
+
+	// Check if TGW attachment already exists
+	_, err = clients.GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)
+	if err != nil {
+		if !clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to check for presence of an existing TGW attachment (%s): %v", tgwAttachmentID, err)
+		}
+
+		log.Printf("[INFO] TGW attachment (%s) not found, proceeding with create", tgwAttachmentID)
+	} else {
+		return diag.Errorf("a TGW attachment with tgw_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_tgw_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
+	}
+
+	// Create TGW attachment
+	createTGWAttachmentParams := network_service.NewCreateTGWAttachmentParams()
+	createTGWAttachmentParams.HvnID = hvnID
+	createTGWAttachmentParams.HvnLocationOrganizationID = loc.OrganizationID
+	createTGWAttachmentParams.HvnLocationProjectID = loc.ProjectID
+	createTGWAttachmentParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateTGWAttachmentRequest{
+		Cidrs: destinationCIDRs,
+		Hvn: &sharedmodels.HashicorpCloudLocationLink{
+			ID:       hvnID,
+			Location: loc,
+		},
+		ID: tgwAttachmentID,
+		ProviderData: &networkmodels.HashicorpCloudNetwork20200907CreateTGWAttachmentRequestProviderData{
+			AwsData: &networkmodels.HashicorpCloudNetwork20200907AWSCreateRequestTGWData{
+				ResourceShareArn: resourceShareARN,
+				TgwID:            tgwID,
+			},
+		},
+	}
+	log.Printf("[INFO] Creating TGW attachment for HVN (%s) and TGW (%s)", hvnID, tgwID)
+	createTGWAttachmentResponse, err := client.Network.CreateTGWAttachment(createTGWAttachmentParams, nil)
+	if err != nil {
+		return diag.Errorf("unable to create TGW attachment for HVN (%s) and TGW (%s): %v", hvnID, tgwID, err)
+	}
+
+	tgwAtt := createTGWAttachmentResponse.Payload.TgwAttachment
+
+	// Wait for TGW attachment creation to complete
+	if err := clients.WaitForOperation(ctx, client, "create TGW attachment", loc, createTGWAttachmentResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create TGW attachment (%s) for HVN (%s) and TGW (%s): %v", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID, err)
+	}
+
+	log.Printf("[INFO] Created TGW attachment (%s) for HVN (%s) and TGW (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
+
+	// Set the globally unique id of this TGW attachment in the state now since
+	// it has been created, and from this point forward should be deletable
+	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
+	// Wait for TGW attachment to transition into PENDING_ACCEPTANCE state
+	tgwAtt, err = clients.WaitForTGWAttachmentState(ctx, client, tgwAtt.ID, hvnID, loc, "PENDING_ACCEPTANCE")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[INFO] TGW attachment (%s) is now in PENDING_ACCEPTANCE state", tgwAtt.ID)
+
+	if err := setTGWAttachmentResourceData(d, tgwAtt); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func resourceTGWAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	tgwAttID := link.ID
+	loc := link.Location
+	hvnID := d.Get("hvn_id").(string)
+
+	log.Printf("[INFO] Reading TGW attachment (%s)", tgwAttID)
+	tgwAtt, err := clients.GetTGWAttachmentByID(ctx, client, tgwAttID, hvnID, loc)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] TGW attachment (%s) not found, removing from state", tgwAttID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to retrieve TGW attachment (%s): %v", tgwAttID, err)
+	}
+
+	// TGW attachment has been found, update resource data
+	if err := setTGWAttachmentResourceData(d, tgwAtt); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func resourceTGWAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	tgwAttID := link.ID
+	loc := link.Location
+	hvnID := d.Get("hvn_id").(string)
+
+	deleteTGWAttParams := network_service.NewDeleteTGWAttachmentParams()
+	deleteTGWAttParams.ID = tgwAttID
+	deleteTGWAttParams.HvnID = hvnID
+	deleteTGWAttParams.HvnLocationOrganizationID = loc.OrganizationID
+	deleteTGWAttParams.HvnLocationProjectID = loc.ProjectID
+	log.Printf("[INFO] Deleting TGW attachment (%s)", tgwAttID)
+	deleteTGWAttResponse, err := client.Network.DeleteTGWAttachment(deleteTGWAttParams, nil)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] TGW attachment (%s) not found, so no action was taken", tgwAttID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete TGW attachment (%s): %v", tgwAttID, err)
+	}
+
+	// Wait for TGW attachment to be deleted
+	if err := clients.WaitForOperation(ctx, client, "delete TGW attachment", loc, deleteTGWAttResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete TGW attachment (%s): %v", tgwAttID, err)
+	}
+
+	log.Printf("[INFO] TGW attachment (%s) deleted, removing from state", tgwAttID)
+
+	return nil
+}
+
+func setTGWAttachmentResourceData(d *schema.ResourceData, tgwAtt *networkmodels.HashicorpCloudNetwork20200907TGWAttachment) error {
+	if err := d.Set("hvn_id", tgwAtt.Hvn.ID); err != nil {
+		return err
+	}
+	if err := d.Set("tgw_attachment_id", tgwAtt.ID); err != nil {
+		return err
+	}
+	if err := d.Set("tgw_id", tgwAtt.ProviderData.AwsData.TgwID); err != nil {
+		return err
+	}
+	if err := d.Set("destination_cidrs", tgwAtt.Cidrs); err != nil {
+		return err
+	}
+	if err := d.Set("organization_id", tgwAtt.Location.OrganizationID); err != nil {
+		return err
+	}
+	if err := d.Set("project_id", tgwAtt.Location.ProjectID); err != nil {
+		return err
+	}
+	if err := d.Set("provider_tgw_attachment_id", tgwAtt.ProviderTgwAttachmentID); err != nil {
+		return err
+	}
+	if err := d.Set("state", string(tgwAtt.State)); err != nil {
+		return err
+	}
+	if err := d.Set("created_at", tgwAtt.CreatedAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("expires_at", tgwAtt.ExpiresAt.String()); err != nil {
+		return err
+	}
+
+	return nil
+}

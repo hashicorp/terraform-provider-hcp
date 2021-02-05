@@ -57,6 +57,11 @@ func dataSourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"provider_account_id": {
+				Description: "??????????",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
