@@ -17,13 +17,13 @@ var tgwDefaultTimeout = time.Minute * 1
 var tgwCreateTimeout = time.Minute * 35
 var tgwDeleteTimeout = time.Minute * 35
 
-func resourceTransitGatewayAttachment() *schema.Resource {
+func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "???",
 
-		CreateContext: resourceTransitGatewayAttachmentCreate,
-		ReadContext:   resourceTransitGatewayAttachmentRead,
-		DeleteContext: resourceTransitGatewayAttachmentDelete,
+		CreateContext: resourceAwsTransitGatewayAttachmentCreate,
+		ReadContext:   resourceAwsTransitGatewayAttachmentRead,
+		DeleteContext: resourceAwsTransitGatewayAttachmentDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
 			Create:  &tgwCreateTimeout,
@@ -106,7 +106,7 @@ func resourceTransitGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
@@ -210,7 +210,7 @@ func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)
@@ -242,7 +242,7 @@ func resourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceTransitGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsTransitGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)

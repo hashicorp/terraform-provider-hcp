@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func dataSourceTransitGatewayAttachment() *schema.Resource {
+func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "??????",
-		ReadContext: dataSourceTransitGatewayAttachmentRead,
+		ReadContext: dataSourceAwsTransitGatewayAttachmentRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
 		},
@@ -81,7 +81,7 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
