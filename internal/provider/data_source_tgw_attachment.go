@@ -14,9 +14,9 @@ func dataSourceTGWAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "??????",
 		ReadContext: dataSourceTGWAttachmentRead,
-		// Timeouts: &schema.ResourceTimeout{
-		// 	Default: &hvnDefaultTimeout,
-		// },
+		Timeouts: &schema.ResourceTimeout{
+			Default: &tgwDefaultTimeout,
+		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_id": {

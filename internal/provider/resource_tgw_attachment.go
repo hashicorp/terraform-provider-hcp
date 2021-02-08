@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
@@ -12,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// var tgwDefaultTimeout = time.Minute * 1
-// var tgwCreateTimeout = time.Minute * 35
-// var tgwDeleteTimeout = time.Minute * 35
+var tgwDefaultTimeout = time.Minute * 1
+var tgwCreateTimeout = time.Minute * 35
+var tgwDeleteTimeout = time.Minute * 35
 
 func resourceTGWAttachment() *schema.Resource {
 	return &schema.Resource{
@@ -23,11 +24,11 @@ func resourceTGWAttachment() *schema.Resource {
 		CreateContext: resourceTGWAttachmentCreate,
 		ReadContext:   resourceTGWAttachmentRead,
 		DeleteContext: resourceTGWAttachmentDelete,
-		// Timeouts: &schema.ResourceTimeout{
-		// 	Default: &tgwDefaultTimeout,
-		// 	Create:  &tgwCreateTimeout,
-		// 	Delete:  &tgwDeleteTimeout,
-		// },
+		Timeouts: &schema.ResourceTimeout{
+			Default: &tgwDefaultTimeout,
+			Create:  &tgwCreateTimeout,
+			Delete:  &tgwDeleteTimeout,
+		},
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
