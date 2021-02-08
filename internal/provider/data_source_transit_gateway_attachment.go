@@ -26,7 +26,7 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description: "The ID of the Transit Gateway (TGW) attachment.",
+				Description: "The ID of the Transit gateway attachment.",
 				Type:        schema.TypeString,
 				Required:    true,
 				// ValidateDiagFunc: validateSlugID,
@@ -40,12 +40,12 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the TGW attachment is located. Always matches the HVN's organization.",
+				Description: "The ID of the HCP organization where the Transit gateway attachment is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the TGW attachment is located. Always matches the HVN's project.",
+				Description: "The ID of the HCP project where the Transit gateway attachment is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -68,12 +68,12 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the TGW attachment was created.",
+				Description: "The time that the Transit gateway attachment was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the TGW attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

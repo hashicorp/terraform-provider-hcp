@@ -43,7 +43,7 @@ func resourceTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description: "The ID of the Transit Gateway (TGW) attachment.",
+				Description: "The ID of the Transit gateway attachment.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -73,12 +73,12 @@ func resourceTransitGatewayAttachment() *schema.Resource {
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the TGW attachment is located. Always matches the HVN's organization.",
+				Description: "The ID of the HCP organization where the Transit gateway attachment is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the TGW attachment is located. Always matches the HVN's project.",
+				Description: "The ID of the HCP project where the Transit gateway attachment is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -93,12 +93,12 @@ func resourceTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the TGW attachment was created.",
+				Description: "The time that the Transit gateway attachment was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the TGW attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -133,7 +133,7 @@ func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Resou
 	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to find the HVN (%s) for the TGW attachment", hvnID)
+			return diag.Errorf("unable to find the HVN (%s) for the Transit gateway attachment", hvnID)
 		}
 
 		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
@@ -144,12 +144,12 @@ func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Resou
 	_, err = clients.GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing TGW attachment (%s): %v", tgwAttachmentID, err)
+			return diag.Errorf("unable to check for presence of an existing Transit gateway attachment (%s): %v", tgwAttachmentID, err)
 		}
 
-		log.Printf("[INFO] TGW attachment (%s) not found, proceeding with create", tgwAttachmentID)
+		log.Printf("[INFO] Transit gateway attachment (%s) not found, proceeding with create", tgwAttachmentID)
 	} else {
-		return diag.Errorf("a TGW attachment with transit_gateway_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_tgw_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
+		return diag.Errorf("a Transit gateway attachment with transit_gateway_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_transit_gateway_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
 	}
 
 	// Create TGW attachment
@@ -171,20 +171,20 @@ func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Resou
 			},
 		},
 	}
-	log.Printf("[INFO] Creating TGW attachment for HVN (%s) and TGW (%s)", hvnID, tgwID)
+	log.Printf("[INFO] Creating Transit gateway attachment for HVN (%s) and Transit gateway (%s)", hvnID, tgwID)
 	createTGWAttachmentResponse, err := client.Network.CreateTGWAttachment(createTGWAttachmentParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create TGW attachment for HVN (%s) and TGW (%s): %v", hvnID, tgwID, err)
+		return diag.Errorf("unable to create Transit gateway attachment for HVN (%s) and Transit gateway (%s): %v", hvnID, tgwID, err)
 	}
 
 	tgwAtt := createTGWAttachmentResponse.Payload.TgwAttachment
 
 	// Wait for TGW attachment creation to complete
-	if err := clients.WaitForOperation(ctx, client, "create TGW attachment", loc, createTGWAttachmentResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create TGW attachment (%s) for HVN (%s) and TGW (%s): %v", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID, err)
+	if err := clients.WaitForOperation(ctx, client, "create Transit gateway attachment", loc, createTGWAttachmentResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s): %v", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID, err)
 	}
 
-	log.Printf("[INFO] Created TGW attachment (%s) for HVN (%s) and TGW (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
+	log.Printf("[INFO] Created Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
 
 	// Set the globally unique id of this TGW attachment in the state now since
 	// it has been created, and from this point forward should be deletable
@@ -201,7 +201,7 @@ func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] TGW attachment (%s) is now in PENDING_ACCEPTANCE state", tgwAtt.ID)
+	log.Printf("[INFO] Transit gateway attachment (%s) is now in PENDING_ACCEPTANCE state", tgwAtt.ID)
 
 	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
@@ -222,16 +222,16 @@ func resourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resourc
 	loc := link.Location
 	hvnID := d.Get("hvn_id").(string)
 
-	log.Printf("[INFO] Reading TGW attachment (%s)", tgwAttID)
+	log.Printf("[INFO] Reading Transit gateway attachment (%s)", tgwAttID)
 	tgwAtt, err := clients.GetTGWAttachmentByID(ctx, client, tgwAttID, hvnID, loc)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] TGW attachment (%s) not found, removing from state", tgwAttID)
+			log.Printf("[WARN] Transit gateway attachment (%s) not found, removing from state", tgwAttID)
 			d.SetId("")
 			return nil
 		}
 
-		return diag.Errorf("unable to retrieve TGW attachment (%s): %v", tgwAttID, err)
+		return diag.Errorf("unable to retrieve Transit gateway attachment (%s): %v", tgwAttID, err)
 	}
 
 	// TGW attachment has been found, update resource data
@@ -259,23 +259,23 @@ func resourceTransitGatewayAttachmentDelete(ctx context.Context, d *schema.Resou
 	deleteTGWAttParams.HvnID = hvnID
 	deleteTGWAttParams.HvnLocationOrganizationID = loc.OrganizationID
 	deleteTGWAttParams.HvnLocationProjectID = loc.ProjectID
-	log.Printf("[INFO] Deleting TGW attachment (%s)", tgwAttID)
+	log.Printf("[INFO] Deleting Transit gateway attachment (%s)", tgwAttID)
 	deleteTGWAttResponse, err := client.Network.DeleteTGWAttachment(deleteTGWAttParams, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] TGW attachment (%s) not found, so no action was taken", tgwAttID)
+			log.Printf("[WARN] Transit gateway attachment (%s) not found, so no action was taken", tgwAttID)
 			return nil
 		}
 
-		return diag.Errorf("unable to delete TGW attachment (%s): %v", tgwAttID, err)
+		return diag.Errorf("unable to delete Transit gateway attachment (%s): %v", tgwAttID, err)
 	}
 
 	// Wait for TGW attachment to be deleted
-	if err := clients.WaitForOperation(ctx, client, "delete TGW attachment", loc, deleteTGWAttResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to delete TGW attachment (%s): %v", tgwAttID, err)
+	if err := clients.WaitForOperation(ctx, client, "delete Transit gateway attachment", loc, deleteTGWAttResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete Transit gateway attachment (%s): %v", tgwAttID, err)
 	}
 
-	log.Printf("[INFO] TGW attachment (%s) deleted, removing from state", tgwAttID)
+	log.Printf("[INFO] Transit gateway attachment (%s) deleted, removing from state", tgwAttID)
 
 	return nil
 }

@@ -34,15 +34,15 @@ func WaitForTGWAttachmentState(ctx context.Context, client *Client, tgwAttachmen
 	for {
 		tgwAtt, err := GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve TGW attachment (%s): %v", tgwAttachmentID, err)
+			return nil, fmt.Errorf("unable to retrieve Transit gateway attachment (%s): %v", tgwAttachmentID, err)
 		}
 		switch curState := string(tgwAtt.State); curState {
 		case state:
 			return tgwAtt, nil
 		case string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateFAILED):
-			return nil, fmt.Errorf("TGW attachment got into FAILED state")
+			return nil, fmt.Errorf("Transit gateway attachment got into FAILED state")
 		default:
-			log.Printf("[INFO] Waiting for TGW attachment (%s) to be in [%s] state; current state: [%s]", tgwAttachmentID, state, curState)
+			log.Printf("[INFO] Waiting for Transit gateway attachment (%s) to be in [%s] state; current state: [%s]", tgwAttachmentID, state, curState)
 		}
 
 		// Wait some time to check the state again
@@ -50,7 +50,7 @@ func WaitForTGWAttachmentState(ctx context.Context, client *Client, tgwAttachmen
 		case <-time.After(time.Second * 5):
 			continue
 		case <-ctx.Done():
-			return nil, fmt.Errorf("context canceled waiting to retrieve TGW attachment (%s)", tgwAttachmentID)
+			return nil, fmt.Errorf("context canceled waiting to retrieve Transit gateway attachment (%s)", tgwAttachmentID)
 		}
 	}
 }
