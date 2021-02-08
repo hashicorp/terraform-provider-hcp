@@ -10,6 +10,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -19,7 +20,7 @@ var tgwDeleteTimeout = time.Minute * 35
 
 func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "???",
+		Description: "The AWS Transit gateway attachment resource allows you to manage a Transit gateway attachment that attaches an HVN to a Transit gateway in AWS.",
 
 		CreateContext: resourceAwsTransitGatewayAttachmentCreate,
 		ReadContext:   resourceAwsTransitGatewayAttachmentRead,
@@ -43,32 +44,34 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description: "The ID of the Transit gateway attachment.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				// ValidateDiagFunc: validateSlugID,
+				Description:      "The ID of the Transit gateway attachment.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_id": {
-				Description: "??????",
+				Description: "The ID of the Transit gateway in AWS.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 			"resource_share_arn": {
-				Description: "??????",
+				Description: "The Amazon Resource Name (ARN) of the Resource Share that is needed to grant HCP access to the Transit gateway in AWS.",
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				ForceNew:    true,
 			},
 			"destination_cidrs": {
-				Description: "??????",
+				Description: "The list of associated CIDR ranges.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
 				},
 				Required: true,
+				MinItems: 1,
 				ForceNew: true,
 			},
 			// Computed outputs
@@ -83,12 +86,12 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"provider_transit_gateway_attachment_id": {
-				Description: "??????",
+				Description: "The Transit gateway attachment ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"state": {
-				Description: "??????",
+				Description: "The state of the Transit gateway attachment.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

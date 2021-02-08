@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "??????",
+		Description: "The AWS Transit gateway attachment data source provides information about an existing Transit gateway attachment.",
 		ReadContext: dataSourceAwsTransitGatewayAttachmentRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
@@ -26,14 +26,14 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description: "The ID of the Transit gateway attachment.",
-				Type:        schema.TypeString,
-				Required:    true,
-				// ValidateDiagFunc: validateSlugID,
+				Description:      "The ID of the Transit gateway attachment.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validateSlugID,
 			},
 			// Optional inputs
 			"state": {
-				Description: "?????????",
+				Description: "The state of the Transit gateway attachment.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -50,12 +50,12 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"transit_gateway_id": {
-				Description: "?????????",
+				Description: "The ID of the Transit gateway in AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"destination_cidrs": {
-				Description: "?????????",
+				Description: "The list of associated CIDR ranges.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -63,7 +63,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed: true,
 			},
 			"provider_transit_gateway_attachment_id": {
-				Description: "?????????",
+				Description: "The Transit gateway attachment ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
