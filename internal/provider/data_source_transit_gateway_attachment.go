@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func dataSourceTGWAttachment() *schema.Resource {
+func dataSourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "??????",
-		ReadContext: dataSourceTGWAttachmentRead,
+		ReadContext: dataSourceTransitGatewayAttachmentRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
 		},
@@ -25,7 +25,7 @@ func dataSourceTGWAttachment() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"tgw_attachment_id": {
+			"transit_gateway_attachment_id": {
 				Description: "The ID of the Transit Gateway (TGW) attachment.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -49,7 +49,7 @@ func dataSourceTGWAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"tgw_id": {
+			"transit_gateway_id": {
 				Description: "?????????",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -62,7 +62,7 @@ func dataSourceTGWAttachment() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"provider_tgw_attachment_id": {
+			"provider_transit_gateway_attachment_id": {
 				Description: "?????????",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -81,11 +81,11 @@ func dataSourceTGWAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTGWAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
-	tgwAttID := d.Get("tgw_attachment_id").(string)
+	tgwAttID := d.Get("transit_gateway_attachment_id").(string)
 	tgwAttState := d.Get("state").(string)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -111,7 +111,7 @@ func dataSourceTGWAttachmentRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.SetId(url)
 
-	if err := setTGWAttachmentResourceData(d, tgwAtt); err != nil {
+	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
 	}
 

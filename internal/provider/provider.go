@@ -23,15 +23,15 @@ func New() func() *schema.Provider {
 				"hcp_consul_agent_kubernetes_secret": dataSourceConsulAgentKubernetesSecret(),
 				"hcp_consul_cluster":                 dataSourceConsulCluster(),
 				"hcp_hvn":                            dataSourceHvn(),
-				"hcp_tgw_attachment":                 dataSourceTGWAttachment(),
+				"hcp_transit_gateway_attachment":     dataSourceTransitGatewayAttachment(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
-				"hcp_aws_network_peering":       resourceAwsNetworkPeering(),
-				"hcp_consul_cluster":            resourceConsulCluster(),
-				"hcp_consul_cluster_root_token": resourceConsulClusterRootToken(),
-				"hcp_consul_snapshot":           resourceConsulSnapshot(),
-				"hcp_hvn":                       resourceHvn(),
-				"hcp_tgw_attachment":            resourceTGWAttachment(),
+				"hcp_aws_network_peering":        resourceAwsNetworkPeering(),
+				"hcp_consul_cluster":             resourceConsulCluster(),
+				"hcp_consul_cluster_root_token":  resourceConsulClusterRootToken(),
+				"hcp_consul_snapshot":            resourceConsulSnapshot(),
+				"hcp_hvn":                        resourceHvn(),
+				"hcp_transit_gateway_attachment": resourceTransitGatewayAttachment(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {

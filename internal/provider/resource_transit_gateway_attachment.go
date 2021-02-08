@@ -17,13 +17,13 @@ var tgwDefaultTimeout = time.Minute * 1
 var tgwCreateTimeout = time.Minute * 35
 var tgwDeleteTimeout = time.Minute * 35
 
-func resourceTGWAttachment() *schema.Resource {
+func resourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "???",
 
-		CreateContext: resourceTGWAttachmentCreate,
-		ReadContext:   resourceTGWAttachmentRead,
-		DeleteContext: resourceTGWAttachmentDelete,
+		CreateContext: resourceTransitGatewayAttachmentCreate,
+		ReadContext:   resourceTransitGatewayAttachmentRead,
+		DeleteContext: resourceTransitGatewayAttachmentDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
 			Create:  &tgwCreateTimeout,
@@ -42,14 +42,14 @@ func resourceTGWAttachment() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"tgw_attachment_id": {
+			"transit_gateway_attachment_id": {
 				Description: "The ID of the Transit Gateway (TGW) attachment.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				// ValidateDiagFunc: validateSlugID,
 			},
-			"tgw_id": {
+			"transit_gateway_id": {
 				Description: "??????",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -82,7 +82,7 @@ func resourceTGWAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"provider_tgw_attachment_id": {
+			"provider_transit_gateway_attachment_id": {
 				Description: "??????",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -106,12 +106,12 @@ func resourceTGWAttachment() *schema.Resource {
 	}
 }
 
-func resourceTGWAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	hvnID := d.Get("hvn_id").(string)
-	tgwAttachmentID := d.Get("tgw_attachment_id").(string)
-	tgwID := d.Get("tgw_id").(string)
+	tgwAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	tgwID := d.Get("transit_gateway_id").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 	rawCIDRs := d.Get("destination_cidrs").([]interface{})
 
@@ -149,7 +149,7 @@ func resourceTGWAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 		log.Printf("[INFO] TGW attachment (%s) not found, proceeding with create", tgwAttachmentID)
 	} else {
-		return diag.Errorf("a TGW attachment with tgw_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_tgw_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
+		return diag.Errorf("a TGW attachment with transit_gateway_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_tgw_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
 	}
 
 	// Create TGW attachment
@@ -203,14 +203,14 @@ func resourceTGWAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] TGW attachment (%s) is now in PENDING_ACCEPTANCE state", tgwAtt.ID)
 
-	if err := setTGWAttachmentResourceData(d, tgwAtt); err != nil {
+	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceTGWAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)
@@ -235,14 +235,14 @@ func resourceTGWAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// TGW attachment has been found, update resource data
-	if err := setTGWAttachmentResourceData(d, tgwAtt); err != nil {
+	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceTGWAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
 	link, err := buildLinkFromURL(d.Id(), TgwAttachmentResourceType, client.Config.OrganizationID)
@@ -280,14 +280,14 @@ func resourceTGWAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func setTGWAttachmentResourceData(d *schema.ResourceData, tgwAtt *networkmodels.HashicorpCloudNetwork20200907TGWAttachment) error {
+func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *networkmodels.HashicorpCloudNetwork20200907TGWAttachment) error {
 	if err := d.Set("hvn_id", tgwAtt.Hvn.ID); err != nil {
 		return err
 	}
-	if err := d.Set("tgw_attachment_id", tgwAtt.ID); err != nil {
+	if err := d.Set("transit_gateway_attachment_id", tgwAtt.ID); err != nil {
 		return err
 	}
-	if err := d.Set("tgw_id", tgwAtt.ProviderData.AwsData.TgwID); err != nil {
+	if err := d.Set("transit_gateway_id", tgwAtt.ProviderData.AwsData.TgwID); err != nil {
 		return err
 	}
 	if err := d.Set("destination_cidrs", tgwAtt.Cidrs); err != nil {
@@ -299,7 +299,7 @@ func setTGWAttachmentResourceData(d *schema.ResourceData, tgwAtt *networkmodels.
 	if err := d.Set("project_id", tgwAtt.Location.ProjectID); err != nil {
 		return err
 	}
-	if err := d.Set("provider_tgw_attachment_id", tgwAtt.ProviderTgwAttachmentID); err != nil {
+	if err := d.Set("provider_transit_gateway_attachment_id", tgwAtt.ProviderTgwAttachmentID); err != nil {
 		return err
 	}
 	if err := d.Set("state", string(tgwAtt.State)); err != nil {
