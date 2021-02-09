@@ -156,7 +156,7 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 	snapshotID := snapshotLink.ID
 	loc := snapshotLink.Location
 
-	snapshot, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
+	snapshotResp, err := clients.GetSnapshotByID(ctx, client, loc, snapshotID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] Consul snapshot (%s) not found, removing from state", snapshotID)
@@ -167,7 +167,15 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Consul snapshot (%s): %v", snapshotID, err)
 	}
 
-	if err := setConsulSnapshotResourceData(d, snapshot.Snapshot); err != nil {
+	// The Consul snapshot failed to provision properly so we want to let the user know and
+	// remove it from state
+	if snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20200826SnapshotSnapshotStateCREATINGFAILED {
+		log.Printf("[WARN] Consul snapshot (%s) failed to provision, removing from state", snapshotResp.Snapshot.ID)
+		d.SetId("")
+		return nil
+	}
+
+	if err := setConsulSnapshotResourceData(d, snapshotResp.Snapshot); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -142,19 +142,19 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("unable to create HVN (%s): %v", hvnID, err)
 	}
 
-	// Wait for HVN to be created
-	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
-	}
-
-	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
-
 	link := newLink(loc, HvnResourceType, hvnID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(url)
+
+	// Wait for HVN to be created
+	if err := clients.WaitForOperation(ctx, client, "create HVN", loc, createNetworkResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create HVN (%s): %v", createNetworkResponse.Payload.Network.ID, err)
+	}
+
+	log.Printf("[INFO] Created HVN (%s)", createNetworkResponse.Payload.Network.ID)
 
 	// Get the updated HVN
 	hvn, err := clients.GetHvnByID(ctx, client, loc, createNetworkResponse.Payload.Network.ID)
@@ -190,6 +190,14 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 
 		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
+	}
+
+	// The HVN failed to provision properly so we want to let the user know and remove it from
+	// state
+	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateFAILED {
+		log.Printf("[WARN] HVN (%s) failed to provision, removing from state", hvnID)
+		d.SetId("")
+		return nil
 	}
 
 	// HVN found, update resource data

@@ -181,13 +181,6 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	peering := peeringResponse.Payload.Peering
 
-	// Wait for Network peering to be created
-	if err := clients.WaitForOperation(ctx, client, "create Network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Network peering (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
-	}
-
-	log.Printf("[INFO] Created Network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
-
 	// Set the globally unique id of this peering in the state now since it has
 	// been created, and from this point forward should be deletable
 	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
@@ -196,6 +189,13 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	d.SetId(url)
+
+	// Wait for Network peering to be created
+	if err := clients.WaitForOperation(ctx, client, "create Network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Network peering (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
+	}
+
+	log.Printf("[INFO] Created Network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
 
 	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc)
 	if err != nil {
@@ -233,6 +233,14 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		return diag.Errorf("unable to retrieve Network peering (%s): %v", peeringID, err)
+	}
+
+	// The Network peering failed to provision properly so we want to let the user know and
+	// remove it from state
+	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
+		log.Printf("[WARN] network peering (%s) failed to provision, removing from state", peering.ID)
+		d.SetId("")
+		return nil
 	}
 
 	// Network peering found, update resource data

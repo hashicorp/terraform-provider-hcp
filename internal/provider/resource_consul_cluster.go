@@ -281,13 +281,6 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
 
-	// wait for the Consul cluster to be created
-	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Consul cluster (%s): %v", payload.Cluster.ID, err)
-	}
-
-	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
-
 	link := newLink(loc, ConsulClusterResourceType, clusterID)
 	url, err := linkURL(link)
 	if err != nil {
@@ -295,6 +288,13 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(url)
+
+	// wait for the Consul cluster to be created
+	if err := clients.WaitForOperation(ctx, client, "create Consul cluster", loc, payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Consul cluster (%s): %v", payload.Cluster.ID, err)
+	}
+
+	log.Printf("[INFO] Created Consul cluster (%s)", payload.Cluster.ID)
 
 	// get the created Consul cluster
 	cluster, err := clients.GetConsulClusterByID(ctx, client, loc, payload.Cluster.ID)
@@ -442,6 +442,14 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
+	}
+
+	// The Consul cluster failed to provision properly so we want to let the user know and
+	// remove it from state
+	if cluster.State == consulmodels.HashicorpCloudConsul20200826ClusterStateFAILED {
+		log.Printf("[WARN] Consul cluster (%s) failed to provision, removing from state", clusterID)
+		d.SetId("")
+		return nil
 	}
 
 	// get the cluster's Consul client config files
