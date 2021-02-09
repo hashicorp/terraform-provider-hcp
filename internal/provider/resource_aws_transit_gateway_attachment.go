@@ -30,9 +30,6 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 			Create:  &tgwCreateTimeout,
 			Delete:  &tgwDeleteTimeout,
 		},
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
 
 		Schema: map[string]*schema.Schema{
 			// Required inputs
