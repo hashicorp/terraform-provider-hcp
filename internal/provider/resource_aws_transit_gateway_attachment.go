@@ -41,7 +41,7 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description:      "The ID of the Transit gateway attachment.",
+				Description:      "The user-settable name of the Transit gateway attachment in HCP.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -54,14 +54,14 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				ForceNew:    true,
 			},
 			"resource_share_arn": {
-				Description: "The Amazon Resource Name (ARN) of the Resource Share that is needed to grant HCP access to the Transit gateway in AWS.",
+				Description: "The Amazon Resource Name (ARN) of the Resource Share that is needed to grant HCP access to the Transit gateway in AWS. The Resource Share should be associated with the HCP AWS account principal (see [aws_ram_principal_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_principal_association)) and the Transit gateway resource (see [aws_ram_resource_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_association))",
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 				ForceNew:    true,
 			},
 			"destination_cidrs": {
-				Description: "The list of associated CIDR ranges.",
+				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this Transit gateway attachment.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,

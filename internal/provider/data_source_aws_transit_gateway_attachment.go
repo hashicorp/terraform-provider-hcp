@@ -26,7 +26,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description:      "The ID of the Transit gateway attachment.",
+				Description:      "The user-settable name of the Transit gateway attachment in HCP.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
@@ -55,7 +55,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"destination_cidrs": {
-				Description: "The list of associated CIDR ranges.",
+				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this Transit gateway attachment.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,

@@ -23,7 +23,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 ### Required
 
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
-- **transit_gateway_attachment_id** (String) The ID of the Transit gateway attachment.
+- **transit_gateway_attachment_id** (String) The user-settable name of the Transit gateway attachment in HCP.
 
 ### Optional
 
@@ -34,7 +34,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 ### Read-only
 
 - **created_at** (String) The time that the Transit gateway attachment was created.
-- **destination_cidrs** (List of String) The list of associated CIDR ranges.
+- **destination_cidrs** (List of String) The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this Transit gateway attachment.
 - **expires_at** (String) The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
 - **organization_id** (String) The ID of the HCP organization where the Transit gateway attachment is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the Transit gateway attachment is located. Always matches the HVN's project.
