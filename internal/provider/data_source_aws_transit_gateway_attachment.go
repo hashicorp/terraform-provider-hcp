@@ -74,7 +74,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
