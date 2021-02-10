@@ -10,8 +10,20 @@
 1. Clone the repository
 1. Enter the repository directory
 1. Build the provider using the `make dev` command: 
-```sh
-$ make dev
+  ```sh
+  $ make dev
+  ```
+To use the local provider binary, ensure you are on Terraform >= 0.13.x and add the following to your terraform file:
+
+```
+terraform {
+  required_providers {
+    hcp = {
+      source = "localhost/providers/hcp"
+      version = "0.0.1"
+    }
+  }
+}
 ```
 
 ## Adding Dependencies
