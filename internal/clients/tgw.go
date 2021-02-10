@@ -3,12 +3,12 @@ package clients
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // GetTGWAttachmentByID gets a TGW attachment by its ID, hvnID, and location
@@ -26,31 +26,77 @@ func GetTGWAttachmentByID(ctx context.Context, client *Client, tgwAttachmentID s
 	return getTGWAttachmentResponse.Payload.TgwAttachment, nil
 }
 
-// WaitForTGWAttachmentState will poll the GET TGW attachment endpoint until
-// it is in the specified state, ctx is canceled, or an error occurs. This
-// is required because AWS can return a newly created TGW attachment before
-// it is ready to be used.
-func WaitForTGWAttachmentState(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, state string) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
-	for {
+const (
+	// TgwAttachmentStateCreating is the CREATING state of a TGW attachment
+	TgwAttachmentStateCreating = string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateCREATING)
+
+	// TgwAttachmentStatePendingAcceptance is the PENDING_ACCEPTANCE state of a TGW attachment
+	TgwAttachmentStatePendingAcceptance = string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStatePENDINGACCEPTANCE)
+
+	// TgwAttachmentStateAccepted is the ACCEPTED state of a TGW attachment
+	TgwAttachmentStateAccepted = string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACCEPTED)
+
+	// TgwAttachmentStateActive is the ACTIVE state of a TGW attachment
+	TgwAttachmentStateActive = string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE)
+)
+
+// tgwAttachmentRefreshState refreshes the state of the TGW attachment
+func tgwAttachmentRefreshState(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
 		tgwAtt, err := GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve Transit gateway attachment (%s): %v", tgwAttachmentID, err)
-		}
-		switch curState := string(tgwAtt.State); curState {
-		case state:
-			return tgwAtt, nil
-		case string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateFAILED):
-			return nil, fmt.Errorf("Transit gateway attachment got into FAILED state")
-		default:
-			log.Printf("[INFO] Waiting for Transit gateway attachment (%s) to be in [%s] state; current state: [%s]", tgwAttachmentID, state, curState)
+			return nil, "", err
 		}
 
-		// Wait some time to check the state again
-		select {
-		case <-time.After(time.Second * 5):
-			continue
-		case <-ctx.Done():
-			return nil, fmt.Errorf("context canceled waiting to retrieve Transit gateway attachment (%s)", tgwAttachmentID)
-		}
+		return tgwAtt, string(tgwAtt.State), nil
 	}
+}
+
+// WaitForTGWAttachmentToBeActive will poll the GET TGW attachment endpoint
+// until the state is ACTIVE, ctx is canceled, or an error occurs.
+func WaitForTGWAttachmentToBeActive(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{
+			TgwAttachmentStateCreating,
+			TgwAttachmentStatePendingAcceptance,
+			TgwAttachmentStateAccepted,
+		},
+		Target: []string{
+			TgwAttachmentStateActive,
+		},
+		Refresh:      tgwAttachmentRefreshState(ctx, client, tgwAttachmentID, hvnID, loc),
+		Timeout:      timeout,
+		PollInterval: 5 * time.Second,
+	}
+
+	result, err := stateChangeConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for Transit gateway attachment (%s) to become 'ACTIVE': %s", tgwAttachmentID, err)
+	}
+
+	return result.(*networkmodels.HashicorpCloudNetwork20200907TGWAttachment), nil
+}
+
+// WaitForTGWAttachmentToBePendingAcceptance will poll the GET TGW attachment
+// endpoint until the state is PENDING_ACCEPTANCE, ctx is canceled, or an error
+// occurs.
+func WaitForTGWAttachmentToBePendingAcceptance(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{
+			TgwAttachmentStateCreating,
+		},
+		Target: []string{
+			TgwAttachmentStatePendingAcceptance,
+		},
+		Refresh:      tgwAttachmentRefreshState(ctx, client, tgwAttachmentID, hvnID, loc),
+		Timeout:      timeout,
+		PollInterval: 5 * time.Second,
+	}
+
+	result, err := stateChangeConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for Transit gateway attachment (%s) to become 'PENDING_ACCEPTANCE': %s", tgwAttachmentID, err)
+	}
+
+	return result.(*networkmodels.HashicorpCloudNetwork20200907TGWAttachment), nil
 }

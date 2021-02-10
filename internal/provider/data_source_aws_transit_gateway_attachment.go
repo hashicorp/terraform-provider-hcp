@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,11 +33,11 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Optional inputs
-			"state": {
-				Description: "The state of the Transit gateway attachment.",
-				Type:        schema.TypeString,
+			"wait_for_active_state": {
+				Description: "If `true`, the Transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.",
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
+				Default:     false,
 			},
 			// Computed outputs
 			"organization_id": {
@@ -86,7 +87,7 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 
 	hvnID := d.Get("hvn_id").(string)
 	tgwAttID := d.Get("transit_gateway_attachment_id").(string)
-	tgwAttState := d.Get("state").(string)
+	waitForActive := d.Get("wait_for_active_state").(bool)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -94,14 +95,15 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 	}
 
 	tgwAtt, err := clients.GetTGWAttachmentByID(ctx, client, tgwAttID, hvnID, loc)
-	if err == nil && tgwAttState != "" {
-		tgwAtt, err = clients.WaitForTGWAttachmentState(ctx, client, tgwAttID, hvnID, loc, tgwAttState)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if waitForActive && tgwAtt.State != networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
+		tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-	}
-	if err != nil {
-		return diag.FromErr(err)
 	}
 
 	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)

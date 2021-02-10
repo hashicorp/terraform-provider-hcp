@@ -28,8 +28,8 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **state** (String) The state of the Transit gateway attachment.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **wait_for_active_state** (Boolean) If `true`, the Transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.
 
 ### Read-only
 

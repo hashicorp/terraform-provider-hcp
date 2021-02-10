@@ -87,11 +87,6 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"state": {
-				Description: "The state of the Transit gateway attachment.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"created_at": {
 				Description: "The time that the Transit gateway attachment was created.",
 				Type:        schema.TypeString,
@@ -196,7 +191,7 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 	log.Printf("[INFO] Created Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
 
 	// Wait for TGW attachment to transition into PENDING_ACCEPTANCE state
-	tgwAtt, err = clients.WaitForTGWAttachmentState(ctx, client, tgwAtt.ID, hvnID, loc, "PENDING_ACCEPTANCE")
+	tgwAtt, err = clients.WaitForTGWAttachmentToBePendingAcceptance(ctx, client, tgwAtt.ID, hvnID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -308,9 +303,6 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 		return err
 	}
 	if err := d.Set("provider_transit_gateway_attachment_id", tgwAtt.ProviderTgwAttachmentID); err != nil {
-		return err
-	}
-	if err := d.Set("state", string(tgwAtt.State)); err != nil {
 		return err
 	}
 	if err := d.Set("created_at", tgwAtt.CreatedAt.String()); err != nil {
