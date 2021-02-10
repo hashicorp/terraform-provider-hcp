@@ -144,7 +144,7 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 
 		log.Printf("[INFO] Transit gateway attachment (%s) not found, proceeding with create", tgwAttachmentID)
 	} else {
-		return diag.Errorf("a Transit gateway attachment with transit_gateway_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_transit_gateway_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
+		return diag.Errorf("a Transit gateway attachment with transit_gateway_attachment_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_aws_transit_gateway_attachment for more information", tgwAttachmentID, hvnID, loc.ProjectID)
 	}
 
 	// Create TGW attachment
