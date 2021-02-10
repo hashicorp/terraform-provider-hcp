@@ -179,13 +179,6 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 
 	tgwAtt := createTGWAttachmentResponse.Payload.TgwAttachment
 
-	// Wait for TGW attachment creation to complete
-	if err := clients.WaitForOperation(ctx, client, "create Transit gateway attachment", loc, createTGWAttachmentResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s): %v", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID, err)
-	}
-
-	log.Printf("[INFO] Created Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
-
 	// Set the globally unique id of this TGW attachment in the state now since
 	// it has been created, and from this point forward should be deletable
 	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)
@@ -194,6 +187,13 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 	d.SetId(url)
+
+	// Wait for TGW attachment creation to complete
+	if err := clients.WaitForOperation(ctx, client, "create Transit gateway attachment", loc, createTGWAttachmentResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s): %v", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID, err)
+	}
+
+	log.Printf("[INFO] Created Transit gateway attachment (%s) for HVN (%s) and Transit gateway (%s)", tgwAtt.ID, tgwAtt.Hvn.ID, tgwAtt.ProviderData.AwsData.TgwID)
 
 	// Wait for TGW attachment to transition into PENDING_ACCEPTANCE state
 	tgwAtt, err = clients.WaitForTGWAttachmentState(ctx, client, tgwAtt.ID, hvnID, loc, "PENDING_ACCEPTANCE")
@@ -232,6 +232,14 @@ func resourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Reso
 		}
 
 		return diag.Errorf("unable to retrieve Transit gateway attachment (%s): %v", tgwAttID, err)
+	}
+
+	// The TGW attachment failed to provision properly so we want to let the user know and
+	// remove it from state
+	if tgwAtt.State == networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateFAILED {
+		log.Printf("[WARN] Transit gateway attachment (%s) failed to provision, removing from state", tgwAtt.ID)
+		d.SetId("")
+		return nil
 	}
 
 	// TGW attachment has been found, update resource data
