@@ -34,7 +34,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 			},
 			// Optional inputs
 			"wait_for_active_state": {
-				Description: "If `true`, the transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.",
+				Description: "If `true`, Terraform will wait for the transit gateway attachment to reach an `ACTIVE` state before continuing. Default `false`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -51,7 +51,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"transit_gateway_id": {
-				Description: "The ID of the transit gateway in AWS.",
+				Description: "The ID of the user-owned transit gateway in AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

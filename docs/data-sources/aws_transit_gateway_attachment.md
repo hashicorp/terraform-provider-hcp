@@ -29,7 +29,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
-- **wait_for_active_state** (Boolean) If `true`, the transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.
+- **wait_for_active_state** (Boolean) If `true`, Terraform will wait for the transit gateway attachment to reach an `ACTIVE` state before continuing. Default `false`.
 
 ### Read-only
 
@@ -39,7 +39,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 - **organization_id** (String) The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.
 - **provider_transit_gateway_attachment_id** (String) The transit gateway attachment ID used by AWS.
-- **transit_gateway_id** (String) The ID of the transit gateway in AWS.
+- **transit_gateway_id** (String) The ID of the user-owned transit gateway in AWS.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

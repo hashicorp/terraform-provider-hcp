@@ -20,7 +20,7 @@ var tgwDeleteTimeout = time.Minute * 35
 
 func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment that attaches an HVN to a transit gateway in AWS.",
+		Description: "The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",
 
 		CreateContext: resourceAwsTransitGatewayAttachmentCreate,
 		ReadContext:   resourceAwsTransitGatewayAttachmentRead,
@@ -48,7 +48,7 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_id": {
-				Description: "The ID of the transit gateway in AWS.",
+				Description: "The ID of the user-owned transit gateway in AWS. The AWS region of the transit gateway must match the HVN.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -93,7 +93,7 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -133,7 +133,7 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 
 		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
 	}
-	log.Printf("[INFO] HVN (%s) found, proceeding with create", hvnID)
+	log.Printf("[INFO] HVN (%s) found, proceeding with transit gateway attachment create", hvnID)
 
 	// Check if TGW attachment already exists
 	_, err = clients.GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)

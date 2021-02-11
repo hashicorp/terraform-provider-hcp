@@ -40,7 +40,8 @@ const (
 	TgwAttachmentStateActive = string(networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE)
 )
 
-// tgwAttachmentRefreshState refreshes the state of the TGW attachment
+// tgwAttachmentRefreshState refreshes the state of the TGW attachment by
+// calling the GET endpoint
 func tgwAttachmentRefreshState(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		tgwAtt, err := GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)

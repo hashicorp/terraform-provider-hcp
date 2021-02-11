@@ -2,12 +2,12 @@
 page_title: "hcp_aws_transit_gateway_attachment Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment that attaches an HVN to a transit gateway in AWS.
+  The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.
 ---
 
 # Resource `hcp_aws_transit_gateway_attachment`
 
-The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment that attaches an HVN to a transit gateway in AWS.
+The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.
 
 ## Example Usage
 
@@ -74,7 +74,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **resource_share_arn** (String, Sensitive) The Amazon Resource Name (ARN) of the Resource Share that is needed to grant HCP access to the transit gateway in AWS. The Resource Share should be associated with the HCP AWS account principal (see [aws_ram_principal_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_principal_association)) and the transit gateway resource (see [aws_ram_resource_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_association))
 - **transit_gateway_attachment_id** (String) The user-settable name of the transit gateway attachment in HCP.
-- **transit_gateway_id** (String) The ID of the transit gateway in AWS.
+- **transit_gateway_id** (String) The ID of the user-owned transit gateway in AWS. The AWS region of the transit gateway must match the HVN.
 
 ### Optional
 
@@ -84,7 +84,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 ### Read-only
 
 - **created_at** (String) The time that the transit gateway attachment was created.
-- **expires_at** (String) The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.
+- **expires_at** (String) The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - **organization_id** (String) The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.
 - **provider_transit_gateway_attachment_id** (String) The transit gateway attachment ID used by AWS.
