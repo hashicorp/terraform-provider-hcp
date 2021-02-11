@@ -244,7 +244,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// fetch available version from HCP
-	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, loc, client)
+	availableConsulVersions, err := clients.GetAvailableHCPConsulVersionsForLocation(ctx, loc, client)
 	if err != nil || availableConsulVersions == nil {
 		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
 	}
