@@ -52,6 +52,11 @@ func dataSourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"provider_account_id": {
+				Description: "The provider account ID where the HVN is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"created_at": {
 				Description: "The time that the HVN was created.",
 				Type:        schema.TypeString,

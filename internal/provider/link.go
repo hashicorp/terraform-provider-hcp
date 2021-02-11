@@ -19,6 +19,9 @@ const (
 	// PeeringResourceType is the resource type of a Network peering
 	PeeringResourceType = "hashicorp.network.peering"
 
+	// TgwAttachmentResourceType is the resource type of a TGW attachment
+	TgwAttachmentResourceType = "hashicorp.network.tgw-attachment"
+
 	// ConsulSnapshotResourceType is the resource type of a Consul snapshot
 	ConsulSnapshotResourceType = "hashicorp.consul.snapshot"
 
