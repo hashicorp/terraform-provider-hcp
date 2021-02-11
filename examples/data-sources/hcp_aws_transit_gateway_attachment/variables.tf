@@ -4,6 +4,6 @@ variable "hvn_id" {
 }
 
 variable "transit_gateway_attachment_id" {
-  description = "The ID of the Transit gateway attachment."
+  description = "The user-settable name of the transit gateway attachment in HCP."
   type        = string
 }

@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Transit gateway attachment data source provides information about an existing Transit gateway attachment.",
+		Description: "The AWS Transit Gateway Attachment data source provides information about an existing transit gateway attachment.",
 		ReadContext: dataSourceAwsTransitGatewayAttachmentRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
@@ -27,36 +27,36 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"transit_gateway_attachment_id": {
-				Description:      "The user-settable name of the Transit gateway attachment in HCP.",
+				Description:      "The user-settable name of the transit gateway attachment in HCP.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Optional inputs
 			"wait_for_active_state": {
-				Description: "If `true`, the Transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.",
+				Description: "If `true`, the transit gateway attachment information will not be provided until it is in an `ACTIVE` state. Default `false`.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the Transit gateway attachment is located. Always matches the HVN's organization.",
+				Description: "The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the Transit gateway attachment is located. Always matches the HVN's project.",
+				Description: "The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"transit_gateway_id": {
-				Description: "The ID of the Transit gateway in AWS.",
+				Description: "The ID of the transit gateway in AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"destination_cidrs": {
-				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this Transit gateway attachment.",
+				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this transit gateway attachment.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -64,17 +64,17 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Computed: true,
 			},
 			"provider_transit_gateway_attachment_id": {
-				Description: "The Transit gateway attachment ID used by AWS.",
+				Description: "The transit gateway attachment ID used by AWS.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the Transit gateway attachment was created.",
+				Description: "The time that the transit gateway attachment was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the Transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
+				Description: "The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
