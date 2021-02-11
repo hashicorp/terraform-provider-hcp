@@ -88,6 +88,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 - **organization_id** (String) The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.
 - **provider_transit_gateway_attachment_id** (String) The transit gateway attachment ID used by AWS.
+- **state** (String) The state of the transit gateway attachment.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

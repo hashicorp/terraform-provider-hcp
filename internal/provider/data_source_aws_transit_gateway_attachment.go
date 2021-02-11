@@ -68,6 +68,11 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the transit gateway attachment.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"created_at": {
 				Description: "The time that the transit gateway attachment was created.",
 				Type:        schema.TypeString,

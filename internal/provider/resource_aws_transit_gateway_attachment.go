@@ -87,6 +87,11 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the transit gateway attachment.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"created_at": {
 				Description: "The time that the transit gateway attachment was created.",
 				Type:        schema.TypeString,
@@ -303,6 +308,9 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 		return err
 	}
 	if err := d.Set("provider_transit_gateway_attachment_id", tgwAtt.ProviderTgwAttachmentID); err != nil {
+		return err
+	}
+	if err := d.Set("state", tgwAtt.State); err != nil {
 		return err
 	}
 	if err := d.Set("created_at", tgwAtt.CreatedAt.String()); err != nil {
