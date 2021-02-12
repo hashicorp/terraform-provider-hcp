@@ -1,69 +1,27 @@
+<p align="center" style="text-align:center;">
+  <img alt="HashiCorp Cloud Platform logo" src="hcp.svg" width="300" />
+</p>
+
 # HashiCorp Cloud Platform (HCP) Terraform Provider
+
+Available in the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/hcp/latest).
+
+The HashiCorp Cloud Platform (HCP) Terraform Provider is a plugin for Terraform that allows for the full lifecycle management of HCP resources. This provider is maintained internally by the HashiCorp Cloud Services team.
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
--	[Go](https://golang.org/doc/install) >= 1.14
+- [Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
 
-## Building The Provider
+## Using the Provider
 
-1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the `make dev` command: 
-  ```sh
-  $ make dev
-  ```
-To use the local provider binary, ensure you are on Terraform >= 0.13.x and add the following to your terraform file:
+See the [HashiCorp Cloud Platform (HCP) Provider documentation](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs) to get started using the provider.
 
-```
-terraform {
-  required_providers {
-    hcp = {
-      source = "localhost/providers/hcp"
-      version = "0.0.1"
-    }
-  }
-}
-```
+## Contributing
 
-## Adding Dependencies
+See the [`contributing`](contributing/) directory for more developer documentation.
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+## Example
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
-
-```
-go get github.com/author/dependency
-go mod tidy
-```
-
-Then commit the changes to `go.mod` and `go.sum`.
-
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-*Note:* Acceptance tests create real resources, and often cost money to run.
-
-```sh
-$ make testacc
-```
-
-## Generating Docs
-
-To generate or update documentation, run `go generate`.
-```shell script
-$ go generate
-```
-
-## Using the provider
-
-Please see the docs for details about a particular resource. 
 Below is a complex example that creates a HashiCorp Virtual Network (HVN), an HCP Consul cluster within that HVN, and peers the HVN to an AWS VPC.
 ```hcl
 // Configure the provider
