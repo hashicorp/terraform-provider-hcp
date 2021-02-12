@@ -101,6 +101,8 @@ Optional:
 
 ## Import
 
+-> **Note:** When importing a transit gateway attachment, you will want to configure a `lifecycle` configuration block with an `ignore_changes` argument including `resource_share_arn`. This is needed because its value is no longer retrievable after creation.
+
 Import is supported using the following syntax:
 
 ```shell
