@@ -162,7 +162,8 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	return deleteResp.Payload, nil
 }
 
-// GetAvailableHCPConsulVersionsForLocation gets the list of available Consul versions that HCP supports.
+// ListConsulUpgradeVersions gets the list of available Consul versions that the supplied cluster
+// can upgrade to.
 func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
 
