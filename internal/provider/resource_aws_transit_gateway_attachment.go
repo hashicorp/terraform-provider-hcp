@@ -2,7 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
@@ -29,6 +31,9 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 			Default: &tgwDefaultTimeout,
 			Create:  &tgwCreateTimeout,
 			Delete:  &tgwDeleteTimeout,
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceAwsTransitGatewayAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -321,4 +326,34 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 	}
 
 	return nil
+}
+
+// resourceAwsTransitGatewayAttachmentImport implements the logic necessary to
+// import an un-tracked (by Terraform) Network peering resource into Terraform
+// state.
+func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	idParts := strings.SplitN(d.Id(), ":", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}", d.Id())
+	}
+	hvnID := idParts[0]
+	tgwAttID := idParts[1]
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		ProjectID: client.Config.ProjectID,
+	}
+
+	link := newLink(loc, TgwAttachmentResourceType, tgwAttID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(url)
+	if err := d.Set("hvn_id", hvnID); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
