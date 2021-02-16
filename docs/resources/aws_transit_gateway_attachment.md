@@ -99,4 +99,13 @@ Optional:
 - **default** (String)
 - **delete** (String)
 
+## Import
 
+-> **Note:** When importing a transit gateway attachment, you will want to configure a `lifecycle` configuration block with an `ignore_changes` argument including `resource_share_arn`. This is needed because its value is no longer retrievable after creation.
+
+Import is supported using the following syntax:
+
+```shell
+# The import ID is {hvn_id}:{transit_gateway_attachment_id}
+terraform import hcp_aws_transit_gateway_attachment.example main-hvn:example-tgw-attachment
+```
