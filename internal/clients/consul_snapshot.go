@@ -13,7 +13,7 @@ import (
 func CreateSnapshot(ctx context.Context, client *Client, res *sharedmodels.HashicorpCloudLocationLink,
 	snapshotName string) (*consulmodels.HashicorpCloudConsul20200826CreateSnapshotResponse, error) {
 
-	p := consul_service.NewCreateSnapshotParams()
+	p := consul_service.NewConsulServiceCreateSnapshotParams()
 	p.Context = ctx
 	p.ResourceLocationOrganizationID = res.Location.OrganizationID
 	p.ResourceLocationProjectID = res.Location.ProjectID
@@ -22,7 +22,7 @@ func CreateSnapshot(ctx context.Context, client *Client, res *sharedmodels.Hashi
 		Resource: res,
 	}
 
-	resp, err := client.Consul.CreateSnapshot(p, nil)
+	resp, err := client.Consul.ConsulServiceCreateSnapshot(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -34,13 +34,13 @@ func CreateSnapshot(ctx context.Context, client *Client, res *sharedmodels.Hashi
 func GetSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	snapshotID string) (*consulmodels.HashicorpCloudConsul20200826GetSnapshotResponse, error) {
 
-	p := consul_service.NewGetSnapshotParams()
+	p := consul_service.NewConsulServiceGetSnapshotParams()
 	p.Context = ctx
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 	p.SnapshotID = snapshotID
 
-	resp, err := client.Consul.GetSnapshot(p, nil)
+	resp, err := client.Consul.ConsulServiceGetSnapshot(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +52,13 @@ func GetSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.Hash
 func DeleteSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	snapshotID string) (*consulmodels.HashicorpCloudConsul20200826DeleteSnapshotResponse, error) {
 
-	p := consul_service.NewDeleteSnapshotParams()
+	p := consul_service.NewConsulServiceDeleteSnapshotParams()
 	p.Context = ctx
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 	p.SnapshotID = snapshotID
 
-	resp, err := client.Consul.DeleteSnapshot(p, nil)
+	resp, err := client.Consul.ConsulServiceDeleteSnapshot(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func DeleteSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.H
 func RenameSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	snapshotID string, snapshotName string) (*consulmodels.HashicorpCloudConsul20200826UpdateSnapshotResponse, error) {
 
-	p := consul_service.NewUpdateSnapshotParams()
+	p := consul_service.NewConsulServiceUpdateSnapshotParams()
 	p.Context = ctx
 	p.SnapshotLocationOrganizationID = loc.OrganizationID
 	p.SnapshotLocationProjectID = loc.ProjectID
@@ -80,7 +80,7 @@ func RenameSnapshotByID(ctx context.Context, client *Client, loc *sharedmodels.H
 		Name: snapshotName,
 	}
 
-	resp, err := client.Consul.UpdateSnapshot(p, nil)
+	resp, err := client.Consul.ConsulServiceUpdateSnapshot(p, nil)
 	if err != nil {
 		return nil, err
 	}

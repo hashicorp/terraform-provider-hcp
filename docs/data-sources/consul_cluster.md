@@ -43,10 +43,12 @@ data "hcp_consul_cluster" "example" {
 - **datacenter** (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
 - **organization_id** (String) The ID of the organization the project for this HCP Consul cluster is located.
+- **primary_link** (String) The `self_link` of the HCP Consul Cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - **project_id** (String) The ID of the project this HCP Consul cluster is located.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - **region** (String) The region where the HCP Consul cluster is located.
 - **scale** (Number) The the number of Consul server nodes in the cluster.
+- **self_link** (String) A unique URL identifying the HCP Consul Cluster.
 - **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
 
 <a id="nestedblock--timeouts"></a>

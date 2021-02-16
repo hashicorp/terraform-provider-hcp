@@ -2,7 +2,9 @@ package clients
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-openapi/runtime"
 )
@@ -11,5 +13,9 @@ import (
 // request, and returns true if the response code was 404 not found
 func IsResponseCodeNotFound(err error) bool {
 	var apiErr *runtime.APIError
-	return errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound
+	if errors.As(err, &apiErr) {
+		return apiErr.Code == http.StatusNotFound
+	} else {
+		return strings.Contains(err.Error(), fmt.Sprintf("[%d]", http.StatusNotFound))
+	}
 }

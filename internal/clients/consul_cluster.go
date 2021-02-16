@@ -12,13 +12,13 @@ import (
 func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826Cluster, error) {
 
-	getParams := consul_service.NewGetParams()
+	getParams := consul_service.NewConsulServiceGetParams()
 	getParams.Context = ctx
 	getParams.ID = consulClusterID
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
 
-	getResp, err := client.Consul.Get(getParams, nil)
+	getResp, err := client.Consul.ConsulServiceGet(getParams, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +33,13 @@ func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels
 func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse, error) {
 
-	p := consul_service.NewGetClientConfigParams()
+	p := consul_service.NewConsulServiceGetClientConfigParams()
 	p.Context = ctx
 	p.ID = consulClusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 
-	resp, err := client.Consul.GetClientConfig(p, nil)
+	resp, err := client.Consul.ConsulServiceGetClientConfig(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *shared
 func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse, error) {
 
-	p := consul_service.NewCreateCustomerMasterACLTokenParams()
+	p := consul_service.NewConsulServiceCreateCustomerMasterACLTokenParams()
 	p.Context = ctx
 	p.ID = consulClusterID
 	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenRequest{
@@ -64,7 +64,7 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 
-	resp, err := client.Consul.CreateCustomerMasterACLToken(p, nil)
+	resp, err := client.Consul.ConsulServiceCreateCustomerMasterACLToken(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +75,9 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 // CreateConsulCluster will make a call to the Consul service to initiate the create Consul
 // cluster workflow.
 func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
+	clusterID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink, primary *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
 
-	p := consul_service.NewCreateParams()
+	p := consul_service.NewConsulServiceCreateParams()
 	p.Context = ctx
 	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
 		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
@@ -88,6 +88,7 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
 					ConnectEnabled: connectEnabled,
 					Datacenter:     datacenter,
+					Primary:        primary,
 				},
 				MaintenanceConfig: nil,
 				NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
@@ -104,7 +105,7 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	p.ClusterLocationOrganizationID = loc.OrganizationID
 	p.ClusterLocationProjectID = loc.ProjectID
 
-	resp, err := client.Consul.Create(p, nil)
+	resp, err := client.Consul.ConsulServiceCreate(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,13 +115,13 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 
 // GetAvailableHCPConsulVersionsForLocation gets the list of available Consul versions that HCP supports for
 // the provided location.
-func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
-	p := consul_service.NewListVersionsParams()
+func GetAvailableHCPConsulVersions(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+	p := consul_service.NewConsulServiceListVersionsParams()
 	p.Context = ctx
 	p.LocationProjectID = loc.ProjectID
 	p.LocationOrganizationID = loc.OrganizationID
 
-	resp, err := client.Consul.ListVersions(p, nil)
+	resp, err := client.Consul.ConsulServiceListVersions(p, nil)
 
 	if err != nil {
 		return nil, err
@@ -148,13 +149,13 @@ func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*cons
 func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string) (*consulmodels.HashicorpCloudConsul20200826DeleteResponse, error) {
 
-	p := consul_service.NewDeleteParams()
+	p := consul_service.NewConsulServiceDeleteParams()
 	p.Context = ctx
 	p.ID = clusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 
-	deleteResp, err := client.Consul.Delete(p, nil)
+	deleteResp, err := client.Consul.ConsulServiceDelete(p, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -167,13 +168,13 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
 
-	p := consul_service.NewListUpgradeVersionsParams()
+	p := consul_service.NewConsulServiceListUpgradeVersionsParams()
 	p.Context = ctx
 	p.ID = clusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
 
-	resp, err := client.Consul.ListUpgradeVersions(p, nil)
+	resp, err := client.Consul.ConsulServiceListUpgradeVersions(p, nil)
 
 	if err != nil {
 		return nil, err
@@ -200,7 +201,7 @@ func UpdateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 		},
 	}
 
-	updateParams := consul_service.NewUpdateParams()
+	updateParams := consul_service.NewConsulServiceUpdateParams()
 	updateParams.Context = ctx
 	updateParams.ClusterID = cluster.ID
 	updateParams.ClusterLocationProjectID = loc.ProjectID
@@ -208,7 +209,7 @@ func UpdateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	updateParams.Body = &cluster
 
 	// Invoke update cluster endpoint
-	updateResp, err := client.Consul.Update(updateParams, nil)
+	updateResp, err := client.Consul.ConsulServiceUpdate(updateParams, nil)
 	if err != nil {
 		return nil, err
 	}
