@@ -1,6 +1,7 @@
 package consul
 
 import (
+	"fmt"
 	"strings"
 
 	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
@@ -36,4 +37,34 @@ func IsValidVersion(version string, versions []*consulmodels.HashicorpCloudConsu
 // NormalizeVersion ensures the version starts with a 'v'
 func NormalizeVersion(version string) string {
 	return "v" + strings.TrimPrefix(version, "v")
+}
+
+// VersionsToString converts a slice of version pointers to a string of their comma delimited values.
+func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20200826Version) string {
+	var recommendedVersion string
+	var otherVersions []string
+
+	for _, v := range versions {
+		if v == nil {
+			continue
+		}
+
+		if v.Status == consulmodels.HashicorpCloudConsul20200826VersionStatusRECOMMENDED {
+			recommendedVersion = v.Version
+		} else {
+			otherVersions = append(otherVersions, v.Version)
+		}
+	}
+
+	// No other versions found, return recommended even if it's empty
+	if len(otherVersions) == 0 {
+		return recommendedVersion
+	}
+
+	// No recommended found, return others
+	if recommendedVersion == "" {
+		return strings.Join(otherVersions, ", ")
+	}
+
+	return fmt.Sprintf("%s, %s", recommendedVersion, strings.Join(otherVersions, ", "))
 }

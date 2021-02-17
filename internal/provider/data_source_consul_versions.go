@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
 )
 
 // defaultConsulVersionsTimeoutDuration is the default timeout
@@ -90,7 +92,7 @@ func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.SetId(fmt.Sprintf("recommended/%s/available_len/%d/preview_len/%d", recommendedVersion, len(availableVersions), len(previewVersions)))
+	d.SetId(fmt.Sprintf("%x", md5.Sum([]byte(consul.VersionsToString(availableConsulVersions)))))
 
 	return nil
 }

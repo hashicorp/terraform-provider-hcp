@@ -141,3 +141,74 @@ func Test_NormalizeVersion(t *testing.T) {
 		})
 	}
 }
+
+func Test_VersionsToString(t *testing.T) {
+	tcs := map[string]struct {
+		expected string
+		input    []*consulmodels.HashicorpCloudConsul20200826Version
+	}{
+		"with a recommended version": {
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+				{
+					Version: "v1.9.0",
+					Status:  "RECOMMENDED",
+				},
+				{
+					Version: "v1.8.6",
+					Status:  "AVAILABLE",
+				},
+				{
+					Version: "v1.8.4",
+					Status:  "AVAILABLE",
+				},
+			},
+			expected: "v1.9.0, v1.8.6, v1.8.4",
+		},
+		"without a recommended version": {
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+				{
+					Version: "v1.8.6",
+					Status:  "AVAILABLE",
+				},
+				{
+					Version: "v1.8.4",
+					Status:  "AVAILABLE",
+				},
+			},
+			expected: "v1.8.6, v1.8.4",
+		},
+		"no other versions but recommended": {
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+				{
+					Version: "v1.9.0",
+					Status:  "RECOMMENDED",
+				},
+			},
+			expected: "v1.9.0",
+		},
+		"nil input": {
+			input:    nil,
+			expected: "",
+		},
+		"nil values": {
+			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+				nil,
+				{
+					Version: "v1.9.0",
+					Status:  "RECOMMENDED",
+				},
+				nil,
+			},
+			expected: "v1.9.0",
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+
+			result := VersionsToString(tc.input)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
