@@ -162,7 +162,7 @@ func Test_VersionsToString(t *testing.T) {
 					Status:  "AVAILABLE",
 				},
 			},
-			expected: "v1.9.0, v1.8.6, v1.8.4",
+			expected: "v1.9.0 (recommended), v1.8.6, v1.8.4",
 		},
 		"without a recommended version": {
 			input: []*consulmodels.HashicorpCloudConsul20200826Version{
