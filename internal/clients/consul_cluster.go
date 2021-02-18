@@ -132,10 +132,10 @@ func GetAvailableHCPConsulVersions(ctx context.Context, loc *sharedmodels.Hashic
 
 // GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
 func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
-	p := consul_service.NewListVersions2Params()
+	p := consul_service.NewConsulServiceListVersions2Params()
 	p.Context = ctx
 
-	resp, err := client.Consul.ListVersions2(p, nil)
+	resp, err := client.Consul.ConsulServiceListVersions2(p, nil)
 
 	if err != nil {
 		return nil, err
