@@ -118,7 +118,7 @@ func dataSourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"self_link": {
-				Description: "A unique URL identifying the HCP Consul Cluster.",
+				Description: "A unique URL identifying the HCP Consul cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
