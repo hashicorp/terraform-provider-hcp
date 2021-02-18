@@ -112,14 +112,29 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	return resp.Payload, nil
 }
 
-// GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
-func GetAvailableHCPConsulVersions(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+// GetAvailableHCPConsulVersionsForLocation gets the list of available Consul versions that HCP supports for
+// the provided location.
+func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
 	p := consul_service.NewListVersionsParams()
 	p.Context = ctx
 	p.LocationProjectID = loc.ProjectID
 	p.LocationOrganizationID = loc.OrganizationID
 
 	resp, err := client.Consul.ListVersions(p, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload.Versions, nil
+}
+
+// GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
+func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+	p := consul_service.NewListVersions2Params()
+	p.Context = ctx
+
+	resp, err := client.Consul.ListVersions2(p, nil)
 
 	if err != nil {
 		return nil, err
@@ -147,7 +162,8 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 	return deleteResp.Payload, nil
 }
 
-// GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
+// ListConsulUpgradeVersions gets the list of available Consul versions that the supplied cluster
+// can upgrade to.
 func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
 

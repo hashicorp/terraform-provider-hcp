@@ -244,7 +244,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// fetch available version from HCP
-	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, loc, client)
+	availableConsulVersions, err := clients.GetAvailableHCPConsulVersionsForLocation(ctx, loc, client)
 	if err != nil || availableConsulVersions == nil {
 		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
 	}
@@ -258,7 +258,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	// check if version is valid and available
 	if !consul.IsValidVersion(consulVersion, availableConsulVersions) {
-		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", consulVersion, availableConsulVersions)
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: [%s]", consulVersion, consul.VersionsToString(availableConsulVersions))
 	}
 
 	datacenter := strings.ToLower(clusterID)
@@ -509,7 +509,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	// Validate that the upgrade version is valid
 	if !consul.IsValidVersion(newConsulVersion, upgradeVersions) {
-		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: %v", newConsulVersion, upgradeVersions)
+		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: [%s]", newConsulVersion, consul.VersionsToString(upgradeVersions))
 	}
 
 	// Invoke update cluster endpoint
