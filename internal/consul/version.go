@@ -66,5 +66,5 @@ func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20200826Versi
 		return strings.Join(otherVersions, ", ")
 	}
 
-	return fmt.Sprintf("%s, %s", recommendedVersion, strings.Join(otherVersions, ", "))
+	return fmt.Sprintf("%s (recommended), %s", recommendedVersion, strings.Join(otherVersions, ", "))
 }
