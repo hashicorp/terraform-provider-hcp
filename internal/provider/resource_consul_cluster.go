@@ -130,7 +130,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"primary_link": {
-				Description: "The `self_link` of the HCP Consul Cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.",
+				Description: "The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
