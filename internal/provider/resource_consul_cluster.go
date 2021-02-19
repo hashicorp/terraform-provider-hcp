@@ -280,13 +280,11 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		if err != nil {
 			return diag.Errorf(err.Error())
 		}
-		if primary.Location.OrganizationID == "" {
-			primaryOrgID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, primary.Location.ProjectID)
-			if err != nil {
-				return diag.Errorf("Error determining organization of primary cluster. %v", err)
-			}
-			primary.Location.OrganizationID = primaryOrgID
+		primaryOrgID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, primary.Location.ProjectID)
+		if err != nil {
+			return diag.Errorf("Error determining organization of primary cluster. %v", err)
 		}
+		primary.Location.OrganizationID = primaryOrgID
 		// fetch the primary cluster
 		primaryConsulCluster, err := clients.GetConsulClusterByID(ctx, client, primary.Location, primary.ID)
 		if err != nil {
