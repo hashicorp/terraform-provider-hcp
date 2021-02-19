@@ -309,8 +309,28 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
-	payload, err := clients.CreateConsulCluster(ctx, client, loc, clusterID, datacenter, consulVersion,
-		numServers, !publicEndpoint, connectEnabled, newLink(loc, "hvn", hvnID), primary)
+	consulCuster := &consulmodels.HashicorpCloudConsul20200826Cluster{
+		Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
+			CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
+				NumServers: numServers,
+			},
+			ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
+				ConnectEnabled: connectEnabled,
+				Datacenter:     datacenter,
+				Primary:        primary,
+			},
+			MaintenanceConfig: nil,
+			NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
+				Network: newLink(loc, "hvn", hvnID),
+				Private: !publicEndpoint,
+			},
+		},
+		ConsulVersion: consulVersion,
+		ID:            clusterID,
+		Location:      loc,
+	}
+
+	payload, err := clients.CreateConsulCluster(ctx, client, loc, consulCuster)
 	if err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
