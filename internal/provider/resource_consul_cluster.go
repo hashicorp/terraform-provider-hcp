@@ -471,8 +471,12 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	// self_link is equal to the terraform ID of the resource
-	if err := d.Set("self_link", d.Id()); err != nil {
+	link := newLink(cluster.Location, ConsulClusterResourceType, cluster.ID)
+	self_link, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", self_link); err != nil {
 		return err
 	}
 
