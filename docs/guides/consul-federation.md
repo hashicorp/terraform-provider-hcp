@@ -7,7 +7,7 @@ description: |-
 
 # Federate a new HCP Consul cluster with an existing one
 
-Once you have a HCP Consul cluster, you can create new Consul cluster to federate with the existing one.
+Once you have a HCP Consul cluster, you can create a new Consul cluster to federate with the existing one.
 
 ```terraform
 resource "hcp_hvn" "example" {

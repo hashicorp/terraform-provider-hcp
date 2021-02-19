@@ -71,6 +71,14 @@ resource "hcp_consul_cluster" "example" {
   cluster_id = "hcp-tf-example-consul-cluster"
   tier       = "development"
 }
+
+// Create a secondary Consul cluster to federate with the existing Consul cluster
+resource "hcp_consul_cluster" "example_secondary" {
+  hvn_id       = hcp_hvn.example_hvn.hvn_id
+  cluster_id   = "hcp-tf-example-consul-cluster-secondary"
+  tier         = "development"
+  primary_link = hcp_consul_cluster.example.self_link
+}
 ```
 
 ## Schema
