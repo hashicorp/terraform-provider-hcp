@@ -75,32 +75,11 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 // CreateConsulCluster will make a call to the Consul service to initiate the create Consul
 // cluster workflow.
 func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID, datacenter, consulVersion string, numServers int32, private, connectEnabled bool, network *sharedmodels.HashicorpCloudLocationLink, primary *sharedmodels.HashicorpCloudLocationLink) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
+	consulCluster *consulmodels.HashicorpCloudConsul20200826Cluster) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
 
 	p := consul_service.NewConsulServiceCreateParams()
 	p.Context = ctx
-	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{
-		Cluster: &consulmodels.HashicorpCloudConsul20200826Cluster{
-			Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
-				CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
-					NumServers: numServers,
-				},
-				ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
-					ConnectEnabled: connectEnabled,
-					Datacenter:     datacenter,
-					Primary:        primary,
-				},
-				MaintenanceConfig: nil,
-				NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
-					Network: network,
-					Private: private,
-				},
-			},
-			ConsulVersion: consulVersion,
-			ID:            clusterID,
-			Location:      loc,
-		},
-	}
+	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{Cluster: consulCluster}
 
 	p.ClusterLocationOrganizationID = loc.OrganizationID
 	p.ClusterLocationProjectID = loc.ProjectID
