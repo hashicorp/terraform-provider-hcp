@@ -105,7 +105,7 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 
 	rootTokenResp, err := clients.CreateCustomerRootACLToken(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("error creating HCP Consul Cluster root ACL token (cluster_id %q) (project_id %q): %+v",
+		return diag.Errorf("error creating HCP Consul cluster root ACL token (cluster_id %q) (project_id %q): %+v",
 			clusterID,
 			projectID,
 			err,
@@ -154,7 +154,7 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state
-			log.Printf("[WARN] no HCP Consul Cluster found with (cluster_id %q) (project_id %q); removing root token.",
+			log.Printf("[WARN] no HCP Consul cluster found with (cluster_id %q) (project_id %q); removing root token.",
 				clusterID,
 				projectID,
 			)
@@ -192,7 +192,7 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state
-			log.Printf("[WARN] no HCP Consul Cluster found with (cluster_id %q) (project_id %q); removing root token.",
+			log.Printf("[WARN] no HCP Consul cluster found with (cluster_id %q) (project_id %q); removing root token.",
 				clusterID,
 				projectID,
 			)

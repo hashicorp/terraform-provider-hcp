@@ -129,6 +129,12 @@ func resourceConsulCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
+			"primary_link": {
+				Description: "The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
 			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization this HCP Consul cluster is located in.",
@@ -206,6 +212,11 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the HCP Consul cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -261,6 +272,27 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: [%s]", consulVersion, consul.VersionsToString(availableConsulVersions))
 	}
 
+	// If specified, validate and parse the primary link provided for federation.
+	primary_link, ok := d.GetOk("primary_link")
+	var primary *sharedmodels.HashicorpCloudLocationLink
+	if ok {
+		primary, err = parseLinkURL(primary_link.(string), ConsulClusterResourceType)
+		if err != nil {
+			return diag.Errorf(err.Error())
+		}
+		primaryOrgID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, primary.Location.ProjectID)
+		if err != nil {
+			return diag.Errorf("Error determining organization of primary cluster. %v", err)
+		}
+		primary.Location.OrganizationID = primaryOrgID
+		// fetch the primary cluster
+		primaryConsulCluster, err := clients.GetConsulClusterByID(ctx, client, primary.Location, primary.ID)
+		if err != nil {
+			return diag.Errorf("unable to check for presence of an existing primary Consul cluster (%s): %v", primary.ID, err)
+		}
+		primary.Location.Region = primaryConsulCluster.Location.Region
+	}
+
 	datacenter := strings.ToLower(clusterID)
 	v, ok = d.GetOk("datacenter")
 	if ok {
@@ -275,8 +307,28 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
-	payload, err := clients.CreateConsulCluster(ctx, client, loc, clusterID, datacenter, consulVersion,
-		numServers, !publicEndpoint, connectEnabled, newLink(loc, "hvn", hvnID))
+	consulCuster := &consulmodels.HashicorpCloudConsul20200826Cluster{
+		Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
+			CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
+				NumServers: numServers,
+			},
+			ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
+				ConnectEnabled: connectEnabled,
+				Datacenter:     datacenter,
+				Primary:        primary,
+			},
+			MaintenanceConfig: nil,
+			NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
+				Network: newLink(loc, "hvn", hvnID),
+				Private: !publicEndpoint,
+			},
+		},
+		ConsulVersion: consulVersion,
+		ID:            clusterID,
+		Location:      loc,
+	}
+
+	payload, err := clients.CreateConsulCluster(ctx, client, loc, consulCuster)
 	if err != nil {
 		return diag.Errorf("unable to create Consul cluster (%s): %v", clusterID, err)
 	}
@@ -415,6 +467,26 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 
 	if err := d.Set("consul_private_endpoint_url", cluster.DNSNames.Private); err != nil {
 		return err
+	}
+
+	link := newLink(cluster.Location, ConsulClusterResourceType, cluster.ID)
+	self_link, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", self_link); err != nil {
+		return err
+	}
+
+	if cluster.Config.ConsulConfig.Primary != nil {
+		link := newLink(cluster.Config.ConsulConfig.Primary.Location, ConsulClusterResourceType, cluster.Config.ConsulConfig.Primary.ID)
+		primary_link, err := linkURL(link)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("primary_link", primary_link); err != nil {
+			return err
+		}
 	}
 
 	return nil
