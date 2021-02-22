@@ -1,4 +1,4 @@
-## 0.2.0 (Unreleased)
+## 0.2.0 (February 22, 2021)
 
 FEATURES:
 * **New data source** `hcp_aws_transit_gateway_attachment` (#58)
