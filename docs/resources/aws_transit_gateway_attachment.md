@@ -7,6 +7,8 @@ description: |-
 
 # Resource `hcp_aws_transit_gateway_attachment`
 
+-> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+
 The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.
 
 ## Example Usage

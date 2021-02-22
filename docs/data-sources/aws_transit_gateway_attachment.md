@@ -7,6 +7,8 @@ description: |-
 
 # Data Source `hcp_aws_transit_gateway_attachment`
 
+-> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+
 The AWS Transit Gateway Attachment data source provides information about an existing transit gateway attachment.
 
 ## Example Usage
@@ -48,5 +50,3 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 Optional:
 
 - **default** (String)
-
-
