@@ -63,3 +63,7 @@ The following checklists are meant to be used for PRs to give developers and rev
 
 * [New resource](checklist-resource.md)
 * [Adding resource import support](checklist-resource-import.md)
+
+## References
+
+The [reference documentation](references.md) includes more background material on specific functionality. This documentation is intended for Terraform HCP Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
