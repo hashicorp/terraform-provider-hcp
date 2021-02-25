@@ -13,34 +13,34 @@ In order to support Terraform usage for our beta customers, **the current patter
 Here are some steps that can be followed when adding resources that are only available to beta customers:
 1. Ensure there is a feature flag at the service level that will produce a clear error message for a Terraform user without access
 1. Create a template file for the resource documentation to include a banner. For example, `templates/resources/aws_transit_gateway_attachment.md.tmpl` used this content:
-```
----
-page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
-subcategory: ""
-description: |-
-{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
----
+    ```
+    ---
+    page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+    subcategory: ""
+    description: |-
+    {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+    ---
 
-# {{.Name}} `{{.Type}}`
+    # {{.Name}} `{{.Type}}`
 
--> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+    -> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
 
-{{ .Description | trimspace }}
+    {{ .Description | trimspace }}
 
-## Example Usage
+    ## Example Usage
 
-{{ tffile "examples/resources/hcp_aws_transit_gateway_attachment/resource.tf" }}
+    {{ tffile "examples/resources/hcp_aws_transit_gateway_attachment/resource.tf" }}
 
-{{ .SchemaMarkdown | trimspace }}
+    {{ .SchemaMarkdown | trimspace }}
 
-## Import
+    ## Import
 
--> **Note:** When importing a transit gateway attachment, you will want to configure a `lifecycle` configuration block with an `ignore_changes` argument including `resource_share_arn`. This is needed because its value is no longer retrievable after creation.
+    -> **Note:** When importing a transit gateway attachment, you will want to configure a `lifecycle` configuration block with an `ignore_changes` argument including `resource_share_arn`. This is needed because its value is no longer retrievable after creation.
 
-Import is supported using the following syntax:
+    Import is supported using the following syntax:
 
-{{ codefile "shell" "examples/resources/hcp_aws_transit_gateway_attachment/import.sh" }}
+    {{ codefile "shell" "examples/resources/hcp_aws_transit_gateway_attachment/import.sh" }}
 
-```
+    ```
 1. Merge the resources into `main` like normal, and include them in the next public release of the provider
 1. Once the feature is no longer in a beta phase, remove the banner by deleting the custom template file
