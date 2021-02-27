@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-hcp
 go 1.15
 
 require (
-	github.com/go-openapi/runtime v0.19.20
+	github.com/go-openapi/runtime v0.19.26
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/hcp-sdk-go v0.2.0
