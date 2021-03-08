@@ -10,7 +10,7 @@ The HCP team will sometimes use a pattern where a feature or set of features are
 
 In order to support Terraform usage for our beta customers, **the current pattern is to make the Terraform resources publicly available, and use a banner in the resource documentation to indicate that the feature is only available to beta customers.** Other users that attempt to use the feature with Terraform will be presented with an error message from the service indicating that the feature is not enabled.
 
-Here are some steps that can be followed when adding resources that are only available to beta customers:
+Follow these steps when adding resources that are only available to beta customers:
 1. Ensure there is a feature flag at the service level that will produce a clear error message for a Terraform user without access
 1. Create a template file for the resource documentation to include a banner. For example, `templates/resources/aws_transit_gateway_attachment.md.tmpl` used this content:
     ```

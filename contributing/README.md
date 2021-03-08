@@ -66,4 +66,4 @@ The following checklists are meant to be used for PRs to give developers and rev
 
 ## References
 
-The [reference documentation](references.md) includes more background material on specific functionality. This documentation is intended for Terraform HCP Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
+The [reference documentation](references.md) includes more background material on specific functionality. This documentation is intended for developers extending or updating the Terraform HCP Provider. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
