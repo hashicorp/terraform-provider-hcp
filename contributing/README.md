@@ -56,3 +56,14 @@ To generate or update documentation, run `go generate`.
 ```shell script
 $ go generate
 ```
+
+## Checklists
+
+The following checklists are meant to be used for PRs to give developers and reviewers confidence that the proper changes have been made:
+
+* [New resource](checklist-resource.md)
+* [Adding resource import support](checklist-resource-import.md)
+
+## References
+
+The [reference documentation](references.md) includes more background material on specific functionality. This documentation is intended for developers extending or updating the Terraform HCP Provider. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
