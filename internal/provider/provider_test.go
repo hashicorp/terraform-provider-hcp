@@ -1,18 +1,44 @@
 package provider
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+// testAccProvider is the "main" provider instance
+//
+// This Provider can be used in testing code for API calls without requiring
+// the use of saving and referencing specific ProviderFactories instances.
+//
+// testAccPreCheck(t) must be called before using this provider instance.
+var testAccProvider *schema.Provider
+
+// testAccProviderConfigure ensures testAccProvider is only configured once
+//
+// The testAccPreCheck(t) function is invoked for every test and this prevents
+// extraneous reconfiguration to the same values each time. However, this does
+// not prevent reconfiguration that may happen should the address of
+// testAccProvider be errantly reused in ProviderFactories.
+var testAccProviderConfigure sync.Once
 
 // providerFactories are used to instantiate a provider during acceptance testing.
 // The factory function will be invoked for every Terraform CLI command executed
 // to create a provider server to which the CLI can reattach.
 var providerFactories = map[string]func() (*schema.Provider, error){
-	"scaffolding": func() (*schema.Provider, error) {
+	"hcp": func() (*schema.Provider, error) {
 		return New()(), nil
 	},
+}
+
+func init() {
+	testAccProvider = New()()
 }
 
 func TestProvider(t *testing.T) {
@@ -21,8 +47,37 @@ func TestProvider(t *testing.T) {
 	}
 }
 
+// testAccPreCheck verifies and sets required provider testing configuration
+//
+// This PreCheck function should be present in every acceptance test. It ensures
+// testing functions that attempt to call HCP APIs are previously configured.
+//
+// These verifications and configuration are preferred at this level to prevent
+// provider developers from experiencing less clear errors for every test.
 func testAccPreCheck(t *testing.T) {
-	// You can add code here to run prior to any test case execution, for example assertions
-	// about the appropriate environment variables being set are common to see in a pre-check
-	// function.
+	// Since we are outside the scope of the Terraform configuration we must
+	// call Configure() to properly initialize the provider configuration.
+	testAccProviderConfigure.Do(func() {
+		if os.Getenv("HCP_CLIENT_ID") == "" {
+			t.Fatal("HCP_CLIENT_ID must be set for acceptance tests")
+		}
+
+		if os.Getenv("HCP_CLIENT_SECRET") == "" {
+			t.Fatal("HCP_CLIENT_SECRET must be set for acceptance tests")
+		}
+
+		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
+func testConfig(res ...string) string {
+	provider := fmt.Sprintf(`
+provider "hcp" {}`)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
 }
