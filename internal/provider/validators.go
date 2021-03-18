@@ -114,8 +114,8 @@ func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 
 	err := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
-		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindStringSubmatch(err.Error())
-		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList[0])
+		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       msg,
@@ -132,8 +132,8 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 
 	err := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
-		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindStringSubmatch(err.Error())
-		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList[0])
+		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       msg,
