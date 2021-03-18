@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-cty/cty"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -100,6 +102,42 @@ func validateDatacenter(v interface{}, path cty.Path) diag.Diagnostics {
 			Severity:      diag.Error,
 			Summary:       msg,
 			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	err := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindStringSubmatch(err.Error())
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList[0])
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value can be case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	err := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindStringSubmatch(err.Error())
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList[0])
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value can be case-insensitive).",
 			AttributePath: path,
 		})
 	}

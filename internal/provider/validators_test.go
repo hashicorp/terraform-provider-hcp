@@ -261,3 +261,83 @@ func Test_validateDatacenter(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateConsulClusterTier(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid tier lowercase": {
+			input:    "development",
+			expected: nil,
+		},
+		"valid tier uppercase": {
+			input:    "STANDARD",
+			expected: nil,
+		},
+		"valid tier mixedcase": {
+			input:    "DEVelopment",
+			expected: nil,
+		},
+		"invalid tier": {
+			input: "dev",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "expected dev to be one of [UNSET DEVELOPMENT STANDARD]",
+					Detail:        "expected dev to be one of [UNSET DEVELOPMENT STANDARD] (value can be case-insensitive).",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateConsulClusterTier(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
+
+func Test_validateConsulClusterSize(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid size": {
+			input:    "x_small",
+			expected: nil,
+		},
+		"valid size lowercase": {
+			input:    "small",
+			expected: nil,
+		},
+		"valid size uppercase": {
+			input:    "MEDIUM",
+			expected: nil,
+		},
+		"valid size mixedcase": {
+			input:    "LARge",
+			expected: nil,
+		},
+		"invalid tier": {
+			input: "med",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "expected med to be one of [UNSET X_SMALL SMALL MEDIUM LARGE]",
+					Detail:        "expected med to be one of [UNSET X_SMALL SMALL MEDIUM LARGE] (value can be case-insensitive).",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateConsulClusterSize(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}

@@ -117,6 +117,11 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"size": {
+				Description: "The t-shirt size representation of each server VM that this Consul cluster\nis provisioned with. Valid options - x_small, small, medium, large.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"self_link": {
 				Description: "A unique URL identifying the HCP Consul cluster.",
 				Type:        schema.TypeString,
