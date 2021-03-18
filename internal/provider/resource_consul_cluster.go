@@ -415,11 +415,11 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	if err := d.Set("tier", strings.ToLower(string(cluster.Config.Tier))); err != nil {
+	if err := d.Set("tier", cluster.Config.Tier); err != nil {
 		return err
 	}
 
-	if err := d.Set("size", strings.ToLower(string(cluster.Config.CapacityConfig.Size))); err != nil {
+	if err := d.Set("size", cluster.Config.CapacityConfig.Size); err != nil {
 		return err
 	}
 
