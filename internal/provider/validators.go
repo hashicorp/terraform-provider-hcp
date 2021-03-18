@@ -119,7 +119,7 @@ func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       msg,
-			Detail:        msg + " (value can be case-insensitive).",
+			Detail:        msg + " (value is case-insensitive).",
 			AttributePath: path,
 		})
 	}
