@@ -32,7 +32,7 @@ resource "hcp_consul_cluster" "example" {
 
 - **cluster_id** (String) The ID of the HCP Consul cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Consul cluster is associated to.
-- **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.
+- **tier** (String) The tier that the HCP Consul cluster will be provisioned as.  Only `development` and `standard` are available at this time.
 
 ### Optional
 
@@ -42,7 +42,7 @@ resource "hcp_consul_cluster" "example" {
 - **min_consul_version** (String) The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **primary_link** (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
-- **size** (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - x_small. Valid options for other tiers - small, medium, large.
+- **size** (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-only
