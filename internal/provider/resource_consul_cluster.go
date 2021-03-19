@@ -118,7 +118,8 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"size": {
-				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid options - x_small, small, medium, large.",
+				// TODO: Add a link to the HCP Consul size details when it is available.
+				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - x_small. Valid options for other tiers - small, medium, large.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,

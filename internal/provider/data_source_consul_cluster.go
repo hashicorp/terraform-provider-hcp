@@ -118,7 +118,7 @@ func dataSourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"size": {
-				Description: "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid options - x_small, small, medium, large.",
+				Description: "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - x_small. Valid options for other tiers - small, medium, large.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
