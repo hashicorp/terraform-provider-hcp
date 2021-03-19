@@ -284,8 +284,8 @@ func Test_validateConsulClusterTier(t *testing.T) {
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "expected dev to be one of [UNSET DEVELOPMENT STANDARD]",
-					Detail:        "expected dev to be one of [UNSET DEVELOPMENT STANDARD] (value is case-insensitive).",
+					Summary:       "expected dev to be one of [DEVELOPMENT STANDARD]",
+					Detail:        "expected dev to be one of [DEVELOPMENT STANDARD] (value is case-insensitive).",
 					AttributePath: nil,
 				},
 			},
@@ -326,8 +326,8 @@ func Test_validateConsulClusterSize(t *testing.T) {
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "expected med to be one of [UNSET X_SMALL SMALL MEDIUM LARGE]",
-					Detail:        "expected med to be one of [UNSET X_SMALL SMALL MEDIUM LARGE] (value is case-insensitive).",
+					Summary:       "expected med to be one of [X_SMALL SMALL MEDIUM LARGE]",
+					Detail:        "expected med to be one of [X_SMALL SMALL MEDIUM LARGE] (value is case-insensitive).",
 					AttributePath: nil,
 				},
 			},

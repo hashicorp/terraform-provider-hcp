@@ -112,9 +112,11 @@ func validateDatacenter(v interface{}, path cty.Path) diag.Diagnostics {
 func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
+	// TODO: Update the validation once SDK provides a way to get all valid values for the enum.
 	err := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
-		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.Replace(enumList, "UNSET ", "", 1)
 		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -130,9 +132,11 @@ func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
+	// TODO: Update the validation once SDK provides a way to get all valid values for the enum.
 	err := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
-		expectedEnumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.Replace(enumList, "UNSET ", "", 1)
 		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
