@@ -33,6 +33,7 @@ func New() func() *schema.Provider {
 				"hcp_consul_cluster_root_token":      resourceConsulClusterRootToken(),
 				"hcp_consul_snapshot":                resourceConsulSnapshot(),
 				"hcp_hvn":                            resourceHvn(),
+				"hcp_vault_cluster":                  resourceVaultCluster(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {
