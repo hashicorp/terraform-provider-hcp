@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	hvn = fmt.Sprintf(`
+	testAccHvnConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
 	cloud_provider = "aws"
@@ -28,7 +28,7 @@ func TestAccHvn(t *testing.T) {
 		CheckDestroy:      testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(hvn),
+				Config: testConfig(testAccHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
@@ -55,7 +55,7 @@ func TestAccHvn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testConfig(hvn),
+				Config: testConfig(testAccHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
