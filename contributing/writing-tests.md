@@ -3,6 +3,7 @@
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
 Terraform Providers, see the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/index.html).
+This guide is meant to augment that documentation with information specific to the HCP provider.
 
 ## Acceptance Tests Often Cost Money to Run
 
