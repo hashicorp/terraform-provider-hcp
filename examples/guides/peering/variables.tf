@@ -14,6 +14,6 @@ variable "region" {
 }
 
 variable "peer_id" {
-  description = "The ID to use for the HCP Network peering."
+  description = "The ID to use for the HCP network peering."
   type        = string
 }

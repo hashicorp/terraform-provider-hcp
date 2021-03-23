@@ -22,7 +22,7 @@ var tgwDeleteTimeout = time.Minute * 35
 
 func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",
+		Description: "The AWS transit gateway attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",
 
 		CreateContext: resourceAwsTransitGatewayAttachmentCreate,
 		ReadContext:   resourceAwsTransitGatewayAttachmentRead,
@@ -331,8 +331,8 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 }
 
 // resourceAwsTransitGatewayAttachmentImport implements the logic necessary to
-// import an un-tracked (by Terraform) Network peering resource into Terraform
-// state.
+// import an un-tracked (by Terraform) transit gateway attachment resource into
+// Terraform state.
 func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
