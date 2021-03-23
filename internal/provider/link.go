@@ -94,7 +94,7 @@ func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloud
 	pattern := fmt.Sprintf("^/project/[^/]+/%s/[^/]+$", resourceType)
 	match, _ := regexp.MatchString(pattern, urn)
 	if !match {
-		return nil, fmt.Errorf("url is not in the correct format: /project/{project_id}/%s/{id}", resourceType)
+		return nil, fmt.Errorf("url %q is not in the correct format: /project/{project_id}/%s/{id}", urn, resourceType)
 	}
 
 	components := strings.Split(urn, "/")
