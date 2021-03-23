@@ -14,6 +14,7 @@ import (
 // GetPeeringByID gets a peering by its ID, hvnID, and location
 func GetPeeringByID(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
 	getPeeringParams := network_service.NewGetPeeringParams()
+	getPeeringParams.Context = ctx
 	getPeeringParams.ID = peeringID
 	getPeeringParams.HvnID = hvnID
 	getPeeringParams.LocationOrganizationID = loc.OrganizationID
