@@ -54,7 +54,7 @@ resource "aws_vpc" "peer" {
   cidr_block = "10.220.0.0/16"
 }
 
-// Create an HCP Network peering to peer your HVN with your AWS VPC.
+// Create an HCP network peering to peer your HVN with your AWS VPC.
 resource "hcp_aws_network_peering" "example" {
   peering_id          = "peer-id"
   hvn_id              = hcp_hvn.example.hvn_id

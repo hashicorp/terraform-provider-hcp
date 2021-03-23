@@ -16,7 +16,7 @@ const (
 	// HvnResourceType is the resource type of an HVN
 	HvnResourceType = "hashicorp.network.hvn"
 
-	// PeeringResourceType is the resource type of a Network peering
+	// PeeringResourceType is the resource type of a network peering
 	PeeringResourceType = "hashicorp.network.peering"
 
 	// TgwAttachmentResourceType is the resource type of a TGW attachment

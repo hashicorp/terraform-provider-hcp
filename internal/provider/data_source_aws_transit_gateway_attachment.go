@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Transit Gateway Attachment data source provides information about an existing transit gateway attachment.",
+		Description: "The AWS transit gateway attachment data source provides information about an existing transit gateway attachment.",
 		ReadContext: dataSourceAwsTransitGatewayAttachmentRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &tgwDefaultTimeout,
