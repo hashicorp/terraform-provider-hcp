@@ -9,6 +9,15 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
+// NOTE: The `Link` behavior in this file is based off of the internal cloud-api:
+// https://github.com/hashicorp/cloud-api-internal/blob/master/helper/hashicorp/cloud/location/link.go
+//
+// It is important that the implementation here is consistent with the internal
+// cloud-api because the `Link`s produced by these functions could be sent in
+// API requests. In practice, this primarily means that the resource types must
+// be the same in both places, eg. the HVN type is defined here:
+// https://github.com/hashicorp/cloud-network/blob/master/resource/network.go#L13
+
 const (
 	// ConsulClusterResourceType is the resource type of a Consul cluster
 	ConsulClusterResourceType = "hashicorp.consul.cluster"
