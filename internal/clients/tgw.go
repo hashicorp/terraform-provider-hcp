@@ -14,6 +14,7 @@ import (
 // GetTGWAttachmentByID gets a TGW attachment by its ID, hvnID, and location
 func GetTGWAttachmentByID(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
 	getTGWAttachmentParams := network_service.NewGetTGWAttachmentParams()
+	getTGWAttachmentParams.Context = ctx
 	getTGWAttachmentParams.ID = tgwAttachmentID
 	getTGWAttachmentParams.HvnID = hvnID
 	getTGWAttachmentParams.HvnLocationOrganizationID = loc.OrganizationID

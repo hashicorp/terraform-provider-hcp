@@ -153,6 +153,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	peerNetworkParams := network_service.NewCreatePeeringParams()
+	peerNetworkParams.Context = ctx
 	peerNetworkParams.PeeringHvnID = hvnID
 	peerNetworkParams.PeeringHvnLocationOrganizationID = loc.OrganizationID
 	peerNetworkParams.PeeringHvnLocationProjectID = loc.ProjectID
@@ -264,6 +265,7 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 	hvnID := d.Get("hvn_id").(string)
 
 	deletePeeringParams := network_service.NewDeletePeeringParams()
+	deletePeeringParams.Context = ctx
 	deletePeeringParams.ID = peeringID
 	deletePeeringParams.HvnID = hvnID
 	deletePeeringParams.LocationOrganizationID = loc.OrganizationID

@@ -159,6 +159,7 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 
 	// Create TGW attachment
 	createTGWAttachmentParams := network_service.NewCreateTGWAttachmentParams()
+	createTGWAttachmentParams.Context = ctx
 	createTGWAttachmentParams.HvnID = hvnID
 	createTGWAttachmentParams.HvnLocationOrganizationID = loc.OrganizationID
 	createTGWAttachmentParams.HvnLocationProjectID = loc.ProjectID
@@ -268,6 +269,7 @@ func resourceAwsTransitGatewayAttachmentDelete(ctx context.Context, d *schema.Re
 	hvnID := d.Get("hvn_id").(string)
 
 	deleteTGWAttParams := network_service.NewDeleteTGWAttachmentParams()
+	deleteTGWAttParams.Context = ctx
 	deleteTGWAttParams.ID = tgwAttID
 	deleteTGWAttParams.HvnID = hvnID
 	deleteTGWAttParams.HvnLocationOrganizationID = loc.OrganizationID
