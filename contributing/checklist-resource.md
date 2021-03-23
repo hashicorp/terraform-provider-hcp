@@ -3,6 +3,7 @@
 Implementing a new resource is a good way to learn more about how Terraform interacts with upstream APIs. There are plenty of examples to draw from in the existing resources, but you still get to implement something completely new.
 
 - [ ] __Minimal LOC__: It can be inefficient for both the reviewer and author to go through long feedback cycles on a big PR with many resources. We therefore encourage you to only submit **1 resource at a time**.
+- [ ] __Acceptance Tests__: New resources should include acceptance tests covering their behavior. See [Writing Acceptance Tests](writing-tests.md) below for a detailed guide on how to approach these.
 - [ ] __Documentation__: Each resource gets a page in the [Terraform Registry documentation](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs). For a new resource, you'll want to add an example and field descriptions. A guide is required if the new feature requires multiple dependent resources to use.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you see in the codebase, and ensure your code is formatted with `go fmt`. The PR reviewers can help out on this front, and may provide comments with suggestions on how to improve the code.
 

@@ -30,7 +30,7 @@ terraform {
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
-*Note:* Acceptance tests create real resources, and often cost money to run.
+*Note:* Acceptance tests create real resources, and often cost money to run. Please read [Writing Acceptance Tests](writing-tests.md) in the contribution guidelines for more information on usage.
 
 ```sh
 $ make testacc
