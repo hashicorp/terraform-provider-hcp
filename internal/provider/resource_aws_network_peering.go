@@ -198,7 +198,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
 
-	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc)
+	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}

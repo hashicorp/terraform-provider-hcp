@@ -3,12 +3,12 @@ package clients
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // GetPeeringByID gets a peering by its ID, hvnID, and location
@@ -27,32 +27,46 @@ func GetPeeringByID(ctx context.Context, client *Client, peeringID string, hvnID
 	return getPeeringResponse.Payload.Peering, nil
 }
 
-// WaitForPeeringToBePendingAcceptance will poll the GET peering endpoint until
-// the state is PENDING_ACCEPTANCE, ctx is canceled, or an error occurs. This
-// is required because AWS can return a newly created network peering before
-// it is ready to be accepted.
-// See https://hashicorp.atlassian.net/browse/HCP-1658
-func WaitForPeeringToBePendingAcceptance(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
-	for {
+const (
+	// PeeringStateCreating is the CREATING state of a network peering
+	PeeringStateCreating = string(networkmodels.HashicorpCloudNetwork20200907PeeringStateCREATING)
+
+	// PeeringStatePendingAcceptance is the PENDING_ACCEPTANCE state of a network peering
+	PeeringStatePendingAcceptance = string(networkmodels.HashicorpCloudNetwork20200907PeeringStatePENDINGACCEPTANCE)
+)
+
+// peeringRefreshState refreshes the state of the network peering by calling
+// the GET endpoint
+func peeringRefreshState(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
 		peering, err := GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 		if err != nil {
-			return nil, fmt.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
-		}
-		switch peering.State {
-		case networkmodels.HashicorpCloudNetwork20200907PeeringStateCREATING:
-			log.Printf("[INFO] Waiting for network peering (%s) to be in PENDING_ACCEPTANCE state", peeringID)
-		case networkmodels.HashicorpCloudNetwork20200907PeeringStatePENDINGACCEPTANCE:
-			return peering, nil
-		default:
-			return nil, fmt.Errorf("unexpected peering state %s", peering.State)
+			return nil, "", err
 		}
 
-		// Wait some time to check the state again
-		select {
-		case <-time.After(time.Second * 5):
-			continue
-		case <-ctx.Done():
-			return nil, fmt.Errorf("context canceled waiting to retrieve network peering (%s)", peeringID)
-		}
+		return peering, string(peering.State), nil
 	}
+}
+
+// WaitForPeeringToBePendingAcceptance will poll the GET peering endpoint until
+// the state is PENDING_ACCEPTANCE, ctx is canceled, or an error occurs.
+func WaitForPeeringToBePendingAcceptance(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{
+			PeeringStateCreating,
+		},
+		Target: []string{
+			PeeringStatePendingAcceptance,
+		},
+		Refresh:      peeringRefreshState(ctx, client, peeringID, hvnID, loc),
+		Timeout:      timeout,
+		PollInterval: 5 * time.Second,
+	}
+
+	result, err := stateChangeConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for network peering (%s) to become 'PENDING_ACCEPTANCE': %s", peeringID, err)
+	}
+
+	return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
 }
