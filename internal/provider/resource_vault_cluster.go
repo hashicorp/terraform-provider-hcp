@@ -13,9 +13,9 @@ import (
 // before a cluster read operation should timeout.
 var defaultVaultClusterTimeout = time.Minute * 5
 
-// createUpdateTimeout is the amount of time that can elapse
-// before a cluster create or update operation should timeout.
-var createUpdateVaultClusterTimeout = time.Minute * 35
+// createTimeout is the amount of time that can elapse
+// before a cluster create operation should timeout.
+var createVaultClusterTimeout = time.Minute * 35
 
 // deleteTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
@@ -26,11 +26,9 @@ func resourceVaultCluster() *schema.Resource {
 		Description:   "The Vault cluster resource allows you to manage an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterCreate,
 		ReadContext:   resourceVaultClusterRead,
-		UpdateContext: resourceVaultClusterUpdate,
 		DeleteContext: resourceVaultClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create:  &createUpdateVaultClusterTimeout,
-			Update:  &createUpdateVaultClusterTimeout,
+			Create:  &createVaultClusterTimeout,
 			Delete:  &deleteVaultClusterTimeout,
 			Default: &defaultVaultClusterTimeout,
 		},
@@ -142,10 +140,6 @@ func resourceVaultClusterCreate(ctx context.Context, data *schema.ResourceData, 
 }
 
 func resourceVaultClusterRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
-}
-
-func resourceVaultClusterUpdate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
