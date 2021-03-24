@@ -17,8 +17,6 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 		Description:   "The Vault cluster admin token resource provides a token with administrator privileges on an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterAdminTokenCreate,
 		Timeouts: &schema.ResourceTimeout{
-			// TODO: in the API this is a GetAdminToken, but it's called Generate in the UI?
-			// Should this be a Create or Get?
 			Create: &defaultVaultAdminTokenTimeout,
 		},
 		Schema: map[string]*schema.Schema{
@@ -31,7 +29,7 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs
-			"admin_token": {
+			"token": {
 				Description: "The admin token of this HCP Vault cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
