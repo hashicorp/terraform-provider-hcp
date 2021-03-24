@@ -50,7 +50,6 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			// TODO: this is required for consul, but is this complete for vault yet? we can also mark computed output until it's ready.
 			"tier": {
 				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
 				Type:        schema.TypeString,
@@ -129,6 +128,11 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			"vault_private_endpoint_url": {
 				Description: "The private URL for the Vault UI.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "The time that the Vault cluster was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
