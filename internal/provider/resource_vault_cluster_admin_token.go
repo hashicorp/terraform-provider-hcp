@@ -16,10 +16,12 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The Vault cluster admin token resource provides a token with administrator privileges on an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterAdminTokenCreate,
+		ReadContext:   resourceVaultClusterAdminTokenRead,
+		DeleteContext: resourceVaultClusterAdminTokenDelete,
 		Timeouts: &schema.ResourceTimeout{
-			// TODO: in the API this is a GetAdminToken, but it's called Generate in the UI?
-			// Should this be a Create or Get?
 			Create: &defaultVaultAdminTokenTimeout,
+			Read:   &defaultVaultAdminTokenTimeout,
+			Delete: &defaultVaultAdminTokenTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -31,7 +33,7 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs
-			"admin_token": {
+			"token": {
 				Description: "The admin token of this HCP Vault cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -41,5 +43,17 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 }
 
 func resourceVaultClusterAdminTokenCreate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+// resourceVaultClusterAdminTokenRead will act as a no-op as the admin token is not persisted in
+// any way that it can be fetched and read
+func resourceVaultClusterAdminTokenRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+// resourceVaultClusterAdminTokenDelete will act as a no-op as the admin token is not persisted in
+// any way that it can be deleted.
+func resourceVaultClusterAdminTokenDelete(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
