@@ -64,3 +64,22 @@ func DeleteVaultCluster(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	return deleteResp.Payload, nil
 }
+
+// CreateVaultClusterAdminToken will make a call to the Vault service to generate an admin token for the Vault cluster
+// that expires after 6 hours.
+func CreateVaultClusterAdminToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	vaultClusterID string) (*vaultmodels.HashicorpCloudVault20201125GetAdminTokenResponse, error) {
+
+	p := vault_service.NewGetAdminTokenParams()
+	p.Context = ctx
+	p.ClusterID = vaultClusterID
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+
+	resp, err := client.Vault.GetAdminToken(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
