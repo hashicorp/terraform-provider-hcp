@@ -73,17 +73,14 @@ func resourceVaultCluster() *schema.Resource {
 				Description: "The name of the customer namespace.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				// TODO Confirm:
-				// ForceNew:    true,
+				ForceNew:    true,
 			},
 			"max_lease_ttl": {
 				Description: "The max lease time-to-live (TTL) for this Vault cluster.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				// TODO Confirm:
-				// ForceNew:    true,
+				ForceNew:    true,
 			},
-			// TODO: min_vault_version for consistency with Consul?
 			"initial_vault_version": {
 				Description:      "The initial Vault version to use when creating the cluster. Once the cluster is created, this value is no longer used. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
