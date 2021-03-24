@@ -4,7 +4,7 @@ Adding a new resource or datasource? Use this checklist to get started: https://
 
 ### :hammer_and_wrench: Description
 
-<!-- What code changed, and why? -->
+<!-- What code changed, and why? If adding a new resource, what is it and what are its key features? If updating an existing resource, what new functionality was added? -->
 
 ### :building_construction: Testing
 
