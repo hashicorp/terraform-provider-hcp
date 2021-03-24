@@ -45,3 +45,22 @@ func CreateVaultCluster(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	return resp.Payload, nil
 }
+
+// DeleteVaultCluster will make a call to the Vault service to initiate the delete Vault
+// cluster workflow.
+func DeleteVaultCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string) (*vaultmodels.HashicorpCloudVault20201125DeleteResponse, error) {
+
+	p := vault_service.NewDeleteParams()
+	p.Context = ctx
+	p.ClusterID = clusterID
+	p.LocationOrganizationID = loc.OrganizationID
+	p.LocationProjectID = loc.ProjectID
+
+	deleteResp, err := client.Vault.Delete(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResp.Payload, nil
+}
