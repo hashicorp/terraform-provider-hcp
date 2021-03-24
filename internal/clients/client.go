@@ -10,6 +10,8 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
+	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client/vault_service"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
 
@@ -22,6 +24,7 @@ type Client struct {
 	Project      project_service.ClientService
 	Organization organization_service.ClientService
 	Consul       consul_service.ClientService
+	Vault        vault_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -65,6 +68,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
+		Vault:        cloud_vault.New(httpClient, nil).VaultService,
 	}
 
 	return client, nil
