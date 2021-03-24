@@ -6,9 +6,11 @@ Adding a new resource or datasource? Use this checklist to get started: https://
 
 <!-- What code changed, and why? If adding a new resource, what is it and what are its key features? If updating an existing resource, what new functionality was added? -->
 
-### :building_construction: Testing
+### :building_construction: Acceptance tests
 
-<!-- Include any feature flags that are required for testing. -->
+- [ ] Are there any feature flags that are required to use this functionality?
+- [ ] Have you added an acceptance test for the functionality being added?
+- [ ] Have you run the acceptance tests on this branch?
 
 Output from acceptance testing:
 
