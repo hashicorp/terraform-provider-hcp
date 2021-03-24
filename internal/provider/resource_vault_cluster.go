@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,9 +12,9 @@ import (
 // before a cluster read operation should timeout.
 var defaultVaultClusterTimeout = time.Minute * 5
 
-// createUpdateTimeout is the amount of time that can elapse
-// before a cluster create or update operation should timeout.
-var createUpdateVaultClusterTimeout = time.Minute * 35
+// createTimeout is the amount of time that can elapse
+// before a cluster create operation should timeout.
+var createVaultClusterTimeout = time.Minute * 35
 
 // deleteTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
@@ -26,11 +25,9 @@ func resourceVaultCluster() *schema.Resource {
 		Description:   "The Vault cluster resource allows you to manage an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterCreate,
 		ReadContext:   resourceVaultClusterRead,
-		UpdateContext: resourceVaultClusterUpdate,
 		DeleteContext: resourceVaultClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create:  &createUpdateVaultClusterTimeout,
-			Update:  &createUpdateVaultClusterTimeout,
+			Create:  &createVaultClusterTimeout,
 			Delete:  &deleteVaultClusterTimeout,
 			Default: &defaultVaultClusterTimeout,
 		},
@@ -50,17 +47,6 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"tier": {
-				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				// TODO: generalize consul enum validator
-				// ValidateDiagFunc: validateStringInSlice(vaultClusterResourceTiers, true),
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
-				},
-			},
 			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint for the Vault UI. Defaults to false.",
@@ -69,31 +55,20 @@ func resourceVaultCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
-			"namespace": {
-				Description: "The name of the customer namespace.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				// TODO Confirm:
-				// ForceNew:    true,
-			},
-			"max_lease_ttl": {
-				Description: "The max lease time-to-live (TTL) for this Vault cluster.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				// TODO Confirm:
-				// ForceNew:    true,
-			},
-			// TODO: min_vault_version for consistency with Consul?
-			"initial_vault_version": {
-				Description:      "The initial Vault version to use when creating the cluster. Once the cluster is created, this value is no longer used. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+			"min_vault_version": {
+				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
-				// DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-				// TODO generalize consul.NormalizeVersion()
-				// },
+				ForceNew:         true,
 			},
 			// computed outputs
+			// TODO: once more tiers are supported and can be changed by users, make this a required input.
+			"tier": {
+				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -113,6 +88,11 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			"region": {
 				Description: "The region where the HCP Vault cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"namespace": {
+				Description: "The name of the customer namespace this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -145,10 +125,6 @@ func resourceVaultClusterCreate(ctx context.Context, data *schema.ResourceData, 
 }
 
 func resourceVaultClusterRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
-}
-
-func resourceVaultClusterUpdate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
