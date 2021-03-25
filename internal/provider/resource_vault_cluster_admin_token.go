@@ -16,8 +16,10 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The Vault cluster admin token resource provides a token with administrator privileges on an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterAdminTokenCreate,
+		ReadContext:   resourceVaultClusterAdminTokenRead,
 		Timeouts: &schema.ResourceTimeout{
 			Create: &defaultVaultAdminTokenTimeout,
+			Read:   &defaultVaultAdminTokenTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -39,5 +41,11 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 }
 
 func resourceVaultClusterAdminTokenCreate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+// resourceVaultClusterAdminTokenRead will act as a no-op as the admin token is not persisted in
+// any way that it can be fetched and read
+func resourceVaultClusterAdminTokenRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
