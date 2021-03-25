@@ -1,4 +1,4 @@
-## 0.3.0 (Unreleased)
+## 0.3.0 (March 25, 2021)
 
 IMPROVEMENTS:
 * all: Improve error messages for requests made to all HCP services (#83)
