@@ -60,9 +60,7 @@ func resourceVaultCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
-				// DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-				// TODO generalize consul.NormalizeVersion()
-				// },
+				ForceNew:         true,
 			},
 			// computed outputs
 			// TODO: once more tiers are supported and can be changed by users, make this a required input.
