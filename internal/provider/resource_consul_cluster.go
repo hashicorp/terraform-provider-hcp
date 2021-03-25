@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
+	"github.com/hashicorp/terraform-provider-hcp/internal/input"
 )
 
 const consulTierDevelopment = "development"
@@ -111,7 +112,7 @@ func resourceConsulCluster() *schema.Resource {
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress diff is normalized versions match OR min_consul_version is removed from the resource
 					// since min_consul_version is required in order to upgrade the cluster to a new Consul version.
-					return consul.NormalizeVersion(old) == consul.NormalizeVersion(new) || new == ""
+					return input.NormalizeVersion(old) == input.NormalizeVersion(new) || new == ""
 				},
 			},
 			"datacenter": {
@@ -264,7 +265,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	consulVersion := consul.RecommendedVersion(availableConsulVersions)
 	v, ok := d.GetOk("min_consul_version")
 	if ok {
-		consulVersion = consul.NormalizeVersion(v.(string))
+		consulVersion = input.NormalizeVersion(v.(string))
 	}
 
 	// check if version is valid and available
@@ -572,7 +573,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	if !ok {
 		return diag.Errorf("min_consul_version is required in order to upgrade the cluster")
 	}
-	newConsulVersion := consul.NormalizeVersion(v.(string))
+	newConsulVersion := input.NormalizeVersion(v.(string))
 
 	// Check that there are any valid upgrade versions
 	if upgradeVersions == nil {
