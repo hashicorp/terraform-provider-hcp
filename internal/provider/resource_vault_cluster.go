@@ -67,18 +67,6 @@ func resourceVaultCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
-			"namespace": {
-				Description: "The name of the customer namespace.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-			},
-			"max_lease_ttl": {
-				Description: "The max lease time-to-live (TTL) for this Vault cluster.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-			},
 			"initial_vault_version": {
 				Description:      "The initial Vault version to use when creating the cluster. Once the cluster is created, this value is no longer used. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
@@ -108,6 +96,11 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			"region": {
 				Description: "The region where the HCP Vault cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"namespace": {
+				Description: "The name of the customer namespace this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
