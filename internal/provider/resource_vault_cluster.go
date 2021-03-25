@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -48,17 +47,6 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"tier": {
-				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				// TODO: generalize consul enum validator
-				// ValidateDiagFunc: validateStringInSlice(vaultClusterResourceTiers, true),
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
-				},
-			},
 			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint for the Vault UI. Defaults to false.",
@@ -77,6 +65,12 @@ func resourceVaultCluster() *schema.Resource {
 				// },
 			},
 			// computed outputs
+			// TODO: once more tiers are supported and can be changed by users, make this a required input.
+			"tier": {
+				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
