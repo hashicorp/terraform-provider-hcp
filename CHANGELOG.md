@@ -1,3 +1,18 @@
+## 0.3.0 (Unreleased)
+
+IMPROVEMENTS:
+* all: Improve error messages for requests made to all HCP services (#83)
+* ci: Run unit tests instead of acceptance tests on Pull Requests (#73)
+* docs: Add contribution guidelines (#71)
+* docs: Update contribution docs to include guidance on acceptance tests (#79)
+* docs: Add CODEOWNERS (#76)
+* docs: Add PR template (#80)
+* provider: Bump `hcp-go-sdk` dependency (#83)
+* provider: Bump `uuid` dependency (#49)
+* provider: Bump `testify` dependency (#51)
+* resource/hcp_consul_cluster: Add basic acceptance test (#78)
+* resource/hcp_hvn: Add basic acceptance test (#74)
+
 ## 0.2.0 (February 22, 2021)
 
 FEATURES:
