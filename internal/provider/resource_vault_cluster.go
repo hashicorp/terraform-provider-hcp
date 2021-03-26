@@ -263,7 +263,34 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceVaultClusterDelete(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), ConsulClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Deleting Vault cluster (%s)", clusterID)
+
+	deleteResp, err := clients.DeleteVaultCluster(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Vault cluster (%s) not found, so no action was taken", clusterID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the delete cluster operation.
+	if err := clients.WaitForOperation(ctx, client, "delete Vault cluster", loc, deleteResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete Vault cluster (%s): %v", clusterID, err)
+	}
+
 	return nil
 }
 
