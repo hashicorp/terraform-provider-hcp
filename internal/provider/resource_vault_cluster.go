@@ -223,7 +223,43 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func resourceVaultClusterRead(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), VaultClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Vault cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// The Vault cluster failed to provision properly so we want to let the user know and
+	// remove it from state.
+	if cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateFAILED {
+		log.Printf("[WARN] Vault cluster (%s) failed to provision, removing from state", clusterID)
+		d.SetId("")
+		return nil
+	}
+
+	// Cluster found, update resource data.
+	if err := setVaultClusterResourceData(d, cluster); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
