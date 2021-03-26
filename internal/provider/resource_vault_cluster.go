@@ -55,8 +55,8 @@ func resourceVaultCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
-			"initial_vault_version": {
-				Description:      "The initial Vault version to use when creating the cluster. Once the cluster is created, this value is no longer used. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+			"min_vault_version": {
+				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
