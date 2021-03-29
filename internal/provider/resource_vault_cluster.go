@@ -160,8 +160,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// TODO: Recommended version is hard-coded for now, but eventually should be fetched from an API.
-	vaultVersion := "1.0.7"
-	v, ok := d.GetOk("initial_vault_version")
+	vaultVersion := "1.7.0"
+	v, ok := d.GetOk("min_vault_version")
 	if ok {
 		vaultVersion = input.NormalizeVersion(v.(string))
 	}
@@ -171,14 +171,11 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	// TODO: Tier is hard-coded for now, but eventually will be required input on the resource.
 	tier := vaultmodels.HashicorpCloudVault20201125TierDEV
 
-	namespace := "admin"
-
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
 	vaultCuster := &vaultmodels.HashicorpCloudVault20201125InputCluster{
 		Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 			VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
-				Namespace:      namespace,
 				InitialVersion: vaultVersion,
 			},
 			Tier: tier,
@@ -266,7 +263,7 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceVaultClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	link, err := buildLinkFromURL(d.Id(), ConsulClusterResourceType, client.Config.OrganizationID)
+	link, err := buildLinkFromURL(d.Id(), VaultClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
