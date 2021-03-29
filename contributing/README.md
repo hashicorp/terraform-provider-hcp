@@ -2,6 +2,9 @@
 
 This directory contains documentation about the HCP Terraform Provider codebase, aimed at readers who are interested in making code contributions.
 
+To learn more about how to create issues and pull requests in this repository, and what happens after they are created, you may refer to the resources below:
+- [Pull Request submission and lifecycle](pull-request-lifecycle.md)
+
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
