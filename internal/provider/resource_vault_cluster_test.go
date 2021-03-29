@@ -20,14 +20,14 @@ resource "hcp_hvn" "test" {
 	
 resource "hcp_vault_cluster" "test" {
 	cluster_id            = "test-vault-cluster"
-	hvn_id                = "test-hvn"
-	initial_vault_version = "1.7.0"
+	hvn_id                = hcp_hvn.test.hvn_id
+	min_vault_version     = "v1.7.0"
 }
 `)
 )
 
 func TestAccVaultCluster(t *testing.T) {
-	resourceName := "hcp_vault_cluster.test-vault"
+	resourceName := "hcp_vault_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -40,14 +40,14 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckVaultClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "development"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "namespace", "admin"),
+					resource.TestCheckResourceAttr(resourceName, "vault_version", "v1.7.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "vault_version"),
 					resource.TestCheckNoResourceAttr(resourceName, "vault_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "vault_private_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -60,7 +60,7 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckVaultClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "development"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
