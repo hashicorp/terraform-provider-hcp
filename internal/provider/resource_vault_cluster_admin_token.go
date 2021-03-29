@@ -2,10 +2,13 @@ package provider
 
 import (
 	"context"
+	"log"
 	"time"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 // defaultVaultAdminTokenTimeout is the amount of time that can elapse
@@ -42,7 +45,53 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 	}
 }
 
-func resourceVaultClusterAdminTokenCreate(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	clusterID := d.Get("cluster_id").(string)
+
+	// Fetch organizationID by project ID.
+	organizationID := client.Config.OrganizationID
+	projectID := client.Config.ProjectID
+
+	loc := &models.HashicorpCloudLocationLocation{
+		OrganizationID: organizationID,
+		ProjectID:      projectID,
+	}
+
+	log.Printf("[INFO] reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	_, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to create admin token; Vault cluster (%s) not found",
+				clusterID,
+			)
+		}
+
+		return diag.Errorf("unable to check for presence of an existing Vault cluster (%s): %v",
+			clusterID,
+			err,
+		)
+	}
+
+	tokenResp, err := clients.CreateVaultClusterAdminToken(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("error creating HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
+			clusterID,
+			projectID,
+			err,
+		)
+	}
+
+	err = d.Set("token", tokenResp.Token)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// TODO: Need to verify if this is safe to be used as ID in state.
+	d.SetId(tokenResp.Token)
+
 	return nil
 }
 
