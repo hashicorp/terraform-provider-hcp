@@ -11,6 +11,25 @@ on:
       - 'README.md'
 
 jobs:
+  # ensure go.mod and go.sum are updated
+  depscheck:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '1.15'
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2.3.3
+
+    - name: Run 'go mod tidy' and check for differences
+      run: |
+        make depscheck
+
   # ensure the code builds
   build:
     name: Build
@@ -55,7 +74,47 @@ jobs:
       run: |
         go mod download
         
-    - name: Unit tests
-      timeout-minutes: 5
+    - name: Run unit tests
       run: |
-        go test ./internal/...
+        make test
+
+  # ensure code is formatted
+  fmtcheck:
+    name: Check Code Formatting
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '1.15'
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2.3.3
+
+    - name: Generate docs and check for differences
+      run: |
+        make fmtcheck
+
+  # ensure docs are generated
+  gencheck:
+    name: Check Generated Docs
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '1.15'
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2.3.3
+
+    - name: Generate docs and check for differences
+      run: |
+        make gencheck
+
