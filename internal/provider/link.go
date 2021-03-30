@@ -42,7 +42,7 @@ const (
 	// type of a Consul cluster agent Kubernetes secret
 	ConsulClusterAgentKubernetesSecretDataSourceType = ConsulClusterResourceType + ".agent-kubernetes-secret"
 
-	// VaultClusterResourceType is the resource type of a Consul cluster
+	// VaultClusterResourceType is the resource type of a Vault cluster
 	VaultClusterResourceType = "hashicorp.vault.cluster"
 )
 

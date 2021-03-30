@@ -21,7 +21,6 @@ resource "hcp_hvn" "test" {
 resource "hcp_vault_cluster" "test" {
 	cluster_id            = "test-vault-cluster"
 	hvn_id                = hcp_hvn.test.hvn_id
-	min_vault_version     = "v1.7.0"
 }
 `)
 )
@@ -45,7 +44,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "namespace", "admin"),
-					resource.TestCheckResourceAttr(resourceName, "vault_version", "v1.7.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "vault_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vault_public_endpoint_url"),
