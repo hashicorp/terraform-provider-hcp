@@ -55,7 +55,7 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			// optional fields
 			"public_endpoint": {
-				Description: "Denotes that the cluster has a public endpoint for the Vault UI. Defaults to false.",
+				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
@@ -83,8 +83,6 @@ func resourceVaultCluster() *schema.Resource {
 			"project_id": {
 				Description: "The ID of the project this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
 				Computed:    true,
 			},
 			"cloud_provider": {
@@ -108,12 +106,12 @@ func resourceVaultCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"vault_public_endpoint_url": {
-				Description: "The public URL for the Vault UI. This will be empty if `public_endpoint` is `false`.",
+				Description: "The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"vault_private_endpoint_url": {
-				Description: "The private URL for the Vault UI.",
+				Description: "The private URL for the Vault cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -159,8 +157,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("a Vault cluster with cluster_id=%q in project_id=%q already exists - to be managed via Terraform this resource needs to be imported into the State.  Please see the resource documentation for hcp_vault_cluster for more information.", clusterID, loc.ProjectID)
 	}
 
-	// TODO: Recommended version is hard-coded for now, but eventually should be fetched from an API.
-	vaultVersion := "1.7.0"
+	// If no min_vault_version is set, an empty version is passed and the backend will set a default version.
+	var vaultVersion string
 	v, ok := d.GetOk("min_vault_version")
 	if ok {
 		vaultVersion = input.NormalizeVersion(v.(string))
