@@ -6,7 +6,7 @@ labels: enhancement
 
 ### Description
 
-<!--- Please leave a helpful description of the feature request here. --->
+<!--- Please leave a helpful description of the feature request and the problem it solves here. --->
 
 ### New or Affected Resource(s)
 

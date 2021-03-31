@@ -5,7 +5,7 @@ labels: bug
 ---
 
 <!---
-Please note the following potential times when an issue might be in Terraform core:
+Please note there are times when an issue might be in Terraform core:
 
 * [Configuration Language](https://www.terraform.io/docs/configuration/index.html) or resource ordering issues
 * [State](https://www.terraform.io/docs/state/index.html) and [State Backend](https://www.terraform.io/docs/backends/index.html) issues
@@ -69,7 +69,7 @@ To obtain the debug output, see the [Terraform documentation on debugging](https
 
 ### Important Factoids
 
-<!--- Are there anything atypical about your accounts that we should know? --->
+<!--- Is there anything atypical about your accounts that we should know? --->
 
 ### References
 
