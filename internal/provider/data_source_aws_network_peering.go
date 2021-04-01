@@ -12,7 +12,7 @@ import (
 
 func dataSourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Network peering data source provides information about an existing Network peering between an HVN and a peer AWS VPC.",
+		Description: "The AWS network peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.",
 		ReadContext: dataSourceAwsNetworkPeeringRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &peeringDefaultTimeout,
@@ -26,19 +26,19 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"peering_id": {
-				Description:      "The ID of the Network peering.",
+				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the Network peering is located. Always matches the HVN's organization.",
+				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the Network peering is located. Always matches the HVN's project.",
+				Description: "The ID of the HCP project where the network peering is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -68,12 +68,12 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the Network peering was created.",
+				Description: "The time that the network peering was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the Network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the network peering will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -82,7 +82,7 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 }
 
 // dataSourceAwsNetworkPeeringRead is the func to implement reading of the
-// AWS Network peering between an HVN and a peer AWS VPC.
+// network peering between an HVN and a peer AWS VPC.
 func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -93,10 +93,10 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	hvnID := d.Get("hvn_id").(string)
 	peeringID := d.Get("peering_id").(string)
 
-	log.Printf("[INFO] Reading Network peering (%s)", peeringID)
+	log.Printf("[INFO] Reading network peering (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
 	// Network peering found, update resource data.
