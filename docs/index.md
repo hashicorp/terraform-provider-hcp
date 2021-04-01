@@ -56,7 +56,7 @@ resource "aws_vpc_peering_connection_accepter" "main" {
   auto_accept               = true
 }
 
-// Create a Network peering between the HVN and the AWS VPC
+// Create a network peering between the HVN and the AWS VPC
 resource "hcp_aws_network_peering" "example_peering" {
   hvn_id              = hcp_hvn.example_hvn.hvn_id
   peer_vpc_id         = aws_vpc.main.id

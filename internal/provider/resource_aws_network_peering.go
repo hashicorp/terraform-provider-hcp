@@ -22,7 +22,7 @@ var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Network peering resource allows you to manage a Network peering between an HVN and a peer AWS VPC.",
+		Description: "The AWS network peering resource allows you to manage a network peering between an HVN and a peer AWS VPC.",
 
 		CreateContext: resourceAwsNetworkPeeringCreate,
 		ReadContext:   resourceAwsNetworkPeeringRead,
@@ -75,7 +75,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			},
 			// Optional inputs
 			"peering_id": {
-				Description:      "The ID of the Network peering.",
+				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -84,12 +84,12 @@ func resourceAwsNetworkPeering() *schema.Resource {
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the Network peering is located. Always matches the HVN's organization.",
+				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the Network peering is located. Always matches the HVN's project.",
+				Description: "The ID of the HCP project where the network peering is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -99,12 +99,12 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the Network peering was created.",
+				Description: "The time that the network peering was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the Network peering will be considered expired if it hasn't transitioned into 'Accepted' or 'Active' state.",
+				Description: "The time after which the network peering will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -131,28 +131,29 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to find the HVN (%s) for the Network peering", hvnID)
+			return diag.Errorf("unable to find the HVN (%s) for the network peering", hvnID)
 		}
 
 		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnID, err)
 	}
-	log.Printf("[INFO] HVN (%s) found, proceeding with create", hvnID)
+	log.Printf("[INFO] HVN (%s) found, proceeding with network peering create", hvnID)
 
 	// Check if peering already exists
 	if peeringID != "" {
 		_, err = clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 		if err != nil {
 			if !clients.IsResponseCodeNotFound(err) {
-				return diag.Errorf("unable to check for presence of an existing Network peering (%s): %v", peeringID, err)
+				return diag.Errorf("unable to check for presence of an existing network peering (%s): %v", peeringID, err)
 			}
 
-			log.Printf("[INFO] Network peering (%s) not found, proceeding with create", peeringID)
+			log.Printf("[INFO] Network peering (%s) not found, proceeding with network peering create", peeringID)
 		} else {
-			return diag.Errorf("a Network peering with peering_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_aws_network_peering for more information", peeringID, hvnID, loc.ProjectID)
+			return diag.Errorf("a network peering with peering_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_aws_network_peering for more information", peeringID, hvnID, loc.ProjectID)
 		}
 	}
 
 	peerNetworkParams := network_service.NewCreatePeeringParams()
+	peerNetworkParams.Context = ctx
 	peerNetworkParams.PeeringHvnID = hvnID
 	peerNetworkParams.PeeringHvnLocationOrganizationID = loc.OrganizationID
 	peerNetworkParams.PeeringHvnLocationProjectID = loc.ProjectID
@@ -173,10 +174,10 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 			},
 		},
 	}
-	log.Printf("[INFO] Creating Network peering between HVN (%s) and peer (%s)", hvnID, peerVpcID)
+	log.Printf("[INFO] Creating network peering between HVN (%s) and peer (%s)", hvnID, peerVpcID)
 	peeringResponse, err := client.Network.CreatePeering(peerNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create Network peering between HVN (%s) and peer (%s): %v", hvnID, peerVpcID, err)
+		return diag.Errorf("unable to create network peering between HVN (%s) and peer (%s): %v", hvnID, peerVpcID, err)
 	}
 
 	peering := peeringResponse.Payload.Peering
@@ -190,14 +191,14 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	}
 	d.SetId(url)
 
-	// Wait for Network peering to be created
-	if err := clients.WaitForOperation(ctx, client, "create Network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create Network peering (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
+	// Wait for network peering to be created
+	if err := clients.WaitForOperation(ctx, client, "create network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create network peering (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID, err)
 	}
 
-	log.Printf("[INFO] Created Network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
+	log.Printf("[INFO] Created network peering (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AwsTarget.VpcID)
 
-	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc)
+	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -223,7 +224,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 	loc := link.Location
 	hvnID := d.Get("hvn_id").(string)
 
-	log.Printf("[INFO] Reading Network peering (%s)", peeringID)
+	log.Printf("[INFO] Reading network peering (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
@@ -232,13 +233,13 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 			return nil
 		}
 
-		return diag.Errorf("unable to retrieve Network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
-	// The Network peering failed to provision properly so we want to let the user know and
+	// The network peering failed to provision properly so we want to let the user know and
 	// remove it from state
 	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
-		log.Printf("[WARN] network peering (%s) failed to provision, removing from state", peering.ID)
+		log.Printf("[WARN] Network peering (%s) failed to provision, removing from state", peering.ID)
 		d.SetId("")
 		return nil
 	}
@@ -264,11 +265,12 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 	hvnID := d.Get("hvn_id").(string)
 
 	deletePeeringParams := network_service.NewDeletePeeringParams()
+	deletePeeringParams.Context = ctx
 	deletePeeringParams.ID = peeringID
 	deletePeeringParams.HvnID = hvnID
 	deletePeeringParams.LocationOrganizationID = loc.OrganizationID
 	deletePeeringParams.LocationProjectID = loc.ProjectID
-	log.Printf("[INFO] Deleting Network peering (%s)", peeringID)
+	log.Printf("[INFO] Deleting network peering (%s)", peeringID)
 	deletePeeringResponse, err := client.Network.DeletePeering(deletePeeringParams, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
@@ -276,11 +278,11 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 			return nil
 		}
 
-		return diag.Errorf("unable to delete Network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to delete network peering (%s): %v", peeringID, err)
 	}
 
 	// Wait for peering to be deleted
-	if err := clients.WaitForOperation(ctx, client, "delete Network peering", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "delete network peering", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
 		// If the HVN has already been deleted
 		// TODO: Peerings can be deleted automatically by the network monitor workflow ]
 		// and when deleting the HVN is deleted can cause an already started error.
@@ -288,7 +290,7 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 		if strings.Contains(err.Error(), "execution already started") {
 			return nil
 		}
-		return diag.Errorf("unable to delete Network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to delete network peering (%s): %v", peeringID, err)
 	}
 
 	log.Printf("[INFO] Network peering (%s) deleted, removing from state", peeringID)
@@ -332,7 +334,7 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 }
 
 // resourceAwsNetworkPeeringImport implements the logic necessary to import an
-// un-tracked (by Terraform) Network peering resource into Terraform state.
+// un-tracked (by Terraform) network peering resource into Terraform state.
 func resourceAwsNetworkPeeringImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 

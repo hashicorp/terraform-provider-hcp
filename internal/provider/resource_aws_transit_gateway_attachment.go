@@ -22,7 +22,7 @@ var tgwDeleteTimeout = time.Minute * 35
 
 func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS Transit Gateway Attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",
+		Description: "The AWS transit gateway attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",
 
 		CreateContext: resourceAwsTransitGatewayAttachmentCreate,
 		ReadContext:   resourceAwsTransitGatewayAttachmentRead,
@@ -159,6 +159,7 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 
 	// Create TGW attachment
 	createTGWAttachmentParams := network_service.NewCreateTGWAttachmentParams()
+	createTGWAttachmentParams.Context = ctx
 	createTGWAttachmentParams.HvnID = hvnID
 	createTGWAttachmentParams.HvnLocationOrganizationID = loc.OrganizationID
 	createTGWAttachmentParams.HvnLocationProjectID = loc.ProjectID
@@ -268,6 +269,7 @@ func resourceAwsTransitGatewayAttachmentDelete(ctx context.Context, d *schema.Re
 	hvnID := d.Get("hvn_id").(string)
 
 	deleteTGWAttParams := network_service.NewDeleteTGWAttachmentParams()
+	deleteTGWAttParams.Context = ctx
 	deleteTGWAttParams.ID = tgwAttID
 	deleteTGWAttParams.HvnID = hvnID
 	deleteTGWAttParams.HvnLocationOrganizationID = loc.OrganizationID
@@ -329,8 +331,8 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 }
 
 // resourceAwsTransitGatewayAttachmentImport implements the logic necessary to
-// import an un-tracked (by Terraform) Network peering resource into Terraform
-// state.
+// import an un-tracked (by Terraform) transit gateway attachment resource into
+// Terraform state.
 func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
