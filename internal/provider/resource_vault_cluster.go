@@ -38,7 +38,7 @@ func resourceVaultCluster() *schema.Resource {
 			Default: &defaultVaultClusterTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceAwsNetworkPeeringImport,
+			StateContext: resourceVaultClusterImport,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
