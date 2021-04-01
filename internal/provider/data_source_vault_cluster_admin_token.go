@@ -12,16 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// defaultVaultAdminTokenTimeout is the amount of time that can elapse
-// before an admin token create operation should timeout.
-var defaultVaultAdminTokenTimeout = time.Minute * 5
-
 func dataSourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
 		Description: "The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.",
 		ReadContext: dataSourceVaultClusterAdminTokenRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &defaultVaultAdminTokenTimeout,
+			Read: schema.DefaultTimeout(5 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
