@@ -9,7 +9,21 @@ description: |-
 
 The Vault cluster resource allows you to manage an HCP Vault cluster.
 
+## Example Usage
 
+```terraform
+resource "hcp_hvn" "example" {
+  hvn_id         = "hvn"
+  cloud_provider = "aws"
+  region         = "us-west-2"
+  cidr_block     = "172.25.16.0/20"
+}
+
+resource "hcp_vault_cluster" "example" {
+  cluster_id = "vault-cluster"
+  hvn_id     = hcp_hvn.example.hvn_id
+}
+```
 
 ## Schema
 
@@ -47,4 +61,11 @@ Optional:
 - **default** (String)
 - **delete** (String)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# The import ID is {cluster_id}
+terraform import hcp_vault_cluster.example vault-cluster
+```
