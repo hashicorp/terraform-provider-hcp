@@ -37,6 +37,9 @@ func resourceVaultCluster() *schema.Resource {
 			Delete:  &deleteVaultClusterTimeout,
 			Default: &defaultVaultClusterTimeout,
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceAwsNetworkPeeringImport,
+		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"cluster_id": {
@@ -348,4 +351,23 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	}
 
 	return nil
+}
+
+func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	clusterID := d.Id()
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		ProjectID: client.Config.ProjectID,
+	}
+
+	link := newLink(loc, VaultClusterResourceType, clusterID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(url)
+
+	return []*schema.ResourceData{d}, nil
 }
