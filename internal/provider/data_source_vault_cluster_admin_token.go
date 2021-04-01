@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -19,7 +18,7 @@ var defaultVaultAdminTokenTimeout = time.Minute * 5
 
 func dataSourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Vault cluster admin token resource provides a token with administrator privileges on an HCP Vault cluster.",
+		Description: "The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.",
 		ReadContext: dataSourceVaultClusterAdminTokenRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultVaultAdminTokenTimeout,
@@ -30,7 +29,6 @@ func dataSourceVaultClusterAdminToken() *schema.Resource {
 				Description:      "The ID of the HCP Vault cluster.",
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs
@@ -50,13 +48,9 @@ func dataSourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.Resourc
 
 	clusterID := d.Get("cluster_id").(string)
 
-	// Fetch organizationID by project ID.
-	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
-
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
-		ProjectID:      projectID,
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
 	log.Printf("[INFO] reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
@@ -75,7 +69,7 @@ func dataSourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.Resourc
 		)
 	}
 
-	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+	loc.Region = &models.HashicorpCloudLocationRegion{
 		Provider: cluster.Location.Region.Provider,
 		Region:   cluster.Location.Region.Region,
 	}
@@ -84,7 +78,7 @@ func dataSourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.Errorf("error creating HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
 			clusterID,
-			projectID,
+			client.Config.ProjectID,
 			err,
 		)
 	}
