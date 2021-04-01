@@ -52,6 +52,20 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 				),
 			},
+			// This step simulates an import of the resource.
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					return rs.Primary.Attributes["cluster_id"], nil
+				},
+				ImportStateVerify: true,
+			},
 			// This step is a subsequent terraform apply that verifies that no state is modified.
 			{
 				Config: testConfig(testAccVaultClusterConfig),
