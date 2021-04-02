@@ -190,6 +190,19 @@ func generateHelmConfig(name, datacenter, fqdn string, retryJoin []string, expos
 	// replace any escaped double-quotes with single quotes
 	rj = strings.Replace(rj, "\"", "'", -1)
 
+	// trim off any leading `https://` protocol if present.
+	// this protocol will be prepended as expected when
+	// the helm config string is generated.
+	//
+	// this string is trimmed here to handle both the cases
+	// of when the provided fqdn string has the leading
+	// protocol and does not.
+	//
+	// trimming the leading protocol here will guarantee a
+	// valid URL is generated when prepended in the
+	// helmConfigTemplate.
+	fqdn = strings.TrimPrefix(fqdn, "https://")
+
 	return fmt.Sprintf(helmConfigTemplate,
 		datacenter,
 		lower, lower, lower,
