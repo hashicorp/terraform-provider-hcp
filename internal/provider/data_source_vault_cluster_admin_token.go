@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+// adminTokenExpiry is the length of the time in seconds before a generated admin token expires.
+var adminTokenExpiry = time.Second * 3600 * 6
+
 func dataSourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
 		Description: "The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.",
@@ -28,6 +31,11 @@ func dataSourceVaultClusterAdminToken() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs
+			"created_at": {
+				Description: "The time that the admin token was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"token": {
 				Description: "The admin token of this HCP Vault cluster.",
 				Type:        schema.TypeString,
@@ -65,6 +73,33 @@ func dataSourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.Resourc
 		)
 	}
 
+	log.Printf("[INFO] checking for existing admin token for Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	// TODO: this is not how I access existing state's created_at...
+	createdAt := d.Get("created_at").(string)
+	if createdAt != "" {
+		log.Printf("[INFO] existing admin token found for Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+		// If the token is less than five minutes from expiry, it's time to regenerate.
+		expiry := adminTokenExpiry - (time.Second * 60 * 5)
+		// TODO: for testing only
+		// expiry := time.Second * 20
+
+		t, err := time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
+				clusterID,
+				client.Config.ProjectID,
+				err,
+			)
+		}
+
+		// Return early if admin token is still within expiry window.
+		if time.Now().Unix() < t.Add(expiry).Unix() {
+			return nil
+		}
+	}
+
 	loc.Region = &models.HashicorpCloudLocationRegion{
 		Provider: cluster.Location.Region.Provider,
 		Region:   cluster.Location.Region.Region,
@@ -80,6 +115,11 @@ func dataSourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.Resourc
 	}
 
 	err = d.Set("token", tokenResp.Token)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("created_at", time.Now().Format(time.RFC3339))
 	if err != nil {
 		return diag.FromErr(err)
 	}
