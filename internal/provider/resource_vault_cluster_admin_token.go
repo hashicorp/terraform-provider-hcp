@@ -13,7 +13,7 @@ import (
 )
 
 // defaultVaultAdminTokenTimeout is the amount of time that can elapse
-// before an admin token create operation should timeout.
+// before an admin token operation should timeout.
 var defaultVaultAdminTokenTimeout = time.Minute * 5
 
 func resourceVaultClusterAdminToken() *schema.Resource {
@@ -135,7 +135,7 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 }
 
 // resourceVaultClusterAdminTokenRead will act as a no-op as the admin token is not persisted in
-// any way that it can be fetched and read
+// any way that it can be fetched and read.
 func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -172,8 +172,8 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-// resourceVaultClusterAdminTokenDelete will act as a no-op as the admin token is not persisted in
-// any way that it can be deleted.
+// resourceVaultClusterAdminTokenDelete will remove the token from state but there is currently no way to invalidate an existing token.
 func resourceVaultClusterAdminTokenDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return resourceVaultClusterAdminTokenRead(ctx, d, meta)
+	d.SetId("")
+	return nil
 }
