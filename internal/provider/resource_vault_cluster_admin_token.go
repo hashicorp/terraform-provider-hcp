@@ -51,8 +51,7 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 	}
 }
 
-// resourceVaultClusterAdminTokenCreate generates a new admin token for the Vault cluster if there is no existing token or the 
-// current token in state is about to expire.
+// resourceVaultClusterAdminTokenCreate generates a new admin token for the Vault cluster.
 func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -64,7 +63,6 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[INFO] reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
-
 	cluster, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
@@ -77,29 +75,6 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 			clusterID,
 			err,
 		)
-	}
-
-	createdAt, ok := d.GetOk("created_at").(string); ok {
-		log.Printf("[INFO] existing admin token found for Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
-
-		// If the token is less than five minutes from expiry, it's time to regenerate.
-		expiry := adminTokenExpiry - (time.Second * 60 * 5)
-		// TODO: for testing only
-		// expiry := time.Second * 20
-
-		t, err := time.Parse(time.RFC3339, createdAt)
-		if err != nil {
-			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
-				clusterID,
-				client.Config.ProjectID,
-				err,
-			)
-		}
-
-		// Return early if admin token is still within expiry window.
-		if time.Now().Unix() < t.Add(expiry).Unix() {
-			return nil
-		}
 	}
 
 	loc.Region = &models.HashicorpCloudLocationRegion{
@@ -134,8 +109,9 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-// resourceVaultClusterAdminTokenRead will act as a no-op as the admin token is not persisted in
-// any way that it can be fetched and read.
+// resourceVaultClusterAdminTokenRead cannot read the admin token from the API as it is not persisted in
+// any way that it can be fetched. Instead this operation if the current token is about to expire; if no refresh is needed,
+// proceeds to verify the existence of the associated Vault cluster.
 func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -146,6 +122,38 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
 		ProjectID:      projectID,
+	}
+
+	createdAt, ok := d.GetOk("created_at")
+	if ok {
+		log.Printf("[INFO] existing admin token found for Vault cluster (%s) [project_id=%s, organization_id=%s]",
+			clusterID,
+			loc.ProjectID,
+			loc.OrganizationID,
+		)
+
+		// The refresh window starts five minutes before the 6h expiry.
+		expiry := adminTokenExpiry - (time.Second * 60 * 5)
+
+		t, err := time.Parse(time.RFC3339, createdAt.(string))
+		if err != nil {
+			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
+				clusterID,
+				client.Config.ProjectID,
+				err,
+			)
+		}
+
+		// If the token is less than five minutes from the 6h expiry, it's time to regenerate.
+		if time.Now().Unix() > t.Add(expiry).Unix() {
+			log.Printf("[INFO] refreshing admin token for Vault cluster (%s) [project_id=%s, organization_id=%s]",
+				clusterID,
+				loc.ProjectID,
+				loc.OrganizationID,
+			)
+			// If no token exists or the current one is about to expire, generate a new token.
+			return resourceVaultClusterAdminTokenCreate(ctx, d, meta)
+		}
 	}
 
 	log.Printf("[INFO] reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
