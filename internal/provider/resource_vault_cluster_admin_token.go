@@ -18,7 +18,7 @@ var defaultVaultAdminTokenTimeout = time.Minute * 5
 
 func resourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The Vault cluster admin token resource provides a token with administrator privileges on an HCP Vault cluster.",
+		Description:   "The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.",
 		CreateContext: resourceVaultClusterAdminTokenCreate,
 		ReadContext:   resourceVaultClusterAdminTokenRead,
 		DeleteContext: resourceVaultClusterAdminTokenDelete,
