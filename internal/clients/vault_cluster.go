@@ -75,6 +75,8 @@ func CreateVaultClusterAdminToken(ctx context.Context, client *Client, loc *shar
 	p.ClusterID = vaultClusterID
 	p.LocationOrganizationID = loc.OrganizationID
 	p.LocationProjectID = loc.ProjectID
+	p.LocationRegionProvider = &loc.Region.Provider
+	p.LocationRegionRegion = &loc.Region.Region
 
 	resp, err := client.Vault.GetAdminToken(p, nil)
 	if err != nil {
