@@ -3,6 +3,6 @@ resource "hcp_vault_cluster" "example_vault_cluster" {
   cluster_id = "hcp-tf-example-vault-cluster"
 }
 
-data "hcp_vault_cluster_admin_token" "example_vault_admin_token" {
+resource "hcp_vault_cluster_admin_token" "example_vault_admin_token" {
   cluster_id = hcp_vault_cluster.example_vault_cluster.cluster_id
 }
