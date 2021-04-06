@@ -18,7 +18,6 @@ resource "hcp_hvn" "test" {
 resource "hcp_vault_cluster" "test" {
 	cluster_id            = "test-vault-cluster"
 	hvn_id                = hcp_hvn.test.hvn_id
-	min_vault_version     = "v1.7.0"
 }
 
 resource "hcp_vault_cluster_admin_token" "test" {
@@ -39,6 +38,7 @@ func TestAccVaultClusterAdminToken(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
 					resource.TestCheckResourceAttrSet(resourceName, "token"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 				),
 			},
 		},
