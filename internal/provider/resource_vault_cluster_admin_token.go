@@ -113,8 +113,8 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 }
 
 // resourceVaultClusterAdminTokenRead cannot read the admin token from the API as it is not persisted in
-// any way that it can be fetched. Instead this operation if the current token is about to expire; if no refresh is needed,
-// proceeds to verify the existence of the associated Vault cluster.
+// any way that it can be fetched. Instead this operation first verifies the existence of the associated Vault cluster
+// and then refreshes the token if it is close to expiring or expired.
 func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -127,41 +127,9 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 		ProjectID:      projectID,
 	}
 
-	createdAt, ok := d.GetOk("created_at")
-	if ok {
-		log.Printf("[INFO] existing admin token found for Vault cluster (%s) [project_id=%s, organization_id=%s]",
-			clusterID,
-			loc.ProjectID,
-			loc.OrganizationID,
-		)
-
-		// The refresh window starts five minutes before the 6h expiry.
-		expiry := adminTokenExpiry - (time.Second * 60 * 5)
-
-		t, err := time.Parse(time.RFC3339, createdAt.(string))
-		if err != nil {
-			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
-				clusterID,
-				client.Config.ProjectID,
-				err,
-			)
-		}
-
-		// If the token is less than five minutes from the 6h expiry, it's time to regenerate.
-		if time.Now().Unix() > t.Add(expiry).Unix() {
-			log.Printf("[INFO] refreshing admin token for Vault cluster (%s) [project_id=%s, organization_id=%s]",
-				clusterID,
-				loc.ProjectID,
-				loc.OrganizationID,
-			)
-			// If no token exists or the current one is about to expire, generate a new token.
-			return resourceVaultClusterAdminTokenCreate(ctx, d, meta)
-		}
-	}
-
 	log.Printf("[INFO] reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
+	cluster, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this admin token should be removed from state.
@@ -178,6 +146,61 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 			projectID,
 			err,
 		)
+	}
+
+	loc.Region = &models.HashicorpCloudLocationRegion{
+		Provider: cluster.Location.Region.Provider,
+		Region:   cluster.Location.Region.Region,
+	}
+
+	// If the token already exists, this block verifies if it is close to expiration and should be refreshed.
+	createdAt := d.Get("created_at").(string)
+	if createdAt != "" {
+		log.Printf("[INFO] existing admin token found for Vault cluster (%s) [project_id=%s, organization_id=%s]",
+			clusterID,
+			loc.ProjectID,
+			loc.OrganizationID,
+		)
+
+		// The refresh window starts five minutes before the 6h expiry.
+		expiry := adminTokenExpiry - (time.Second * 60 * 5)
+
+		t, err := time.Parse(time.RFC3339, createdAt)
+		if err != nil {
+			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
+				clusterID,
+				client.Config.ProjectID,
+				err,
+			)
+		}
+
+		// If the token is less than five minutes from the 6h expiry, it's time to regenerate.
+		if time.Now().Unix() > t.Add(expiry).Unix() {
+			log.Printf("[INFO] refreshing admin token for Vault cluster (%s) [project_id=%s, organization_id=%s]",
+				clusterID,
+				loc.ProjectID,
+				loc.OrganizationID,
+			)
+
+			tokenResp, err := clients.CreateVaultClusterAdminToken(ctx, client, loc, clusterID)
+			if err != nil {
+				return diag.Errorf("error creating HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
+					clusterID,
+					client.Config.ProjectID,
+					err,
+				)
+			}
+
+			err = d.Set("token", tokenResp.Token)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			err = d.Set("created_at", time.Now().Format(time.RFC3339))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	return nil
