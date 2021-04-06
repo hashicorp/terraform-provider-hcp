@@ -16,6 +16,9 @@ import (
 // before an admin token operation should timeout.
 var defaultVaultAdminTokenTimeout = time.Minute * 5
 
+// adminTokenExpiry is the length of the time in seconds before a generated admin token expires.
+var adminTokenExpiry = time.Second * 3600 * 6
+
 func resourceVaultClusterAdminToken() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.",
