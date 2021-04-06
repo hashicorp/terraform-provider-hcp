@@ -6,18 +6,14 @@ import (
 	"strings"
 	"time"
 
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/consul"
 )
-
-const consulTierDevelopment = "development"
-const consulTierStandard = "standard"
 
 // defaultClusterTimeoutDuration is the amount of time that can elapse
 // before a cluster read operation should timeout.
@@ -35,20 +31,6 @@ var deleteTimeoutDuration = time.Minute * 25
 // where a HCP Consul cluster can be provisioned.
 var consulCusterResourceCloudProviders = []string{
 	"aws",
-}
-
-// consulClusterResourceTiers is the list of tiers
-// that an HCP Consul cluster can be provisioned as.
-var consulClusterResourceTiers = []string{
-	consulTierDevelopment,
-	consulTierStandard,
-}
-
-// tierToNumServers maps the set of tiers
-// to the number of servers to be provisioned for that cluster.
-var consulTierToNumServers = map[string]int32{
-	consulTierDevelopment: int32(1),
-	consulTierStandard:    int32(3),
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
@@ -86,11 +68,11 @@ func resourceConsulCluster() *schema.Resource {
 			},
 			"tier": {
 				// TODO: link to HCP Consul feature tier page when it is available
-				Description:      "The tier that the HCP Consul cluster will be provisioned as.  Only 'development' and 'standard' are available at this time.",
+				Description:      "The tier that the HCP Consul cluster will be provisioned as.  Only `development` and `standard` are available at this time.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateStringInSlice(consulClusterResourceTiers, true),
+				ValidateDiagFunc: validateConsulClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
@@ -134,6 +116,17 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+			},
+			"size": {
+				// TODO: Add a link to the HCP Consul size details when it is available here - https://cloud.hashicorp.com/pricing/consul#FAQ
+				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateConsulClusterSize,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
 			},
 			// computed outputs
 			"organization_id": {
@@ -302,23 +295,21 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	tier := strings.ToLower(d.Get("tier").(string))
-	numServers := consulTierToNumServers[tier]
-
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
-	consulCuster := &consulmodels.HashicorpCloudConsul20200826Cluster{
-		Config: &consulmodels.HashicorpCloudConsul20200826ClusterConfig{
-			CapacityConfig: &consulmodels.HashicorpCloudConsul20200826CapacityConfig{
-				NumServers: numServers,
+	consulCuster := &consulmodels.HashicorpCloudConsul20210204Cluster{
+		Config: &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
+			Tier: consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string))),
+			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
+				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string))),
 			},
-			ConsulConfig: &consulmodels.HashicorpCloudConsul20200826ConsulConfig{
+			ConsulConfig: &consulmodels.HashicorpCloudConsul20210204ConsulConfig{
 				ConnectEnabled: connectEnabled,
 				Datacenter:     datacenter,
 				Primary:        primary,
 			},
 			MaintenanceConfig: nil,
-			NetworkConfig: &consulmodels.HashicorpCloudConsul20200826NetworkConfig{
+			NetworkConfig: &consulmodels.HashicorpCloudConsul20210204NetworkConfig{
 				Network: newLink(loc, "hvn", hvnID),
 				Private: !publicEndpoint,
 			},
@@ -385,8 +376,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 // setConsulClusterResourceData sets the KV pairs of the Consul cluster resource schema.
 // We do not set consul_root_token_accessor_id and consul_root_token_secret_id here since
 // the original root token is only available during cluster creation.
-func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20200826Cluster,
-	clientConfigFiles *consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse) error {
+func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20210204Cluster,
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse) error {
 
 	if err := d.Set("cluster_id", cluster.ID); err != nil {
 		return err
@@ -421,18 +412,16 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		return err
 	}
 
-	if err := d.Set("scale", cluster.Config.CapacityConfig.NumServers); err != nil {
+	if err := d.Set("scale", cluster.Config.CapacityConfig.Scale); err != nil {
 		return err
 	}
 
-	// TODO: Update this logic when tier becomes a first class value on the cluster
-	for t, numServers := range consulTierToNumServers {
-		if numServers == cluster.Config.CapacityConfig.NumServers {
-			if err := d.Set("tier", t); err != nil {
-				return err
-			}
-			break
-		}
+	if err := d.Set("tier", cluster.Config.Tier); err != nil {
+		return err
+	}
+
+	if err := d.Set("size", cluster.Config.CapacityConfig.Size); err != nil {
+		return err
 	}
 
 	if err := d.Set("consul_snapshot_interval", "24h"); err != nil {
@@ -518,7 +507,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	// The Consul cluster failed to provision properly so we want to let the user know and
 	// remove it from state
-	if cluster.State == consulmodels.HashicorpCloudConsul20200826ClusterStateFAILED {
+	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateFAILED {
 		log.Printf("[WARN] Consul cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil

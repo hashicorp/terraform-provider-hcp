@@ -8,7 +8,7 @@ import (
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -169,7 +169,7 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 
 	// The Consul snapshot failed to provision properly so we want to let the user know and
 	// remove it from state
-	if snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20200826SnapshotSnapshotStateCREATINGFAILED {
+	if snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20210204SnapshotSnapshotStateCREATINGFAILED {
 		log.Printf("[WARN] Consul snapshot (%s) failed to provision, removing from state", snapshotResp.Snapshot.ID)
 		d.SetId("")
 		return nil
@@ -250,7 +250,7 @@ func resourceConsulSnapshotDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodels.HashicorpCloudConsul20200826Snapshot) error {
+func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodels.HashicorpCloudConsul20210204Snapshot) error {
 
 	if err := d.Set("organization_id", snapshot.Location.OrganizationID); err != nil {
 		return err

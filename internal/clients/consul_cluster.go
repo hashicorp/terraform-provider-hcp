@@ -3,14 +3,14 @@ package clients
 import (
 	"context"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // GetConsulClusterByID gets an Consul cluster by its ID
 func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826Cluster, error) {
+	consulClusterID string) (*consulmodels.HashicorpCloudConsul20210204Cluster, error) {
 
 	getParams := consul_service.NewGetParams()
 	getParams.Context = ctx
@@ -31,7 +31,7 @@ func GetConsulClusterByID(ctx context.Context, client *Client, loc *sharedmodels
 // The files will be returned in base64-encoded format and will get passed in
 // that format.
 func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826GetClientConfigResponse, error) {
+	consulClusterID string) (*consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse, error) {
 
 	p := consul_service.NewGetClientConfigParams()
 	p.Context = ctx
@@ -52,12 +52,12 @@ func GetConsulClientConfigFiles(ctx context.Context, client *Client, loc *shared
 // Example token: After cluster create, a customer would want a root token
 // (or "bootstrap token") so they can continue to set-up their cluster.
 func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	consulClusterID string) (*consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenResponse, error) {
+	consulClusterID string) (*consulmodels.HashicorpCloudConsul20210204CreateCustomerMasterACLTokenResponse, error) {
 
 	p := consul_service.NewCreateCustomerMasterACLTokenParams()
 	p.Context = ctx
 	p.ID = consulClusterID
-	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateCustomerMasterACLTokenRequest{
+	p.Body = &consulmodels.HashicorpCloudConsul20210204CreateCustomerMasterACLTokenRequest{
 		ID:       consulClusterID,
 		Location: loc,
 	}
@@ -75,11 +75,11 @@ func CreateCustomerRootACLToken(ctx context.Context, client *Client, loc *shared
 // CreateConsulCluster will make a call to the Consul service to initiate the create Consul
 // cluster workflow.
 func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	consulCluster *consulmodels.HashicorpCloudConsul20200826Cluster) (*consulmodels.HashicorpCloudConsul20200826CreateResponse, error) {
+	consulCluster *consulmodels.HashicorpCloudConsul20210204Cluster) (*consulmodels.HashicorpCloudConsul20210204CreateResponse, error) {
 
 	p := consul_service.NewCreateParams()
 	p.Context = ctx
-	p.Body = &consulmodels.HashicorpCloudConsul20200826CreateRequest{Cluster: consulCluster}
+	p.Body = &consulmodels.HashicorpCloudConsul20210204CreateRequest{Cluster: consulCluster}
 
 	p.ClusterLocationOrganizationID = loc.OrganizationID
 	p.ClusterLocationProjectID = loc.ProjectID
@@ -94,7 +94,7 @@ func CreateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 
 // GetAvailableHCPConsulVersionsForLocation gets the list of available Consul versions that HCP supports for
 // the provided location.
-func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *Client) ([]*consulmodels.HashicorpCloudConsul20210204Version, error) {
 	p := consul_service.NewListVersionsParams()
 	p.Context = ctx
 	p.LocationProjectID = loc.ProjectID
@@ -110,7 +110,7 @@ func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmo
 }
 
 // GetAvailableHCPConsulVersions gets the list of available Consul versions that HCP supports.
-func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20210204Version, error) {
 	p := consul_service.NewListVersions2Params()
 	p.Context = ctx
 
@@ -126,7 +126,7 @@ func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*cons
 // DeleteConsulCluster will make a call to the Consul service to initiate the delete Consul
 // cluster workflow.
 func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID string) (*consulmodels.HashicorpCloudConsul20200826DeleteResponse, error) {
+	clusterID string) (*consulmodels.HashicorpCloudConsul20210204DeleteResponse, error) {
 
 	p := consul_service.NewDeleteParams()
 	p.Context = ctx
@@ -145,7 +145,7 @@ func DeleteConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.
 // ListConsulUpgradeVersions gets the list of available Consul versions that the supplied cluster
 // can upgrade to.
 func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID string) ([]*consulmodels.HashicorpCloudConsul20200826Version, error) {
+	clusterID string) ([]*consulmodels.HashicorpCloudConsul20210204Version, error) {
 
 	p := consul_service.NewListUpgradeVersionsParams()
 	p.Context = ctx
@@ -165,9 +165,9 @@ func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedm
 // UpdateConsulCluster will make a call to the Consul service to initiate the update Consul
 // cluster workflow.
 func UpdateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID, newConsulVersion string) (*consulmodels.HashicorpCloudConsul20200826UpdateResponse, error) {
+	clusterID, newConsulVersion string) (*consulmodels.HashicorpCloudConsul20210204UpdateResponse, error) {
 
-	cluster := consulmodels.HashicorpCloudConsul20200826Cluster{
+	cluster := consulmodels.HashicorpCloudConsul20210204Cluster{
 		ConsulVersion: newConsulVersion,
 		ID:            clusterID,
 		Location: &sharedmodels.HashicorpCloudLocationLocation{

@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-cty/cty"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -100,6 +102,46 @@ func validateDatacenter(v interface{}, path cty.Path) diag.Diagnostics {
 			Severity:      diag.Error,
 			Summary:       msg,
 			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	// TODO: Update the validation once SDK provides a way to get all valid values for the enum.
+	err := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.Replace(enumList, "UNSET ", "", 1)
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	// TODO: Update the validation once SDK provides a way to get all valid values for the enum.
+	err := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.Replace(enumList, "UNSET ", "", 1)
+		msg := fmt.Sprintf("expected %v to be one of %v", v, expectedEnumList)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value is case-insensitive).",
 			AttributePath: path,
 		})
 	}

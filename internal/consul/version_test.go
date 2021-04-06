@@ -3,17 +3,17 @@ package consul
 import (
 	"testing"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_RecommendedVersion(t *testing.T) {
 	tcs := map[string]struct {
 		expected string
-		input    []*consulmodels.HashicorpCloudConsul20200826Version
+		input    []*consulmodels.HashicorpCloudConsul20210204Version
 	}{
 		"with a recommended version": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -30,7 +30,7 @@ func Test_RecommendedVersion(t *testing.T) {
 			expected: "v1.9.0",
 		},
 		"without a recommended version": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "AVAILABLE",
@@ -62,11 +62,11 @@ func Test_IsValidVersion(t *testing.T) {
 	tcs := map[string]struct {
 		expected      bool
 		version       string
-		validVersions []*consulmodels.HashicorpCloudConsul20200826Version
+		validVersions []*consulmodels.HashicorpCloudConsul20210204Version
 	}{
 		"with a valid version": {
 			version: "v1.9.0",
-			validVersions: []*consulmodels.HashicorpCloudConsul20200826Version{
+			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -84,7 +84,7 @@ func Test_IsValidVersion(t *testing.T) {
 		},
 		"with an invalid version": {
 			version: "v1.8.0",
-			validVersions: []*consulmodels.HashicorpCloudConsul20200826Version{
+			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -145,10 +145,10 @@ func Test_NormalizeVersion(t *testing.T) {
 func Test_VersionsToString(t *testing.T) {
 	tcs := map[string]struct {
 		expected string
-		input    []*consulmodels.HashicorpCloudConsul20200826Version
+		input    []*consulmodels.HashicorpCloudConsul20210204Version
 	}{
 		"with a recommended version": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -165,7 +165,7 @@ func Test_VersionsToString(t *testing.T) {
 			expected: "v1.9.0 (recommended), v1.8.6, v1.8.4",
 		},
 		"without a recommended version": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.8.6",
 					Status:  "AVAILABLE",
@@ -178,7 +178,7 @@ func Test_VersionsToString(t *testing.T) {
 			expected: "v1.8.6, v1.8.4",
 		},
 		"no other versions but recommended": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
 					Status:  "RECOMMENDED",
@@ -191,7 +191,7 @@ func Test_VersionsToString(t *testing.T) {
 			expected: "",
 		},
 		"nil values": {
-			input: []*consulmodels.HashicorpCloudConsul20200826Version{
+			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				nil,
 				{
 					Version: "v1.9.0",
