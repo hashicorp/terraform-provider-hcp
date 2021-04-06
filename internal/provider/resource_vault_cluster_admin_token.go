@@ -49,6 +49,7 @@ func resourceVaultClusterAdminToken() *schema.Resource {
 				Description: "The admin token of this HCP Vault cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
+				Sensitive:   true,
 			},
 		},
 	}
