@@ -18,6 +18,10 @@ The Vault cluster admin token resource generates an admin-level token for the HC
 This resource saves a single admin token per Vault cluster and auto-refreshes the token when it is about to expire.
 Destroying this resource *does not* invalidate the admin token.
 
+~> **Known Issue** An admin token may be generated during a `terraform plan` if the current token is expiring. 
+Since the Plan phase does not save any state, the Apply phase saves a different generated token, and the token generated during Plan ends up orphaned. 
+It will expire in six hours.
+
 ## Example Usage
 
 ```terraform
@@ -40,7 +44,7 @@ resource "hcp_vault_cluster_admin_token" "example" {
 ### Read-only
 
 - **created_at** (String) The time that the admin token was created.
-- **token** (String) The admin token of this HCP Vault cluster.
+- **token** (String, Sensitive) The admin token of this HCP Vault cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
