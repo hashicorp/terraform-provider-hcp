@@ -15,7 +15,7 @@ to the system where Terraform will be run.
 
 The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.
 
-This resource generates an admin token for the Vault cluster and auto-refreshes that token when it is about to expire.
+This resource saves a single admin token per Vault cluster and auto-refreshes the token when it is about to expire.
 Destroying this resource *does not* invalidate the admin token.
 
 ## Example Usage
