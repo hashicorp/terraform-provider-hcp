@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -67,12 +67,12 @@ func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, m
 
 	for _, v := range availableConsulVersions {
 		switch v.Status {
-		case consulmodels.HashicorpCloudConsul20200826VersionStatusRECOMMENDED:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED:
 			recommendedVersion = v.Version
 			availableVersions = append(availableVersions, v.Version)
-		case consulmodels.HashicorpCloudConsul20200826VersionStatusAVAILABLE:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE:
 			availableVersions = append(availableVersions, v.Version)
-		case consulmodels.HashicorpCloudConsul20200826VersionStatusPREVIEW:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusPREVIEW:
 			previewVersions = append(previewVersions, v.Version)
 		}
 	}

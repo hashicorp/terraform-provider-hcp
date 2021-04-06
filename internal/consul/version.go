@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 )
 
 // RecommendedVersion returns the recommended version of Consul
-func RecommendedVersion(versions []*consulmodels.HashicorpCloudConsul20200826Version) string {
+func RecommendedVersion(versions []*consulmodels.HashicorpCloudConsul20210204Version) string {
 	var defaultVersion string
 
 	for _, v := range versions {
@@ -24,7 +24,7 @@ func RecommendedVersion(versions []*consulmodels.HashicorpCloudConsul20200826Ver
 
 // IsValidVersion determines that a given version string is contained within the slice of
 // available Consul versions.
-func IsValidVersion(version string, versions []*consulmodels.HashicorpCloudConsul20200826Version) bool {
+func IsValidVersion(version string, versions []*consulmodels.HashicorpCloudConsul20210204Version) bool {
 	for _, v := range versions {
 		if version == v.Version {
 			return true
@@ -40,7 +40,7 @@ func NormalizeVersion(version string) string {
 }
 
 // VersionsToString converts a slice of version pointers to a string of their comma delimited values.
-func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20200826Version) string {
+func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20210204Version) string {
 	var recommendedVersion string
 	var otherVersions []string
 
@@ -49,7 +49,7 @@ func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20200826Versi
 			continue
 		}
 
-		if v.Status == consulmodels.HashicorpCloudConsul20200826VersionStatusRECOMMENDED {
+		if v.Status == consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED {
 			recommendedVersion = v.Version
 		} else {
 			otherVersions = append(otherVersions, v.Version)

@@ -1,8 +1,8 @@
 package clients
 
 import (
-	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2020-08-26/client/consul_service"
+	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
