@@ -1,0 +1,71 @@
+---
+page_title: "hcp_vault_cluster Resource - terraform-provider-hcp"
+subcategory: ""
+description: |-
+  The Vault cluster resource allows you to manage an HCP Vault cluster.
+---
+
+# Resource `hcp_vault_cluster`
+
+The Vault cluster resource allows you to manage an HCP Vault cluster.
+
+## Example Usage
+
+```terraform
+resource "hcp_hvn" "example" {
+  hvn_id         = "hvn"
+  cloud_provider = "aws"
+  region         = "us-west-2"
+  cidr_block     = "172.25.16.0/20"
+}
+
+resource "hcp_vault_cluster" "example" {
+  cluster_id = "vault-cluster"
+  hvn_id     = hcp_hvn.example.hvn_id
+}
+```
+
+## Schema
+
+### Required
+
+- **cluster_id** (String) The ID of the HCP Vault cluster.
+- **hvn_id** (String) The ID of the HVN this HCP Vault cluster is associated to.
+
+### Optional
+
+- **id** (String) The ID of this resource.
+- **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
+- **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
+- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
+### Read-only
+
+- **cloud_provider** (String) The provider where the HCP Vault cluster is located.
+- **created_at** (String) The time that the Vault cluster was created.
+- **namespace** (String) The name of the customer namespace this HCP Vault cluster is located in.
+- **organization_id** (String) The ID of the organization this HCP Vault cluster is located in.
+- **project_id** (String) The ID of the project this HCP Vault cluster is located in.
+- **region** (String) The region where the HCP Vault cluster is located.
+- **tier** (String) The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.
+- **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
+- **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
+- **vault_version** (String) The Vault version of the cluster.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- **create** (String)
+- **default** (String)
+- **delete** (String)
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# The import ID is {cluster_id}
+terraform import hcp_vault_cluster.example vault-cluster
+```
