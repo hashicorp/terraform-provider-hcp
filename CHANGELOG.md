@@ -1,4 +1,4 @@
-## 0.4.0 (Unreleased)
+## 0.4.0 (April 07, 2021)
 
 FEATURES:
 - **New resource** `hcp_vault_cluster` (#97)
