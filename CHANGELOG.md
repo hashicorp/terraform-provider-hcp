@@ -1,3 +1,19 @@
+## 0.4.0 (April 6, 2021)
+
+FEATURES:
+
+- **New resource** `hcp_vault_cluster` (#97)
+- **New resource** `hcp_vault_cluster_admin_token` (#97)
+
+IMPROVEMENTS:
+
+- all: General chores (#82)
+- ci: Add github checks (#90)
+- docs: Add pull request lifecycle docs (#89)
+- docs: Add issue lifecycle docs (#93)
+- datasource/consul_agent_helm_config: Remove extraneous protocol from FQDN string (#95)
+- resource/consul_cluster: Add VM size to Consul cluster (#77)
+
 ## 0.3.0 (March 25, 2021)
 
 IMPROVEMENTS:
