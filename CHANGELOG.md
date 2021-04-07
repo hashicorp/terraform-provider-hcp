@@ -1,4 +1,4 @@
-## 0.4.0 (April 6, 2021)
+## 0.4.0 (Unreleased)
 
 FEATURES:
 
@@ -7,12 +7,18 @@ FEATURES:
 
 IMPROVEMENTS:
 
-- all: General chores (#82)
+- all: Log import ID used when an import fails due to parsing (#82)
+- all: Add comment to clarify that Links can be sent in API requests (#82)
 - ci: Add github checks (#90)
 - docs: Add pull request lifecycle docs (#89)
 - docs: Add issue lifecycle docs (#93)
 - datasource/consul_agent_helm_config: Remove extraneous protocol from FQDN string (#95)
 - resource/consul_cluster: Add VM size to Consul cluster (#77)
+- resource/aws_network_peering: Update comments, docs, and messages to use correct capitalization for network peering (#82)
+- resource/aws_network_peering: Update peering wait function to use helper (#82)
+
+FIXES:
+- all: Ensure context is being passed for all HCP API calls (#82)
 
 ## 0.3.0 (March 25, 2021)
 
