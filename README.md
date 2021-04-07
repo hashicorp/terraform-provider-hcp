@@ -69,4 +69,10 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   vpc_peering_connection_id = hcp_aws_network_peering.example.provider_peering_id
   auto_accept               = true
 }
+
+// Create a Vault cluster within the HVN.
+resource "hcp_vault_cluster" "example" {
+  cluster_id = "vault-cluster"
+  hvn_id     = hcp_hvn.example_hvn.hvn_id
+}
 ```

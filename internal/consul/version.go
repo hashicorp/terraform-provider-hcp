@@ -34,11 +34,6 @@ func IsValidVersion(version string, versions []*consulmodels.HashicorpCloudConsu
 	return false
 }
 
-// NormalizeVersion ensures the version starts with a 'v'
-func NormalizeVersion(version string) string {
-	return "v" + strings.TrimPrefix(version, "v")
-}
-
 // VersionsToString converts a slice of version pointers to a string of their comma delimited values.
 func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20210204Version) string {
 	var recommendedVersion string

@@ -41,6 +41,9 @@ const (
 	// ConsulClusterAgentKubernetesSecretDataSourceType is the data source
 	// type of a Consul cluster agent Kubernetes secret
 	ConsulClusterAgentKubernetesSecretDataSourceType = ConsulClusterResourceType + ".agent-kubernetes-secret"
+
+	// VaultClusterResourceType is the resource type of a Vault cluster
+	VaultClusterResourceType = "hashicorp.vault.cluster"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the
