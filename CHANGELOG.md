@@ -1,12 +1,10 @@
 ## 0.4.0 (Unreleased)
 
 FEATURES:
-
 - **New resource** `hcp_vault_cluster` (#97)
 - **New resource** `hcp_vault_cluster_admin_token` (#97)
 
 IMPROVEMENTS:
-
 - all: Log import ID used when an import fails due to parsing (#82)
 - all: Add comment to clarify that Links can be sent in API requests (#82)
 - ci: Add github checks (#90)
