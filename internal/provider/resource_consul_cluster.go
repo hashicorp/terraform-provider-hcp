@@ -119,11 +119,11 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"size": {
-				// TODO: Add a link to the HCP Consul size details when it is available here - https://cloud.hashicorp.com/pricing/consul#FAQ
-				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`.",
+				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
+				Computed:         true,
 				ValidateDiagFunc: validateConsulClusterSize,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.ToLower(old) == strings.ToLower(new)
