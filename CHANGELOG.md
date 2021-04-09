@@ -1,3 +1,8 @@
+## 0.4.1 (Unreleased)
+
+FIXES:
+- resource/consul_cluster: Set "computed=true" option for the vm size (#100)
+
 ## 0.4.0 (April 07, 2021)
 
 FEATURES:
