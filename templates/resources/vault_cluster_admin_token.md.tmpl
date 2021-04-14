@@ -7,14 +7,14 @@ description: |-
 
 # {{.Name}} `{{.Type}}`
 
-~> **Security Notice** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
+~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
 {{ .Description | trimspace }}
 
 This resource saves a single admin token per Vault cluster and auto-refreshes the token when it is about to expire.
 Destroying this resource *does not* invalidate the admin token.
 
-~> **Known Issue** An admin token may be generated during a `terraform plan` if the current token is expiring. 
+~> **Known Issue:** An admin token may be generated during a `terraform plan` if the current token is expiring. 
 Since the Plan phase does not save any state, the Apply phase saves a different generated token, and the token generated during Plan ends up orphaned. 
 It will expire in six hours.
 
