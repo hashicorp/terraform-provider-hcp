@@ -17,6 +17,10 @@ The HCP provider supports authentication via a Client ID and a Client Secret. Th
 
 ## Example Usage
 
+Most HCP resources have a dependency on the Hashicorp Virtual Network (HVN) resource. 
+We suggest referring to the HVN using an expression (`hvn_id = hcp_hvn.example.hvn_id`) or the `depends_on` meta-argument, rather than a string, to ensure
+Terraform detects that dependency.
+
 ```terraform
 // Pin the version
 terraform {
