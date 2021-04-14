@@ -11,12 +11,7 @@ description: |-
 
 {{ .Description | trimspace }}
 
-This resource saves a single admin token per Vault cluster and auto-refreshes the token when it is about to expire.
-Destroying this resource *does not* invalidate the admin token.
-
-~> **Known Issue** An admin token may be generated during a `terraform plan` if the current token is expiring. 
-Since the Plan phase does not save any state, the Apply phase saves a different generated token, and the token generated during Plan ends up orphaned. 
-It will expire in six hours.
+The cluster root token resource is the token used to bootstrap the cluster's ACL system. Using this resource to create a new root token for a cluster will invalidate the consul root token accessor id and Consul root token secret id properties of the cluster.
 
 ## Example Usage
 
