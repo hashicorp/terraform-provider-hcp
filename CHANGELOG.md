@@ -1,3 +1,8 @@
+## 0.5.0 (Unreleased)
+
+IMPROVEMENTS:
+* Upgraded to Go 1.16. Binary releases of this provider now include the darwin-arm64 platform.
+
 ## 0.4.1 (April 09, 2021)
 
 FIXES:
