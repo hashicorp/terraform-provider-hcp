@@ -9,6 +9,11 @@ description: |-
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
+~> **Known Issue:** There is a known issue with v0.4.0 of the HCP Provider in which Terraform will incorrectly recommend a rebuild of a Consul cluster, which could result in data loss. 
+See the Release Notes on Github for more detail. Please upgrade to the patch v0.4.1 or beyond to avoid this issue.
+
+-> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+
 ## Authenticating with HCP
 
 The HCP provider supports authentication via a Client ID and a Client Secret. The [authentication guide](guides/auth.md) describes how to obtain client credentials.

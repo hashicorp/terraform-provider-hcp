@@ -5,7 +5,7 @@ description: |-
   The AWS transit gateway attachment data source provides information about an existing transit gateway attachment.
 ---
 
-# Data Source `hcp_aws_transit_gateway_attachment`
+# hcp_aws_transit_gateway_attachment (Data Source)
 
 -> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
 

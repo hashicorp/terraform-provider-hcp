@@ -5,7 +5,7 @@ description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-# {{.Name}} `{{.Type}}`
+# {{.Type}} ({{.Name}})
 
 -> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
 
@@ -14,6 +14,8 @@ description: |-
 ## Example Usage
 
 {{ tffile "examples/resources/hcp_aws_transit_gateway_attachment/resource.tf" }}
+
+~> **Security Notice:** This resource contains sensitive input. Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
 {{ .SchemaMarkdown | trimspace }}
 
