@@ -10,6 +10,8 @@ FIXES:
 
 ## 0.4.0 (April 07, 2021)
 
+⚠️ Note: There is an issue with this version of the HCP Provider in which existing Consul clusters that do not specify size will be recommended by Terraform to be recreated on the next terraform apply, resulting in potential data loss. Please upgrade to the patch v0.4.1 or beyond to avoid this issue. ⚠️
+
 FEATURES:
 - **New resource** `hcp_vault_cluster` (#97)
 - **New resource** `hcp_vault_cluster_admin_token` (#97)
