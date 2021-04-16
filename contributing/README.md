@@ -8,7 +8,7 @@ To learn more about how to create issues and pull requests in this repository, a
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
-- [Go](https://golang.org/doc/install) >= 1.14
+- [Go](https://golang.org/doc/install) >= 1.15
 
 ## Building the Provider
 
