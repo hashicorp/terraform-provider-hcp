@@ -1,0 +1,18 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Type}} ({{.Name}})
+
+~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_consul_cluster_root_token/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
