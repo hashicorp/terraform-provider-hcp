@@ -5,16 +5,14 @@ description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-# {{.Name}} `{{.Type}}`
+# {{.Type}} ({{.Name}})
 
 ~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
 {{ .Description | trimspace }}
 
-The cluster root token resource is the token used to bootstrap the cluster's ACL system. Using this resource to create a new root token for a cluster will invalidate the consul root token accessor id and Consul root token secret id properties of the cluster.
-
 ## Example Usage
 
-{{ tffile "examples/resources/hcp_vault_cluster_admin_token/resource.tf" }}
+{{ tffile "examples/resources/hcp_consul_cluster_root_token/resource.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
