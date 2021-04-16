@@ -1,9 +1,16 @@
+## 0.5.0 (Unreleased)
+
+IMPROVEMENTS:
+* Upgraded to Go 1.16. Binary releases of this provider now include the darwin-arm64 platform.
+
 ## 0.4.1 (April 09, 2021)
 
 FIXES:
 - resource/consul_cluster: Set "computed=true" option for the vm size (#100)
 
 ## 0.4.0 (April 07, 2021)
+
+⚠️ Note: There is an issue with this version of the HCP Provider in which existing Consul clusters that do not specify size will be recommended by Terraform to be recreated on the next terraform apply, resulting in potential data loss. Please upgrade to the patch v0.4.1 or beyond to avoid this issue. ⚠️
 
 FEATURES:
 - **New resource** `hcp_vault_cluster` (#97)
