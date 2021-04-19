@@ -1,7 +1,13 @@
 ## 0.5.0 (Unreleased)
 
 IMPROVEMENTS:
-* Upgraded to Go 1.16. Binary releases of this provider now include the darwin-arm64 platform.
+* provider: Upgraded to Go 1.16. Binary releases of this provider now include the darwin-arm64 platform (#104)
+* provider: Bump `terraform-plugin-sdk/v2` dependency (#86)
+* provider: Bump `go-openapi/runtime` dependency (#81)
+* provider: Bump `terraform-plugin-docs` dependency (#55)
+* provider: Bump `go-openapi/strfmt` dependency (#99)
+* docs: Add warnings (#103)
+* resource/consul_cluster: Fixed Consul cluster acceptance test (#103)
 
 ## 0.4.1 (April 09, 2021)
 
