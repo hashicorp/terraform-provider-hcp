@@ -6,7 +6,7 @@ IMPROVEMENTS:
 * provider: Bump `go-openapi/runtime` dependency (#81)
 * provider: Bump `terraform-plugin-docs` dependency (#55)
 * provider: Bump `go-openapi/strfmt` dependency (#99)
-* docs: Add warnings (#103)
+* docs: Add warnings (#102)
 * resource/consul_cluster: Fixed Consul cluster acceptance test (#103)
 
 ## 0.4.1 (April 09, 2021)
