@@ -99,6 +99,11 @@ func resourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the HVN.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -273,6 +278,15 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	if err := d.Set("provider_account_id", hvn.ProviderNetworkData.AwsNetworkData.AccountID); err != nil {
+		return err
+	}
+
+	link := newLink(hvn.Location, HvnResourceType, hvn.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
 	return nil
