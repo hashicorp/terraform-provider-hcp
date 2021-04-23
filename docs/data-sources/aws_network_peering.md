@@ -43,6 +43,7 @@ data "hcp_aws_network_peering" "test" {
 - **peer_vpc_region** (String) The region of the peer VPC in AWS.
 - **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
 - **provider_peering_id** (String) The peering connection ID used by AWS.
+- **self_link** (String) A unique URL identifying the network peering.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
