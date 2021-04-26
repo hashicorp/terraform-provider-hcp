@@ -62,6 +62,11 @@ func dataSourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the HVN.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

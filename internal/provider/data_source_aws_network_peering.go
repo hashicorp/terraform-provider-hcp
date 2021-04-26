@@ -77,6 +77,11 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the network peering.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

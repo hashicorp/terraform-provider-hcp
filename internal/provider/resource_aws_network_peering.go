@@ -108,6 +108,11 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the network peering.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -327,6 +332,15 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 		return err
 	}
 	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
+		return err
+	}
+
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
 

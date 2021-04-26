@@ -107,6 +107,11 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the transit gateway attachment.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -324,6 +329,15 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 		return err
 	}
 	if err := d.Set("expires_at", tgwAtt.ExpiresAt.String()); err != nil {
+		return err
+	}
+
+	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
 

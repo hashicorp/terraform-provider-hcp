@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -39,6 +41,7 @@ func TestAccHvn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
+					testSelfLink(resourceName, "test-hvn", HvnResourceType),
 				),
 			},
 			{
@@ -66,6 +69,7 @@ func TestAccHvn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
+					testSelfLink(resourceName, "test-hvn", HvnResourceType),
 				),
 			},
 		},
@@ -96,6 +100,41 @@ func testAccCheckHvnExists(name string) resource.TestCheckFunc {
 
 		if _, err := clients.GetHvnByID(context.Background(), client, loc, hvnID); err != nil {
 			return fmt.Errorf("unable to read HVN %q: %v", id, err)
+		}
+
+		return nil
+	}
+}
+
+func testSelfLink(name string, expectedID, expectedType string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+
+		selfLink, ok := rs.Primary.Attributes["self_link"]
+		if !ok {
+			return fmt.Errorf("self_link isn't set")
+		}
+
+		projectID, ok := rs.Primary.Attributes["project_id"]
+		if !ok {
+			return fmt.Errorf("project_id isn't set")
+		}
+
+		link, err := linkURL(&sharedmodels.HashicorpCloudLocationLink{
+			ID: expectedID,
+			Location: &sharedmodels.HashicorpCloudLocationLocation{
+				ProjectID: projectID},
+			Type: expectedType,
+		})
+		if err != nil {
+			return fmt.Errorf("unable to build link: %v", err)
+		}
+
+		if link != selfLink {
+			return fmt.Errorf("incorrect self_link, expected: %s, got: %s", link, selfLink)
 		}
 
 		return nil

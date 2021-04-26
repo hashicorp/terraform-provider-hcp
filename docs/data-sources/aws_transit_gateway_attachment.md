@@ -42,6 +42,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 - **organization_id** (String) The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.
 - **provider_transit_gateway_attachment_id** (String) The transit gateway attachment ID used by AWS.
+- **self_link** (String) A unique URL identifying the transit gateway attachment.
 - **state** (String) The state of the transit gateway attachment.
 - **transit_gateway_id** (String) The ID of the user-owned transit gateway in AWS.
 
