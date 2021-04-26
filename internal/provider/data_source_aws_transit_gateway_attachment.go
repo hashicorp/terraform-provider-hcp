@@ -83,6 +83,11 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the transit gateway attachment.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
