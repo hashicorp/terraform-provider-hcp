@@ -312,6 +312,8 @@ github.com/hashicorp/hcl/v2 v2.3.0 h1:iRly8YaMwTBAKhn1Ybk7VSdzbnopghktCD031P8ggU
 github.com/hashicorp/hcl/v2 v2.3.0/go.mod h1:d+FwDBbOLvpAM3Z6J7gPj/VoAGkNe/gm352ZhjJ/Zv8=
 github.com/hashicorp/hcp-sdk-go v0.6.0 h1:vG6ZV0hOTZoYK4o/ZsqkgrhLFc3JIWG0y8l1thinQiA=
 github.com/hashicorp/hcp-sdk-go v0.6.0/go.mod h1:vpV5eSGZVmfCFcksi4AH8d/QSybuyLSH5UQcwmnRUQk=
+github.com/hashicorp/hcp-sdk-go v0.7.0 h1:OtbcR/rMBlfK5BLowHIPe0HJtb0rEs8FyRAzS+xH9vI=
+github.com/hashicorp/hcp-sdk-go v0.7.0/go.mod h1:M+kmFj0s4KWNA5GVOgLhNtCTu3ypTR+QjWYIMgedA5Q=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/terraform-exec v0.12.0/go.mod h1:SGhto91bVRlgXQWcJ5znSz+29UZIa8kpBbkGwQ+g9E8=
