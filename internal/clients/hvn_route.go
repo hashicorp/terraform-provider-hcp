@@ -9,12 +9,17 @@ import (
 )
 
 // ListHVNRoutes lists the routes for an HVN.
-func ListHVNRoutes(ctx context.Context, client *Client, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
+func ListHVNRoutes(ctx context.Context, client *Client, hvnID string,
+	destination string, targetID string, targetType string,
+	loc *sharedmodels.HashicorpCloudLocationLocation) ([]*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
 	listHVNRoutesParams := network_service.NewListHVNRoutesParams()
 	listHVNRoutesParams.Context = ctx
 	listHVNRoutesParams.HvnID = hvnID
 	listHVNRoutesParams.HvnLocationOrganizationID = loc.OrganizationID
 	listHVNRoutesParams.HvnLocationProjectID = loc.ProjectID
+	listHVNRoutesParams.Destination = &destination
+	listHVNRoutesParams.TargetID = &targetID
+	listHVNRoutesParams.TargetType = &targetType
 
 	listHVNRoutesResponse, err := client.Network.ListHVNRoutes(listHVNRoutesParams, nil)
 	if err != nil {

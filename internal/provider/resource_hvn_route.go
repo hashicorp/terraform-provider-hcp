@@ -14,14 +14,6 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return err
 	}
 
-	if err := d.Set("hvn_region", route.Hvn.Location.Region.Region); err != nil {
-		return err
-	}
-
-	if err := d.Set("hvn_provider", route.Hvn.Location.Region.Provider); err != nil {
-		return err
-	}
-
 	if err := d.Set("organization_id", route.Hvn.Location.OrganizationID); err != nil {
 		return err
 	}

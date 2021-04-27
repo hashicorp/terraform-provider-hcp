@@ -18,25 +18,19 @@ func dataSourceHVNRoute() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"hvn_id": {
-				Description:      "The ID of the HashiCorp Virtual Network (HVN).",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validateSlugID,
+			"hvn": {
+				Description: "The Self Link of the HashiCorp Virtual Network (HVN).",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"destination_cidr": {
-				Description: "The destination CIDR of the HVN Route",
+				Description: "The destination CIDR of the HVN route",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			// Computed outputs
-			"organization_id": {
-				Description: "The ID of the HCP organization where the HVN Route is located. Always matches the HVN's organization.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the HVN Route is located. Always matches the HVN's project.",
+			"self_link": {
+				Description: "A unique URL identifying the HVN route.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -47,21 +41,37 @@ func dataSourceHVNRoute() *schema.Resource {
 func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	hvnID := d.Get("hvn_id").(string)
+	hvn := d.Get("hvn").(string)
+	var hvnLink *sharedmodels.HashicorpCloudLocationLink
+
+	hvnLink, err := parseLinkURL(hvn, "hashicorp.network.hvn")
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.ListHVNRoutes(ctx, client, hvnID, loc)
+	destination := d.Get("destination_cidr").(string)
+	route, err := clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// if err := setHVNRouteResourceData(d, routes); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	// TODO check len(route)>0; handle error otherwise
+
+	link := newLink(loc, HVNRouteResourceType, route[0].ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
+	if err := setHVNRouteResourceData(d, route[0]); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
