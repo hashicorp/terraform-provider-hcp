@@ -14,7 +14,7 @@ var hvnRouteDefaultTimeout = time.Minute * 1
 func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.HashicorpCloudNetwork20200907HVNRoute,
 	loc *sharedmodels.HashicorpCloudLocationLocation) error {
 
-	// Set self_link
+	// Set self_link for the HVN route.
 	link := newLink(loc, HVNRouteResourceType, route.ID)
 	selfLink, err := linkURL(link)
 	if err != nil {
@@ -25,7 +25,7 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return err
 	}
 
-	// Set target self_link
+	// Set self_link identifying the target of the HVN route.
 	var targetLink string
 
 	switch route.Target.HvnConnection.Type {
@@ -48,7 +48,7 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 			return err
 		}
 	default:
-		return errors.New("Unable to set target self_link - HVN Route target is not a known type.")
+		return errors.New("Unable to set self_link identifying the target - HVN Route target is not a known type.")
 	}
 
 	if err := d.Set("target", targetLink); err != nil {

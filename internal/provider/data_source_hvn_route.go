@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"log"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -68,14 +69,19 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
-
 	destination := d.Get("destination_cidr").(string)
+
+	log.Printf("[INFO] Reading HVN route for HVN (%s) with destination_cidr=%s ", hvn, destination)
 	route, err := clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("unable to retrieve HVN route for HVN (%s) with destination_cidr=%s: %v",
+			hvn, destination, err)
 	}
 
-	// TODO check len(route)>0; handle error otherwise
+	// ListHVNRoutes call should return 1 and only 1 HVN route.
+	if len(route) != 1 {
+		return diag.Errorf("Unexpected number of HVN routes returned: %d", len(route))
+	}
 
 	link := newLink(loc, HVNRouteResourceType, route[0].ID)
 	url, err := linkURL(link)
