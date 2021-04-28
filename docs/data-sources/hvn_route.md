@@ -37,7 +37,7 @@ data "hcp_hvn_route" "example" {
 - **created_at** (String) The time that the HVN route was created.
 - **self_link** (String) A unique URL identifying the HVN route.
 - **state** (String) The state of the HVN route.
-- **target** (String) The `self_link` identifying the target of the HVN route.
+- **target** (Map of String) The target of the HVN route.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

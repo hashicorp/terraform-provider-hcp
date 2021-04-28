@@ -51,7 +51,7 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return errors.New("Unable to set self_link identifying the target - HVN Route target is not a known type.")
 	}
 
-	if err := d.Set("target", targetLink); err != nil {
+	if err := d.Set("target", map[string]interface{}{"self_link": targetLink}); err != nil {
 		return err
 	}
 

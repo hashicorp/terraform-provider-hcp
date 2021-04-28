@@ -36,9 +36,12 @@ func dataSourceHVNRoute() *schema.Resource {
 				Computed:    true,
 			},
 			"target": {
-				Description: "The `self_link` identifying the target of the HVN route.",
-				Type:        schema.TypeString,
-				Computed:    true,
+				Description: "The target of the HVN route.",
+				Type:        schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed: true,
 			},
 			"state": {
 				Description: "The state of the HVN route.",
@@ -79,8 +82,11 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// ListHVNRoutes call should return 1 and only 1 HVN route.
-	if len(route) != 1 {
-		return diag.Errorf("Unexpected number of HVN routes returned: %d", len(route))
+	if len(route) > 1 {
+		return diag.Errorf("Unexpected number of HVN routes returned for destination_cidr=%s: %d", destination, len(route))
+	}
+	if len(route) == 0 {
+		return diag.Errorf("No HVN route found for destionation_cidr=%s", destination)
 	}
 
 	link := newLink(loc, HVNRouteResourceType, route[0].ID)
