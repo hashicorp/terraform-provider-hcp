@@ -11,7 +11,7 @@ import (
 
 func dataSourceHVNRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "The HVN Route data source provides information about an existing HVN Route.",
+		Description: "The HVN Route data source provides information about an existing HVN route.",
 		ReadContext: dataSourceHVNRouteRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnRouteDefaultTimeout,
@@ -19,7 +19,7 @@ func dataSourceHVNRoute() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn": {
-				Description: "The Self Link of the HashiCorp Virtual Network (HVN).",
+				Description: "The `self_link` of the HashiCorp Virtual Network (HVN).",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -31,6 +31,21 @@ func dataSourceHVNRoute() *schema.Resource {
 			// Computed outputs
 			"self_link": {
 				Description: "A unique URL identifying the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"target": {
+				Description: "The `self_link` identifying the target of the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"state": {
+				Description: "The state of the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "The time that the HVN route was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -69,7 +84,7 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.SetId(url)
 
-	if err := setHVNRouteResourceData(d, route[0]); err != nil {
+	if err := setHVNRouteResourceData(d, route[0], loc); err != nil {
 		return diag.FromErr(err)
 	}
 

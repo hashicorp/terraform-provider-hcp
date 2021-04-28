@@ -1,36 +1,61 @@
 package provider
 
 import (
+	"errors"
 	"time"
 
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var hvnRouteDefaultTimeout = time.Minute * 1
 
-func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.HashicorpCloudNetwork20200907HVNRoute) error {
-	if err := d.Set("hvn_id", route.Hvn.ID); err != nil {
+func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.HashicorpCloudNetwork20200907HVNRoute,
+	loc *sharedmodels.HashicorpCloudLocationLocation) error {
+
+	// Set self_link
+	link := newLink(loc, HVNRouteResourceType, route.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
 		return err
 	}
 
-	if err := d.Set("organization_id", route.Hvn.Location.OrganizationID); err != nil {
+	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
 
-	if err := d.Set("project_id", route.Hvn.Location.ProjectID); err != nil {
-		return err
+	// Set target self_link
+	var targetLink string
+
+	switch route.Target.HvnConnection.Type {
+	case HvnResourceType:
+		hvnLink := newLink(loc, HvnResourceType, route.Target.HvnConnection.ID)
+		targetLink, err = linkURL(hvnLink)
+		if err != nil {
+			return err
+		}
+	case PeeringResourceType:
+		peeringLink := newLink(loc, PeeringResourceType, route.Target.HvnConnection.ID)
+		targetLink, err = linkURL(peeringLink)
+		if err != nil {
+			return err
+		}
+	case TgwAttachmentResourceType:
+		tgwAttLink := newLink(loc, PeeringResourceType, route.Target.HvnConnection.ID)
+		targetLink, err = linkURL(tgwAttLink)
+		if err != nil {
+			return err
+		}
+	default:
+		return errors.New("Unable to set target self_link - HVN Route target is not a known type.")
 	}
 
-	if err := d.Set("hvn_route_id", route.ID); err != nil {
+	if err := d.Set("target", targetLink); err != nil {
 		return err
 	}
 
 	if err := d.Set("destination_cidr", route.Destination); err != nil {
-		return err
-	}
-
-	if err := d.Set("target", route.Target); err != nil {
 		return err
 	}
 
