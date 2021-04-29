@@ -35,13 +35,10 @@ func dataSourceHVNRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"target": {
-				Description: "The target of the HVN route.",
-				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Computed: true,
+			"target_link": {
+				Description: "A unique URL identifying the target of the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"state": {
 				Description: "The state of the HVN route.",
@@ -63,7 +60,7 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	hvn := d.Get("hvn").(string)
 	var hvnLink *sharedmodels.HashicorpCloudLocationLink
 
-	hvnLink, err := parseLinkURL(hvn, "hashicorp.network.hvn")
+	hvnLink, err := parseLinkURL(hvn, HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
 	}

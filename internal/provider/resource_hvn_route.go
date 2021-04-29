@@ -31,7 +31,7 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return err
 	}
 
-	if err := d.Set("target", map[string]interface{}{"self_link": targetLink}); err != nil {
+	if err := d.Set("target_link", targetLink); err != nil {
 		return err
 	}
 
