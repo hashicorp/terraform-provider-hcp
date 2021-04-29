@@ -12,7 +12,7 @@ import (
 
 func dataSourceHVNRoute() *schema.Resource {
 	return &schema.Resource{
-		Description: "The HVN Route data source provides information about an existing HVN route.",
+		Description: "The HVN route data source provides information about an existing HVN route.",
 		ReadContext: dataSourceHVNRouteRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnRouteDefaultTimeout,
