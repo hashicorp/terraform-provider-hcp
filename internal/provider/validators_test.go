@@ -341,3 +341,76 @@ func Test_validateConsulClusterSize(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateIsStartOfPrivateCIDRRange(t *testing.T) {
+	tcs := map[string]struct {
+		expected diag.Diagnostics
+		input    string
+	}{
+		"valid CIDR case A": {
+			input:    "192.168.0.0/20",
+			expected: nil,
+		},
+		"valid CIDR case B": {
+			input:    "172.25.16.0/24",
+			expected: nil,
+		},
+		"valid CIDR case C": {
+			input:    "10.0.0.0/16",
+			expected: nil,
+		},
+		"not a CIDR case A": {
+			input: "string123",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "expected \"string123\" to be a valid IPv4 value",
+					Detail:        "expected \"string123\" to be a valid IPv4 value",
+					AttributePath: nil,
+				},
+			},
+		},
+		"not a CIDR case B": {
+			input: "10.255.255asdfasdfaqsd.250",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "expected \"10.255.255asdfasdfaqsd.250\" to be a valid IPv4 value",
+					Detail:        "expected \"10.255.255asdfasdfaqsd.250\" to be a valid IPv4 value",
+					AttributePath: nil,
+				},
+			},
+		},
+		"invalid CIDR": {
+			input: "87.70.141.1/22",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16",
+					Detail:        "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16",
+					AttributePath: nil,
+				},
+			},
+		},
+		"not start of range": {
+			input: "192.168.255.255/24",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0",
+					Detail:        "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0; CIDR value must be at the start of the range",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+
+			result := validateIsStartOfPrivateCIDRRange(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}

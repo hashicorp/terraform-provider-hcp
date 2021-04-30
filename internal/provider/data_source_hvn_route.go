@@ -25,9 +25,10 @@ func dataSourceHVNRoute() *schema.Resource {
 				Required:    true,
 			},
 			"destination_cidr": {
-				Description: "The destination CIDR of the HVN route",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:      "The destination CIDR of the HVN route",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validateIsStartOfPrivateCIDRRange,
 			},
 			// Computed outputs
 			"self_link": {
