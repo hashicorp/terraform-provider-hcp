@@ -65,7 +65,6 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Sensitive:   true,
 				ForceNew:    true,
 			},
-			// Optional inputs
 			"destination_cidrs": {
 				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this transit gateway attachment.",
 				Type:        schema.TypeList,
@@ -73,7 +72,8 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsCIDR,
 				},
-				Optional: true,
+				Required: true,
+				MinItems: 1,
 				ForceNew: true,
 			},
 			// Computed outputs
