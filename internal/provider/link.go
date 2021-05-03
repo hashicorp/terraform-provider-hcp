@@ -31,6 +31,9 @@ const (
 	// TgwAttachmentResourceType is the resource type of a TGW attachment
 	TgwAttachmentResourceType = "hashicorp.network.tgw-attachment"
 
+	// HVNRouteResourceType is the resource type of an HVN route
+	HVNRouteResourceType = "hashicorp.network.route"
+
 	// ConsulSnapshotResourceType is the resource type of a Consul snapshot
 	ConsulSnapshotResourceType = "hashicorp.consul.snapshot"
 
