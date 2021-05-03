@@ -7,6 +7,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -25,10 +26,10 @@ func dataSourceHVNRoute() *schema.Resource {
 				Required:    true,
 			},
 			"destination_cidr": {
-				Description:      "The destination CIDR of the HVN route",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validateIsStartOfPrivateCIDRRange,
+				Description:  "The destination CIDR of the HVN route",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			// Computed outputs
 			"self_link": {

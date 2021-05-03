@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"net"
 	"regexp"
 	"strings"
 
@@ -143,63 +142,6 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 			Severity:      diag.Error,
 			Summary:       msg,
 			Detail:        msg + " (value is case-insensitive).",
-			AttributePath: path,
-		})
-	}
-
-	return diagnostics
-}
-
-// validateIsStartOfPrivateCIDRRange validates that a value passed is (a)a valid
-// CIDR, (b)a valid RFC 1819 address, and (c)at the start of the CIDR range.
-func validateIsStartOfPrivateCIDRRange(v interface{}, path cty.Path) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	// Validation fails if value is not string.
-	s, ok := v.(string)
-	if !ok {
-		msg := fmt.Sprintf("expected type of %v to be string", v)
-		diagnostics = append(diagnostics, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       msg,
-			Detail:        msg,
-			AttributePath: path,
-		})
-		return diagnostics
-	}
-
-	// Validation fails if string cannot be parsed as CIDR.
-	ip, net, err := net.ParseCIDR(s)
-	if err != nil {
-		msg := fmt.Sprintf("expected \"%v\" to be a valid IPv4 value", v)
-		diagnostics = append(diagnostics, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       msg,
-			Detail:        msg,
-			AttributePath: path,
-		})
-		return diagnostics
-	}
-
-	// Validation fails if address is not within valid RFC 1819 ranges
-	if !regexp.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`).MatchString(v.(string)) {
-		msg := "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"
-		diagnostics = append(diagnostics, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       msg,
-			Detail:        msg,
-			AttributePath: path,
-		})
-		return diagnostics
-	}
-
-	// Validation fails if value is not at the beginning of the CIDR range.
-	if !ip.Equal(net.IP) {
-		msg := fmt.Sprintf("invalid CIDR range start %v, should have been %v", ip, net.IP)
-		diagnostics = append(diagnostics, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       msg,
-			Detail:        msg + "; CIDR value must be at the start of the range",
 			AttributePath: path,
 		})
 	}
