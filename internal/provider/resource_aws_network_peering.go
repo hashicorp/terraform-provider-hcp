@@ -66,14 +66,14 @@ func resourceAwsNetworkPeering() *schema.Resource {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
+			// Optional inputs
 			"peer_vpc_cidr_block": {
 				Description:  "The CIDR range of the peer VPC in AWS.",
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
-			// Optional inputs
 			"peering_id": {
 				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
