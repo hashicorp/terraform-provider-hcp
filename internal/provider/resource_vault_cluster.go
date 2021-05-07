@@ -62,7 +62,7 @@ func resourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
