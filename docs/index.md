@@ -20,6 +20,17 @@ The HCP provider supports authentication via a Client ID and a Client Secret. Th
 
 ## Example Usage
 
+Everything in HashiCorp Cloud Platform (HCP) starts with the HashiCorp Virtual Network (HVN).
+
+HVNs enable you to deploy HashiCorp Cloud products without having to manage the networking details. They give you a simple setup for creating a network on AWS, in the region of your choice, and with the option to specify a CIDR range.
+
+Creating a network peering from your HVN will allow you to connect and launch AWS resources to your HCP account.
+Peer your Amazon VPC with your HVN to enable resource access. After creating, you will need to accept the peering request and set up your VPC’s security groups and routing table on your AWS account. The Amazon VPC can be managed with the [AWS provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs).
+
+Once you have an HVN, HCP Consul and HCP Vault enable you to quickly deploy Consul and Vault clusters in AWS across a variety of environments while offloading the operations burden to the SRE experts at HashiCorp.
+
+One final note: with a fully deployed HCP Consul, you need to deploy Consul clients inside of the peered VPC to fully access your Consul features.
+
 ```terraform
 // Pin the version
 terraform {
