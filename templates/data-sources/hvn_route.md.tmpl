@@ -1,0 +1,18 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Type}} ({{.Name}})
+
+-> **Note:** This feature is currently in private beta.
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_hvn_route/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
