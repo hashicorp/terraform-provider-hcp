@@ -18,6 +18,7 @@ import (
 
 var peeringDefaultTimeout = time.Minute * 1
 var peeringCreateTimeout = time.Minute * 35
+var peeringUpdateTimeout = time.Minute * 35
 var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
@@ -26,10 +27,12 @@ func resourceAwsNetworkPeering() *schema.Resource {
 
 		CreateContext: resourceAwsNetworkPeeringCreate,
 		ReadContext:   resourceAwsNetworkPeeringRead,
+		UpdateContext: resourceAwsNetworkPeeringUpdate,
 		DeleteContext: resourceAwsNetworkPeeringDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &peeringDefaultTimeout,
 			Create:  &peeringCreateTimeout,
+			Update:  &peeringUpdateTimeout,
 			Delete:  &peeringDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
@@ -71,7 +74,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Description:  "The CIDR range of the peer VPC in AWS.",
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validation.IsCIDR,
 			},
 			"peering_id": {
@@ -255,6 +258,74 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
+}
+
+func resourceAwsNetworkPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	peeringID := link.ID
+	loc := link.Location
+	hvnID := d.Get("hvn_id").(string)
+
+	log.Printf("[INFO] Reading network peering for update(%s)", peeringID)
+	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Network peering (%s) not found, removing from state", peeringID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
+	}
+
+	// The network peering failed to provision properly so we want to let the user know and
+	// remove it from state
+	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
+		log.Printf("[WARN] Network peering (%s) failed to provision, removing from state", peering.ID)
+		d.SetId("")
+		return nil
+	}
+
+	oldCIDR, newCIDR := d.GetChange("peer_vpc_cidr_block")
+
+	// If the field peer_vpc_cidr_block previously has a value, but is is not present for the update,
+	// the HVN route for the peering will be removed.
+	if newCIDR == "" && oldCIDR != "" {
+		log.Printf("[WARN] Updating network peering (%s) route without a value for field peer_vpc_cid_block; this means the HVN route for this peering will be removed. To avoid deleting the peering's HVN route, please include peer_vpc_cidr_block = \"%v\" in the peering resource.", peering.ID, oldCIDR)
+
+		route, err := clients.ListHVNRoutes(ctx, client, peering.Hvn.ID, oldCIDR.(string), "", "", loc)
+		if err != nil {
+			return diag.Errorf("unable to retrieve HVN route for Network peering (%s) in preparation for update", peeringID)
+		}
+
+		// ListHVNRoutes should only ever return 1 route for a specified HVN and destination CIDR.
+		if len(route) != 1 {
+			return diag.Errorf("unexpected number of HVN route retrieved for Network peering (%s): %v", peeringID, len(route))
+		}
+
+		resp, err := clients.DeleteHVNRouteByID(ctx, client, peering.Hvn.ID, route[0].ID, loc)
+		log.Printf("operation ID for delete HVN route is %+v", resp.Operation.ID)
+		if err := clients.WaitForOperation(ctx, client, "delete network peering HVN route", loc, resp.Operation.ID); err != nil {
+			if strings.Contains(err.Error(), "execution already started") {
+				return nil
+			}
+			return diag.Errorf("unable to delete network peering (%s) HVN route (%s): %v", peeringID, route[0].ID, err)
+		}
+	}
+
+	// If the value for peer_vpc_cidr_block is being updated to a different non-empty value, return an error.
+	if newCIDR != oldCIDR && newCIDR != "" {
+		return diag.Errorf("Cannot update peer_vpc_cidr_block for Network peering (%s); peering route must be updated using HVN Route resource instead", peeringID)
+	}
+
+	// Set state for the peering
+	return resourceAwsNetworkPeeringRead(ctx, d, meta)
 }
 
 func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

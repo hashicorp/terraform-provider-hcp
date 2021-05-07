@@ -28,3 +28,22 @@ func ListHVNRoutes(ctx context.Context, client *Client, hvnID string,
 
 	return listHVNRoutesResponse.Payload.Routes, nil
 }
+
+// DeleteSnapshotByID deletes an HVN route by its ID
+func DeleteHVNRouteByID(ctx context.Context, client *Client, hvnID string,
+	hvnRouteID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907DeleteHVNRouteResponse, error) {
+	deleteHVNRouteParams := network_service.NewDeleteHVNRouteParams()
+
+	deleteHVNRouteParams.Context = ctx
+	deleteHVNRouteParams.ID = hvnRouteID
+	deleteHVNRouteParams.HvnID = hvnID
+	deleteHVNRouteParams.HvnLocationOrganizationID = loc.OrganizationID
+	deleteHVNRouteParams.HvnLocationProjectID = loc.ProjectID
+
+	deleteHVNRouteResponse, err := client.Network.DeleteHVNRoute(deleteHVNRouteParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteHVNRouteResponse.Payload, nil
+}
