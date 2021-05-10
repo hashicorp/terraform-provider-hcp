@@ -1,4 +1,4 @@
-## 0.6.0 (Unreleased)
+## 0.6.0 (May 10, 2021)
 
 FEATURES:
 * **New data source** `hcp_hvn_route` (#115)
