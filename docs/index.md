@@ -18,7 +18,7 @@ See the Release Notes on Github for more detail. Please upgrade to the patch v0.
 
 The HCP provider supports authentication via a Client ID and a Client Secret. The [authentication guide](guides/auth.md) describes how to obtain client credentials.
 
-## Example Usage
+## Getting Started
 
 Everything in HashiCorp Cloud Platform (HCP) starts with the HashiCorp Virtual Network (HVN).
 
