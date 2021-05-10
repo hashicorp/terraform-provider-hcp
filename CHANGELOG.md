@@ -1,7 +1,7 @@
 ## 0.6.0 (Unreleased)
 
 FEATURES:
-* **New data source** `hcp_hvn_route` (#58)
+* **New data source** `hcp_hvn_route` (#115)
 
 IMPROVEMENTS:
 * provider: Bump `hcp-go-sdk` dependency (#105)
