@@ -1,3 +1,14 @@
+## 0.6.0 (Unreleased)
+
+FEATURES:
+* **New data source** `hcp_hvn_route` (#58)
+
+IMPROVEMENTS:
+* provider: Bump `hcp-go-sdk` dependency (#105)
+* provider: Bump `go-openapi/runtime` dependency (#106)
+* resource/hvn, peering, tgw attachment: added `self_link` output (#111)
+* docs: various doc updates (#117, #119)
+
 ## 0.5.0 (April 20, 2021)
 
 IMPROVEMENTS:
