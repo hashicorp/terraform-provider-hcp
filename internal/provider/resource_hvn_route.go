@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
@@ -192,7 +193,7 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	destination := d.Get("destination").(string)
+	destination := d.Get("destination_cidr").(string)
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
@@ -229,6 +230,34 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), HVNRouteResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	routeID := link.ID
+	loc := link.Location
+
+	hvn := d.Get("hvn").(string)
+	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[INFO] Deleting HVN route (%s)", routeID)
+	resp, err := clients.DeleteHVNRouteByID(ctx, client, hvnLink.ID, routeID, loc)
+
+	if err := clients.WaitForOperation(ctx, client, "delete HVN route", loc, resp.Operation.ID); err != nil {
+		if strings.Contains(err.Error(), "execution already started") {
+			return nil
+		}
+		return diag.Errorf("unable to delete HVN route (%s): %v", routeID, err)
+	}
+
+	log.Printf("[INFO] Network peering (%s) deleted, removing from state", routeID)
+
 	return nil
 }
 

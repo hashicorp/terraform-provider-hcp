@@ -71,8 +71,6 @@ func hvnRouteRefreshState(ctx context.Context, client *Client, destination strin
 			return nil, "", err
 		}
 
-		fmt.Println("here in refresh state")
-
 		if len(route) != 1 {
 			return nil, "", fmt.Errorf("Unexpected number of HVN route returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active", destination, hvnID)
 		}
