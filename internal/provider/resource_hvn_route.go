@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -29,6 +30,10 @@ func resourceHvnRoute() *schema.Resource {
 			Default: &hvnRouteDefaultTimeout,
 			Create:  &hvnRouteCreateTimeout,
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceHVNRouteImport,
+		},
+
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn": {
@@ -38,7 +43,7 @@ func resourceHvnRoute() *schema.Resource {
 				ForceNew:    true,
 			},
 			"hvn_route_id": {
-				Description:      "The ID of the network peering.",
+				Description:      "The ID of the HVN route.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -133,7 +138,6 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
-	log.Printf("targetLink is %+v, hvnlink is %+v", targetLink.Location, hvnLink.Location)
 	hvnRouteParams := network_service.NewCreateHVNRouteParams()
 	hvnRouteParams.Context = ctx
 	hvnRouteParams.HvnLocationOrganizationID = loc.OrganizationID
@@ -282,6 +286,10 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return err
 	}
 
+	if err := d.Set("hvn_route_id", route.ID); err != nil {
+		return err
+	}
+
 	if err := d.Set("target_link", targetLink); err != nil {
 		return err
 	}
@@ -299,4 +307,40 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 	}
 
 	return nil
+}
+
+// resourceHVNRouteImport implements the logic necessary to import an
+// un-tracked (by Terraform) HVN route resource into Terraform state.
+func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
+
+	idParts := strings.SplitN(d.Id(), ":", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{peering_id}", d.Id())
+	}
+	hvnID := idParts[0]
+	routeID := idParts[1]
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		ProjectID: client.Config.ProjectID,
+	}
+
+	link := newLink(loc, HVNRouteResourceType, routeID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(url)
+
+	hvnLink := newLink(loc, HvnResourceType, hvnID)
+	hvnUrl, err := linkURL(hvnLink)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("hvn", hvnUrl); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
