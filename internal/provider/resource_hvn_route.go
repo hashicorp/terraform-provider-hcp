@@ -92,6 +92,9 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ProjectID:      client.Config.ProjectID,
 	}
 
+	destination := d.Get("destination_cidr").(string)
+	hvnRouteID := d.Get("hvn_route_id").(string)
+
 	hvn := d.Get("hvn").(string)
 	var hvnLink *sharedmodels.HashicorpCloudLocationLink
 	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
@@ -101,11 +104,14 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	target := d.Get("target_link").(string)
 	var targetLink *sharedmodels.HashicorpCloudLocationLink
-	// TODO this needs to handle more than just peering type
 	targetLink, err = buildLinkFromURL(target, PeeringResourceType, loc.OrganizationID)
+	if err != nil {
+		targetLink, err = buildLinkFromURL(target, TgwAttachmentResourceType, loc.OrganizationID)
+		if err != nil {
+			return diag.Errorf("unable to parse target_link for HVN (%s) route with destination CIDR of %s: %v", hvnLink.ID, destination, err)
+		}
+	}
 
-	destination := d.Get("destination_cidr").(string)
-	hvnRouteID := d.Get("hvn_route_id").(string)
 	// Check for an existing HVN.
 	retrievedHvn, err := clients.GetHvnByID(ctx, client, loc, hvnLink.ID)
 	if err != nil {
@@ -260,7 +266,7 @@ func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("unable to delete HVN route (%s): %v", routeID, err)
 	}
 
-	log.Printf("[INFO] Network peering (%s) deleted, removing from state", routeID)
+	log.Printf("[INFO] HVN route (%s) deleted, removing from state", routeID)
 
 	return nil
 }
@@ -316,7 +322,7 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 
 	idParts := strings.SplitN(d.Id(), ":", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{peering_id}", d.Id())
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())
 	}
 	hvnID := idParts[0]
 	routeID := idParts[1]
