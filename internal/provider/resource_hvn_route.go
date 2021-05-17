@@ -140,7 +140,22 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[INFO] HVN route with destination CIDR of %s for HVN (%s) not found, proceeding with HVN route create", destination, hvnLink.ID)
 	}
 
-	// TODO Check if the target exists and is in operational state.
+	// Check if the target exists.
+	switch targetLink.Type {
+	case PeeringResourceType:
+		_, err = clients.GetPeeringByID(ctx, client, targetLink.ID, hvnLink.ID, loc)
+	case TgwAttachmentResourceType:
+		_, err = clients.GetTGWAttachmentByID(ctx, client, targetLink.ID, hvnLink.ID, loc)
+	default:
+		// Handle impossible error
+		return diag.Errorf("unable to create route for HVN (%s) with the destination CIDR of %s, impossible error parsing target type (%s) ", hvnLink.ID, destination, targetLink.Type)
+	}
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to create route for HVN (%s) with the destination CIDR of %s, target (%s) does not exist ", hvnLink.ID, destination, target)
+		}
+		return diag.Errorf("unable to create route for HVN (%s) with the destination CIDR of %s, unable to check for existence of target (%s)", hvnLink.ID, destination, target)
+	}
 
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
