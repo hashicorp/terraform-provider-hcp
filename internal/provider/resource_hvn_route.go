@@ -104,11 +104,13 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	target := d.Get("target_link").(string)
 	var targetLink *sharedmodels.HashicorpCloudLocationLink
+	// If target type is neither a peering nor a TGW attachment, we will return an error.
+	// Currently create HVN route will only support these two resource types.
 	targetLink, err = buildLinkFromURL(target, PeeringResourceType, loc.OrganizationID)
 	if err != nil {
 		targetLink, err = buildLinkFromURL(target, TgwAttachmentResourceType, loc.OrganizationID)
 		if err != nil {
-			return diag.Errorf("unable to parse target_link for HVN (%s) route with destination CIDR of %s: %v", hvnLink.ID, destination, err)
+			return diag.Errorf("unable to parse target_link for HVN (%s) route with destination CIDR of %s: %v; target must be of either %s or %s", hvnLink.ID, destination, err, PeeringResourceType, TgwAttachmentResourceType)
 		}
 	}
 
@@ -156,6 +158,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		return diag.Errorf("unable to create route for HVN (%s) with the destination CIDR of %s, unable to check for existence of target (%s)", hvnLink.ID, destination, target)
 	}
+	log.Printf("Target %s is found, proceeding with creating HVN route for HVN (%s).", target, hvnLink.ID)
 
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
@@ -236,7 +239,7 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if len(route) != 1 {
-		return diag.Errorf("Unexpected number of HVN route returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active", destination, hvnLink.ID)
+		return diag.Errorf("Unexpected number of HVN routes returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active: %d", destination, hvnLink.ID, len(route))
 	}
 
 	// The HVN route failed to provision properly so we want to let the user know and
