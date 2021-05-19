@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -139,26 +139,12 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
-	hvnRouteParams := network_service.NewCreateHVNRouteParams()
-	hvnRouteParams.Context = ctx
-	hvnRouteParams.HvnLocationOrganizationID = loc.OrganizationID
-	hvnRouteParams.HvnLocationProjectID = loc.ProjectID
-	hvnRouteParams.HvnID = hvnLink.ID
-	hvnRouteParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateHVNRouteRequest{
-		Destination: destination,
-		Hvn:         hvnLink,
-		ID:          hvnRouteID,
-		Target: &networkmodels.HashicorpCloudNetwork20200907HVNRouteTarget{
-			HvnConnection: targetLink,
-		},
-	}
-	log.Printf("[INFO] Creating HVN route for HVN (%s) with destination CIDR %s", hvnLink.ID, destination)
-	hvnRouteResp, err := client.Network.CreateHVNRoute(hvnRouteParams, nil)
+	// Create HVN route
+	hvnRouteResp, err := clients.CreateHVNRoute(ctx, client, hvnRouteID, hvnLink, destination, targetLink, loc)
 	if err != nil {
-		return diag.Errorf("unable to create HVN route for HVN (%s) with destination CIDR %s: %v", hvnLink.ID, destination, err)
+		return diag.FromErr(err)
 	}
-
-	hvnRoute := hvnRouteResp.Payload.Route
+	hvnRoute := hvnRouteResp.Route
 
 	// Set the globally unique id of this HVN route in the state now since it has
 	// been created, and from this point forward should be deletable.
@@ -170,7 +156,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(url)
 
 	// Wait for HVN route to be created.
-	if err := clients.WaitForOperation(ctx, client, "create HVN route", loc, hvnRouteResp.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "create HVN route", loc, hvnRouteResp.Operation.ID); err != nil {
 		return diag.Errorf("unable to create HVN route for HVN (%s) with destination CIDR %s:%v", hvnLink.ID, destination, err)
 	}
 

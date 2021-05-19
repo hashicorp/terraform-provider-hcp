@@ -3,6 +3,7 @@ package clients
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
@@ -11,10 +12,41 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+// CreateHVNRoute creates a new HVN route
+func CreateHVNRoute(ctx context.Context, client *Client,
+	id string,
+	hvn *sharedmodels.HashicorpCloudLocationLink,
+	destination string,
+	target *sharedmodels.HashicorpCloudLocationLink,
+	location *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907CreateHVNRouteResponse, error) {
+
+	hvnRouteParams := network_service.NewCreateHVNRouteParams()
+	hvnRouteParams.Context = ctx
+	hvnRouteParams.HvnLocationOrganizationID = location.OrganizationID
+	hvnRouteParams.HvnLocationProjectID = location.ProjectID
+	hvnRouteParams.HvnID = hvn.ID
+	hvnRouteParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateHVNRouteRequest{
+		Destination: destination,
+		Hvn:         hvn,
+		ID:          id,
+		Target: &networkmodels.HashicorpCloudNetwork20200907HVNRouteTarget{
+			HvnConnection: target,
+		},
+	}
+	log.Printf("[INFO] Creating HVN route for HVN (%s) with destination CIDR %s", hvn.ID, destination)
+	hvnRouteResp, err := client.Network.CreateHVNRoute(hvnRouteParams, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create HVN route for HVN (%s) with destination CIDR %s: %v", hvn.ID, destination, err)
+	}
+
+	return hvnRouteResp.Payload, nil
+}
+
 // ListHVNRoutes lists the routes for an HVN.
 func ListHVNRoutes(ctx context.Context, client *Client, hvnID string,
 	destination string, targetID string, targetType string,
 	loc *sharedmodels.HashicorpCloudLocationLocation) ([]*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
+
 	listHVNRoutesParams := network_service.NewListHVNRoutesParams()
 	listHVNRoutesParams.Context = ctx
 	listHVNRoutesParams.HvnID = hvnID
@@ -35,6 +67,7 @@ func ListHVNRoutes(ctx context.Context, client *Client, hvnID string,
 // DeleteSnapshotByID deletes an HVN route by its ID
 func DeleteHVNRouteByID(ctx context.Context, client *Client, hvnID string,
 	hvnRouteID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907DeleteHVNRouteResponse, error) {
+
 	deleteHVNRouteParams := network_service.NewDeleteHVNRouteParams()
 
 	deleteHVNRouteParams.Context = ctx
@@ -80,7 +113,12 @@ func hvnRouteRefreshState(ctx context.Context, client *Client, destination strin
 
 // WaitForHVNRouteToBeActive will poll the LIST HVN route endpoint until
 // the state is ACTIVE, ctx is canceled, or an error occurs.
-func WaitForHVNRouteToBeActive(ctx context.Context, client *Client, destination string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
+func WaitForHVNRouteToBeActive(ctx context.Context, client *Client,
+	destination string,
+	hvnID string,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
+
 	stateChangeConf := resource.StateChangeConf{
 		Pending: []string{
 			HvnRouteStateCreating,
