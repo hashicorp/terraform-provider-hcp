@@ -102,16 +102,11 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	target := d.Get("target_link").(string)
-	var targetLink *sharedmodels.HashicorpCloudLocationLink
-	// If target type is neither a peering nor a TGW attachment, we will return an error.
-	// Currently create HVN route will only support these two resource types.
-	targetLink, err = buildLinkFromURL(target, PeeringResourceType, loc.OrganizationID)
+	targetLink, err := parseLinkURL(target, "")
 	if err != nil {
-		targetLink, err = buildLinkFromURL(target, TgwAttachmentResourceType, loc.OrganizationID)
-		if err != nil {
-			return diag.Errorf("unable to parse target_link for HVN (%s) route with destination CIDR of %s: %v; target must be of either %s or %s", hvnLink.ID, destination, err, PeeringResourceType, TgwAttachmentResourceType)
-		}
+		return diag.Errorf("unable to parse target_link for HVN route (%s): %v", hvnRouteID, destination, err)
 	}
+	targetLink.Location.OrganizationID = loc.OrganizationID
 
 	// Check for an existing HVN.
 	retrievedHvn, err := clients.GetHvnByID(ctx, client, loc, hvnLink.ID)
