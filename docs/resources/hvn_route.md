@@ -58,7 +58,7 @@ resource "hcp_hvn_route" "example-peering-route" {
 - **destination_cidr** (String) The destination CIDR of the HVN route
 - **hvn** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
 - **hvn_route_id** (String) The ID of the HVN route.
-- **target_link** (String) A unique URL identifying the target of the HVN route.
+- **target_link** (String) A unique URL identifying the target of the HVN route. Examples of the target: [`aws_network_peering`](aws_network_peering.md), [`aws_transit_gateway_attachment`](aws_transit_gateway_attachment.md)
 
 ### Optional
 

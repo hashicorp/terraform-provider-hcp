@@ -57,7 +57,7 @@ func resourceHvnRoute() *schema.Resource {
 				ValidateFunc: validation.IsCIDR,
 			},
 			"target_link": {
-				Description: "A unique URL identifying the target of the HVN route.",
+				Description: "A unique URL identifying the target of the HVN route. Examples of the target: [`aws_network_peering`](aws_network_peering.md), [`aws_transit_gateway_attachment`](aws_transit_gateway_attachment.md)",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
