@@ -52,7 +52,6 @@ func dataSourceHVNRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			// TODO add updated_at after public API returns updated_at for HVN route
 		},
 	}
 }
