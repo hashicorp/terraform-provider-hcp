@@ -120,18 +120,6 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] HVN (%s) found, proceeding with HVN route create", hvnLink.ID)
 
-	// Check if HVN route already exists.
-	_, err = clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
-	if err != nil {
-		if !clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("unable to check for presence of an existing route for HVN (%s) with the destination CIDR of %s: %v", hvnLink.ID, destination, err)
-		}
-
-		return diag.Errorf("an HVN route with destination=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_hvn_route for more information", destination, hvnLink.ID, loc.ProjectID)
-	} else {
-		log.Printf("[INFO] HVN route with destination CIDR of %s for HVN (%s) not found, proceeding with HVN route create", destination, hvnLink.ID)
-	}
-
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
 	// Create HVN route
