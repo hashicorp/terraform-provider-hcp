@@ -3,7 +3,7 @@ variable "hvn" {
   type        = string
 }
 
-variable "destination_cidr" {
-  description = "The destination CIDR of the HVN route."
+variable "hvn_route_id" {
+  description = "The HVN route ID."
   type        = string
 }

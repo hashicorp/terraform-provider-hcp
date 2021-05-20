@@ -83,7 +83,6 @@ func resourceHvnRoute() *schema.Resource {
 }
 
 func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	client := meta.(*clients.Client)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{

@@ -7,7 +7,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -25,15 +25,19 @@ func dataSourceHVNRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"destination_cidr": {
-				Description:  "The destination CIDR of the HVN route",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.IsCIDR,
+			"hvn_route_id": {
+				Description: "The HVN route ID",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			// Computed outputs
 			"self_link": {
 				Description: "A unique URL identifying the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"destination_cidr": {
+				Description: "The destination CIDR of the HVN route",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -60,8 +64,6 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	client := meta.(*clients.Client)
 
 	hvn := d.Get("hvn").(string)
-	var hvnLink *sharedmodels.HashicorpCloudLocationLink
-
 	hvnLink, err := parseLinkURL(hvn, HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)
@@ -71,31 +73,23 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
-	destination := d.Get("destination_cidr").(string)
 
-	log.Printf("[INFO] Reading HVN route for HVN (%s) with destination_cidr=%s ", hvn, destination)
-	route, err := clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
-	if err != nil {
-		return diag.Errorf("unable to retrieve HVN route for HVN (%s) with destination_cidr=%s: %v",
-			hvn, destination, err)
-	}
-
-	// ListHVNRoutes call should return 1 and only 1 HVN route.
-	if len(route) > 1 {
-		return diag.Errorf("Unexpected number of HVN routes returned for destination_cidr=%s: %d", destination, len(route))
-	}
-	if len(route) == 0 {
-		return diag.Errorf("No HVN route found for destionation_cidr=%s", destination)
-	}
-
-	link := newLink(loc, HVNRouteResourceType, route[0].ID)
-	url, err := linkURL(link)
+	routeID := d.Get("hvn_route_id").(string)
+	routeLink := newLink(loc, HVNRouteResourceType, routeID)
+	routeUrl, err := linkURL(routeLink)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(url)
+	d.SetId(routeUrl)
 
-	if err := setHVNRouteResourceData(d, route[0], loc); err != nil {
+	log.Printf("[INFO] Reading HVN route (%s)", routeID)
+	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, routeID, loc)
+	if err != nil {
+		return diag.Errorf("unable to retrieve HVN route (%s): %v", routeID, err)
+	}
+
+	// HVN route found, update resource data.
+	if err := setHVNRouteResourceData(d, route, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
