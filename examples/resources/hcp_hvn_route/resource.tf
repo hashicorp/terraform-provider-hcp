@@ -28,8 +28,8 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 
 resource "hcp_hvn_route" "example-peering-route" {
-  hvn              = hcp_hvn.main.self_link
-  destination_cidr = aws_vpc.peer.cidr_block
+  hvn_link         = hcp_hvn.main.self_link
   hvn_route_id     = "peering-route"
+  destination_cidr = aws_vpc.peer.cidr_block
   target_link      = hcp_aws_network_peering.example.self_link
 }

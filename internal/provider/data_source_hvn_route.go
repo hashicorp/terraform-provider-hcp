@@ -20,7 +20,7 @@ func dataSourceHVNRoute() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"hvn": {
+			"hvn_link": {
 				Description: "The `self_link` of the HashiCorp Virtual Network (HVN).",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -63,7 +63,7 @@ func dataSourceHVNRoute() *schema.Resource {
 func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	hvn := d.Get("hvn").(string)
+	hvn := d.Get("hvn_link").(string)
 	hvnLink, err := parseLinkURL(hvn, HvnResourceType)
 	if err != nil {
 		return diag.FromErr(err)

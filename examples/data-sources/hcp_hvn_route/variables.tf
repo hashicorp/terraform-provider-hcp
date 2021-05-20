@@ -1,4 +1,4 @@
-variable "hvn" {
+variable "hvn_link" {
   description = "The `self_link` of the HashiCorp Virtual Network (HVN)."
   type        = string
 }

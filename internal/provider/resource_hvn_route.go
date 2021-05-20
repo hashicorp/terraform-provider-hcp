@@ -36,7 +36,7 @@ func resourceHvnRoute() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"hvn": {
+			"hvn_link": {
 				Description: "The `self_link` of the HashiCorp Virtual Network (HVN).",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -93,7 +93,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	destination := d.Get("destination_cidr").(string)
 	hvnRouteID := d.Get("hvn_route_id").(string)
 
-	hvn := d.Get("hvn").(string)
+	hvn := d.Get("hvn_link").(string)
 	var hvnLink *sharedmodels.HashicorpCloudLocationLink
 	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
 	if err != nil {
@@ -158,7 +158,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	hvn := d.Get("hvn").(string)
+	hvn := d.Get("hvn_link").(string)
 	var hvnLink *sharedmodels.HashicorpCloudLocationLink
 
 	hvnLink, err := parseLinkURL(hvn, HvnResourceType)
@@ -212,7 +212,7 @@ func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta in
 	routeID := link.ID
 	loc := link.Location
 
-	hvn := d.Get("hvn").(string)
+	hvn := d.Get("hvn_link").(string)
 	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
@@ -220,6 +220,9 @@ func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Deleting HVN route (%s)", routeID)
 	resp, err := clients.DeleteHVNRouteByID(ctx, client, hvnLink.ID, routeID, loc)
+	if err != nil {
+		return diag.Errorf("unable to delete HVN route (%s): %v", routeID, err)
+	}
 
 	if err := clients.WaitForOperation(ctx, client, "delete HVN route", loc, resp.Operation.ID); err != nil {
 		if strings.Contains(err.Error(), "execution already started") {
@@ -305,7 +308,7 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 		return nil, err
 	}
 
-	if err := d.Set("hvn", hvnUrl); err != nil {
+	if err := d.Set("hvn_link", hvnUrl); err != nil {
 		return nil, err
 	}
 
