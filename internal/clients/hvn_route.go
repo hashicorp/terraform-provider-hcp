@@ -139,4 +139,3 @@ func WaitForHVNRouteToBeActive(ctx context.Context, client *Client,
 
 	return result.(*networkmodels.HashicorpCloudNetwork20200907HVNRoute), nil
 }
-
