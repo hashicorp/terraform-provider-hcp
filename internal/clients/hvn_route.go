@@ -112,27 +112,23 @@ const (
 	HvnRouteStatePending = string(networkmodels.HashicorpCloudNetwork20200907HVNRouteStatePENDING)
 )
 
-// hvnRouteRefreshState refreshes the state of the HVN route by calling
-// the LIST endpoint
-func hvnRouteRefreshState(ctx context.Context, client *Client, destination string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+// hvnRouteRefreshState refreshes the state of the HVN route
+func hvnRouteRefreshState(ctx context.Context, client *Client, hvnID, routeID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		route, err := ListHVNRoutes(ctx, client, hvnID, destination, "", "", loc)
+		route, err := GetHVNRoute(ctx, client, hvnID, routeID, loc)
 		if err != nil {
 			return nil, "", err
 		}
 
-		if len(route) != 1 {
-			return nil, "", fmt.Errorf("Unexpected number of HVN route returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active", destination, hvnID)
-		}
-		return route[0], string(route[0].State), nil
+		return route, string(route.State), nil
 	}
 }
 
-// WaitForHVNRouteToBeActive will poll the LIST HVN route endpoint until
+// WaitForHVNRouteToBeActive will poll the GET HVN route endpoint until
 // the state is ACTIVE, ctx is canceled, or an error occurs.
 func WaitForHVNRouteToBeActive(ctx context.Context, client *Client,
-	destination string,
 	hvnID string,
+	routeID string,
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
 
@@ -144,14 +140,14 @@ func WaitForHVNRouteToBeActive(ctx context.Context, client *Client,
 		Target: []string{
 			HvnRouteStateActive,
 		},
-		Refresh:      hvnRouteRefreshState(ctx, client, destination, hvnID, loc),
+		Refresh:      hvnRouteRefreshState(ctx, client, hvnID, routeID, loc),
 		Timeout:      timeout,
 		PollInterval: 5 * time.Second,
 	}
 
 	result, err := stateChangeConf.WaitForStateContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Error waiting for route with destination CIDR of %s for HVN %s to become 'ACTIVE': %+v", destination, hvnID, err)
+		return nil, fmt.Errorf("error waiting for the HVN route (%s) to become 'ACTIVE': %+v", routeID, err)
 	}
 
 	return result.(*networkmodels.HashicorpCloudNetwork20200907HVNRoute), nil

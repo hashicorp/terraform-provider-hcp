@@ -144,7 +144,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Created HVN route for HVN (%s) with destination CIDR %s", hvnRoute.ID, hvnRoute.Hvn.ID)
 
-	hvnRoute, err = clients.WaitForHVNRouteToBeActive(ctx, client, destination, hvnLink.ID, loc, d.Timeout(schema.TimeoutCreate))
+	hvnRoute, err = clients.WaitForHVNRouteToBeActive(ctx, client, hvnLink.ID, hvnRouteID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
