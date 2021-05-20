@@ -42,6 +42,23 @@ func CreateHVNRoute(ctx context.Context, client *Client,
 	return hvnRouteResp.Payload, nil
 }
 
+// GetHVNRoute returns specific HVN route by its ID
+func GetHVNRoute(ctx context.Context, client *Client, hvnID, routeID string, loc *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
+	getHVNRouteParams := network_service.NewGetHVNRouteParams()
+	getHVNRouteParams.Context = ctx
+	getHVNRouteParams.HvnID = hvnID
+	getHVNRouteParams.ID = routeID
+	getHVNRouteParams.HvnLocationOrganizationID = loc.OrganizationID
+	getHVNRouteParams.HvnLocationProjectID = loc.ProjectID
+
+	getHVNRouteResponse, err := client.Network.GetHVNRoute(getHVNRouteParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return getHVNRouteResponse.Payload.Route, nil
+}
+
 // ListHVNRoutes lists the routes for an HVN.
 func ListHVNRoutes(ctx context.Context, client *Client, hvnID string,
 	destination string, targetID string, targetType string,
