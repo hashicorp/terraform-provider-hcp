@@ -173,7 +173,7 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	route, err := clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
+	routes, err := clients.ListHVNRoutes(ctx, client, hvnLink.ID, destination, "", "", loc)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] HVN route for HVN (%s) with destination CIDR %s not found, removing from state", hvnLink.ID, destination)
@@ -184,20 +184,27 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("unable to retrieve HVN route for HVN (%s) with destination CIDR %s: %v", hvnLink.ID, destination, err)
 	}
 
-	if len(route) != 1 {
-		return diag.Errorf("Unexpected number of HVN routes returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active: %d", destination, hvnLink.ID, len(route))
+	if len(routes) != 1 {
+		return diag.Errorf("Unexpected number of HVN routes returned when waiting for route with destination CIDR of %s for HVN (%s) to be Active: %d", destination, hvnLink.ID, len(routes))
 	}
 
 	// The HVN route failed to provision properly so we want to let the user know and
 	// remove it from state.
-	if route[0].State == networkmodels.HashicorpCloudNetwork20200907HVNRouteStateFAILED {
+	if routes[0].State == networkmodels.HashicorpCloudNetwork20200907HVNRouteStateFAILED {
 		log.Printf("[WARN] HVN route for HVN (%s) with destination CIDR %s failed to provision, removing from state", hvnLink.ID, destination)
 		d.SetId("")
 		return nil
 	}
 
+	idLink := newLink(routes[0].Hvn.Location, HVNRouteResourceType, routes[0].ID)
+	id, err := linkURL(idLink)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(id)
+
 	// HVN route found, update resource data.
-	if err := setHVNRouteResourceData(d, route[0], loc); err != nil {
+	if err := setHVNRouteResourceData(d, routes[0], loc); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
@@ -286,21 +293,13 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 
 	idParts := strings.SplitN(d.Id(), ":", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{destination_cidr}", d.Id())
 	}
 	hvnID := idParts[0]
-	routeID := idParts[1]
+	destination := idParts[1]
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		ProjectID: client.Config.ProjectID,
 	}
-
-	link := newLink(loc, HVNRouteResourceType, routeID)
-	url, err := linkURL(link)
-	if err != nil {
-		return nil, err
-	}
-
-	d.SetId(url)
 
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
 	hvnUrl, err := linkURL(hvnLink)
@@ -309,6 +308,10 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err := d.Set("hvn", hvnUrl); err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("destination_cidr", destination); err != nil {
 		return nil, err
 	}
 
