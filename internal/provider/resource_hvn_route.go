@@ -225,9 +225,6 @@ func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err := clients.WaitForOperation(ctx, client, "delete HVN route", loc, resp.Operation.ID); err != nil {
-		if strings.Contains(err.Error(), "execution already started") {
-			return nil
-		}
 		return diag.Errorf("unable to delete HVN route (%s): %v", routeID, err)
 	}
 
