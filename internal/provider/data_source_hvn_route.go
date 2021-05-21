@@ -26,7 +26,7 @@ func dataSourceHVNRoute() *schema.Resource {
 				Required:    true,
 			},
 			"hvn_route_id": {
-				Description: "The HVN route ID",
+				Description: "The ID of the HVN route.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -37,7 +37,7 @@ func dataSourceHVNRoute() *schema.Resource {
 				Computed:    true,
 			},
 			"destination_cidr": {
-				Description: "The destination CIDR of the HVN route",
+				Description: "The destination CIDR of the HVN route.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

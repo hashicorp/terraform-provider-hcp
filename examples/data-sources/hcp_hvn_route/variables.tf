@@ -4,6 +4,6 @@ variable "hvn_link" {
 }
 
 variable "hvn_route_id" {
-  description = "The HVN route ID."
+  description = "The ID of the HVN route ID."
   type        = string
 }

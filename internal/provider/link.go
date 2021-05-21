@@ -103,7 +103,7 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 // error is returned.
 //
 // If `expectedType` is provided it will be matched against the resource from
-// the URL and if they don't much function returns an error. If `expectedType`
+// the URL and if they don't match the function returns an error. If `expectedType`
 // is an empty string then the resource type just will be inferred from the URL
 // as is.
 //

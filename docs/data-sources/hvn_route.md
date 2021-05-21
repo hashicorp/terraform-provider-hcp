@@ -26,7 +26,7 @@ data "hcp_hvn_route" "example" {
 ### Required
 
 - **hvn_link** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
-- **hvn_route_id** (String) The HVN route ID
+- **hvn_route_id** (String) The ID of the HVN route ID.
 
 ### Optional
 
@@ -36,7 +36,7 @@ data "hcp_hvn_route" "example" {
 ### Read-Only
 
 - **created_at** (String) The time that the HVN route was created.
-- **destination_cidr** (String) The destination CIDR of the HVN route
+- **destination_cidr** (String) The destination CIDR of the HVN route.
 - **self_link** (String) A unique URL identifying the HVN route.
 - **state** (String) The state of the HVN route.
 - **target_link** (String) A unique URL identifying the target of the HVN route.

@@ -50,7 +50,7 @@ func resourceHvnRoute() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"destination_cidr": {
-				Description:  "The destination CIDR of the HVN route",
+				Description:  "The destination CIDR of the HVN route.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
