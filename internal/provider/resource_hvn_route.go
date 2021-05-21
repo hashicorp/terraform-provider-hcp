@@ -176,10 +176,11 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		ProjectID:      client.Config.ProjectID,
 	}
 
+	log.Printf("[INFO] Reading HVN route (%s)", idLink.ID)
 	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, idLink.ID, loc)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] HVN route (%s), removing from state", idLink.ID)
+			log.Printf("[WARN] HVN route (%s) not found, removing from state", idLink.ID)
 			d.SetId("")
 			return nil
 		}
