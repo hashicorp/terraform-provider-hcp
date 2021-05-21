@@ -350,12 +350,13 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
-	idParts := strings.SplitN(d.Id(), ":", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}", d.Id())
+	idParts := strings.SplitN(d.Id(), ":", 3)
+	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
 	}
 	hvnID := idParts[0]
 	tgwAttID := idParts[1]
+	resourceShareArn := idParts[2]
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		ProjectID: client.Config.ProjectID,
 	}
@@ -368,6 +369,9 @@ func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.Re
 
 	d.SetId(url)
 	if err := d.Set("hvn_id", hvnID); err != nil {
+		return nil, err
+	}
+	if err := d.Set("resource_share_arn", resourceShareArn); err != nil {
 		return nil, err
 	}
 
