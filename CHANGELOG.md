@@ -1,3 +1,10 @@
+## Unreleased ()
+
+FEATURES:
+* **New resource** `hcp_hvn_route` (#122)
+
+⚠️ Note: Due to the introduction of HVN routes, this version introduces breaking changes to the `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resources. Please see our [migration guide](link TODO) to learn about how to update your HCP networking setup to work with HVN routes. ⚠️
+
 ## 0.6.1 (June 03, 2021)
 
 IMPROVEMENTS:
