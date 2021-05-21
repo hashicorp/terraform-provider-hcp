@@ -92,6 +92,20 @@ func Test_parseLinkURL(t *testing.T) {
 		require.Equal(t, id, l.ID)
 	})
 
+	t.Run("extracting type from the URL", func(t *testing.T) {
+		urn := fmt.Sprintf("/project/%s/%s/%s",
+			projID,
+			svcType,
+			id)
+
+		l, err := parseLinkURL(urn, "")
+		require.NoError(t, err)
+
+		require.Equal(t, projID, l.Location.ProjectID)
+		require.Equal(t, svcType, l.Type)
+		require.Equal(t, id, l.ID)
+	})
+
 	t.Run("missing project ID", func(t *testing.T) {
 		urn := fmt.Sprintf("/project/%s/%s/%s",
 			"",
