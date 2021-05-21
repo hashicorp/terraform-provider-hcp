@@ -26,7 +26,7 @@ data "hcp_hvn_route" "example" {
 ### Required
 
 - **hvn_link** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
-- **hvn_route_id** (String) The ID of the HVN route ID.
+- **hvn_route_id** (String) The ID of the HVN route.
 
 ### Optional
 
