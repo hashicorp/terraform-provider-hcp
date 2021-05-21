@@ -38,7 +38,6 @@ data "hcp_aws_network_peering" "test" {
 - **expires_at** (String) The time after which the network peering will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - **organization_id** (String) The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.
 - **peer_account_id** (String) The account ID of the peer VPC in AWS.
-- **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.
 - **peer_vpc_region** (String) The region of the peer VPC in AWS.
 - **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
