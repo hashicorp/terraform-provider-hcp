@@ -1,0 +1,75 @@
+---
+subcategory: ""
+page_title: "HVN Route Migration Guide - HCP Provider"
+description: |-
+    An guide to migrating HCP networking resources to use HVN routes.
+---
+
+# Introducing HVN routes
+
+The HVN route is a new resource that belongs to an HVN. It contains a CIDR block and targets a networking connection: 
+currently, either a peering or transit gateway attachment.
+TODO: expand on why they're being introduced.
+
+## Migrating existing peerings and transit gateway attachments
+
+There are two ways to migrate existing peerings and transit gateway attachments managed by Terraform:
+
+ 1. Recreate Resources with Updated Schema
+    * This option is quicker but will result in downtime and possible data loss. Best for test environments. Will allow you to specify human-readable ids for the resources.
+    * Comment out all `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resources.
+    * Run `terraform apply` to destroy currently existing connections.
+    * Uncomment and update all `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resource definitions to match the new schema. 
+    * Add corresponding `hcp_hvn_route` resources for each CIDR targeting corresponding peering connections or transit gateway attachment.
+    * Run `terraform apply` to recreate connections.
+
+ 2. Re-Import with Updated Syntax:
+    * This option allows you to avoid downtime or data loss.
+    * Update any `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resource definitions to match the new schema. All values needed can be found on the details pages of Peerings and TGW attachment in the HCP Portal.
+    * Add corresponding `hcp_hvn_route` resources for each CIDR targeting corresponding peering connections or transit gateway attachments.
+    * Run `terraform import hcp_hvn_route.<route-name> <hvn-id>:<hvn-route-id>` for each `hcp_hvn_route`. The `<hvn-route-id>` can be found on the details pages of the corresponding HVN connection in the HCP Portal.
+    * Run `terraform plan` and make sure that there are no changes detected by the Terraform.
+
+The examples below walk through the schema upgrade and re-import steps.
+
+### Peering example
+
+Given:
+{{ tffile "examples/guides/hvn_route_migration_guide/before-peering.tf" }}
+
+Rewrite it to the new schema and add corresponding HVN route:
+{{ tffile "examples/guides/hvn_route_migration_guide/after-peering.tf" }}
+
+Run `import` for the `hcp_hvn_route`:
+```shell
+$ terraform import hcp_hvn_route.peering-route prod-hvn:a8dda9a8-0f69-4fa0-b38c-55be302fdddb
+```
+
+Run `terraform plan` to make sure there are no changes detected by the Terraform:
+```shell
+$ terraform plan
+No changes. Infrastructure is up-to-date.
+```
+
+### Transit gateway attachment example
+
+Given:
+{{ tffile "examples/guides/hvn_route_migration_guide/before-tgw.tf" }}
+
+Rewrite it to the new schema and add corresponding HVN route:
+{{ tffile "examples/guides/hvn_route_migration_guide/after-tgw.tf" }}
+
+Run `import` for each `hcp_hvn_route` you've added:
+```shell
+$ terraform import hcp_hvn_route.tgw-route-1 prod-hvn:35392425-215a-44ec-bbd0-051bb777ce5f
+...
+
+$ terraform import hcp_hvn_route.tgw-route-2 prod-hvn:9867959a-d81b-4e52-ae8e-ca56f9dd06fc
+...
+```
+
+Run `terraform plan` to make sure there are no changes detected by the Terraform:
+```shell
+$ terraform plan
+No changes. Infrastructure is up-to-date.
+```
