@@ -58,7 +58,13 @@ resource "hcp_aws_transit_gateway_attachment" "example" {
   transit_gateway_attachment_id = "example-tgw-attachment"
   transit_gateway_id            = aws_ec2_transit_gateway.example.id
   resource_share_arn            = aws_ram_resource_share.example.arn
-  destination_cidrs             = [aws_vpc.example.cidr_block]
+}
+
+resource "hcp_hvn_route" "route" {
+  hvn_link         = hcp_hvn.main.self_link
+  hvn_route_id     = "hvn-to-tgw-attachment"
+  destination_cidr = aws_vpc.example.cidr_block
+  target_link      = hcp_aws_transit_gateway_attachment.example.self_link
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
@@ -73,7 +79,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 
 ### Required
 
-- **destination_cidrs** (List of String) The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this transit gateway attachment.
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **resource_share_arn** (String, Sensitive) The Amazon Resource Name (ARN) of the Resource Share that is needed to grant HCP access to the transit gateway in AWS. The Resource Share should be associated with the HCP AWS account principal (see [aws_ram_principal_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_principal_association)) and the transit gateway resource (see [aws_ram_resource_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_association))
 - **transit_gateway_attachment_id** (String) The user-settable name of the transit gateway attachment in HCP.
