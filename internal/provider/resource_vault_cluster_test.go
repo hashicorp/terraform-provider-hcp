@@ -29,7 +29,7 @@ func TestAccVaultCluster(t *testing.T) {
 	resourceName := "hcp_vault_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
