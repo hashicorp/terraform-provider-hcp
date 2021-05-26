@@ -120,7 +120,7 @@ func testLink(resourceName, fieldName, expectedID, expectedType, projectIDSource
 
 		projectIDSource, ok := s.RootModule().Resources[projectIDSourceResource]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", projectIDSourceResource)
 		}
 
 		projectID, ok := projectIDSource.Primary.Attributes["project_id"]
