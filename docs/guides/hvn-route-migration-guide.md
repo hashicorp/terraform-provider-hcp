@@ -130,7 +130,7 @@ resource "hcp_aws_transit_gateway_attachment" "prod" {
 // add a new `hcp_hvn_route` for each CIDR associated with the transit gateway attachment
 resource "hcp_hvn_route" "tgw-route-1" {
   hvn_link = hcp_hvn.hvn.self_link
-  // you can find this id in the HCP Portal in the TGW attachment details page in the list of Routes
+  // you can find this ID in the HCP Portal in the TGW attachment details page in the list of Routes
   hvn_route_id     = "35392425-215a-44ec-bbd0-051bb777ce5f"
   destination_cidr = "10.1.0.0/24"
   target_link      = hcp_aws_transit_gateway_attachment.prod.self_link
