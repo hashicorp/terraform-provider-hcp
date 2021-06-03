@@ -1,3 +1,9 @@
+## Unreleased
+
+IMPROVEMENTS:
+* docs: updates banner on index page to warn of upcoming breaking changes (#134)
+* resource/hcp_consul_cluster_snapshot_test: add Consul cluster snapshot acceptance test (#126)
+
 ## 0.6.0 (May 10, 2021)
 
 FEATURES:
