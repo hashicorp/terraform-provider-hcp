@@ -1,4 +1,4 @@
-## 0.6.1 (Unreleased)
+## 0.6.1 (June 03, 2021)
 
 IMPROVEMENTS:
 * docs: updates banner on index page to warn of upcoming breaking changes (#134)
