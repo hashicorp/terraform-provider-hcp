@@ -39,7 +39,7 @@ export AWS_SECRET_ACCESS_KEY=...
 export AWS_SESSION_TOKEN=...
 ```
 
-Note that this AWS account **MUST NOT** be the same AWS account that is being used by
+**Note for HCP developers**: this AWS account **MUST NOT** be the same AWS account that is being used by
 your HCP organization (dataplane) otherwise tests would fail.
 
 Tests can then be run by specifying a regular expression defining the tests to run:
