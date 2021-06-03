@@ -9,8 +9,8 @@ description: |-
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
-~> **Known Issue:** There is a known issue with v0.4.0 of the HCP Provider in which Terraform will incorrectly recommend a rebuild of a Consul cluster, which could result in data loss. 
-See the Release Notes on Github for more detail. Please upgrade to the patch v0.4.1 or beyond to avoid this issue.
+~> **Upcoming Migration:** The upcoming release of HVN Routes will include breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This PR](https://github.com/hashicorp/terraform-provider-hcp/pull/128) contains a migration guide.
+Please pin to the current version to avoid disruption until you are ready to migrate.
 
 -> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
 
