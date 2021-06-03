@@ -1,4 +1,4 @@
-## Unreleased
+## 0.6.1 (Unreleased)
 
 IMPROVEMENTS:
 * docs: updates banner on index page to warn of upcoming breaking changes (#134)
