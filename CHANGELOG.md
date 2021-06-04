@@ -1,3 +1,19 @@
+## 0.7.0 (Unreleased)
+
+⚠️ Note: This version contains breaking changes to the `hcp_aws_transit_gateway_attachment` and `hcp_aws_network_peering` resources and data sources. Please pin to the previous version and follow [this migration guide](https://github.com/hashicorp/terraform-provider-hcp/pull/128) when you're ready to migrate. ⚠️
+
+FEATURES:
+* **New resource** `hcp_hvn_route` (#122)
+
+IMPROVEMENTS:
+* resource/hcp_aws_transit_gateway_attachment: released as Generally Available (#121)
+
+BREAKING CHANGES:
+* resource/hcp_aws_network_peering: now requires `peering_id` to be specified and doesn't accept `peer_vpc_cidr_block` as input (#128)
+* datasource/hcp_aws_network_peering: no longer returns `peer_vpc_cidr_block` as output (#128)
+* resource/hcp_aws_transit_gateway_attachment: doesn't accept `destination_cidrs` as input (#128)
+* datasource/hcp_aws_transit_gateway_attachment: no longer returns `destination_cidrs` as output (#128)
+
 ## 0.6.1 (June 03, 2021)
 
 IMPROVEMENTS:

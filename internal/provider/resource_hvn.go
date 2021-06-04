@@ -132,7 +132,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		log.Printf("[INFO] HVN (%s) not found, proceeding with create", hvnID)
 	} else {
-		return diag.Errorf("unable to create HVN (%s) - an HVN with this ID already exists; see resouce documentation for hcp_hvn for instructions on how to add an already existing HVN to the state", hvnID)
+		return diag.Errorf("unable to create HVN (%s) - an HVN with this ID already exists; see resource documentation for hcp_hvn for instructions on how to add an already existing HVN to the state", hvnID)
 	}
 
 	createNetworkParams := network_service.NewCreateParams()
