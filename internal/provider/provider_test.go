@@ -54,7 +54,7 @@ func TestProvider(t *testing.T) {
 //
 // These verifications and configuration are preferred at this level to prevent
 // provider developers from experiencing less clear errors for every test.
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(t *testing.T, requireAWSCreds bool) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
@@ -64,6 +64,20 @@ func testAccPreCheck(t *testing.T) {
 
 		if os.Getenv("HCP_CLIENT_SECRET") == "" {
 			t.Fatal("HCP_CLIENT_SECRET must be set for acceptance tests")
+		}
+
+		if requireAWSCreds {
+			if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+				t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
+			}
+
+			if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+				t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
+			}
+
+			if os.Getenv("AWS_SESSION_TOKEN") == "" {
+				t.Fatal("AWS_SESSION_TOKEN must be set for acceptance tests")
+			}
 		}
 
 		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
