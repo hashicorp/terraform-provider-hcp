@@ -222,6 +222,11 @@ func resourceHvnRouteDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[INFO] Deleting HVN route (%s)", routeID)
 	resp, err := clients.DeleteHVNRouteByID(ctx, client, hvnLink.ID, routeID, loc)
 	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] HVN route (%s) not found, so no action was taken", routeID)
+			return nil
+		}
+
 		return diag.Errorf("unable to delete HVN route (%s): %v", routeID, err)
 	}
 
