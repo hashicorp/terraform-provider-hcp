@@ -80,6 +80,7 @@ Optional:
 
 - **create** (String)
 - **default** (String)
+- **delete** (String)
 
 ## Import
 

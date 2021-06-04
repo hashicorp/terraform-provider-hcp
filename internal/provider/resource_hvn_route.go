@@ -18,6 +18,7 @@ import (
 
 var hvnRouteDefaultTimeout = time.Minute * 1
 var hvnRouteCreateTimeout = time.Minute * 35
+var hvnRouteDeleteTimeout = time.Minute * 25
 
 func resourceHvnRoute() *schema.Resource {
 	return &schema.Resource{
@@ -29,6 +30,7 @@ func resourceHvnRoute() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Default: &hvnRouteDefaultTimeout,
 			Create:  &hvnRouteCreateTimeout,
+			Delete:  &hvnRouteDeleteTimeout,
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceHVNRouteImport,
