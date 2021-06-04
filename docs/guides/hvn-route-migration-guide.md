@@ -8,8 +8,9 @@ description: |-
 # Introducing HVN routes
 
 The HVN route is a new resource that belongs to an HVN. It contains a CIDR block and targets a networking connection: 
-currently, either a peering or transit gateway attachment.
-TODO: expand on why they're being introduced.
+either a peering or transit gateway attachment.
+
+HVN routes provide a general view on how an HVN's traffic is routed across all networking connections and create a flexible way of managing these routing rules.
 
 ## Migrating existing peerings and transit gateway attachments
 
