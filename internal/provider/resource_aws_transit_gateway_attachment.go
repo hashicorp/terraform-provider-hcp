@@ -12,7 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -65,17 +65,6 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Sensitive:   true,
 				ForceNew:    true,
 			},
-			"destination_cidrs": {
-				Description: "The list of associated CIDR ranges. Traffic from these CIDRs will be allowed for all resources in the HVN. Traffic to these CIDRs will be routed into this transit gateway attachment.",
-				Type:        schema.TypeList,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
-				},
-				Required: true,
-				MinItems: 1,
-				ForceNew: true,
-			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.",
@@ -123,16 +112,6 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 	tgwAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	tgwID := d.Get("transit_gateway_id").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
-	rawCIDRs := d.Get("destination_cidrs").([]interface{})
-
-	destinationCIDRs := make([]string, len(rawCIDRs))
-	for i, cidr := range rawCIDRs {
-		strCidr, ok := cidr.(string)
-		if !ok {
-			return diag.Errorf("unable to convert cidr: %v to string", cidr)
-		}
-		destinationCIDRs[i] = strCidr
-	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -169,7 +148,6 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 	createTGWAttachmentParams.HvnLocationOrganizationID = loc.OrganizationID
 	createTGWAttachmentParams.HvnLocationProjectID = loc.ProjectID
 	createTGWAttachmentParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateTGWAttachmentRequest{
-		Cidrs: destinationCIDRs,
 		Hvn: &sharedmodels.HashicorpCloudLocationLink{
 			ID:       hvnID,
 			Location: loc,
@@ -310,9 +288,6 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 	if err := d.Set("transit_gateway_id", tgwAtt.ProviderData.AwsData.TgwID); err != nil {
 		return err
 	}
-	if err := d.Set("destination_cidrs", tgwAtt.Cidrs); err != nil {
-		return err
-	}
 	if err := d.Set("organization_id", tgwAtt.Location.OrganizationID); err != nil {
 		return err
 	}
@@ -350,12 +325,13 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
-	idParts := strings.SplitN(d.Id(), ":", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}", d.Id())
+	idParts := strings.SplitN(d.Id(), ":", 3)
+	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
 	}
 	hvnID := idParts[0]
 	tgwAttID := idParts[1]
+	resourceShareArn := idParts[2]
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		ProjectID: client.Config.ProjectID,
 	}
@@ -368,6 +344,9 @@ func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.Re
 
 	d.SetId(url)
 	if err := d.Set("hvn_id", hvnID); err != nil {
+		return nil, err
+	}
+	if err := d.Set("resource_share_arn", resourceShareArn); err != nil {
 		return nil, err
 	}
 

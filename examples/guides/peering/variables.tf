@@ -17,3 +17,8 @@ variable "peer_id" {
   description = "The ID to use for the HCP network peering."
   type        = string
 }
+
+variable "route_id" {
+  description = "The ID to use for the HCP HVN route."
+  type        = string
+}

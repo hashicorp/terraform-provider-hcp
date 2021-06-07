@@ -102,17 +102,26 @@ func linkURL(l *sharedmodels.HashicorpCloudLocationLink) (string, error) {
 // parseLinkURL parses a link URL into a link. If the URL is malformed, an
 // error is returned.
 //
+// If `expectedType` is provided it will be matched against the resource from
+// the URL and if they don't match the function returns an error. If `expectedType`
+// is an empty string then the resource type just will be inferred from the URL
+// as is.
+//
 // The resulting link location does not include an organization, which is
 // typically required for requests. If organization is needed, use
 // `buildLinkFromURL()`.
-func parseLinkURL(urn string, resourceType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
-	pattern := fmt.Sprintf("^/project/[^/]+/%s/[^/]+$", resourceType)
+func parseLinkURL(urn string, expectedType string) (*sharedmodels.HashicorpCloudLocationLink, error) {
+	pattern := "^/project/[^/]+/[^/]+/[^/]+$"
 	match, _ := regexp.MatchString(pattern, urn)
 	if !match {
-		return nil, fmt.Errorf("url %q is not in the correct format: /project/{project_id}/%s/{id}", urn, resourceType)
+		return nil, fmt.Errorf("url %q is not in the correct format: /project/{project_id}/{resource_type}/{id}", urn)
 	}
 
 	components := strings.Split(urn, "/")
+
+	if expectedType != "" && expectedType != components[3] {
+		return nil, fmt.Errorf("url %q is not in the correct format: /project/{project_id}/%s/{id}", urn, expectedType)
+	}
 
 	return &sharedmodels.HashicorpCloudLocationLink{
 		Type: components[3],

@@ -32,16 +32,23 @@ data "aws_arn" "peer" {
   arn = aws_vpc.peer.arn
 }
 
-resource "hcp_aws_network_peering" "peer" {
-  hvn_id              = hcp_hvn.main.hvn_id
-  peer_vpc_id         = aws_vpc.peer.id
-  peer_account_id     = aws_vpc.peer.owner_id
-  peer_vpc_region     = data.aws_arn.peer.region
-  peer_vpc_cidr_block = aws_vpc.peer.cidr_block
+resource "hcp_aws_network_peering" "dev" {
+  hvn_id          = hcp_hvn.main.hvn_id
+  peering_id      = "dev"
+  peer_vpc_id     = aws_vpc.peer.id
+  peer_account_id = aws_vpc.peer.owner_id
+  peer_vpc_region = data.aws_arn.peer.region
+}
+
+resource "hcp_hvn_route" "main-to-dev" {
+  hvn_link         = hcp_hvn.main.self_link
+  hvn_route_id     = "main-to-dev"
+  destination_cidr = "172.31.0.0/16"
+  target_link      = hcp_aws_network_peering.dev.self_link
 }
 
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  vpc_peering_connection_id = hcp_aws_network_peering.peer.provider_peering_id
+  vpc_peering_connection_id = hcp_aws_network_peering.dev.provider_peering_id
   auto_accept               = true
 }
 ```
@@ -53,14 +60,13 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 - **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
 - **peer_account_id** (String) The account ID of the peer VPC in AWS.
-- **peer_vpc_cidr_block** (String) The CIDR range of the peer VPC in AWS.
 - **peer_vpc_id** (String) The ID of the peer VPC in AWS.
 - **peer_vpc_region** (String) The region of the peer VPC in AWS.
+- **peering_id** (String) The ID of the network peering.
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **peering_id** (String) The ID of the network peering.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

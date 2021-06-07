@@ -30,6 +30,18 @@ export HCP_CLIENT_ID=...
 export HCP_CLIENT_SECRET=...
 ```
 
+For some tests AWS credentials are also required in order to create "customer"
+resources for testing certain HCP features (network peerings and TGW attachments):
+
+```sh
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_SESSION_TOKEN=...
+```
+
+**Note for HCP developers**: this AWS account **MUST NOT** be the same AWS account that is being used by
+your HCP organization (dataplane) otherwise tests would fail.
+
 Tests can then be run by specifying a regular expression defining the tests to run:
 
 ```sh
