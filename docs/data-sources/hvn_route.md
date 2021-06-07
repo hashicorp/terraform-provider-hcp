@@ -15,8 +15,8 @@ The HVN route data source provides information about an existing HVN route.
 
 ```terraform
 data "hcp_hvn_route" "example" {
-  hvn              = var.hvn
-  destination_cidr = var.destination_cidr
+  hvn_link         = var.hvn_link
+  destination_cidr = var.hvn_route_id
 }
 ```
 
@@ -25,8 +25,8 @@ data "hcp_hvn_route" "example" {
 
 ### Required
 
-- **destination_cidr** (String) The destination CIDR of the HVN route
-- **hvn** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
+- **hvn_link** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
+- **hvn_route_id** (String) The ID of the HVN route.
 
 ### Optional
 
@@ -36,6 +36,7 @@ data "hcp_hvn_route" "example" {
 ### Read-Only
 
 - **created_at** (String) The time that the HVN route was created.
+- **destination_cidr** (String) The destination CIDR of the HVN route.
 - **self_link** (String) A unique URL identifying the HVN route.
 - **state** (String) The state of the HVN route.
 - **target_link** (String) A unique URL identifying the target of the HVN route.

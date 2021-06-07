@@ -25,7 +25,7 @@ func TestAccHvn(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccHvn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
-					testSelfLink(resourceName, "test-hvn", HvnResourceType),
+					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
 				),
 			},
 			{
@@ -69,7 +69,7 @@ func TestAccHvn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
-					testSelfLink(resourceName, "test-hvn", HvnResourceType),
+					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
 				),
 			},
 		},
@@ -106,19 +106,24 @@ func testAccCheckHvnExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testSelfLink(name string, expectedID, expectedType string) resource.TestCheckFunc {
+func testLink(resourceName, fieldName, expectedID, expectedType, projectIDSourceResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		selfLink, ok := rs.Primary.Attributes["self_link"]
+		selfLink, ok := rs.Primary.Attributes[fieldName]
 		if !ok {
-			return fmt.Errorf("self_link isn't set")
+			return fmt.Errorf("%s isn't set", fieldName)
 		}
 
-		projectID, ok := rs.Primary.Attributes["project_id"]
+		projectIDSource, ok := s.RootModule().Resources[projectIDSourceResource]
+		if !ok {
+			return fmt.Errorf("not found: %s", projectIDSourceResource)
+		}
+
+		projectID, ok := projectIDSource.Primary.Attributes["project_id"]
 		if !ok {
 			return fmt.Errorf("project_id isn't set")
 		}

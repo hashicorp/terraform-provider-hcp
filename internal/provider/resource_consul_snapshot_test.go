@@ -32,7 +32,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 	resourceName := "hcp_consul_snapshot.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckConsulSnapshotDestroy,
 		Steps: []resource.TestStep{

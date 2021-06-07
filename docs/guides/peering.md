@@ -41,12 +41,19 @@ resource "aws_vpc" "peer" {
 
 // Create an HCP network peering to peer your HVN with your AWS VPC.
 resource "hcp_aws_network_peering" "example" {
-  peering_id          = var.peer_id
-  hvn_id              = hcp_hvn.example.hvn_id
-  peer_vpc_id         = aws_vpc.peer.id
-  peer_account_id     = aws_vpc.peer.owner_id
-  peer_vpc_region     = var.region
-  peer_vpc_cidr_block = aws_vpc.peer.cidr_block
+  peering_id      = var.peer_id
+  hvn_id          = hcp_hvn.example.hvn_id
+  peer_vpc_id     = aws_vpc.peer.id
+  peer_account_id = aws_vpc.peer.owner_id
+  peer_vpc_region = var.region
+}
+
+// Create an HVN route that targets your HCP network peering and matches your AWS VPC's CIDR block
+resource "hcp_hvn_route" "example" {
+  hvn_link         = hcp_hvn.hvn.self_link
+  hvn_route_id     = var.route_id
+  destination_cidr = aws_vpc.peer.cidr_block
+  target_link      = hcp_aws_network_peering.example.self_link
 }
 
 // Accept the VPC peering within your AWS account.

@@ -12,7 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -45,6 +45,13 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			"peering_id": {
+				Description:      "The ID of the network peering.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
+			},
 			"peer_account_id": {
 				Description: "The account ID of the peer VPC in AWS.",
 				Type:        schema.TypeString,
@@ -65,22 +72,6 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
-			},
-			"peer_vpc_cidr_block": {
-				Description:  "The CIDR range of the peer VPC in AWS.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-			},
-			// Optional inputs
-			"peering_id": {
-				Description:      "The ID of the network peering.",
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Computed:         true,
-				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
 			"organization_id": {
@@ -125,7 +116,6 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	peerAccountID := d.Get("peer_account_id").(string)
 	peerVpcID := d.Get("peer_vpc_id").(string)
 	peerVpcRegion := d.Get("peer_vpc_region").(string)
-	peerVpcCidr := d.Get("peer_vpc_cidr_block").(string)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -174,7 +164,6 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 					AccountID: peerAccountID,
 					VpcID:     peerVpcID,
 					Region:    peerVpcRegion,
-					Cidr:      peerVpcCidr,
 				},
 			},
 		},
@@ -314,9 +303,6 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 		return err
 	}
 	if err := d.Set("peer_vpc_region", peering.Target.AwsTarget.Region); err != nil {
-		return err
-	}
-	if err := d.Set("peer_vpc_cidr_block", peering.Target.AwsTarget.Cidr); err != nil {
 		return err
 	}
 	if err := d.Set("organization_id", peering.Hvn.Location.OrganizationID); err != nil {

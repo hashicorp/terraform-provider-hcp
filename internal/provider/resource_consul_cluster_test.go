@@ -29,7 +29,7 @@ func TestAccConsulCluster(t *testing.T) {
 	resourceName := "hcp_consul_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{

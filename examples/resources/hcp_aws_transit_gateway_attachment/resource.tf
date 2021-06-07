@@ -44,7 +44,13 @@ resource "hcp_aws_transit_gateway_attachment" "example" {
   transit_gateway_attachment_id = "example-tgw-attachment"
   transit_gateway_id            = aws_ec2_transit_gateway.example.id
   resource_share_arn            = aws_ram_resource_share.example.arn
-  destination_cidrs             = [aws_vpc.example.cidr_block]
+}
+
+resource "hcp_hvn_route" "route" {
+  hvn_link         = hcp_hvn.main.self_link
+  hvn_route_id     = "hvn-to-tgw-attachment"
+  destination_cidr = aws_vpc.example.cidr_block
+  target_link      = hcp_aws_transit_gateway_attachment.example.self_link
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {

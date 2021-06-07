@@ -57,11 +57,6 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"peer_vpc_cidr_block": {
-				Description: "The CIDR range of the peer VPC in AWS.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"provider_peering_id": {
 				Description: "The peering connection ID used by AWS.",
 				Type:        schema.TypeString,

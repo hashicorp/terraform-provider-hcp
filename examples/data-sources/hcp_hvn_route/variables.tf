@@ -1,9 +1,9 @@
-variable "hvn" {
+variable "hvn_link" {
   description = "The `self_link` of the HashiCorp Virtual Network (HVN)."
   type        = string
 }
 
-variable "destination_cidr" {
-  description = "The destination CIDR of the HVN route."
+variable "hvn_route_id" {
+  description = "The ID of the HVN route ID."
   type        = string
 }
