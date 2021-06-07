@@ -1,4 +1,4 @@
-## 0.7.0 (Unreleased)
+## 0.7.0 (June 07, 2021)
 
 ⚠️ Note: This version contains breaking changes to the `hcp_aws_transit_gateway_attachment` and `hcp_aws_network_peering` resources and data sources. Please pin to the previous version and follow [this migration guide](https://github.com/hashicorp/terraform-provider-hcp/pull/128) when you're ready to migrate. ⚠️
 
