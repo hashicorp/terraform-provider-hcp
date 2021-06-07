@@ -110,56 +110,56 @@ When executing the test, the following steps are taken for each `TestStep`:
    `hcp_hvn` is required. This results in configuration which
    looks like this:
 
-    ```hcl
-    resource "hcp_hvn" "test" {
-        hvn_id         = "test-hvn"
-        cloud_provider = "aws"
-        region         = "us-west-2"
-    }
-    
-    resource "hcp_consul_cluster" "test" {
-        cluster_id = "test-consul-cluster"
-        hvn_id     = hcp_hvn.test.hvn_id
-        tier       = "development"
-    }
-    ```
+   ```hcl
+   resource "hcp_hvn" "test" {
+       hvn_id         = "test-hvn"
+       cloud_provider = "aws"
+       region         = "us-west-2"
+   }
+
+   resource "hcp_consul_cluster" "test" {
+       cluster_id = "test-consul-cluster"
+       hvn_id     = hcp_hvn.test.hvn_id
+       tier       = "development"
+   }
+   ```
 
 1. Assertions are run using the provider API. These use the provider API
    directly rather than asserting against the resource state. For example, to
    verify that the `hcp_consul_cluster` described above was created
    successfully, a test function like this is used:
 
-    ```go
-    func testAccCheckConsulClusterExists(name string) resource.TestCheckFunc {
-        return func(s *terraform.State) error {
-            rs, ok := s.RootModule().Resources[name]
-            if !ok {
-                return fmt.Errorf("not found: %s", name)
-            }
+   ```go
+   func testAccCheckConsulClusterExists(name string) resource.TestCheckFunc {
+       return func(s *terraform.State) error {
+           rs, ok := s.RootModule().Resources[name]
+           if !ok {
+               return fmt.Errorf("not found: %s", name)
+           }
 
-            id := rs.Primary.ID
-            if id == "" {
-                return fmt.Errorf("no ID is set")
-            }
+           id := rs.Primary.ID
+           if id == "" {
+               return fmt.Errorf("no ID is set")
+           }
 
-            client := testAccProvider.Meta().(*clients.Client)
+           client := testAccProvider.Meta().(*clients.Client)
 
-            link, err := buildLinkFromURL(id, ConsulClusterResourceType, client.Config.OrganizationID)
-            if err != nil {
-                return fmt.Errorf("unable to build link for %q: %v", id, err)
-            }
+           link, err := buildLinkFromURL(id, ConsulClusterResourceType, client.Config.OrganizationID)
+           if err != nil {
+               return fmt.Errorf("unable to build link for %q: %v", id, err)
+           }
 
-            clusterID := link.ID
-            loc := link.Location
+           clusterID := link.ID
+           loc := link.Location
 
-            if _, err := clients.GetConsulClusterByID(context.Background(), client, loc, clusterID); err != nil {
-                return fmt.Errorf("unable to read Consul cluster %q: %v", id, err)
-            }
+           if _, err := clients.GetConsulClusterByID(context.Background(), client, loc, clusterID); err != nil {
+               return fmt.Errorf("unable to read Consul cluster %q: %v", id, err)
+           }
 
-            return nil
-        }
-    }
-    ```
+           return nil
+       }
+   }
+   ```
 
    Notice that the only information used from the Terraform state is the ID of
    the resource - though in this case it is necessary to split the ID into
@@ -168,9 +168,9 @@ When executing the test, the following steps are taken for each `TestStep`:
    expected value if possible. The testing framework provides helper functions
    for several common types of check - for example:
 
-    ```go
-    resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
-    ```
+   ```go
+   resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
+   ```
 
 1. The resources created by the test are destroyed. This step happens
    automatically, and is the equivalent of calling `terraform destroy`.
@@ -180,34 +180,41 @@ When executing the test, the following steps are taken for each `TestStep`:
    "dangling resources". The code to ensure that the `hcp_consul_cluster` shown
    above is removed looks like this:
 
-    ```go
-    func testAccCheckConsulClusterDestroy(s *terraform.State) error {
-        client := testAccProvider.Meta().(*clients.Client)
+   ```go
+   func testAccCheckConsulClusterDestroy(s *terraform.State) error {
+       client := testAccProvider.Meta().(*clients.Client)
 
-        for _, rs := range s.RootModule().Resources {
-            switch rs.Type {
-            case "hcp_consul_cluster":
-                id := rs.Primary.ID
+       for _, rs := range s.RootModule().Resources {
+           switch rs.Type {
+           case "hcp_consul_cluster":
+               id := rs.Primary.ID
 
-                link, err := buildLinkFromURL(id, ConsulClusterResourceType, client.Config.OrganizationID)
-                if err != nil {
-                    return fmt.Errorf("unable to build link for %q: %v", id, err)
-                }
+               link, err := buildLinkFromURL(id, ConsulClusterResourceType, client.Config.OrganizationID)
+               if err != nil {
+                   return fmt.Errorf("unable to build link for %q: %v", id, err)
+               }
 
-                clusterID := link.ID
-                loc := link.Location
+               clusterID := link.ID
+               loc := link.Location
 
-                _, err = clients.GetConsulClusterByID(context.Background(), client, loc, clusterID)
-                if err == nil || !clients.IsResponseCodeNotFound(err) {
-                    return fmt.Errorf("didn't get a 404 when reading destroyed Consul cluster %q: %v", id, err)
-                }
+               _, err = clients.GetConsulClusterByID(context.Background(), client, loc, clusterID)
+               if err == nil || !clients.IsResponseCodeNotFound(err) {
+                   return fmt.Errorf("didn't get a 404 when reading destroyed Consul cluster %q: %v", id, err)
+               }
 
-            default:
-                continue
-            }
-        }
-        return nil
-    }
-    ```
+           default:
+               continue
+           }
+       }
+       return nil
+   }
+   ```
 
    These functions usually test only for the resource directly under test.
+
+## Test Time and Consolidation
+
+Because of the increased length of time it takes to run acceptance tests, efforts
+should be made to not create multiples of the same resource for testing purposes. For
+example, datasource tests have been consolidated into their corresponding resource
+tests so that resources may be reused.

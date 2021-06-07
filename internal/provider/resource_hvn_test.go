@@ -12,17 +12,21 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var (
-	testAccHvnConfig = fmt.Sprintf(`
+var testAccHvnConfig = `
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
 	cloud_provider = "aws"
 	region         = "us-west-2"
-}`)
-)
+}
+
+data "hcp_hvn" "test" {
+	hvn_id = hcp_hvn.test.hvn_id
+}
+`
 
 func TestAccHvn(t *testing.T) {
 	resourceName := "hcp_hvn.test"
+	dataSourceName := "data.hcp_hvn.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
@@ -70,6 +74,20 @@ func TestAccHvn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
 					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+				),
+			},
+			{
+				Config: testConfig(testAccHvnConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", dataSourceName, "hvn_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloud_provider", dataSourceName, "cloud_provider"),
+					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", dataSourceName, "cidr_block"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "provider_account_id", dataSourceName, "provider_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
 				),
 			},
 		},
