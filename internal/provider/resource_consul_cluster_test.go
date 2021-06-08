@@ -1,5 +1,3 @@
-// This includes tests against both the resource and the corresponding datasource
-// to shorten testing time.
 package provider
 
 import (
@@ -30,6 +28,8 @@ data "hcp_consul_cluster" "test" {
 }
 `
 
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time.
 func TestAccConsulCluster(t *testing.T) {
 	resourceName := "hcp_consul_cluster.test"
 	dataSourceName := "data.hcp_consul_cluster.test"

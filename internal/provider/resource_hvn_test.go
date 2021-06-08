@@ -1,5 +1,3 @@
-// This includes tests against both the resource and the corresponding datasource
-// to shorten testing time.
 package provider
 
 import (
@@ -26,6 +24,8 @@ data "hcp_hvn" "test" {
 }
 `
 
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time.
 func TestAccHvn(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
