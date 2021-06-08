@@ -1,3 +1,5 @@
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time.
 package provider
 
 import (
@@ -33,6 +35,7 @@ func TestAccHvn(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
+			// Tests create
 			{
 				Config: testConfig(testAccHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
@@ -48,6 +51,7 @@ func TestAccHvn(t *testing.T) {
 					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
 				),
 			},
+			// Tests import
 			{
 				ResourceName: resourceName,
 				ImportState:  true,
@@ -61,6 +65,7 @@ func TestAccHvn(t *testing.T) {
 				},
 				ImportStateVerify: true,
 			},
+			// Tests read
 			{
 				Config: testConfig(testAccHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
@@ -76,6 +81,7 @@ func TestAccHvn(t *testing.T) {
 					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
 				),
 			},
+			// Tests datasource
 			{
 				Config: testConfig(testAccHvnConfig),
 				Check: resource.ComposeTestCheckFunc(

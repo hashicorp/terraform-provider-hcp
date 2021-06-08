@@ -1,3 +1,5 @@
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time.
 package provider
 
 import (
@@ -36,6 +38,7 @@ func TestAccVaultCluster(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
+			// Tests create
 			{
 				Config: testConfig(testAccVaultClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
@@ -89,6 +92,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 				),
 			},
+			// Tests datasource
 			{
 				Config: testConfig(testAccVaultClusterConfig),
 				Check: resource.ComposeTestCheckFunc(

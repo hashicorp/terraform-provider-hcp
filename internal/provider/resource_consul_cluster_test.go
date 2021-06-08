@@ -1,3 +1,5 @@
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time.
 package provider
 
 import (
@@ -37,6 +39,7 @@ func TestAccConsulCluster(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{
+			// Tests create
 			{
 				Config: testConfig(testAccConsulClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
@@ -66,6 +69,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
 				),
 			},
+			// Tests import
 			{
 				ResourceName: resourceName,
 				ImportState:  true,
@@ -80,6 +84,7 @@ func TestAccConsulCluster(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"consul_root_token_accessor_id", "consul_root_token_secret_id"},
 			},
+			// Tests read
 			{
 				Config: testConfig(testAccConsulClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
@@ -109,6 +114,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
 				),
 			},
+			// Tests datasource
 			{
 				Config: testConfig(testAccConsulClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
