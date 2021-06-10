@@ -56,6 +56,13 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			"tier": {
+				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `small`, `medium`, `large`",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
+			},
 			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
@@ -72,9 +79,8 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 			},
 			// computed outputs
-			// TODO: once more tiers are supported and can be changed by users, make this a required input.
 			"tier": {
-				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.",
+				Description: "The tier that the HCP Vault cluster will be provisioned as.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -169,8 +175,20 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	// TODO: Tier is hard-coded for now, but eventually will be required input on the resource.
-	tier := vaultmodels.HashicorpCloudVault20201125TierDEV
+	//tiers from here: https://github.com/hashicorp/hcp-sdk-go/blob/f7f0dd4b49fd46758c2d2c9a151fe3a70e5e271e/clients/cloud-vault-service/preview/2020-11-25/models/hashicorp_cloud_vault20201125_tier.go#L21
+	t, err := d.Get("tier").(string)
+	switch t {
+	 case "development":
+			 tier := vaultmodels.HashicorpCloudVault20201125TierDEV
+	 case "small":
+			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDSMALL
+	 case "medium":
+			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDMEDIUM
+	 case "large":
+			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDLARGE
+	 default:
+			 return diag.Errorf("unable to create Vault cluster (%s): %s is an invalid tier. Valid tiers are 'development', 'small', 'medium', 'large'", clusterID, err)
+	 }
 
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
