@@ -23,6 +23,7 @@ resource "hcp_hvn" "example" {
 resource "hcp_vault_cluster" "example" {
   cluster_id = "vault-cluster"
   hvn_id     = hcp_hvn.example.hvn_id
+  tier       = "small"
 }
 ```
 
@@ -33,6 +34,7 @@ resource "hcp_vault_cluster" "example" {
 
 - **cluster_id** (String) The ID of the HCP Vault cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Vault cluster is associated to.
+- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `development`, `small`, `medium`, `large`.
 
 ### Optional
 
@@ -49,7 +51,7 @@ resource "hcp_vault_cluster" "example" {
 - **organization_id** (String) The ID of the organization this HCP Vault cluster is located in.
 - **project_id** (String) The ID of the project this HCP Vault cluster is located in.
 - **region** (String) The region where the HCP Vault cluster is located.
-- **tier** (String) The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.
+- **tier** (String) The tier that the HCP Vault cluster will be provisioned as.
 - **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
 - **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - **vault_version** (String) The Vault version of the cluster.
