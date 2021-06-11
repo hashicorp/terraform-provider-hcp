@@ -20,6 +20,7 @@ resource "hcp_hvn" "test" {
 resource "hcp_vault_cluster" "test" {
 	cluster_id            = "test-vault-cluster"
 	hvn_id                = hcp_hvn.test.hvn_id
+	tier									= "standard_small"
 }
 
 data "hcp_vault_cluster" "test" {
@@ -45,7 +46,7 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckVaultClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "standard_small"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
@@ -79,7 +80,7 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckVaultClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "standard_small"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
