@@ -59,7 +59,7 @@ func resourceVaultCluster() *schema.Resource {
 			"tier": {
 				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`",
 				Type:             schema.TypeString,
-				Computed: 				true,
+				Computed:         true,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
@@ -175,17 +175,17 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	//TODO: it is less hardcoded now, but a patch to introduce `size` would be ideal after {vault,consule}models update to bring consistency between {vault,consul}_cluster code
 	t, err := d.Get("tier").(string)
 	switch t {
-	 case "development":
-			 tier := vaultmodels.HashicorpCloudVault20201125TierDEV
-	 case "standard_small":
-			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDSMALL
-	 case "standard_medium":
-			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDMEDIUM
-	 case "standard_large":
-			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDLARGE
-	 default:
-			 return diag.Errorf("unable to create Vault cluster (%s): %s is an invalid tier. Valid tiers are 'development', 'small', 'medium', 'large'", clusterID, err)
-	 }
+	case "development":
+		tier := vaultmodels.HashicorpCloudVault20201125TierDEV
+	case "standard_small":
+		tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDSMALL
+	case "standard_medium":
+		tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDMEDIUM
+	case "standard_large":
+		tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDLARGE
+	default:
+		return diag.Errorf("unable to create Vault cluster (%s): %s is an invalid tier. Valid tiers are 'development', 'small', 'medium', 'large'", clusterID, err)
+	}
 
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
