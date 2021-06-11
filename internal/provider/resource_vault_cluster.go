@@ -60,8 +60,9 @@ func resourceVaultCluster() *schema.Resource {
 			"tier": {
 				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`",
 				Type:             schema.TypeString,
-				Required:         true,
+				Required:         false,
 				ForceNew:         true,
+				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.ToLower(old) == strings.ToLower(new)
