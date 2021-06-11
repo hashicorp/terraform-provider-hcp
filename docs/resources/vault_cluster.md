@@ -34,7 +34,7 @@ resource "hcp_vault_cluster" "example" {
 
 - **cluster_id** (String) The ID of the HCP Vault cluster.
 - **hvn_id** (String) The ID of the HVN this HCP Vault cluster is associated to.
-- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `development`, `small`, `medium`, `large`.
+- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`.
 
 ### Optional
 

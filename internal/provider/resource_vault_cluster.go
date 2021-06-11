@@ -57,8 +57,9 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"tier": {
-				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `small`, `medium`, `large`",
+				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`",
 				Type:             schema.TypeString,
+				Computed: 				true,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
@@ -79,11 +80,6 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 			},
 			// computed outputs
-			"tier": {
-				Description: "The tier that the HCP Vault cluster will be provisioned as.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -176,15 +172,16 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
 	//tiers from here: https://github.com/hashicorp/hcp-sdk-go/blob/f7f0dd4b49fd46758c2d2c9a151fe3a70e5e271e/clients/cloud-vault-service/preview/2020-11-25/models/hashicorp_cloud_vault20201125_tier.go#L21
+	//TODO: it is less hardcoded now, but a patch to introduce `size` would be ideal after {vault,consule}models update to bring consistency between {vault,consul}_cluster code
 	t, err := d.Get("tier").(string)
 	switch t {
 	 case "development":
 			 tier := vaultmodels.HashicorpCloudVault20201125TierDEV
-	 case "small":
+	 case "standard_small":
 			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDSMALL
-	 case "medium":
+	 case "standard_medium":
 			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDMEDIUM
-	 case "large":
+	 case "standard_large":
 			 tier := vaultmodels.HashicorpCloudVault20201125TierSTANDARDLARGE
 	 default:
 			 return diag.Errorf("unable to create Vault cluster (%s): %s is an invalid tier. Valid tiers are 'development', 'small', 'medium', 'large'", clusterID, err)
