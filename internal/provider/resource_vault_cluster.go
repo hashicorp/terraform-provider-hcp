@@ -182,7 +182,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 				InitialVersion: vaultVersion,
 			},
 			//TODO: HashicorpCloudVault20201125Tier still hardcoded as in consul
-			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.Replace(strings.ToUpper(d.Get("tier").(string)), "_", "", -1)),
+			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
 			NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 				NetworkID:        hvn.ID,
 				PublicIpsEnabled: publicEndpoint,
