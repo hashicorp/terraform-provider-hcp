@@ -153,7 +153,6 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	// TODO: Update the validation once vaultmodels got consistent with consulmodels
 	err := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
 		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
