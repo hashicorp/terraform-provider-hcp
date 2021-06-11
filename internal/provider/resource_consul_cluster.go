@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -450,12 +451,12 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if publicEndpoint {
-		if err := d.Set("consul_public_endpoint_url", cluster.DNSNames.Public); err != nil {
+		if err := d.Set("consul_public_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Public)); err != nil {
 			return err
 		}
 	}
 
-	if err := d.Set("consul_private_endpoint_url", cluster.DNSNames.Private); err != nil {
+	if err := d.Set("consul_private_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Private)); err != nil {
 		return err
 	}
 
