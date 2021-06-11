@@ -26,13 +26,19 @@ resource "hcp_consul_cluster" "test" {
 data "hcp_consul_cluster" "test" {
 	cluster_id = hcp_consul_cluster.test.cluster_id
 }
+
+resource "hcp_consul_cluster_root_token" "test" {
+	cluster_id = hcp_consul_cluster.test.cluster_id
+}
 `
 
-// This includes tests against both the resource and the corresponding datasource
-// to shorten testing time.
+// This includes tests against both the resource, the corresponding datasource,
+// and creation of the Consul cluster root token resource in order to shorten
+// testing time.
 func TestAccConsulCluster(t *testing.T) {
 	resourceName := "hcp_consul_cluster.test"
 	dataSourceName := "data.hcp_consul_cluster.test"
+	rootTokenResourceName := "hcp_consul_cluster_root_token.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
@@ -140,6 +146,16 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
 					resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_link", dataSourceName, "primary_link"),
+				),
+			},
+			// Tests root token
+			{
+				Config: testConfig(testAccConsulClusterConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(rootTokenResourceName, "cluster_id", "test-consul-cluster"),
+					resource.TestCheckResourceAttrSet(rootTokenResourceName, "accessor_id"),
+					resource.TestCheckResourceAttrSet(rootTokenResourceName, "secret_id"),
+					resource.TestCheckResourceAttrSet(rootTokenResourceName, "kubernetes_secret"),
 				),
 			},
 		},
