@@ -153,10 +153,15 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
+	//TODO: remove this when API will be 'DEVELOPMENT'
+	if strings.ToLower(v.(string)) == "development" {
+		v = "dev"
+	}
+
 	err := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
 		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
-		expectedEnumList := strings.ToLower(enumList)
+		expectedEnumList := strings.ToLower(strings.Replace(enumList, "DEV", "DEVELOPMENT", 1)) //TODO: strings.ToLower(enumList) when API updated (DEV -> DEVELOPMENT)
 		msg := fmt.Sprintf("expected %v to be one of: %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
