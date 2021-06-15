@@ -1,3 +1,11 @@
+## 0.8.0 (Unreleased)
+
+⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in issues for existing clusters whose endpoint urls are already adjusted by a workaround. ⚠️
+
+FIXES:
+* resource/consul_cluster: returns complete endpoint URLs (#145)
+* resource/vault_cluster: returns complete endpoint URLs (#145)
+
 ## 0.7.0 (June 07, 2021)
 
 ⚠️ Note: This version contains breaking changes to the `hcp_aws_transit_gateway_attachment` and `hcp_aws_network_peering` resources and data sources. Please pin to the previous version and follow [this migration guide](https://github.com/hashicorp/terraform-provider-hcp/pull/128) when you're ready to migrate. ⚠️
