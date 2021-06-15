@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -56,6 +57,17 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			"tier": {
+				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				ValidateDiagFunc: validateVaultClusterTier,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.ToLower(old) == strings.ToLower(new)
+				},
+			},
 			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
@@ -72,12 +84,6 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 			},
 			// computed outputs
-			// TODO: once more tiers are supported and can be changed by users, make this a required input.
-			"tier": {
-				Description: "The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -169,9 +175,6 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	// TODO: Tier is hard-coded for now, but eventually will be required input on the resource.
-	tier := vaultmodels.HashicorpCloudVault20201125TierDEV
-
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
 	vaultCuster := &vaultmodels.HashicorpCloudVault20201125InputCluster{
@@ -179,7 +182,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 				InitialVersion: vaultVersion,
 			},
-			Tier: tier,
+			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
 			NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 				NetworkID:        hvn.ID,
 				PublicIpsEnabled: publicEndpoint,
@@ -210,6 +213,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// Get the created Vault cluster.
 	cluster, err := clients.GetVaultClusterByID(ctx, client, loc, payload.ClusterID)
+
 	if err != nil {
 		return diag.Errorf("unable to retrieve Vault cluster (%s): %v", payload.ClusterID, err)
 	}
