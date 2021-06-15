@@ -58,13 +58,13 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"tier": {
-				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`",
+				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
-				DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
@@ -177,18 +177,12 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
-	clusterTier := strings.ToUpper(d.Get("tier").(string))
-	//TODO: remove this when API will be 'DEVELOPMENT'
-	if strings.ToLower(clusterTier) == "development" {
-		clusterTier = "DEV"
-	}
-
 	vaultCuster := &vaultmodels.HashicorpCloudVault20201125InputCluster{
 		Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 			VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 				InitialVersion: vaultVersion,
 			},
-			Tier: vaultmodels.HashicorpCloudVault20201125Tier(clusterTier),
+			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
 			NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 				NetworkID:        hvn.ID,
 				PublicIpsEnabled: publicEndpoint,
@@ -328,10 +322,7 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	if err := d.Set("region", cluster.Location.Region.Region); err != nil {
 		return err
 	}
-	//TODO: remove this when API will be 'DEVELOPMENT'
-	if cluster.Config.Tier == "DEV" {
-		cluster.Config.Tier = "DEVELOPMENT"
-	}
+
 	if err := d.Set("tier", cluster.Config.Tier); err != nil {
 		return err
 	}

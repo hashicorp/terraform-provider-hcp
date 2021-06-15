@@ -39,7 +39,7 @@ resource "hcp_vault_cluster" "example" {
 - **id** (String) The ID of this resource.
 - **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
-- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `development`, `standard_small`, `standard_medium`, `standard_large`
+- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
