@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testAccCheckFullURL(name, key string) resource.TestCheckFunc {
+func testAccCheckFullURL(name, key, port string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -21,8 +21,10 @@ func testAccCheckFullURL(name, key string) resource.TestCheckFunc {
 			return fmt.Errorf("URL missing scheme")
 		}
 
-		if !strings.HasSuffix(ep, ":8200") {
-			return fmt.Errorf("URL missing port")
+		if port != "" {
+			if !strings.HasSuffix(ep, fmt.Sprintf(":%s", port)) {
+				return fmt.Errorf("URL missing port")
+			}
 		}
 
 		return nil
