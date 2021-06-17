@@ -1,3 +1,11 @@
+## 0.8.0 (Unreleased)
+
+⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in issues for existing clusters whose endpoint urls are already adjusted by a workaround. ⚠️
+
+FIXES:
+* resource/consul_cluster: returns complete endpoint URLs (#145)
+* resource/vault_cluster: returns complete endpoint URLs (#145)
+
 ## 0.7.0 (June 07, 2021)
 
 ⚠️ Note: This version contains breaking changes to the `hcp_aws_transit_gateway_attachment` and `hcp_aws_network_peering` resources and data sources. Please pin to the previous version and follow [this migration guide](https://github.com/hashicorp/terraform-provider-hcp/pull/128) when you're ready to migrate. ⚠️
@@ -45,29 +53,29 @@ IMPROVEMENTS:
 ## 0.4.1 (April 09, 2021)
 
 FIXES:
-- resource/consul_cluster: Set "computed=true" option for the vm size (#100)
+* resource/consul_cluster: Set "computed=true" option for the vm size (#100)
 
 ## 0.4.0 (April 07, 2021)
 
 ⚠️ Note: There is an issue with this version of the HCP Provider in which existing Consul clusters that do not specify size will be recommended by Terraform to be recreated on the next terraform apply, resulting in potential data loss. Please upgrade to the patch v0.4.1 or beyond to avoid this issue. ⚠️
 
 FEATURES:
-- **New resource** `hcp_vault_cluster` (#97)
-- **New resource** `hcp_vault_cluster_admin_token` (#97)
+* **New resource** `hcp_vault_cluster` (#97)
+* **New resource** `hcp_vault_cluster_admin_token` (#97)
 
 IMPROVEMENTS:
-- all: Log import ID used when an import fails due to parsing (#82)
-- all: Add comment to clarify that Links can be sent in API requests (#82)
-- ci: Add github checks (#90)
-- docs: Add pull request lifecycle docs (#89)
-- docs: Add issue lifecycle docs (#93)
-- datasource/consul_agent_helm_config: Remove extraneous protocol from FQDN string (#95)
-- resource/consul_cluster: Add VM size to Consul cluster (#77)
-- resource/aws_network_peering: Update comments, docs, and messages to use correct capitalization for network peering (#82)
-- resource/aws_network_peering: Update peering wait function to use helper (#82)
+* all: Log import ID used when an import fails due to parsing (#82)
+* all: Add comment to clarify that Links can be sent in API requests (#82)
+* ci: Add github checks (#90)
+* docs: Add pull request lifecycle docs (#89)
+* docs: Add issue lifecycle docs (#93)
+* datasource/consul_agent_helm_config: Remove extraneous protocol from FQDN string (#95)
+* resource/consul_cluster: Add VM size to Consul cluster (#77)
+* resource/aws_network_peering: Update comments, docs, and messages to use correct capitalization for network peering (#82)
+* resource/aws_network_peering: Update peering wait function to use helper (#82)
 
 FIXES:
-- all: Ensure context is being passed for all HCP API calls (#82)
+* all: Ensure context is being passed for all HCP API calls (#82)
 
 ## 0.3.0 (March 25, 2021)
 
