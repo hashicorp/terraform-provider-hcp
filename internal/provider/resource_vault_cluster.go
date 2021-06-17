@@ -342,11 +342,13 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	}
 
 	if publicEndpoint {
+		// Port 8200 required to communicate with HCP Vault via HTTPS
 		if err := d.Set("vault_public_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Public)); err != nil {
 			return err
 		}
 	}
 
+	// Port 8200 required to communicate with HCP Vault via HTTPS
 	if err := d.Set("vault_private_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Private)); err != nil {
 		return err
 	}
