@@ -1,12 +1,13 @@
 ## 0.8.0 (Unreleased)
 
-⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in issues for existing clusters whose endpoint urls are already adjusted by a workaround. ⚠️
+⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in a breaking change for existing clusters whose endpoint URLs are already adjusted to be a full URL with string helpers. 
+Please remove any functions that adjust the output from the `vault_private_endpoint_url`, `vault_public_endpoint_url`, `consul_private_endpoint_url`, and `consul_public_endpoint_url` when upgrading to this version. ⚠️
 
 IMPROVEMENTS:
 * resource/vault_cluster: `tier` is now an optional input (#144)
 * tests: expands acceptance test coverage to data sources and dependent resources (#135, #142, #150)
 
-FIXES:
+BREAKING CHANGES:
 * resource/consul_cluster: returns complete endpoint URLs (#145)
 * resource/vault_cluster: returns complete endpoint URLs (#145)
 
