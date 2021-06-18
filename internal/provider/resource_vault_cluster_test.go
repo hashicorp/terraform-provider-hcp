@@ -12,62 +12,72 @@ import (
 
 var testAccVaultClusterConfig = `
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
-	cloud_provider = "aws"
-	region         = "us-west-2"
+	hvn_id           = "test-hvn"
+	cloud_provider   = "aws"
+	region           = "us-west-2"
 }
 
 resource "hcp_vault_cluster" "test" {
-	cluster_id            = "test-vault-cluster"
-	hvn_id                = hcp_hvn.test.hvn_id
-	tier									= "dev"
+	cluster_id       = "test-vault-cluster"
+	hvn_id           = hcp_hvn.test.hvn_id
+	tier             = "dev"
 }
 
 data "hcp_vault_cluster" "test" {
-	cluster_id = hcp_vault_cluster.test.cluster_id
+	cluster_id       = hcp_vault_cluster.test.cluster_id
+}
+
+resource "hcp_vault_cluster_admin_token" "test" {
+	cluster_id       = hcp_vault_cluster.test.cluster_id
 }
 `
 
-// This includes tests against both the resource and the corresponding datasource
+// This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
 func TestAccVaultCluster(t *testing.T) {
-	resourceName := "hcp_vault_cluster.test"
-	dataSourceName := "data.hcp_vault_cluster.test"
+	vaultClusterResourceName := "hcp_vault_cluster.test"
+	vaultClusterDataSourceName := "data.hcp_vault_cluster.test"
+	adminTokenResourceName := "hcp_vault_cluster_admin_token.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
-			// Tests create
+			// This step tests Vault cluster and admin token resource creation.
 			{
 				Config: testConfig(testAccVaultClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
-					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
-					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "namespace", "admin"),
-					resource.TestCheckResourceAttrSet(resourceName, "vault_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vault_public_endpoint_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "vault_private_endpoint_url"),
-					testAccCheckFullURL(resourceName, "vault_private_endpoint_url", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "cluster_id", "test-vault-cluster"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "DEV"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "cloud_provider", "aws"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "region", "us-west-2"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "false"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "namespace", "admin"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_version"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "project_id"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "vault_public_endpoint_url"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", ""),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "created_at"),
+
+					// Verifies admin token
+					resource.TestCheckResourceAttr(adminTokenResourceName, "cluster_id", "test-vault-cluster"),
+					resource.TestCheckResourceAttrSet(adminTokenResourceName, "token"),
+					resource.TestCheckResourceAttrSet(adminTokenResourceName, "created_at"),
 				),
 			},
 			// This step simulates an import of the resource.
 			{
-				ResourceName: resourceName,
+				ResourceName: vaultClusterResourceName,
 				ImportState:  true,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
+					rs, ok := s.RootModule().Resources[vaultClusterResourceName]
 					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
+						return "", fmt.Errorf("not found: %s", vaultClusterResourceName)
 					}
 
 					return rs.Primary.Attributes["cluster_id"], nil
@@ -78,42 +88,42 @@ func TestAccVaultCluster(t *testing.T) {
 			{
 				Config: testConfig(testAccVaultClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-vault-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEV"),
-					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
-					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "namespace", "admin"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "vault_version"),
-					resource.TestCheckNoResourceAttr(resourceName, "vault_public_endpoint_url"),
-					resource.TestCheckResourceAttrSet(resourceName, "vault_private_endpoint_url"),
-					testAccCheckFullURL(resourceName, "vault_private_endpoint_url", "8200"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "cluster_id", "test-vault-cluster"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "DEV"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "cloud_provider", "aws"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "region", "us-west-2"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "false"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "namespace", "admin"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_version"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "vault_public_endpoint_url"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "created_at"),
 				),
 			},
 			// Tests datasource
 			{
 				Config: testConfig(testAccVaultClusterConfig),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", dataSourceName, "cluster_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", dataSourceName, "hvn_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "public_endpoint", dataSourceName, "public_endpoint"),
-					resource.TestCheckResourceAttrPair(resourceName, "min_vault_version", dataSourceName, "min_vault_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "tier", dataSourceName, "tier"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloud_provider", dataSourceName, "cloud_provider"),
-					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "region"),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace", dataSourceName, "namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_version", dataSourceName, "vault_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_public_endpoint_url", dataSourceName, "vault_public_endpoint_url"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_private_endpoint_url", dataSourceName, "vault_private_endpoint_url"),
-					testAccCheckFullURL(resourceName, "vault_private_endpoint_url", "8200"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "cluster_id", vaultClusterDataSourceName, "cluster_id"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "hvn_id", vaultClusterDataSourceName, "hvn_id"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "public_endpoint", vaultClusterDataSourceName, "public_endpoint"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "min_vault_version", vaultClusterDataSourceName, "min_vault_version"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "tier", vaultClusterDataSourceName, "tier"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "organization_id", vaultClusterDataSourceName, "organization_id"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "project_id", vaultClusterDataSourceName, "project_id"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "cloud_provider", vaultClusterDataSourceName, "cloud_provider"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "region", vaultClusterDataSourceName, "region"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "namespace", vaultClusterDataSourceName, "namespace"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_version", vaultClusterDataSourceName, "vault_version"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_public_endpoint_url", vaultClusterDataSourceName, "vault_public_endpoint_url"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_private_endpoint_url", vaultClusterDataSourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
 				),
 			},
 		},

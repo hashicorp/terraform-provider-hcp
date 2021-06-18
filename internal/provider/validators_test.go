@@ -353,3 +353,41 @@ func Test_validateConsulClusterSize(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateVaultClusterTier(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid tier lowercase": {
+			input:    "dev",
+			expected: nil,
+		},
+		"valid tier uppercase": {
+			input:    "STANDARD_SMALL",
+			expected: nil,
+		},
+		"valid tier mixedcase": {
+			input:    "StanDard_LargE",
+			expected: nil,
+		},
+		"invalid tier": {
+			input: "development",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "expected 'development' to be one of: [dev standard_small standard_medium standard_large]",
+					Detail:        "expected 'development' to be one of: [dev standard_small standard_medium standard_large] (value is case-insensitive).",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateVaultClusterTier(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}

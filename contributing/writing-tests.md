@@ -18,6 +18,10 @@ acceptance tests and run them for you on our side. This might mean that your PR
 takes a bit longer to merge, but it most definitely is not a blocker for
 contributions.
 
+## Acceptance Tests Take a While to Run
+
+These acceptance tests create real resources, some of which can take up to 15-20 minutes each to spin up and tear down. For this reason, we urge contributors to consolidate acceptance tests on related resources in one test file. For example, the `resource_vault_cluster_test.go` reuses one test config to test the Vault cluster resource, the Vault cluster datasource, and the dependent Vault cluster admin token resource. This helps speed up the acceptance test runtime by creating a Vault cluster, the most time-intensive resource, only once.
+
 ## Running an Acceptance Test
 
 Acceptance tests can be run using the `testacc` target in the
