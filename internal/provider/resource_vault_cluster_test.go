@@ -20,7 +20,7 @@ resource "hcp_hvn" "test" {
 resource "hcp_vault_cluster" "test" {
 	cluster_id       = "test-vault-cluster"
 	hvn_id           = hcp_hvn.test.hvn_id
-	tier		     = "dev"
+	tier             = "dev"
 }
 
 data "hcp_vault_cluster" "test" {
