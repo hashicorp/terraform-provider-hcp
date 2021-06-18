@@ -22,7 +22,7 @@ var defaultVaultClusterTimeout = time.Minute * 5
 
 // createTimeout is the amount of time that can elapse
 // before a cluster create operation should timeout.
-var createVaultClusterTimeout = time.Minute * 35
+var createUpdateVaultClusterTimeout = time.Minute * 35
 
 // deleteTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
@@ -33,9 +33,11 @@ func resourceVaultCluster() *schema.Resource {
 		Description:   "The Vault cluster resource allows you to manage an HCP Vault cluster.",
 		CreateContext: resourceVaultClusterCreate,
 		ReadContext:   resourceVaultClusterRead,
+		UpdateContext: resourceVaultClusterUpdate,
 		DeleteContext: resourceVaultClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create:  &createVaultClusterTimeout,
+			Create:  &createUpdateVaultClusterTimeout,
+			Update:  &createUpdateTimeoutDuration,
 			Delete:  &deleteVaultClusterTimeout,
 			Default: &defaultVaultClusterTimeout,
 		},
@@ -58,6 +60,7 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Optional fields
 			"tier": {
 				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).",
 				Type:             schema.TypeString,
@@ -69,13 +72,11 @@ func resourceVaultCluster() *schema.Resource {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
-			// optional fields
 			"public_endpoint": {
 				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				ForceNew:    true,
 			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
@@ -84,7 +85,7 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSemVer,
 				ForceNew:         true,
 			},
-			// computed outputs
+			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -259,6 +260,61 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Cluster found, update resource data.
+	if err := setVaultClusterResourceData(d, cluster); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), VaultClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	loc := link.Location
+
+	log.Printf("[INFO] Reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetVaultClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Vault cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// Confirm public_endpoint has changed. This is currently the only field that can be updated.
+	changed := d.HasChange("public_endpoint")
+	if !changed {
+		return nil
+	}
+
+	// Invoke update cluster endpoint.
+	updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, cluster.Location, clusterID, d.Get("public_endpoint").(bool))
+	if err != nil {
+		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// Wait for the update cluster operation.
+	if err := clients.WaitForOperation(ctx, client, "update Vault cluster", cluster.Location, updateResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to update Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// Get the updated Vault cluster.
+	cluster, err = clients.GetVaultClusterByID(ctx, client, loc, clusterID)
+
+	if err != nil {
+		return diag.Errorf("unable to retrieve Vault cluster (%s): %v", clusterID, err)
+	}
+
 	if err := setVaultClusterResourceData(d, cluster); err != nil {
 		return diag.FromErr(err)
 	}
