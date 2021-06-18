@@ -2,6 +2,10 @@
 
 ⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in issues for existing clusters whose endpoint urls are already adjusted by a workaround. ⚠️
 
+IMPROVEMENTS:
+* resource/vault_cluster: `tier` is now an optional input (#144)
+* tests: expands acceptance test coverage to data sources and dependent resources (#135, #142, #150)
+
 FIXES:
 * resource/consul_cluster: returns complete endpoint URLs (#145)
 * resource/vault_cluster: returns complete endpoint URLs (#145)
