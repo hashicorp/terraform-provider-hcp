@@ -1,8 +1,28 @@
 ## 0.8.0 (Unreleased)
 
-⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in issues for existing clusters whose endpoint urls are already adjusted by a workaround. ⚠️
+⚠️ Note: This version fixes a bug where the Consul and Vault clusters' `*_endpoint_url` outputs did not return complete URLs. This may result in a breaking change for existing clusters whose endpoint URLs are already adjusted to be a full URL with string helpers. 
+Please remove any functions that adjust the output of the `vault_private_endpoint_url`, `vault_public_endpoint_url`, `consul_private_endpoint_url`, and `consul_public_endpoint_url` when upgrading to this version. ⚠️
 
-FIXES:
+For example, your Vault provider configuration might need to change:
+
+```
+# before
+provider "vault" {
+  address = join("", ["https://", hcp_vault_cluster.example.vault_public_endpoint_url, ":8200"])
+}
+
+# after
+provider "vault" {
+  address = hcp_vault_cluster.example.vault_public_endpoint_url
+}
+```
+
+IMPROVEMENTS:
+* resource/vault_cluster: `tier` is now an optional input, with the options `dev`, `standard_small`, `standard_medium`, and `standard_large` (#144) (our first open-source contribution - thanks @waxb!)
+* resource/consul_cluster: `plus` is now available as a `tier` option (#148)
+* tests: expands acceptance test coverage to data sources and dependent resources (#135, #142, #150)
+
+BREAKING CHANGES:
 * resource/consul_cluster: returns complete endpoint URLs (#145)
 * resource/vault_cluster: returns complete endpoint URLs (#145)
 
