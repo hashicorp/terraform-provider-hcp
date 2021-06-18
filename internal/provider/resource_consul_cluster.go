@@ -69,8 +69,7 @@ func resourceConsulCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"tier": {
-				// TODO: link to HCP Consul feature tier page when it is available
-				Description:      "The tier that the HCP Consul cluster will be provisioned as.  Only `development` and `standard` are available at this time.",
+				Description:      "The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time. See [pricing information](https://cloud.hashicorp.com/pricing/consul).",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,

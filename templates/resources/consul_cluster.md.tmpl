@@ -7,13 +7,16 @@ description: |-
 
 # {{.Type}} ({{.Name}})
 
+-> **Note:** The `primary_link` attribute is related to federation, a feature that is currently in private beta.
+
+-> **Note:** The `plus` tier is currently in private beta.
+
 {{ .Description | trimspace }}
 
 ## Example Usage
 
 {{ tffile "examples/resources/hcp_consul_cluster/resource.tf" }}
 
--> **Note:** The `primary_link` attribute is related to federation, a feature that is currently in private beta.
 {{ .SchemaMarkdown | trimspace }}
 
 ## Import
