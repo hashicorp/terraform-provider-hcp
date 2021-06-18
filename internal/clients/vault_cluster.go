@@ -85,3 +85,28 @@ func CreateVaultClusterAdminToken(ctx context.Context, client *Client, loc *shar
 
 	return resp.Payload, nil
 }
+
+// UpdateVaultCluster will make a call to the Vault service to enable or disable public IPs for the Vault cluster.
+func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string, enablePublicIps bool) (*vaultmodels.HashicorpCloudVault20201125UpdatePublicIpsResponse, error) {
+
+	updateParams := vault_service.NewUpdatePublicIpsParams()
+	updateParams.Context = ctx
+	updateParams.ClusterID = clusterID
+	updateParams.LocationProjectID = loc.ProjectID
+	updateParams.LocationOrganizationID = loc.OrganizationID
+	updateParams.Body = &vaultmodels.HashicorpCloudVault20201125UpdatePublicIpsRequest{
+		// ClusterID and Location are repeated because the values above are required to populate the URL,
+		// and the values below are required in the API request body
+		ClusterID:       clusterID,
+		Location:        loc,
+		EnablePublicIps: enablePublicIps,
+	}
+
+	updateResp, err := client.Vault.UpdatePublicIps(updateParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResp.Payload, nil
+}
