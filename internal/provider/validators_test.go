@@ -267,6 +267,18 @@ func Test_validateConsulClusterTier(t *testing.T) {
 		input    string
 		expected diag.Diagnostics
 	}{
+		"development": {
+			input:    "development",
+			expected: nil,
+		},
+		"standard": {
+			input:    "standard",
+			expected: nil,
+		},
+		"plus": {
+			input:    "plus",
+			expected: nil,
+		},
 		"valid tier lowercase": {
 			input:    "development",
 			expected: nil,
@@ -284,8 +296,8 @@ func Test_validateConsulClusterTier(t *testing.T) {
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "expected dev to be one of [DEVELOPMENT STANDARD]",
-					Detail:        "expected dev to be one of [DEVELOPMENT STANDARD] (value is case-insensitive).",
+					Summary:       "expected dev to be one of [DEVELOPMENT STANDARD PLUS]",
+					Detail:        "expected dev to be one of [DEVELOPMENT STANDARD PLUS] (value is case-insensitive).",
 					AttributePath: nil,
 				},
 			},
