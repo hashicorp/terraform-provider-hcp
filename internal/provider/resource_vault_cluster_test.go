@@ -12,23 +12,23 @@ import (
 
 var testAccVaultClusterConfig = `
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
-	cloud_provider = "aws"
-	region         = "us-west-2"
+	hvn_id           = "test-hvn"
+	cloud_provider   = "aws"
+	region           = "us-west-2"
 }
 
 resource "hcp_vault_cluster" "test" {
-	cluster_id            = "test-vault-cluster"
-	hvn_id                = hcp_hvn.test.hvn_id
-	tier									= "dev"
+	cluster_id       = "test-vault-cluster"
+	hvn_id           = hcp_hvn.test.hvn_id
+	tier		     = "dev"
 }
 
 data "hcp_vault_cluster" "test" {
-	cluster_id = hcp_vault_cluster.test.cluster_id
+	cluster_id       = hcp_vault_cluster.test.cluster_id
 }
 
 resource "hcp_vault_cluster_admin_token" "test" {
-	cluster_id        = hcp_vault_cluster.test.cluster_id
+	cluster_id       = hcp_vault_cluster.test.cluster_id
 }
 `
 
