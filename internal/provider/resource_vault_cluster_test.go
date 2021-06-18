@@ -24,6 +24,25 @@ resource "hcp_vault_cluster" "test" {
 }
 
 data "hcp_vault_cluster" "test" {
+	cluster_id = hcp_vault_cluster.test.cluster_id
+}
+`
+
+var testAccUpdatedVaultClusterConfig = `
+resource "hcp_hvn" "test" {
+	hvn_id         = "test-hvn"
+	cloud_provider = "aws"
+	region         = "us-west-2"
+}
+
+resource "hcp_vault_cluster" "test" {
+	cluster_id            = "test-vault-cluster"
+	hvn_id                = hcp_hvn.test.hvn_id
+	tier				  = "dev"
+	public_endpoint       = true
+}
+
+data "hcp_vault_cluster" "test" {
 	cluster_id       = hcp_vault_cluster.test.cluster_id
 }
 
@@ -124,6 +143,18 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_private_endpoint_url", vaultClusterDataSourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
+				),
+			},
+			// This step verifies the successful update of updatable fields.
+			{
+				Config: testConfig(testAccUpdatedVaultClusterConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(resourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(resourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(resourceName, "vault_private_endpoint_url", "8200"),
 				),
 			},
 		},
