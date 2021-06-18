@@ -4,7 +4,8 @@
 Please remove any functions that adjust the output from the `vault_private_endpoint_url`, `vault_public_endpoint_url`, `consul_private_endpoint_url`, and `consul_public_endpoint_url` when upgrading to this version. ⚠️
 
 IMPROVEMENTS:
-* resource/vault_cluster: `tier` is now an optional input (#144)
+* resource/vault_cluster: `tier` is now an optional input, with the options `dev`, `standard_small`, `standard_medium`, and `standard_large` (#144)
+* resource/consul_cluster: `plus` is now available as a `tier` option (#148)
 * tests: expands acceptance test coverage to data sources and dependent resources (#135, #142, #150)
 
 BREAKING CHANGES:
