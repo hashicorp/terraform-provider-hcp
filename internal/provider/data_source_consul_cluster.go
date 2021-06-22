@@ -16,7 +16,7 @@ func dataSourceConsulCluster() *schema.Resource {
 		Description: "The cluster data source provides information about an existing HCP Consul cluster.",
 		ReadContext: dataSourceConsulClusterRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &defaultClusterTimeoutDuration,
+			Default: &defaultConsulClusterTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs

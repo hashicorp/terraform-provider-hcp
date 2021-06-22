@@ -17,17 +17,17 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/input"
 )
 
-// defaultClusterTimeoutDuration is the amount of time that can elapse
+// defaultClusterTimeout is the amount of time that can elapse
 // before a cluster read operation should timeout.
-var defaultClusterTimeoutDuration = time.Minute * 5
+var defaultConsulClusterTimeout = time.Minute * 5
 
-// createUpdateTimeoutDuration is the amount of time that can elapse
+// createUpdateTimeout is the amount of time that can elapse
 // before a cluster create or update operation should timeout.
-var createUpdateTimeoutDuration = time.Minute * 35
+var createUpdateConsulClusterTimeout = time.Minute * 35
 
-// deleteTimeoutDuration is the amount of time that can elapse
+// deleteTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
-var deleteTimeoutDuration = time.Minute * 25
+var deleteConsulClusterTimeout = time.Minute * 25
 
 // consulCusterResourceCloudProviders is the list of cloud providers
 // where a HCP Consul cluster can be provisioned.
@@ -44,10 +44,10 @@ func resourceConsulCluster() *schema.Resource {
 		UpdateContext: resourceConsulClusterUpdate,
 		DeleteContext: resourceConsulClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &defaultClusterTimeoutDuration,
-			Create:  &createUpdateTimeoutDuration,
-			Update:  &createUpdateTimeoutDuration,
-			Delete:  &deleteTimeoutDuration,
+			Default: &defaultConsulClusterTimeout,
+			Create:  &createUpdateConsulClusterTimeout,
+			Update:  &createUpdateConsulClusterTimeout,
+			Delete:  &deleteConsulClusterTimeout,
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceConsulClusterImport,
