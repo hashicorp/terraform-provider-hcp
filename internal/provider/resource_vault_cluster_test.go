@@ -10,18 +10,33 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccVaultClusterConfig = `
+var vaultCluster = `
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "dev"
+}
+`
+
+// sets public_endpoint to true
+var updatedVaultCluster = `
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "dev"
+	public_endpoint    = true
+}
+`
+
+func setTestAccVaultClusterConfig(vaultCluster string) string {
+	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id           = "test-hvn"
-	cloud_provider   = "aws"
-	region           = "us-west-2"
+	hvn_id            = "test-hvn"
+	cloud_provider    = "aws"
+	region            = "us-west-2"
 }
 
-resource "hcp_vault_cluster" "test" {
-	cluster_id       = "test-vault-cluster"
-	hvn_id           = hcp_hvn.test.hvn_id
-	tier             = "dev"
-}
+%s
 
 data "hcp_vault_cluster" "test" {
 	cluster_id       = hcp_vault_cluster.test.cluster_id
@@ -30,7 +45,8 @@ data "hcp_vault_cluster" "test" {
 resource "hcp_vault_cluster_admin_token" "test" {
 	cluster_id       = hcp_vault_cluster.test.cluster_id
 }
-`
+`, vaultCluster)
+}
 
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
@@ -46,7 +62,7 @@ func TestAccVaultCluster(t *testing.T) {
 		Steps: []resource.TestStep{
 			// This step tests Vault cluster and admin token resource creation.
 			{
-				Config: testConfig(testAccVaultClusterConfig),
+				Config: testConfig(setTestAccVaultClusterConfig(vaultCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(vaultClusterResourceName),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "cluster_id", "test-vault-cluster"),
@@ -86,7 +102,7 @@ func TestAccVaultCluster(t *testing.T) {
 			},
 			// This step is a subsequent terraform apply that verifies that no state is modified.
 			{
-				Config: testConfig(testAccVaultClusterConfig),
+				Config: testConfig(setTestAccVaultClusterConfig(vaultCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(vaultClusterResourceName),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "cluster_id", "test-vault-cluster"),
@@ -107,7 +123,7 @@ func TestAccVaultCluster(t *testing.T) {
 			},
 			// Tests datasource
 			{
-				Config: testConfig(testAccVaultClusterConfig),
+				Config: testConfig(setTestAccVaultClusterConfig(vaultCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "cluster_id", vaultClusterDataSourceName, "cluster_id"),
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "hvn_id", vaultClusterDataSourceName, "hvn_id"),
@@ -124,6 +140,18 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_private_endpoint_url", vaultClusterDataSourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
+				),
+			},
+			// This step verifies the successful update of updatable fields.
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultCluster)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 				),
 			},
 		},

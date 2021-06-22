@@ -20,7 +20,11 @@ contributions.
 
 ## Acceptance Tests Take a While to Run
 
-These acceptance tests create real resources, some of which can take up to 15-20 minutes each to spin up and tear down. For this reason, we urge contributors to consolidate acceptance tests on related resources in one test file. For example, the `resource_vault_cluster_test.go` reuses one test config to test the Vault cluster resource, the Vault cluster datasource, and the dependent Vault cluster admin token resource. This helps speed up the acceptance test runtime by creating a Vault cluster, the most time-intensive resource, only once.
+These acceptance tests create real resources, some of which can take up to 15-20 minutes each to spin up and tear down. For this reason, we urge contributors to consolidate acceptance tests on related resources in one test file to avoid creating multiples of the same resource over the course of the tests. Data sources and dependent resources can be consolidated into their corresponding resource test.
+
+For example, the `resource_vault_cluster_test.go` reuses one test config to test the Vault cluster resource, the Vault cluster datasource, and the dependent Vault cluster admin token resource. This helps speed up the acceptance test runtime by creating a Vault cluster, the most time-intensive resource, only once.
+
+Exceptions may be made when the HCL required to test a single resource is particularly complex, as in `resource_aws_transit_gateway_attachment_test.go`. In such cases, test readability should be preferred over consolidation.
 
 ## Running an Acceptance Test
 
@@ -128,6 +132,8 @@ When executing the test, the following steps are taken for each `TestStep`:
    }
    ```
 
+   **Note:** Use spaces instead of tabs in test HCL.
+
 1. Assertions are run using the provider API. These use the provider API
    directly rather than asserting against the resource state. For example, to
    verify that the `hcp_consul_cluster` described above was created
@@ -215,10 +221,3 @@ When executing the test, the following steps are taken for each `TestStep`:
    ```
 
    These functions usually test only for the resource directly under test.
-
-## Test Time and Consolidation
-
-Because of the increased length of time it takes to run acceptance tests, efforts
-should be made to not create multiples of the same resource for testing purposes. For
-example, datasource tests have been consolidated into their corresponding resource
-tests so that resources may be reused.
