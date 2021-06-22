@@ -16,7 +16,7 @@ func dataSourceVaultCluster() *schema.Resource {
 		Description: "The cluster data source provides information about an existing HCP Vault cluster.",
 		ReadContext: dataSourceVaultClusterRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &defaultClusterTimeoutDuration,
+			Default: &defaultVaultClusterTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
