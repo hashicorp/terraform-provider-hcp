@@ -33,6 +33,9 @@ const (
 
 	// PeeringStatePendingAcceptance is the PENDING_ACCEPTANCE state of a network peering
 	PeeringStatePendingAcceptance = string(networkmodels.HashicorpCloudNetwork20200907PeeringStatePENDINGACCEPTANCE)
+
+	// PeeringStateAccepted is the ACCEPTED state of a network peering
+	PeeringStateAccepted = string(networkmodels.HashicorpCloudNetwork20200907PeeringStateACCEPTED)
 )
 
 // peeringRefreshState refreshes the state of the network peering by calling
@@ -48,25 +51,34 @@ func peeringRefreshState(ctx context.Context, client *Client, peeringID string, 
 	}
 }
 
+type WaitFor = func(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error)
+
+func waitForPeeringToBe(state string) WaitFor {
+	return func(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
+		stateChangeConfig := resource.StateChangeConf{
+			Pending: []string{
+				PeeringStateCreating,
+			},
+			Target: []string{
+				state,
+			},
+			Refresh:      peeringRefreshState(ctx, client, peeringID, hvnID, loc),
+			Timeout:      timeout,
+			PollInterval: 5 * time.Second,
+		}
+
+		result, err := stateChangeConfig.WaitForStateContext(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error waiting for network peering (%s) to become '%s'", peeringID, state)
+		}
+
+		return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
+	}
+}
+
 // WaitForPeeringToBePendingAcceptance will poll the GET peering endpoint until
 // the state is PENDING_ACCEPTANCE, ctx is canceled, or an error occurs.
-func WaitForPeeringToBePendingAcceptance(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
-	stateChangeConf := resource.StateChangeConf{
-		Pending: []string{
-			PeeringStateCreating,
-		},
-		Target: []string{
-			PeeringStatePendingAcceptance,
-		},
-		Refresh:      peeringRefreshState(ctx, client, peeringID, hvnID, loc),
-		Timeout:      timeout,
-		PollInterval: 5 * time.Second,
-	}
+var WaitForPeeringToBePendingAcceptance = waitForPeeringToBe(PeeringStatePendingAcceptance)
 
-	result, err := stateChangeConf.WaitForStateContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("Error waiting for network peering (%s) to become 'PENDING_ACCEPTANCE': %s", peeringID, err)
-	}
-
-	return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
-}
+// WaitForPeeringToBeAccepted will poll the GET peering endpoint until the state is ACCEPTED, ctx in canceled, or an error occurs.
+var WaitForPeeringToBeAccepted = waitForPeeringToBe(PeeringStateAccepted)
