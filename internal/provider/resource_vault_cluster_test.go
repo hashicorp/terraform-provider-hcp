@@ -12,28 +12,28 @@ import (
 
 var vaultCluster = `
 resource "hcp_vault_cluster" "test" {
-	cluster_id       = "test-vault-cluster"
-	hvn_id           = hcp_hvn.test.hvn_id
-	tier             = "dev"
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "dev"
 }
 `
 
 // sets public_endpoint to true
 var updatedVaultCluster = `
 resource "hcp_vault_cluster" "test" {
-	cluster_id            = "test-vault-cluster"
-	hvn_id                = hcp_hvn.test.hvn_id
-	tier				  = "dev"
-	public_endpoint       = true
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "dev"
+	public_endpoint    = true
 }
 `
 
 func setTestAccVaultClusterConfig(vaultCluster string) string {
 	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
-	cloud_provider = "aws"
-	region         = "us-west-2"
+	hvn_id            = "test-hvn"
+	cloud_provider    = "aws"
+	region            = "us-west-2"
 }
 
 %s
