@@ -12,3 +12,12 @@ or is managed outside of Terraform. It is important to note that when creating a
 the existing root token will be invalidated.
 
 {{ tffile "examples/guides/consul_cluster_root_token/main.tf" }}
+
+The secret ID of this root token can be used to configure the Consul provider.
+
+```
+provider "consul" {
+  address    = "example.consul.io:80"
+  token      = hcp_consul_cluster_root_token.example.root_token_secret_id
+}
+```
