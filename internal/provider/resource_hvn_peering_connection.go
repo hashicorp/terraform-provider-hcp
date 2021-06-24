@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -82,41 +81,42 @@ func resourceHvnPeeringConnection() *schema.Resource {
 func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 	peeringID := d.Get("peering_id").(string)
+	orgID := client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
+		OrganizationID: orgID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	hvn1, err := getHvn(d.Get("hvn_1").(string), ctx, loc, client)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	hvn2, err := getHvn(d.Get("hvn_2").(string), ctx, loc, client)
+	hvn2Link, err := buildLinkFromURL(d.Get("hvn_2").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	peerNetworkParams := network_service.NewCreatePeeringParams()
 	peerNetworkParams.Context = ctx
-	peerNetworkParams.PeeringHvnID = hvn1.ID
-	peerNetworkParams.PeeringHvnLocationOrganizationID = hvn1.Location.OrganizationID
-	peerNetworkParams.PeeringHvnLocationProjectID = hvn1.Location.ProjectID
+	peerNetworkParams.PeeringHvnID = hvn1Link.ID
+	peerNetworkParams.PeeringHvnLocationOrganizationID = hvn1Link.Location.OrganizationID
+	peerNetworkParams.PeeringHvnLocationProjectID = hvn1Link.Location.ProjectID
 	peerNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreatePeeringRequest{
 		Peering: &networkmodels.HashicorpCloudNetwork20200907Peering{
 			ID:  peeringID,
-			Hvn: newLink(hvn1.Location, HvnResourceType, hvn1.ID),
+			Hvn: hvn1Link,
 			Target: &networkmodels.HashicorpCloudNetwork20200907PeeringTarget{
 				HvnTarget: &networkmodels.HashicorpCloudNetwork20200907NetworkTarget{
-					Hvn: newLink(hvn2.Location, HvnResourceType, hvn2.ID),
+					Hvn: hvn2Link,
 				},
 			},
 		},
 	}
-	log.Printf("[INFO] Creating network peering between HVNs (%s), (%s)", hvn1.ID, hvn2.ID)
+	log.Printf("[INFO] Creating network peering between HVNs (%s), (%s)", hvn1Link.ID, hvn2Link.ID)
 	peeringResponse, err := client.Network.CreatePeering(peerNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create network peering between HVNs (%s) and (%s): %v", hvn1.ID, hvn2.ID, err)
+		return diag.Errorf("unable to create network peering between HVNs (%s) and (%s): %v", hvn1Link.ID, hvn1Link.ID, err)
 	}
 
 	peering := peeringResponse.Payload.Peering
@@ -135,7 +135,7 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	}
 	log.Printf("[INFO] Created network peering (%s) between HVNs (%s) and (%s)", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID)
 
-	peering, err = clients.WaitForPeeringToBeAccepted(ctx, client, peering.ID, hvn1.ID, loc, d.Timeout(schema.TimeoutCreate))
+	peering, err = clients.WaitForPeeringToBeAccepted(ctx, client, peering.ID, hvn1Link.ID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -286,19 +286,4 @@ func setHvnPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 	}
 
 	return nil
-}
-
-func getHvn(hvnSelfLink string, ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *clients.Client) (*networkmodels.HashicorpCloudNetwork20200907Network, error) {
-	hvnLink, err := buildLinkFromURL(hvnSelfLink, HvnResourceType, client.Config.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnLink.ID)
-	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			return nil, fmt.Errorf("unable to find the HVN (%s) for the network peering", hvnLink.ID)
-		}
-		return nil, fmt.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnLink.ID, err)
-	}
-	return hvn, nil
 }
