@@ -150,15 +150,16 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
+	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	peeringID := link.ID
 	loc := link.Location
-	hvnLink1, err := parseLinkURL(d.Get("hvn_1").(string), HvnResourceType)
+	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -189,15 +190,16 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
+	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	peeringID := link.ID
 	loc := link.Location
-	hvnLink1, err := parseLinkURL(d.Get("hvn_1").(string), HvnResourceType)
+	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -287,7 +289,7 @@ func setHvnPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 }
 
 func getHvn(hvnSelfLink string, ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation, client *clients.Client) (*networkmodels.HashicorpCloudNetwork20200907Network, error) {
-	hvnLink, err := parseLinkURL(hvnSelfLink, HvnResourceType)
+	hvnLink, err := buildLinkFromURL(hvnSelfLink, HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
