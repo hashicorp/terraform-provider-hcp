@@ -30,20 +30,20 @@ func resourceHvnPeeringConnection() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"peering_id": {
-				Description:      "The ID of the network peering",
+				Description:      "The ID of the network peering.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			"hvn_1": {
-				Description: "The unique URL of one of the HVNs being peer connected.",
+				Description: "The unique URL of one of the HVNs being peered.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 			"hvn_2": {
-				Description: "The unique URL of one of the HVNs being peer connected.",
+				Description: "The unique URL of one of the HVNs being peered.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,

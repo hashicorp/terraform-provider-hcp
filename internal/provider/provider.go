@@ -25,6 +25,7 @@ func New() func() *schema.Provider {
 				"hcp_consul_cluster":                 dataSourceConsulCluster(),
 				"hcp_consul_versions":                dataSourceConsulVersions(),
 				"hcp_hvn":                            dataSourceHvn(),
+				"hcp_hvn_peering_connection":         dataSourceHvnPeeringConnection(),
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 			},

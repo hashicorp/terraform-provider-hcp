@@ -30,10 +30,19 @@ resource "hcp_hvn_peering_connection" "test" {
 	hvn_1      = hcp_hvn.test_1.self_link
 	hvn_2      = hcp_hvn.test_2.self_link
 }
+
+data "hcp_hvn_peering_connection" "test" {
+	peering_id = "test-peering"
+	hvn_1      = hcp_hvn.test_1.self_link
+	hvn_2      = hcp_hvn.test_2.self_link
+}
 `
 
+// This includes tests against both the resource and the corresponding datasource
+// to shorten testing time
 func TestAccHvnPeeringConnection(t *testing.T) {
 	resourceName := "hcp_hvn_peering_connection.test"
+	dataSourceName := "data.hcp_hvn_peering_connection.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
@@ -73,6 +82,19 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					testLink(resourceName, "hvn_1", "test-1", HvnResourceType, resourceName),
 					testLink(resourceName, "hvn_2", "test-2", HvnResourceType, resourceName),
+				),
+			},
+			// Tests datasource
+			{
+				Config: testConfig(testAccHvnPeeringConnectionConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "peering_id", dataSourceName, "peering_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "hvn_1", dataSourceName, "hvn_1"),
+					resource.TestCheckResourceAttrPair(resourceName, "hvn_2", dataSourceName, "hvn_2"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(resourceName, "expires_at", dataSourceName, "expires_at"),
 				),
 			},
 		},
