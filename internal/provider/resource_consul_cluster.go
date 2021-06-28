@@ -302,7 +302,9 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	auto_hvn_to_hvn_peering := d.Get("auto_hvn_to_hvn_peering").(bool)
+	// Enabling auto peering will peer this cluster's HVN with ever other HVN with members in this federation.
+	// The peering happens within the secondary cluster create operation.
+	autoHvnToHvnPeering := d.Get("auto_hvn_to_hvn_peering").(bool)
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
@@ -322,7 +324,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 				Network: newLink(loc, "hvn", hvnID),
 				Private: !publicEndpoint,
 			},
-			AutoHvnToHvnPeering: auto_hvn_to_hvn_peering,
+			AutoHvnToHvnPeering: autoHvnToHvnPeering,
 		},
 		ConsulVersion: consulVersion,
 		ID:            clusterID,
