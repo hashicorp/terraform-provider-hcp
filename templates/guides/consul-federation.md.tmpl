@@ -8,7 +8,7 @@ description: |-
 # Federation with Auto HVN Peering
 
 Once you have a HCP Consul cluster, you can create a new Consul cluster to federate with the existing one.
-By providing `auto_hvn_to_hvn_peering` as a parameter on the secondary cluster, the HVNs are peered
+By providing `auto_hvn_to_hvn_peering` as a parameter on the secondary cluster, the HVNs are being peered
 automatically ensuring full connectivity. This parameter only ever has to be provided on secondary clusters.
 
 {{ tffile "examples/guides/consul_cluster_federation/main.tf" }}
