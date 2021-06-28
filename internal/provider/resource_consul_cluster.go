@@ -134,6 +134,7 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			// computed outputs
 			"organization_id": {
@@ -302,7 +303,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	// Enabling auto peering will peer this cluster's HVN with ever other HVN with members in this federation.
+	// Enabling auto peering will peer this cluster's HVN with every other HVN with members in this federation.
 	// The peering happens within the secondary cluster create operation.
 	autoHvnToHvnPeering := d.Get("auto_hvn_to_hvn_peering").(bool)
 

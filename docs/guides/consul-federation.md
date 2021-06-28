@@ -31,9 +31,10 @@ resource "hcp_consul_cluster" "primary" {
 }
 
 resource "hcp_consul_cluster" "secondary" {
-  hvn_id       = hcp_hvn.secondary.hvn_id
-  cluster_id   = var.secondary_cluster_id
-  tier         = "development"
-  primary_link = hcp_consul_cluster.primary.self_link
+  hvn_id                  = hcp_hvn.secondary.hvn_id
+  cluster_id              = var.secondary_cluster_id
+  tier                    = "development"
+  primary_link            = hcp_consul_cluster.primary.self_link
+  auto_hvn_to_hvn_peering = true
 }
 ```
