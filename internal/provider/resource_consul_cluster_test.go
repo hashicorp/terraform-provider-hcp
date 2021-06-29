@@ -61,6 +61,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_hvn_to_hvn_peering", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),

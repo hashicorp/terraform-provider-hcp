@@ -1,5 +1,10 @@
-variable "hvn_id" {
-  description = "The ID of the HCP HVN."
+variable "primary_hvn_id" {
+  description = "The ID of the primary HCP HVN."
+  type        = string
+}
+
+variable "secondary_hvn_id" {
+  description = "The ID of the secondary HCP HVN."
   type        = string
 }
 
@@ -8,8 +13,13 @@ variable "cloud_provider" {
   type        = string
 }
 
-variable "region" {
-  description = "The region of the HCP HVN and Consul cluster."
+variable "primary_region" {
+  description = "The region of the HCP HVN and primary Consul cluster."
+  type        = string
+}
+
+variable "secondary_region" {
+  description = "The region of the HCP HVN and secondary Consul cluster."
   type        = string
 }
 

@@ -132,6 +132,11 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"auto_hvn_to_hvn_peering": {
+				Description: "Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 		},
 	}
 }

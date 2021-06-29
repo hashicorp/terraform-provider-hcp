@@ -1,12 +1,14 @@
 ---
 subcategory: ""
-page_title: "Federate HCP Consul clusters - HCP Provider"
+page_title: "Federation with Auto HVN Peering - HCP Provider"
 description: |-
-    An example of federating a new HCP Consul cluster with an existing one.
+    An example of federating a new HCP Consul cluster with an existing one via auto peering.
 ---
 
-# Federate a new HCP Consul cluster with an existing one
+# Federation with Auto HVN Peering
 
 Once you have a HCP Consul cluster, you can create a new Consul cluster to federate with the existing one.
+By providing `auto_hvn_to_hvn_peering` as a parameter on the secondary cluster, the HVNs are being peered
+automatically ensuring full connectivity. This parameter only ever has to be provided on secondary clusters.
 
 {{ tffile "examples/guides/consul_cluster_federation/main.tf" }}
