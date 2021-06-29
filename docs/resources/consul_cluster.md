@@ -7,7 +7,7 @@ description: |-
 
 # hcp_consul_cluster (Resource)
 
--> **Note:** The `primary_link` attribute is related to federation, a feature that is currently in private beta.
+-> **Note:** The `primary_link` and `auto_hvn_to_hvn_peering` attributes are related to federation, a feature that is currently in private beta.
 
 -> **Note:** The `plus` tier is currently in private beta.
 
@@ -41,6 +41,7 @@ resource "hcp_consul_cluster" "example" {
 
 ### Optional
 
+- **auto_hvn_to_hvn_peering** (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.
 - **connect_enabled** (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - **datacenter** (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
 - **id** (String) The ID of this resource.

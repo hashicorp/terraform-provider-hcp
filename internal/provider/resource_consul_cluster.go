@@ -129,6 +129,13 @@ func resourceConsulCluster() *schema.Resource {
 					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
+			"auto_hvn_to_hvn_peering": {
+				Description: "Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+			},
 			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization this HCP Consul cluster is located in.",
@@ -296,6 +303,10 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
+	// Enabling auto peering will peer this cluster's HVN with every other HVN with members in this federation.
+	// The peering happens within the secondary cluster create operation.
+	autoHvnToHvnPeering := d.Get("auto_hvn_to_hvn_peering").(bool)
+
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
 	consulCuster := &consulmodels.HashicorpCloudConsul20210204Cluster{
@@ -314,6 +325,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 				Network: newLink(loc, "hvn", hvnID),
 				Private: !publicEndpoint,
 			},
+			AutoHvnToHvnPeering: autoHvnToHvnPeering,
 		},
 		ConsulVersion: consulVersion,
 		ID:            clusterID,
@@ -446,6 +458,10 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("consul_version", cluster.ConsulVersion); err != nil {
+		return err
+	}
+
+	if err := d.Set("auto_hvn_to_hvn_peering", cluster.Config.AutoHvnToHvnPeering); err != nil {
 		return err
 	}
 
