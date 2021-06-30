@@ -1,4 +1,4 @@
-## 0.9.0 (Unreleased)
+## 0.9.0 (June 30, 2021)
 
 IMPROVEMENTS:
 * resource/hcp_vault_cluster: add update functionality to Vault cluster (#152)
