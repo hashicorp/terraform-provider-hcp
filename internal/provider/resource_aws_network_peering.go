@@ -2,10 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
@@ -15,10 +13,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
-
-var peeringDefaultTimeout = time.Minute * 1
-var peeringCreateTimeout = time.Minute * 35
-var peeringDeleteTimeout = time.Minute * 35
 
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
@@ -70,7 +64,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			// Computed outputs
@@ -338,12 +332,11 @@ func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Hashi
 func resourceAwsNetworkPeeringImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
-	idParts := strings.SplitN(d.Id(), ":", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{peering_id}", d.Id())
+	hvnID, peeringID, err := parsePeeringResourceID(d.Id())
+	if err != nil {
+		return nil, err
 	}
-	hvnID := idParts[0]
-	peeringID := idParts[1]
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		ProjectID: client.Config.ProjectID,
 	}
