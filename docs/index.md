@@ -9,7 +9,7 @@ description: |-
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
-~> **Upcoming Migration:** The upcoming release of HVN Routes in v0.7.0 will include breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This guide](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/hvn-route-migration-guide) walks through how to migrate to the new resource syntax.
+~> **Migration Required:** The release of HVN Routes in v0.7.0 includes breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This guide](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/hvn-route-migration-guide) walks through how to migrate to the new resource syntax.
 Please pin to the previous version to avoid disruption until you are ready to migrate.
 
 -> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
