@@ -20,6 +20,9 @@ var tgwDefaultTimeout = time.Minute * 1
 var tgwCreateTimeout = time.Minute * 35
 var tgwDeleteTimeout = time.Minute * 35
 
+// The team decided to create a separate transit gateway attachment resource for each cloud provider supported by HCP, rather than a single transit gateway attachment resource that
+// can be configured with different cloud providers, like the HVN resource. See more about this decision under design/networking-abstractions.md.
+
 func resourceAwsTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "The AWS transit gateway attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.",

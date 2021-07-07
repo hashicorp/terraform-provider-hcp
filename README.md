@@ -20,6 +20,10 @@ See the [HashiCorp Cloud Platform (HCP) Provider documentation](https://registry
 
 See the [`contributing`](contributing/) directory for more developer documentation.
 
+## Design
+
+See the [`design`](design/) for documents capturing certain key design decisions made for this provider as a platform.
+
 ## Example
 
 Below is a complex example that creates a HashiCorp Virtual Network (HVN), an HCP Consul cluster within that HVN, and peers the HVN to an AWS VPC.
