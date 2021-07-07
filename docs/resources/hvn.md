@@ -19,6 +19,8 @@ We recommend the following when selecting the CIDR block of an HVN:
 
 - The CIDR block value must be a private CIDR block within the [RFC1918](https://datatracker.ietf.org/doc/html/rfc1918) address space (10.*.*.*, 192.168.*.*, 172.[16-31].*.*).
 
+- The CIDR block value must be the first IP address of the desired CIDR block. Using the helper `cidrsubnet("172.16.1.1/24", 0, 0)` will specify the first address of the CIDR block in the first argument.
+
 ## Example Usage
 
 ```terraform
