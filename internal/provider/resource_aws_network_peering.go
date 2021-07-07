@@ -20,6 +20,9 @@ var peeringDefaultTimeout = time.Minute * 1
 var peeringCreateTimeout = time.Minute * 35
 var peeringDeleteTimeout = time.Minute * 35
 
+// The team decided to create a separate peering resource for each cloud provider supported by HCP, rather than a single peering resource that
+// can be configured with different cloud providers, like the HVN resource. See more about this decision under design/networking-abstractions.md.
+
 func resourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
 		Description: "The AWS network peering resource allows you to manage a network peering between an HVN and a peer AWS VPC.",
