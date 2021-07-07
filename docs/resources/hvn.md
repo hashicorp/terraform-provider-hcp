@@ -17,6 +17,8 @@ We recommend the following when selecting the CIDR block of an HVN:
 
 - The CIDR block value must end between /16 and /25.
 
+- The CIDR block value must be a private CIDR block within the [RFC1918](https://datatracker.ietf.org/doc/html/rfc1918) address space (10.*.*.*, 192.168.*.*, 172.[16-31].*.*).
+
 ## Example Usage
 
 ```terraform
