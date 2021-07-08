@@ -103,7 +103,7 @@ func resourceConsulCluster() *schema.Resource {
 					log.Printf("[DEBUG] Actual Consul Version %v", old)
 					log.Printf("[DEBUG] Current TF Version %v", new)
 					// suppres diff if the specified min_consul_version is <= to the actual consul version
-					return currentTFVersion.LessThanOrEqual(actualConsulVersion) || new == ""
+					return currentTFVersion.LessThanOrEqual(actualConsulVersion)
 				},
 			},
 			"datacenter": {
