@@ -95,7 +95,7 @@ func resourceConsulCluster() *schema.Resource {
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress diff for non specified value
 					if new == "" {
-						return false
+						return true
 					}
 
 					actualConsulVersion := version.Must(version.NewVersion(old))
