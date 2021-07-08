@@ -94,7 +94,7 @@ func resourceConsulCluster() *schema.Resource {
 				ValidateDiagFunc: validateSemVer,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress diff for non specified value
-					if new == "" {
+					if new == "" || old == "" {
 						return true
 					}
 
