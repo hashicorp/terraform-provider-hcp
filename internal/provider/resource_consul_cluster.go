@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-version"
 	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -95,12 +94,7 @@ func resourceConsulCluster() *schema.Resource {
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					// Suppress diff is normalized versions match OR min_consul_version is removed from the resource
 					// since min_consul_version is required in order to upgrade the cluster to a new Consul version.
-					actualConsulVersion := version.Must(version.NewVersion(old))
-					currentTFVersion := version.Must(version.NewVersion(new))
-					log.Printf("[DEBUG] Actual Consul Version %v", old)
-					log.Printf("[DEBUG] Current TF Version %v", new)
-
-					return currentTFVersion.LessThanOrEqual(actualConsulVersion) || new == ""
+					return input.NormalizeVersion(old) == input.NormalizeVersion(new) || new == ""
 				},
 			},
 			"datacenter": {
@@ -464,10 +458,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("consul_version", cluster.ConsulVersion); err != nil {
-		return err
-	}
-
-	if err := d.Set("min_consul_version", cluster.ConsulVersion); err != nil {
 		return err
 	}
 
