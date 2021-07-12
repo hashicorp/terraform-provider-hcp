@@ -27,6 +27,7 @@ func New() func() *schema.Provider {
 				"hcp_hvn":                            dataSourceHvn(),
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
+				"hcp_packer_registry":                dataSourcePackerRegistry(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
