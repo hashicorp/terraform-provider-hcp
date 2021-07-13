@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
+	cloud_packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -69,6 +70,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 		Vault:        cloud_vault.New(httpClient, nil).VaultService,
+		Packer:       cloud_packer_service.New(httpClient, nil).PackerService,
 	}
 
 	return client, nil
