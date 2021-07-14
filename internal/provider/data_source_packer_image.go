@@ -34,7 +34,7 @@ func dataSourcePackerImage() *schema.Resource {
 			"channel": {
 				Description:      "The channel that points to the version of the image you want.",
 				Type:             schema.TypeString,
-				Required:         false,
+				Optional:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs
