@@ -66,7 +66,7 @@ func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, m
 	previewVersions := make([]string, 0)
 
 	for _, v := range availableConsulVersions {
-		switch v.Status {
+		switch *v.Status {
 		case consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED:
 			recommendedVersion = v.Version
 			availableVersions = append(availableVersions, v.Version)

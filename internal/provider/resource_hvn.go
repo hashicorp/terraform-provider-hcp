@@ -204,7 +204,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	// The HVN failed to provision properly so we want to let the user know and remove it from
 	// state
-	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateFAILED {
+	if *hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateFAILED {
 		log.Printf("[WARN] HVN (%s) failed to provision, removing from state", hvnID)
 		d.SetId("")
 		return nil
