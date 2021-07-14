@@ -188,11 +188,41 @@ func setPackerImageData(d *schema.ResourceData, bucket *packermodels.HashicorpCl
 	if err := d.Set("image_id", it.ID); err != nil {
 		return err
 	}
-
-	// TODO:
-	if err := d.Set("builds", it.ID); err != nil {
+	if err := d.Set("builds", flattenPackerBuildList(it.Builds)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenPackerBuildList(builds []*packermodels.HashicorpCloudPackerBuild) (flattened []map[string]interface{}) {
+	for _, build := range builds {
+		out := map[string]interface{}{
+			"cloud_provider":  build.CloudProvider,
+			"component_type":  build.ComponentType,
+			"created_at":      build.CreatedAt,
+			"id":              build.ID,
+			"images":          flattenPackerBuildImagesList(build.Images),
+			"iteration_id":    build.IterationID,
+			"labels":          build.Labels,
+			"packer_run_uuid": build.PackerRunUUID,
+			"status":          build.Status,
+			"updated_at":      build.UpdatedAt,
+		}
+		flattened = append(flattened, out)
+	}
+	return
+}
+
+func flattenPackerBuildImagesList(images []*packermodels.HashicorpCloudPackerImage) (flattened []map[string]interface{}) {
+	for _, image := range images {
+		out := map[string]interface{}{
+			"created_at": image.CreatedAt,
+			"id":         image.ID,
+			"image_id":   image.ImageID,
+			"region":     image.Region,
+		}
+		flattened = append(flattened, out)
+	}
+	return
 }
