@@ -24,7 +24,7 @@ func dataSourcePackerImage() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"bucket_id": {
+			"bucket": {
 				Description:      "The ID of the HCP Packer Registry image bucket to pull from.",
 				Type:             schema.TypeString,
 				Required:         true,
@@ -133,8 +133,8 @@ func dataSourcePackerImage() *schema.Resource {
 }
 
 func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketID := d.Get("bucket_id").(string)
-	iterationID := d.Get("iteration_id").(string)
+	bucketName := d.Get("bucket").(string)
+	channelSlug := d.Get("channel").(string)
 	client := meta.(*clients.Client)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -146,16 +146,15 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s]", bucketID, loc.ProjectID, loc.OrganizationID)
+	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID)
 
-	bucket, err := clients.GetPackerBucketByID(ctx, client, loc, bucketID)
+	channel, err := clients.GetPackerChannelBySlug(ctx, client, loc, bucketName, channelSlug)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	it, err := clients.GetPackerIterationByID(ctx, client, loc, bucket, iterationID)
-
-	if err := setPackerImageData(d, bucket, it); err != nil {
+	iteration := channel.Pointer.Iteration
+	if err := setPackerImageData(d, iteration); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -174,11 +173,8 @@ func setLocationData(d *schema.ResourceData, loc *sharedmodels.HashicorpCloudLoc
 }
 
 // setPackerImageData sets image data from an image get
-func setPackerImageData(d *schema.ResourceData, bucket *packermodels.HashicorpCloudPackerBucket, it *packermodels.HashicorpCloudPackerIteration) error {
+func setPackerImageData(d *schema.ResourceData, it *packermodels.HashicorpCloudPackerIteration) error {
 
-	if err := d.Set("bucket_id", bucket.ID); err != nil {
-		return err
-	}
 	if err := d.Set("incremental_version", it.IncrementalVersion); err != nil {
 		return err
 	}
