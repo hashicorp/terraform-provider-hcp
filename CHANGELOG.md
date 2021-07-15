@@ -1,4 +1,13 @@
-# Changelog
+## 0.10.0 (Unreleased)
+
+FIXES:
+
+* resource/hcp_consul_cluster: Fix terraform updates for min_consul_version (#161)
+
+IMPROVEMENTS:
+
+* docs: Add CIDR guidance to HVN resource documentation (#160)
+* docs: Add design doc on networking resources (#159)
 
 ## 0.9.0 (June 30, 2021)
 
