@@ -146,7 +146,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID)
+	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, channel=%s]", bucketName, loc.ProjectID, loc.OrganizationID, channelSlug)
 
 	channel, err := clients.GetPackerChannelBySlug(ctx, client, loc, bucketName, channelSlug)
 	if err != nil {
