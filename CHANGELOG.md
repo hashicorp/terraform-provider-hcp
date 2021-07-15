@@ -1,6 +1,9 @@
+# Changelog
+
 ## 0.9.0 (June 30, 2021)
 
 IMPROVEMENTS:
+
 * resource/hcp_vault_cluster: add update functionality to Vault cluster (#152)
 * docs: updates to Consul root token doc (#153)
 * resource/hcp_consul_cluster: add auto peering for Consul Federation (#154)
@@ -12,7 +15,7 @@ Please remove any functions that adjust the output of the `vault_private_endpoin
 
 For example, your Vault provider configuration might need to change:
 
-```
+```hcl
 # before
 provider "vault" {
   address = join("", ["https://", hcp_vault_cluster.example.vault_public_endpoint_url, ":8200"])
@@ -25,11 +28,13 @@ provider "vault" {
 ```
 
 IMPROVEMENTS:
+
 * resource/hcp_vault_cluster: `tier` is now an optional input, with the options `dev`, `standard_small`, `standard_medium`, and `standard_large` (#144) (our first open-source contribution - thanks @waxb!)
 * resource/hcp_consul_cluster: `plus` is now available as a `tier` option (#148)
 * tests: expands acceptance test coverage to data sources and dependent resources (#135, #142, #150)
 
 BREAKING CHANGES:
+
 * resource/hcp_consul_cluster: returns complete endpoint URLs (#145)
 * resource/hcp_vault_cluster: returns complete endpoint URLs (#145)
 
@@ -38,12 +43,15 @@ BREAKING CHANGES:
 ⚠️ Note: This version contains breaking changes to the `hcp_aws_transit_gateway_attachment` and `hcp_aws_network_peering` resources and data sources. Please pin to the previous version and follow [this migration guide](https://github.com/hashicorp/terraform-provider-hcp/pull/128) when you're ready to migrate. ⚠️
 
 FEATURES:
+
 * **New resource** `hcp_hvn_route` (#122)
 
 IMPROVEMENTS:
+
 * resource/hcp_aws_transit_gateway_attachment: released as Generally Available (#121)
 
 BREAKING CHANGES:
+
 * resource/hcp_aws_network_peering: now requires `peering_id` to be specified and doesn't accept `peer_vpc_cidr_block` as input (#128)
 * datasource/hcp_aws_network_peering: no longer returns `peer_vpc_cidr_block` as output (#128)
 * resource/hcp_aws_transit_gateway_attachment: doesn't accept `destination_cidrs` as input (#128)
@@ -52,15 +60,18 @@ BREAKING CHANGES:
 ## 0.6.1 (June 03, 2021)
 
 IMPROVEMENTS:
+
 * docs: updates banner on index page to warn of upcoming breaking changes (#134)
 * resource/hcp_consul_cluster_snapshot_test: add Consul cluster snapshot acceptance test (#126)
 
 ## 0.6.0 (May 10, 2021)
 
 FEATURES:
+
 * **New data source** `hcp_hvn_route` (#115)
 
 IMPROVEMENTS:
+
 * provider: Bump `hcp-go-sdk` dependency (#105)
 * provider: Bump `go-openapi/runtime` dependency (#106)
 * resource/hvn, peering, tgw attachment: added `self_link` output (#111)
@@ -69,6 +80,7 @@ IMPROVEMENTS:
 ## 0.5.0 (April 20, 2021)
 
 IMPROVEMENTS:
+
 * provider: Upgraded to Go 1.16. Binary releases of this provider now include the darwin-arm64 platform (#104, #108)
 * provider: Bump `terraform-plugin-sdk/v2` dependency (#86)
 * provider: Bump `go-openapi/runtime` dependency (#81)
@@ -80,6 +92,7 @@ IMPROVEMENTS:
 ## 0.4.1 (April 09, 2021)
 
 FIXES:
+
 * resource/consul_cluster: Set "computed=true" option for the vm size (#100)
 
 ## 0.4.0 (April 07, 2021)
@@ -87,10 +100,12 @@ FIXES:
 ⚠️ Note: There is an issue with this version of the HCP Provider in which existing Consul clusters that do not specify size will be recommended by Terraform to be recreated on the next terraform apply, resulting in potential data loss. Please upgrade to the patch v0.4.1 or beyond to avoid this issue. ⚠️
 
 FEATURES:
+
 * **New resource** `hcp_vault_cluster` (#97)
 * **New resource** `hcp_vault_cluster_admin_token` (#97)
 
 IMPROVEMENTS:
+
 * all: Log import ID used when an import fails due to parsing (#82)
 * all: Add comment to clarify that Links can be sent in API requests (#82)
 * ci: Add github checks (#90)
@@ -102,11 +117,13 @@ IMPROVEMENTS:
 * resource/aws_network_peering: Update peering wait function to use helper (#82)
 
 FIXES:
+
 * all: Ensure context is being passed for all HCP API calls (#82)
 
 ## 0.3.0 (March 25, 2021)
 
 IMPROVEMENTS:
+
 * all: Improve error messages for requests made to all HCP services (#83)
 * ci: Run unit tests instead of acceptance tests on Pull Requests (#73)
 * docs: Add contribution guidelines (#71)
@@ -122,23 +139,27 @@ IMPROVEMENTS:
 ## 0.2.0 (February 22, 2021)
 
 FEATURES:
+
 * **New data source** `hcp_aws_transit_gateway_attachment` (#58)
 * **New data source** `hcp_consul_versions` (#63)
 * **New resource** `hcp_aws_transit_gateway_attachment` (#58)
 
 IMPROVEMENTS:
+
 * all: Improve error messages for requests made to the Consul service (#68)
 * data-source/hcp_consul_cluster: Add HCP Consul federation support (#68)
 * resource/hcp_aws_transit_gateway_attachment: Support resource import (#64)
 * resource/hcp_consul_cluster: Add HCP Consul federation support (#68)
 
 BUGS:
+
 * all: Set resource id before polling operation and re-create failed deployments (#59)
 * resource/hcp_consul_cluster: Validate Consul datacenter and lowercase the default (#57)
 
 ## 0.1.0 (January 29, 2021)
 
 FEATURES:
+
 * **New resource** `hcp_hvn`.
 * **New resource** `hcp_consul_cluster`.
 * **New resource** `hcp_aws_network_peering`.
