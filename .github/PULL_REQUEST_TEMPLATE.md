@@ -11,6 +11,16 @@ If the feature is ready for all HCP users, it can be merged to main and released
 
 <!-- What code changed, and why? If adding a new resource, what is it and what are its key features? If updating an existing resource, what new functionality was added? -->
 
+### :ship: Release Note
+Release note for [CHANGELOG](https://github.com/hashicorp/terraform-provider-hcp/blob/main/CHANGELOG.md):
+<!--
+If change is not user facing, just write "NONE" in the release-note block below. The [GH-nnnn] should match the number of your PR.
+-->
+
+```release-note
+* {affected resource | docs | all}: {Brief description of change} [GH-nnnn]
+```
+
 ### :building_construction: Acceptance tests
 
 - [ ] Are there any feature flags that are required to use this functionality?
