@@ -51,7 +51,7 @@ func dataSourcePackerImage() *schema.Resource {
 
 			"incremental_version": {
 				Description: "The Packer version of the registry.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 			"created_at": {
@@ -175,10 +175,12 @@ func setLocationData(d *schema.ResourceData, loc *sharedmodels.HashicorpCloudLoc
 // setPackerImageData sets image data from an image get
 func setPackerImageData(d *schema.ResourceData, it *packermodels.HashicorpCloudPackerIteration) error {
 
+	d.SetId(it.ID)
+
 	if err := d.Set("incremental_version", it.IncrementalVersion); err != nil {
 		return err
 	}
-	if err := d.Set("created_at", it.CreatedAt); err != nil {
+	if err := d.Set("created_at", it.CreatedAt.String()); err != nil {
 		return err
 	}
 	if err := d.Set("image_id", it.ID); err != nil {
@@ -196,14 +198,14 @@ func flattenPackerBuildList(builds []*packermodels.HashicorpCloudPackerBuild) (f
 		out := map[string]interface{}{
 			"cloud_provider":  build.CloudProvider,
 			"component_type":  build.ComponentType,
-			"created_at":      build.CreatedAt,
+			"created_at":      build.CreatedAt.String(),
 			"id":              build.ID,
 			"images":          flattenPackerBuildImagesList(build.Images),
 			"iteration_id":    build.IterationID,
 			"labels":          build.Labels,
 			"packer_run_uuid": build.PackerRunUUID,
 			"status":          build.Status,
-			"updated_at":      build.UpdatedAt,
+			"updated_at":      build.UpdatedAt.String(),
 		}
 		flattened = append(flattened, out)
 	}
@@ -213,7 +215,7 @@ func flattenPackerBuildList(builds []*packermodels.HashicorpCloudPackerBuild) (f
 func flattenPackerBuildImagesList(images []*packermodels.HashicorpCloudPackerImage) (flattened []map[string]interface{}) {
 	for _, image := range images {
 		out := map[string]interface{}{
-			"created_at": image.CreatedAt,
+			"created_at": image.CreatedAt.String(),
 			"id":         image.ID,
 			"image_id":   image.ImageID,
 			"region":     image.Region,

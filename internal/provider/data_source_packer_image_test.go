@@ -15,7 +15,7 @@ var (
 )
 
 func TestAcc_dataSourcePacker(t *testing.T) {
-	resourceName := "hcp_packer_image.alpine"
+	resourceName := "data.hcp_packer_image.alpine"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
@@ -30,7 +30,6 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 				),
 			},
 		},
