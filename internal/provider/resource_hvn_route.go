@@ -191,7 +191,7 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// The HVN route failed to provision properly so we want to let the user know and remove it from state.
-	if route.State == networkmodels.HashicorpCloudNetwork20200907HVNRouteStateFAILED {
+	if *route.State == networkmodels.HashicorpCloudNetwork20200907HVNRouteStateFAILED {
 		log.Printf("[WARN] HVN route (%s) failed to provision, removing from state", idLink.ID)
 		d.SetId("")
 		return nil

@@ -311,6 +311,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	connectEnabled := d.Get("connect_enabled").(bool)
 	publicEndpoint := d.Get("public_endpoint").(bool)
+	tier := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string)))
+	size := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string)))
 
 	// Enabling auto peering will peer this cluster's HVN with every other HVN with members in this federation.
 	// The peering happens within the secondary cluster create operation.
@@ -320,9 +322,9 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	consulCuster := &consulmodels.HashicorpCloudConsul20210204Cluster{
 		Config: &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
-			Tier: consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string))),
+			Tier: &tier,
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string))),
+				Size: &size,
 			},
 			ConsulConfig: &consulmodels.HashicorpCloudConsul20210204ConsulConfig{
 				ConnectEnabled: connectEnabled,
@@ -539,7 +541,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	// The Consul cluster failed to provision properly so we want to let the user know and
 	// remove it from state
-	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateFAILED {
+	if *cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateFAILED {
 		log.Printf("[WARN] Consul cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil

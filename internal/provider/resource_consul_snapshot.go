@@ -169,7 +169,7 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 
 	// The Consul snapshot failed to provision properly so we want to let the user know and
 	// remove it from state
-	if snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20210204SnapshotSnapshotStateCREATINGFAILED {
+	if *snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20210204SnapshotSnapshotStateCREATINGFAILED {
 		log.Printf("[WARN] Consul snapshot (%s) failed to provision, removing from state", snapshotResp.Snapshot.ID)
 		d.SetId("")
 		return nil
