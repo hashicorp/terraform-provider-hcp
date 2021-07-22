@@ -584,31 +584,31 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	// Confirm update fields have been changed
 	sizeChanged := d.HasChange("size")
-	version, versionOk := d.GetOk("min_consul_version")
+	versionChanged := d.HasChange("min_consul_version")
 
-	if !sizeChanged && !versionOk {
+	if !sizeChanged && !versionChanged {
 		return diag.Errorf("at least one of: [min_consul_version, size] is required in order to upgrade the cluster")
 	}
 
 	targetCluster := consulmodels.HashicorpCloudConsul20210204Cluster{
 		ID: clusterID,
 		Location: &sharedmodels.HashicorpCloudLocationLocation{
-			ProjectID:      loc.ProjectID,
-			OrganizationID: loc.OrganizationID,
+			ProjectID:      cluster.Location.ProjectID,
+			OrganizationID: cluster.Location.OrganizationID,
 			Region: &sharedmodels.HashicorpCloudLocationRegion{
-				Region:   loc.Region.Region,
-				Provider: loc.Region.Provider,
+				Region:   cluster.Location.Region.Region,
+				Provider: cluster.Location.Region.Provider,
 			},
 		},
 	}
 
-	if versionOk {
+	if versionChanged {
 		// Fetch available upgrade versions
 		upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
 		if err != nil {
 			return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
 		}
-
+		version := d.Get("min_consul_version")
 		newConsulVersion := input.NormalizeVersion(version.(string))
 
 		// Check that there are any valid upgrade versions
@@ -628,13 +628,13 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		newSize := d.Get("size").(string)
 		targetCluster.Config = &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(newSize),
+				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize)),
 			},
 		}
 	}
 
 	// Invoke update cluster endpoint
-	updateResp, err := clients.UpdateConsulCluster(ctx, client, cluster.Location, &targetCluster)
+	updateResp, err := clients.UpdateConsulCluster(ctx, client, &targetCluster)
 	if err != nil {
 		return diag.Errorf("error updating Consul cluster (%s): %v", clusterID, err)
 	}
