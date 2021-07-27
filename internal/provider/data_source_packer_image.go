@@ -48,81 +48,86 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-
-			"incremental_version": {
-				Description: "The Packer version of the registry.",
-				Type:        schema.TypeInt,
+			"iteration": {
+				Description: "Iteration this channel points to",
+				Type:        schema.TypeSet,
 				Computed:    true,
-			},
-			"created_at": {
-				Description: "The time that the Packer registry was created.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"image_id": {
-				Description: "The ID of the image.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"builds": {
-				Description: "Builds for this iteration",
-				Type:        schema.TypeList,
-				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeSet,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"cloud_provider": {
-								Type: schema.TypeString,
-							},
-							"component_type": {
-								Type: schema.TypeString,
-							},
-							"created_at": {
-								Type: schema.TypeString,
-							},
-							"id": {
-								Type: schema.TypeString,
-							},
-							"images": {
-								Type: schema.TypeList,
-								Elem: &schema.Schema{
-									Type: schema.TypeSet,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"created_at": {
-												Type: schema.TypeString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description: "ID of this iteration",
+							Type:        schema.TypeString,
+						},
+						"incremental_version": {
+							Description: "Incremental version of this iteration",
+							Type:        schema.TypeString,
+						},
+						"created_at": {
+							Description: "Creation time of this iteration",
+							Type:        schema.TypeString,
+						},
+						"builds": {
+							Description: "Builds for this iteration",
+							Type:        schema.TypeList,
+							// Computed:    true,
+							Elem: &schema.Schema{
+								Type: schema.TypeSet,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloud_provider": {
+											Type: schema.TypeString,
+										},
+										"component_type": {
+											Type: schema.TypeString,
+										},
+										"created_at": {
+											Type: schema.TypeString,
+										},
+										// "id": {
+										// 	Type: schema.TypeString,
+										// },
+										"images": {
+											Type: schema.TypeList,
+											Elem: &schema.Schema{
+												Type: schema.TypeSet,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"created_at": {
+															Type: schema.TypeString,
+														},
+														"id": {
+															Type: schema.TypeString,
+														},
+														"image_id": {
+															Type: schema.TypeString,
+														},
+														"region": {
+															Type: schema.TypeString,
+														},
+													},
+												},
 											},
-											"id": {
-												Type: schema.TypeString,
-											},
-											"image_id": {
-												Type: schema.TypeString,
-											},
-											"region": {
+										},
+										"iteration_id": {
+											Type: schema.TypeString,
+										},
+										"labels": {
+											Type: schema.TypeMap,
+											Elem: &schema.Schema{
 												Type: schema.TypeString,
 											},
 										},
+										"packer_run_uuid": {
+											Type: schema.TypeString,
+										},
+										"status": {
+											Type: schema.TypeString,
+										},
+										"updated_at": {
+											Type: schema.TypeString,
+										},
 									},
 								},
-							},
-							"iteration_id": {
-								Type: schema.TypeString,
-							},
-							"labels": {
-								Type: schema.TypeMap,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-							"packer_run_uuid": {
-								Type: schema.TypeString,
-							},
-							"status": {
-								Type: schema.TypeString,
-							},
-							"updated_at": {
-								Type: schema.TypeString,
 							},
 						},
 					},
@@ -177,19 +182,14 @@ func setPackerImageData(d *schema.ResourceData, it *packermodels.HashicorpCloudP
 
 	d.SetId(it.ID)
 
-	if err := d.Set("incremental_version", it.IncrementalVersion); err != nil {
+	if err := d.Set("iteration", map[string]interface{}{
+		"id":                  it.ID,
+		"incremental_version": it.IncrementalVersion,
+		"created_at":          it.CreatedAt.String,
+		"builds":              flattenPackerBuildList(it.Builds),
+	}); err != nil {
 		return err
 	}
-	if err := d.Set("created_at", it.CreatedAt.String()); err != nil {
-		return err
-	}
-	if err := d.Set("image_id", it.ID); err != nil {
-		return err
-	}
-	if err := d.Set("builds", flattenPackerBuildList(it.Builds)); err != nil {
-		return err
-	}
-
 	return nil
 }
 
