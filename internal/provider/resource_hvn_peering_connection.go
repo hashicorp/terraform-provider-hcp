@@ -186,6 +186,15 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
+	hvnLink2 := newLink(peering.Target.HvnTarget.Hvn.Location, HvnResourceType, peering.Target.HvnTarget.Hvn.ID)
+	hvnURL2, err := linkURL(hvnLink2)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("hvn_2", hvnURL2); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := setHvnPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
@@ -255,8 +264,15 @@ func resourceHvnPeeringConnectionImport(ctx context.Context, d *schema.ResourceD
 		return nil, err
 	}
 
+	// Only hvn_1 is required to fetch the peering connection. hvn_2 will be populated during the refresh phase immediately after import.
+	hvnLink := newLink(loc, HvnResourceType, hvnID)
+	hvnUrl, err := linkURL(hvnLink)
+	if err != nil {
+		return nil, err
+	}
+
 	d.SetId(url)
-	if err := d.Set("hvn_id", hvnID); err != nil {
+	if err := d.Set("hvn_1", hvnUrl); err != nil {
 		return nil, err
 	}
 
@@ -270,7 +286,6 @@ func setHvnPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 	if err := d.Set("organization_id", peering.Hvn.Location.OrganizationID); err != nil {
 		return err
 	}
-
 	if err := d.Set("project_id", peering.Hvn.Location.ProjectID); err != nil {
 		return err
 	}
