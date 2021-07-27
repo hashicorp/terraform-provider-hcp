@@ -28,9 +28,8 @@ resource "hcp_hvn" "hvn_2" {
 }
 
 resource "hcp_hvn_peering_connection" "peer_1" {
-  peering_id = "peer-1"
-  hvn_1      = hcp_hvn.hvn_1.self_link
-  hvn_2      = hcp_hvn.hvn_2.self_link
+  hvn_1 = hcp_hvn.hvn_1.self_link
+  hvn_2 = hcp_hvn.hvn_2.self_link
 }
 ```
 
@@ -41,7 +40,6 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 
 - **hvn_1** (String) The unique URL of one of the HVNs being peered.
 - **hvn_2** (String) The unique URL of one of the HVNs being peered.
-- **peering_id** (String) The ID of the network peering.
 
 ### Optional
 
@@ -53,6 +51,7 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 - **created_at** (String) The time that the network peering was created.
 - **expires_at** (String) The time after which the network peering will be considered expired if it hasn't into `ACCEPTED` or `ACTIVE` state.
 - **organization_id** (String) The ID of the HCP organization where the network peering is located. Always matches the HVNs' organization.
+- **peering_id** (String) The ID of the network peering.
 - **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVNs' project.
 - **self_link** (String) A unique URL identifying the network peering
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -19,10 +20,9 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"peering_id": {
-				Description:      "The ID of the network peering.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validateSlugID,
+				Description: "The ID of the network peering.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"hvn_1": {
 				Description: "The unique URL of one of the HVNs being peered.",
@@ -67,14 +67,12 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 	orgID := client.Config.OrganizationID
+
 	peeringID := d.Get("peering_id").(string)
-
-	link, err := buildLinkFromURL(peeringID, PeeringResourceType, orgID)
-	if err != nil {
-		return diag.FromErr(err)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
-
-	loc := link.Location
 	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
@@ -92,7 +90,7 @@ func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Set the globally unique id of this peering in the state.
-	link = newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)

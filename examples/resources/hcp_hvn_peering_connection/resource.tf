@@ -13,7 +13,6 @@ resource "hcp_hvn" "hvn_2" {
 }
 
 resource "hcp_hvn_peering_connection" "peer_1" {
-  peering_id = "peer-1"
-  hvn_1      = hcp_hvn.hvn_1.self_link
-  hvn_2      = hcp_hvn.hvn_2.self_link
+  hvn_1 = hcp_hvn.hvn_1.self_link
+  hvn_2 = hcp_hvn.hvn_2.self_link
 }

@@ -29,13 +29,6 @@ func resourceHvnPeeringConnection() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"peering_id": {
-				Description:      "The ID of the network peering.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validateSlugID,
-			},
 			"hvn_1": {
 				Description: "The unique URL of one of the HVNs being peered.",
 				Type:        schema.TypeString,
@@ -49,6 +42,11 @@ func resourceHvnPeeringConnection() *schema.Resource {
 				ForceNew:    true,
 			},
 			// Computed outputs
+			"peering_id": {
+				Description: "The ID of the network peering.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"organization_id": {
 				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVNs' organization.",
 				Type:        schema.TypeString,
@@ -80,7 +78,6 @@ func resourceHvnPeeringConnection() *schema.Resource {
 
 func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	peeringID := d.Get("peering_id").(string)
 	orgID := client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: orgID,
@@ -97,6 +94,15 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	hvn2, err := clients.GetHvnByID(ctx, client, hvn2Link.Location, hvn2Link.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	hvn2Link.Location.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn2.Location.Region.Provider,
+		Region:   hvn2.Location.Region.Region,
+	}
+
 	peerNetworkParams := network_service.NewCreatePeeringParams()
 	peerNetworkParams.Context = ctx
 	peerNetworkParams.PeeringHvnID = hvn1Link.ID
@@ -104,7 +110,6 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	peerNetworkParams.PeeringHvnLocationProjectID = hvn1Link.Location.ProjectID
 	peerNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreatePeeringRequest{
 		Peering: &networkmodels.HashicorpCloudNetwork20200907Peering{
-			ID:  peeringID,
 			Hvn: hvn1Link,
 			Target: &networkmodels.HashicorpCloudNetwork20200907PeeringTarget{
 				HvnTarget: &networkmodels.HashicorpCloudNetwork20200907NetworkTarget{

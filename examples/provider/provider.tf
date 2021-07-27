@@ -33,9 +33,8 @@ resource "hcp_hvn" "second_example_hvn" {
 }
 
 resource "hcp_hvn_peering_connection" "example" {
-  peering_id = "hcp-tf-example-hvn-to-hvn-peering-id"
-  hvn_1      = hcp_hvn.example_hvn.self_link
-  hvn_2      = hcp_hvn.second_example_hvn.self_link
+  hvn_1 = hcp_hvn.example_hvn.self_link
+  hvn_2 = hcp_hvn.second_example_hvn.self_link
 }
 
 // Create a VPC for the HVN to peer into
