@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -8,14 +9,14 @@ import (
 
 var (
 	testAccPackerAlpineProductionImage = `
-	data "hcp_packer_image" "alpine" {
+	data "hcp_packer_image_iteration" "alpine" {
 		bucket  = "alpine"
 		channel = "production"
 	}`
 )
 
 func TestAcc_dataSourcePacker(t *testing.T) {
-	resourceName := "data.hcp_packer_image.alpine"
+	resourceName := "data.hcp_packer_image_iteration.alpine"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },

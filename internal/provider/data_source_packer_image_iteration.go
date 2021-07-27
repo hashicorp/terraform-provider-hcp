@@ -15,9 +15,9 @@ import (
 // a minute sounds like a lot already since this would be mainly pulling data.
 var defaultPackerTimeout = time.Minute
 
-func dataSourcePackerImage() *schema.Resource {
+func dataSourcePackerImageIteration() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source provides information about an existing image build stored in the Packer registry",
+		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image given an channel.",
 		ReadContext: dataSourcePackerImageRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
@@ -48,86 +48,83 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"iteration": {
-				Description: "Iteration this channel points to",
-				Type:        schema.TypeSet,
+
+			// Actual iteration:
+
+			"id": {
+				Description: "ID of this iteration",
+				Type:        schema.TypeString,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Description: "ID of this iteration",
-							Type:        schema.TypeString,
-						},
-						"incremental_version": {
-							Description: "Incremental version of this iteration",
-							Type:        schema.TypeString,
-						},
-						"created_at": {
-							Description: "Creation time of this iteration",
-							Type:        schema.TypeString,
-						},
-						"builds": {
-							Description: "Builds for this iteration",
-							Type:        schema.TypeList,
-							// Computed:    true,
-							Elem: &schema.Schema{
-								Type: schema.TypeSet,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"cloud_provider": {
-											Type: schema.TypeString,
-										},
-										"component_type": {
-											Type: schema.TypeString,
-										},
-										"created_at": {
-											Type: schema.TypeString,
-										},
-										// "id": {
-										// 	Type: schema.TypeString,
-										// },
-										"images": {
-											Type: schema.TypeList,
-											Elem: &schema.Schema{
-												Type: schema.TypeSet,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"created_at": {
-															Type: schema.TypeString,
-														},
-														"id": {
-															Type: schema.TypeString,
-														},
-														"image_id": {
-															Type: schema.TypeString,
-														},
-														"region": {
-															Type: schema.TypeString,
-														},
-													},
-												},
+			},
+			"incremental_version": {
+				Description: "Incremental version of this iteration",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
+			"created_at": {
+				Description: "Creation time of this iteration",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"builds": {
+				Description: "Builds for this iteration",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeSet,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloud_provider": {
+								Type: schema.TypeString,
+							},
+							"component_type": {
+								Type: schema.TypeString,
+							},
+							"created_at": {
+								Type: schema.TypeString,
+							},
+							// "id": {
+							// 	Type: schema.TypeString,
+							// },
+							"images": {
+								Type: schema.TypeList,
+								Elem: &schema.Schema{
+									Type: schema.TypeSet,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"created_at": {
+												Type: schema.TypeString,
 											},
-										},
-										"iteration_id": {
-											Type: schema.TypeString,
-										},
-										"labels": {
-											Type: schema.TypeMap,
-											Elem: &schema.Schema{
+											"id": {
+												Type: schema.TypeString,
+											},
+											"image_id": {
+												Type: schema.TypeString,
+											},
+											"region": {
 												Type: schema.TypeString,
 											},
 										},
-										"packer_run_uuid": {
-											Type: schema.TypeString,
-										},
-										"status": {
-											Type: schema.TypeString,
-										},
-										"updated_at": {
-											Type: schema.TypeString,
-										},
 									},
 								},
+							},
+							"iteration_id": {
+								Type: schema.TypeString,
+							},
+							"labels": {
+								Type: schema.TypeMap,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"packer_run_uuid": {
+								Type: schema.TypeString,
+							},
+							"status": {
+								Type: schema.TypeString,
+							},
+							"updated_at": {
+								Type: schema.TypeString,
 							},
 						},
 					},
@@ -159,9 +156,12 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	iteration := channel.Pointer.Iteration
-	if err := setPackerImageData(d, iteration); err != nil {
-		return diag.FromErr(err)
-	}
+
+	d.SetId(channel.Pointer.Iteration.ID)
+
+	d.Set("incremental_version", iteration.IncrementalVersion)
+	d.Set("created_at", iteration.CreatedAt.String())
+	d.Set("builds", flattenPackerBuildList(iteration.Builds))
 
 	return nil
 }
@@ -172,22 +172,6 @@ func setLocationData(d *schema.ResourceData, loc *sharedmodels.HashicorpCloudLoc
 	}
 
 	if err := d.Set("project_id", loc.ProjectID); err != nil {
-		return err
-	}
-	return nil
-}
-
-// setPackerImageData sets image data from an image get
-func setPackerImageData(d *schema.ResourceData, it *packermodels.HashicorpCloudPackerIteration) error {
-
-	d.SetId(it.ID)
-
-	if err := d.Set("iteration", map[string]interface{}{
-		"id":                  it.ID,
-		"incremental_version": it.IncrementalVersion,
-		"created_at":          it.CreatedAt.String,
-		"builds":              flattenPackerBuildList(it.Builds),
-	}); err != nil {
 		return err
 	}
 	return nil
