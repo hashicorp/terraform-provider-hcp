@@ -25,7 +25,7 @@ func dataSourcePackerImage() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"bucket": {
-				Description:      "The ID of the HCP Packer Registry image bucket to pull from.",
+				Description:      "The slug of the HCP Packer Registry image bucket to pull from.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
