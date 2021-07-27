@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func statusPTR(s consulmodels.HashicorpCloudConsul20210204VersionStatus) *consulmodels.HashicorpCloudConsul20210204VersionStatus {
-	return &s
-}
-
 func Test_RecommendedVersion(t *testing.T) {
 	tcs := map[string]struct {
 		expected string
@@ -20,15 +16,15 @@ func Test_RecommendedVersion(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: "v1.9.0",
@@ -37,15 +33,15 @@ func Test_RecommendedVersion(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: "v1.8.4",
@@ -73,15 +69,15 @@ func Test_IsValidVersion(t *testing.T) {
 			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: true,
@@ -91,15 +87,15 @@ func Test_IsValidVersion(t *testing.T) {
 			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: false,
@@ -130,15 +126,15 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: "v1.9.0 (recommended), v1.8.6, v1.8.4",
@@ -147,11 +143,11 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.8.6",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 				{
 					Version: "v1.8.4",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE),
+					Status:  "AVAILABLE",
 				},
 			},
 			expected: "v1.8.6, v1.8.4",
@@ -160,7 +156,7 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 			},
 			expected: "v1.9.0",
@@ -174,7 +170,7 @@ func Test_VersionsToString(t *testing.T) {
 				nil,
 				{
 					Version: "v1.9.0",
-					Status:  statusPTR(consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED),
+					Status:  "RECOMMENDED",
 				},
 				nil,
 			},

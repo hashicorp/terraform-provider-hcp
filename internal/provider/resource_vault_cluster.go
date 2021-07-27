@@ -176,7 +176,6 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
-	tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
 
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
@@ -185,7 +184,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 				InitialVersion: vaultVersion,
 			},
-			Tier: &tier,
+			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
 			NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 				NetworkID:        hvn.ID,
 				PublicIpsEnabled: publicEndpoint,
@@ -254,7 +253,7 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// The Vault cluster failed to provision properly so we want to let the user know and
 	// remove it from state.
-	if *cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateFAILED {
+	if cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateFAILED {
 		log.Printf("[WARN] Vault cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil

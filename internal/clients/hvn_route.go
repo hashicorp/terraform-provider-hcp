@@ -120,7 +120,7 @@ func hvnRouteRefreshState(ctx context.Context, client *Client, hvnID, routeID st
 			return nil, "", err
 		}
 
-		return route, string(*route.State), nil
+		return route, string(route.State), nil
 	}
 }
 

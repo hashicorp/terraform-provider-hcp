@@ -235,7 +235,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 
 	// The network peering failed to provision properly so we want to let the user know and
 	// remove it from state
-	if *peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
+	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
 		log.Printf("[WARN] Network peering (%s) failed to provision, removing from state", peering.ID)
 		d.SetId("")
 		return nil
