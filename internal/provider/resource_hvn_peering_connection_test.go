@@ -62,14 +62,22 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 					testLink(resourceName, "hvn_2", "test-2", HvnResourceType, resourceName),
 				),
 			},
-			// TODO: Grab peering from TF state since it's computed
 			// Tests import
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateId:     "test-1:test-peering",
-			// 	ImportStateVerify: true,
-			// },
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test_1"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
+				ImportStateVerify: true,
+			},
 			// Tests read
 			{
 				Config: testConfig(testAccHvnPeeringConnectionConfig),
