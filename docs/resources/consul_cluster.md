@@ -7,10 +7,6 @@ description: |-
 
 # hcp_consul_cluster (Resource)
 
--> **Note:** The `primary_link` and `auto_hvn_to_hvn_peering` attributes are related to federation, a feature that is currently in private beta.
-
--> **Note:** The `plus` tier is currently in private beta.
-
 The Consul cluster resource allows you to manage an HCP Consul cluster.
 
 ## Example Usage
