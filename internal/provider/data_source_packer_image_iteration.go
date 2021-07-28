@@ -17,7 +17,7 @@ var defaultPackerTimeout = time.Minute
 
 func dataSourcePackerImageIteration() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image given an channel.",
+		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.",
 		ReadContext: dataSourcePackerImageRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
