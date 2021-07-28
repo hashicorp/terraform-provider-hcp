@@ -51,7 +51,7 @@ func dataSourcePackerImageIteration() *schema.Resource {
 			// Actual iteration:
 
 			"id": {
-				Description: "ID of this iteration",
+				Description: "HCP ID of this iteration",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -66,65 +66,81 @@ func dataSourcePackerImageIteration() *schema.Resource {
 				Computed:    true,
 			},
 			"builds": {
-				Description: "Builds for this iteration",
+				Description: "Builds for this iteration. An iteration can have more than one build if it took more than one go to build all images.",
 				Type:        schema.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeSet,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"cloud_provider": {
-								Type: schema.TypeString,
-							},
-							"component_type": {
-								Type: schema.TypeString,
-							},
-							"created_at": {
-								Type: schema.TypeString,
-							},
-							// "id": {
-							// 	Type: schema.TypeString,
-							// },
-							"images": {
-								Type: schema.TypeList,
-								Elem: &schema.Schema{
-									Type: schema.TypeSet,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"created_at": {
-												Type: schema.TypeString,
-											},
-											"id": {
-												Type: schema.TypeString,
-											},
-											"image_id": {
-												Type: schema.TypeString,
-											},
-											"region": {
-												Type: schema.TypeString,
-											},
-										},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloud_provider": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"component_type": {
+							Description: "Name of the builder that built this. Ex: 'amazon-ebs.example'",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"created_at": {
+							Description: "Creation time of this build.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"id": {
+							Description: "HCP ID of this build.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"images": {
+							Description: "Output of the build. This will contain the location or cloud identifier for your images.",
+							Type:        schema.TypeList,
+							Computed:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"created_at": {
+										Description: "Creation time of this image.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"id": {
+										Description: "HCP ID of this image.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"image_id": {
+										Description: "Cloud Image ID, URL string identifying this image for the builder that built it.",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"region": {
+										Description: "Region this image was built from. If any.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 								},
 							},
-							"iteration_id": {
+						},
+						"labels": {
+							Description: "Labels for this build.",
+							Type:        schema.TypeMap,
+							Computed:    true,
+							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							"labels": {
-								Type: schema.TypeMap,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-							"packer_run_uuid": {
-								Type: schema.TypeString,
-							},
-							"status": {
-								Type: schema.TypeString,
-							},
-							"updated_at": {
-								Type: schema.TypeString,
-							},
+						},
+						"packer_run_uuid": {
+							Description: "UUID of this build.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"status": {
+							Description: "Status this build. DONE means that all images tied to this build were successfully built.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"updated_at": {
+							Description: "Time this build was last updated.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -158,9 +174,15 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(channel.Pointer.Iteration.ID)
 
-	d.Set("incremental_version", iteration.IncrementalVersion)
-	d.Set("created_at", iteration.CreatedAt.String())
-	d.Set("builds", flattenPackerBuildList(iteration.Builds))
+	if err := d.Set("incremental_version", iteration.IncrementalVersion); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_at", iteration.CreatedAt.String()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("builds", flattenPackerBuildList(iteration.Builds)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -184,7 +206,6 @@ func flattenPackerBuildList(builds []*packermodels.HashicorpCloudPackerBuild) (f
 			"created_at":      build.CreatedAt.String(),
 			"id":              build.ID,
 			"images":          flattenPackerBuildImagesList(build.Images),
-			"iteration_id":    build.IterationID,
 			"labels":          build.Labels,
 			"packer_run_uuid": build.PackerRunUUID,
 			"status":          build.Status,
