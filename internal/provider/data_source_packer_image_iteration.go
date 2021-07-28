@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// a minute sounds like a lot already since this would be mainly pulling data.
 var defaultPackerTimeout = time.Minute
 
 func dataSourcePackerImageIteration() *schema.Resource {
