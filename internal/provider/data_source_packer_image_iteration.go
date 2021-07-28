@@ -29,11 +29,10 @@ func dataSourcePackerImageIteration() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			// Optional inputs
 			"channel": {
 				Description:      "The channel that points to the version of the image you want.",
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			// computed outputs

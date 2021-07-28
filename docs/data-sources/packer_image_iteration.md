@@ -18,10 +18,10 @@ The Packer Image data source iteration gets the most recent iteration (or build)
 ### Required
 
 - **bucket** (String) The slug of the HCP Packer Registry image bucket to pull from.
+- **channel** (String) The channel that points to the version of the image you want.
 
 ### Optional
 
-- **channel** (String) The channel that points to the version of the image you want.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
