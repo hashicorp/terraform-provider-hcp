@@ -15,7 +15,7 @@ import (
 
 func resourceHvnPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The HVN peering connection resource allows you to manage a network peering connection between HVNs.",
+		Description:   "The HVN peering connection resource allows you to manage a peering connection between HVNs.",
 		CreateContext: resourceHvnPeeringConnectionCreate,
 		ReadContext:   resourceHvnPeeringConnectionRead,
 		DeleteContext: resourceHvnPeeringConnectionDelete,
@@ -43,32 +43,32 @@ func resourceHvnPeeringConnection() *schema.Resource {
 			},
 			// Computed outputs
 			"peering_id": {
-				Description: "The ID of the network peering.",
+				Description: "The ID of the peering connection.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"organization_id": {
-				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVNs' organization.",
+				Description: "The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the network peering is located. Always matches the HVNs' project.",
+				Description: "The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the network peering was created.",
+				Description: "The time that the peering connection was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the network peering will be considered expired if it hasn't into `ACCEPTED` or `ACTIVE` state.",
+				Description: "The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"self_link": {
-				Description: "A unique URL identifying the network peering",
+				Description: "A unique URL identifying the peering connection",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -118,10 +118,10 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 			},
 		},
 	}
-	log.Printf("[INFO] Creating network peering between HVNs (%s), (%s)", hvn1Link.ID, hvn2Link.ID)
+	log.Printf("[INFO] Creating peering connection between HVNs (%s), (%s)", hvn1Link.ID, hvn2Link.ID)
 	peeringResponse, err := client.Network.CreatePeering(peerNetworkParams, nil)
 	if err != nil {
-		return diag.Errorf("unable to create network peering between HVNs (%s) and (%s): %v", hvn1Link.ID, hvn1Link.ID, err)
+		return diag.Errorf("unable to create peering connection between HVNs (%s) and (%s): %v", hvn1Link.ID, hvn1Link.ID, err)
 	}
 
 	peering := peeringResponse.Payload.Peering
@@ -134,17 +134,17 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	}
 	d.SetId(url)
 
-	// Wait for network peering to be created
-	if err := clients.WaitForOperation(ctx, client, "create network peering", loc, peeringResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create network peering (%s) between HVNs (%s) and (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID, err)
+	// Wait for peering connection to be created
+	if err := clients.WaitForOperation(ctx, client, "create peering connection", loc, peeringResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create peering connection (%s) between HVNs (%s) and (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID, err)
 	}
-	log.Printf("[INFO] Created network peering (%s) between HVNs (%s) and (%s)", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID)
+	log.Printf("[INFO] Created peering connection (%s) between HVNs (%s) and (%s)", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID)
 
 	peering, err = clients.WaitForPeeringToBeAccepted(ctx, client, peering.ID, hvn1Link.ID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Printf("[INFO] Network peering (%s) is now in ACCEPTED state", peering.ID)
+	log.Printf("[INFO] Peering connection (%s) is now in ACCEPTED state", peering.ID)
 
 	if err := setHvnPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
@@ -169,19 +169,19 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Reading network peering (%s)", peeringID)
+	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink1.ID, loc)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] Network peering (%s) not found, removing from state", peeringID)
+			log.Printf("[WARN] Peering connection (%s) not found, removing from state", peeringID)
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
 	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
-		log.Printf("[WARN] Network peering (%s) failed to provision, removing from state", peering.ID)
+		log.Printf("[WARN] Peering connection (%s) failed to provision, removing from state", peering.ID)
 		d.SetId("")
 		return nil
 	}
@@ -225,25 +225,25 @@ func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceD
 	deletePeeringParams.LocationOrganizationID = loc.OrganizationID
 	deletePeeringParams.LocationProjectID = loc.ProjectID
 
-	log.Printf("[INFO] Deleting network peering (%s)", peeringID)
+	log.Printf("[INFO] Deleting peering connection (%s)", peeringID)
 	deletePeeringResponse, err := client.Network.DeletePeering(deletePeeringParams, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			log.Printf("[WARN] Network peering (%s) not found, so no action was taken", peeringID)
+			log.Printf("[WARN] Peering connection (%s) not found, so no action was taken", peeringID)
 			return nil
 		}
-		return diag.Errorf("unable to delete network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to delete peering connection (%s): %v", peeringID, err)
 	}
 
 	// Wait for peering to be deleted
-	if err := clients.WaitForOperation(ctx, client, "delete network peering", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "delete peering connection", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
 		if strings.Contains(err.Error(), "execution already started") {
 			return nil
 		}
-		return diag.Errorf("unable to delete network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to delete peering connection (%s): %v", peeringID, err)
 	}
 
-	log.Printf("[INFO] Network peering (%s) deleted, removing from state", peeringID)
+	log.Printf("[INFO] Peering connection (%s) deleted, removing from state", peeringID)
 	return nil
 }
 

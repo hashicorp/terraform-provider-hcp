@@ -24,7 +24,7 @@ resource "hcp_hvn" "example_hvn" {
   cidr_block     = "172.25.16.0/20"
 }
 
-// Create a network peering between two HVNs
+// Create a peering connection between two HVNs
 resource "hcp_hvn" "second_example_hvn" {
   hvn_id         = "hcp-tf-second-example-hvn"
   cloud_provider = "aws"

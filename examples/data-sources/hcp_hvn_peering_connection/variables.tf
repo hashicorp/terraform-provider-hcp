@@ -1,5 +1,5 @@
 variable "peering_id" {
-  description = "The ID of the network peering."
+  description = "The ID of the HVN peering connection."
   type        = string
 }
 

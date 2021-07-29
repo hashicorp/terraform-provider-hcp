@@ -3,12 +3,12 @@
 page_title: "hcp_hvn_peering_connection Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The HVN peering connection resource allows you to manage a network peering connection between HVNs.
+  The HVN peering connection resource allows you to manage a peering connection between HVNs.
 ---
 
 # hcp_hvn_peering_connection (Resource)
 
-The HVN peering connection resource allows you to manage a network peering connection between HVNs.
+The HVN peering connection resource allows you to manage a peering connection between HVNs.
 
 ## Example Usage
 
@@ -48,12 +48,12 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 
 ### Read-Only
 
-- **created_at** (String) The time that the network peering was created.
-- **expires_at** (String) The time after which the network peering will be considered expired if it hasn't into `ACCEPTED` or `ACTIVE` state.
-- **organization_id** (String) The ID of the HCP organization where the network peering is located. Always matches the HVNs' organization.
-- **peering_id** (String) The ID of the network peering.
-- **project_id** (String) The ID of the HCP project where the network peering is located. Always matches the HVNs' project.
-- **self_link** (String) A unique URL identifying the network peering
+- **created_at** (String) The time that the peering connection was created.
+- **expires_at** (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- **organization_id** (String) The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.
+- **peering_id** (String) The ID of the peering connection.
+- **project_id** (String) The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.
+- **self_link** (String) A unique URL identifying the peering connection
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -12,7 +12,7 @@ import (
 
 func dataSourceHvnPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Description: "The HVN peering connection data source provides information about an existing network peering between HVNs.",
+		Description: "The HVN peering connection data source provides information about an existing peering connection between HVNs.",
 		ReadContext: dataSourceHvnPeeringConnectionRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &peeringDefaultTimeout,
@@ -20,7 +20,7 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"peering_id": {
-				Description: "The ID of the network peering.",
+				Description: "The ID of the peering connection.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -36,27 +36,27 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 			},
 			// Computed outputs
 			"organization_id": {
-				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVNs' organization.",
+				Description: "The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the HCP project where the network peering is located. Always matches the HVNs' project.",
+				Description: "The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "The time that the network peering was created.",
+				Description: "The time that the peering connection was created.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"expires_at": {
-				Description: "The time after which the network peering will be considered expired if it hasn't into `ACCEPTED` or `ACTIVE` state.",
+				Description: "The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"self_link": {
-				Description: "A unique URL identifying the network peering",
+				Description: "A unique URL identifying the peering connection",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -78,13 +78,13 @@ func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Reading network peering (%s)", peeringID)
+	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink1.ID, loc)
 	if err != nil {
-		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
+		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
-	// Network peering found, update resource data.
+	// Peering connection found, update resource data.
 	if err := setHvnPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
