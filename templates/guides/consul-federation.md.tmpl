@@ -11,4 +11,12 @@ Once you have a HCP Consul cluster, you can create a new Consul cluster to feder
 By providing `auto_hvn_to_hvn_peering` as a parameter on the secondary cluster, the HVNs are being peered
 automatically ensuring full connectivity. This parameter only ever has to be provided on secondary clusters.
 
+This example uses the `development` tier. There are restrictions for federating clusters, depending on the tier:
+
+* `development`: allows multi-region and single-region federation with up to two secondary clusters
+* `standard`: allows single-region federation without restrictions of the number of secondary clusters
+* `plus`: allows multi-region federation without restrictions of the number of secondary clusters
+
+Keep in mind that the account wide cluster limit applies to federation as well.
+
 {{ tffile "examples/guides/consul_cluster_federation/main.tf" }}
