@@ -1,9 +1,9 @@
-## 0.11.0 (Unreleased)
+## 0.11.0 (July 30, 2021)
 
 FEATURES:
 
-* **New resource** `hcp_hvn_peering_connection` (GH-156)
-* resource/hcp_consul_cluster: Consul federation released as Generally Available (GH-171)
+* **New resource** `hcp_hvn_peering_connection` ([#156](https://github.com/hashicorp/terraform-provider-hcp/issues/156))
+* resource/hcp_consul_cluster: Consul federation released as Generally Available ([#171](https://github.com/hashicorp/terraform-provider-hcp/issues/171))
 
 ## 0.10.0 (July 15, 2021)
 
