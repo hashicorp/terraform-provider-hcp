@@ -1,6 +1,9 @@
-## 0.*.0 (Unreleased)
+## 0.11.0 (Unreleased)
 
-* {affected resource}: {Brief description of change} [GH-nnnn]
+FEATURES:
+
+* **New resource** `hcp_hvn_peering_connection` (GH-156)
+* resource/hcp_consul_cluster: Consul federation released as Generally Available (GH-171)
 
 ## 0.10.0 (July 15, 2021)
 
