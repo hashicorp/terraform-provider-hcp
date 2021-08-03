@@ -139,7 +139,7 @@ func resourceConsulCluster() *schema.Resource {
 				},
 			},
 			"auto_hvn_to_hvn_peering": {
-				Description: "Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.",
+				Description: "Enables automatic HVN to HVN peering when creating a secondary cluster in a federation. The alternative to using the auto-accept feature is to create an [`hcp_hvn_peering_connection`](hvn_peering_connection.md) resource that explicitly defines the HVN resources that are allowed to communicate with each other.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
