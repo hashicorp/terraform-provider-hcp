@@ -376,8 +376,8 @@ func Test_validateVaultClusterTier(t *testing.T) {
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "expected 'development' to be one of: [dev standard_small standard_medium standard_large]",
-					Detail:        "expected 'development' to be one of: [dev standard_small standard_medium standard_large] (value is case-insensitive).",
+					Summary:       "expected 'development' to be one of: [dev standard_small standard_medium standard_large starter_small]",
+					Detail:        "expected 'development' to be one of: [dev standard_small standard_medium standard_large starter_small] (value is case-insensitive).",
 					AttributePath: nil,
 				},
 			},
