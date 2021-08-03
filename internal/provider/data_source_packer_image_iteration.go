@@ -132,7 +132,7 @@ func dataSourcePackerImageIteration() *schema.Resource {
 							Computed:    true,
 						},
 						"status": {
-							Description: "Status this build. DONE means that all images tied to this build were successfully built.",
+							Description: "Status of this build. DONE means that all images tied to this build were successfully built.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
