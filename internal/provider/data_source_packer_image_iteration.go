@@ -48,12 +48,6 @@ func dataSourcePackerImageIteration() *schema.Resource {
 			},
 
 			// Actual iteration:
-
-			"id": {
-				Description: "HCP ID of this iteration",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"incremental_version": {
 				Description: "Incremental version of this iteration",
 				Type:        schema.TypeInt,
