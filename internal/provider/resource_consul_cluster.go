@@ -587,7 +587,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	versionChanged := d.HasChange("min_consul_version")
 
 	if !sizeChanged && !versionChanged {
-		return diag.Errorf("at least one of: [min_consul_version, size] is required in order to upgrade the cluster")
+		return diag.Errorf("at least one of: [min_consul_version, size] is required in order to update the cluster")
 	}
 
 	targetCluster := consulmodels.HashicorpCloudConsul20210204Cluster{
@@ -644,13 +644,19 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to update Consul cluster (%s): %v", clusterID, err)
 	}
 
+	// Get updated Consul cluster
+	updatedCluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", clusterID, err)
+	}
+
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+	if err := setConsulClusterResourceData(d, updatedCluster, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
