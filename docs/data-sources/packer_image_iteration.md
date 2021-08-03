@@ -30,13 +30,13 @@ data "hcp_packer_image_iteration" "alpine" {
 
 ### Optional
 
+- **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - **builds** (List of Object) Builds for this iteration. An iteration can have more than one build if it took more than one go to build all images. (see [below for nested schema](#nestedatt--builds))
 - **created_at** (String) Creation time of this iteration
-- **id** (String) HCP ID of this iteration
 - **incremental_version** (Number) Incremental version of this iteration
 - **organization_id** (String) The ID of the organization this HCP Packer registry is located in.
 - **project_id** (String) The ID of the project this HCP Packer registry is located in.
