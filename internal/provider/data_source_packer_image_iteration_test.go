@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -125,6 +126,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 		Location:    loc,
 	}
 	createBuildParams.Body.Build = &models.HashicorpCloudPackerBuild{
+		PackerRunUUID: uuid.New().String(),
 		CloudProvider: "aws",
 		ComponentType: "amazon-ebs.example",
 		IterationID:   iterationID,
