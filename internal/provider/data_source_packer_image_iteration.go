@@ -65,8 +65,9 @@ func dataSourcePackerImageIteration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloud_provider": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "Name of the cloud provider this image is stored-in, if any.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"component_type": {
 							Description: "Name of the builder that built this. Ex: 'amazon-ebs.example'",
