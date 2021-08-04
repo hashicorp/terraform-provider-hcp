@@ -1,3 +1,16 @@
+## 0.12.0 (Unreleased)
+
+FEATURES:
+
+* resource/hcp_vault_cluster: Add `starter_small` cluster tier [GH-178]
+
+IMPROVEMENTS:
+
+* provider: Bump `terraform-plugin-sdk/v2` dependency [GH-157]
+* provider: Bump `go-openapi/runtime` dependency [GH-140]
+* provider: Bump `google/uuid` dependency [GH-164]
+* docs: Update Consul docs to include hcp_hvn_peering_connection [GH-176]
+
 ## 0.11.0 (July 30, 2021)
 
 FEATURES:
