@@ -1,15 +1,15 @@
-## 0.12.0 (Unreleased)
+## 0.12.0 (August 04, 2021)
 
 FEATURES:
 
-* resource/hcp_vault_cluster: Add `starter_small` cluster tier [GH-178]
+* resource/hcp_vault_cluster: Add `starter_small` cluster tier ([#178](https://github.com/hashicorp/terraform-provider-hcp/issues/178))
 
 IMPROVEMENTS:
 
-* provider: Bump `terraform-plugin-sdk/v2` dependency [GH-157]
-* provider: Bump `go-openapi/runtime` dependency [GH-140]
-* provider: Bump `google/uuid` dependency [GH-164]
-* docs: Update Consul docs to include hcp_hvn_peering_connection [GH-176]
+* provider: Bump `terraform-plugin-sdk/v2` dependency ([#157](https://github.com/hashicorp/terraform-provider-hcp/issues/157))
+* provider: Bump `go-openapi/runtime` dependency ([#140](https://github.com/hashicorp/terraform-provider-hcp/issues/140))
+* provider: Bump `google/uuid` dependency ([#164](https://github.com/hashicorp/terraform-provider-hcp/issues/164))
+* docs: Update Consul docs to include hcp_hvn_peering_connection ([#176](https://github.com/hashicorp/terraform-provider-hcp/issues/176))
 
 ## 0.11.0 (July 30, 2021)
 
