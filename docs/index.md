@@ -34,7 +34,7 @@ terraform {
   required_providers {
     hcp = {
       source  = "hashicorp/hcp"
-      version = "~> 0.9.0"
+      version = "~> 0.11.0"
     }
   }
 }
@@ -53,6 +53,19 @@ resource "hcp_hvn" "example_hvn" {
   cloud_provider = "aws"
   region         = var.region
   cidr_block     = "172.25.16.0/20"
+}
+
+// Create a peering connection between two HVNs
+resource "hcp_hvn" "second_example_hvn" {
+  hvn_id         = "hcp-tf-second-example-hvn"
+  cloud_provider = "aws"
+  region         = var.region
+  cidr_block     = "172.18.16.0/20"
+}
+
+resource "hcp_hvn_peering_connection" "example" {
+  hvn_1 = hcp_hvn.example_hvn.self_link
+  hvn_2 = hcp_hvn.second_example_hvn.self_link
 }
 
 // Create a VPC for the HVN to peer into

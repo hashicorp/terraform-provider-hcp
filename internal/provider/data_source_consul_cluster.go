@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -173,8 +175,119 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Cluster found, update resource data
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+	if err := setConsulClusterDataSourceAttributes(d, cluster, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func setConsulClusterDataSourceAttributes(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20210204Cluster,
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse) error {
+
+	if err := d.Set("cluster_id", cluster.ID); err != nil {
+		return err
+	}
+
+	if err := d.Set("hvn_id", cluster.Config.NetworkConfig.Network.ID); err != nil {
+		return err
+	}
+
+	if err := d.Set("organization_id", cluster.Location.OrganizationID); err != nil {
+		return err
+	}
+
+	if err := d.Set("project_id", cluster.Location.ProjectID); err != nil {
+		return err
+	}
+
+	if err := d.Set("cloud_provider", cluster.Location.Region.Provider); err != nil {
+		return err
+	}
+
+	if err := d.Set("region", cluster.Location.Region.Region); err != nil {
+		return err
+	}
+
+	publicEndpoint := !cluster.Config.NetworkConfig.Private
+	if err := d.Set("public_endpoint", publicEndpoint); err != nil {
+		return err
+	}
+
+	if err := d.Set("datacenter", cluster.Config.ConsulConfig.Datacenter); err != nil {
+		return err
+	}
+
+	if err := d.Set("scale", cluster.Config.CapacityConfig.Scale); err != nil {
+		return err
+	}
+
+	if err := d.Set("tier", cluster.Config.Tier); err != nil {
+		return err
+	}
+
+	if err := d.Set("size", cluster.Config.CapacityConfig.Size); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_snapshot_interval", "24h"); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_snapshot_retention", "30d"); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("connect_enabled", cluster.Config.ConsulConfig.ConnectEnabled); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_version", cluster.ConsulVersion); err != nil {
+		return err
+	}
+
+	if err := d.Set("auto_hvn_to_hvn_peering", cluster.Config.AutoHvnToHvnPeering); err != nil {
+		return err
+	}
+
+	if publicEndpoint {
+		// No port needed to communicate with HCP Consul via HTTPS
+		if err := d.Set("consul_public_endpoint_url", fmt.Sprintf("https://%s", cluster.DNSNames.Public)); err != nil {
+			return err
+		}
+	}
+
+	// No port needed to communicate with HCP Consul via HTTPS
+	if err := d.Set("consul_private_endpoint_url", fmt.Sprintf("https://%s", cluster.DNSNames.Private)); err != nil {
+		return err
+	}
+
+	link := newLink(cluster.Location, ConsulClusterResourceType, cluster.ID)
+	self_link, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", self_link); err != nil {
+		return err
+	}
+
+	if cluster.Config.ConsulConfig.Primary != nil {
+		link := newLink(cluster.Config.ConsulConfig.Primary.Location, ConsulClusterResourceType, cluster.Config.ConsulConfig.Primary.ID)
+		primary_link, err := linkURL(link)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("primary_link", primary_link); err != nil {
+			return err
+		}
 	}
 
 	return nil
