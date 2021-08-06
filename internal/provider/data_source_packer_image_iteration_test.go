@@ -142,11 +142,16 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 
 	build, err := client.Packer.CreateBuild(createBuildParams, nil)
 	if err, ok := err.(*packer_service.CreateBuildDefault); ok {
-		t.Errorf("unexpected CreateBuild error, expected nil or 409. Got %v", err)
+		switch err.Code() {
+		case int(codes.Aborted), http.StatusConflict:
+			// all good here !
+			return
+		}
 	}
 
 	if build == nil {
 		t.Errorf("unexpected CreateBuild error, expected non nil build response. Got %v", err)
+		return
 	}
 
 	// Iterations are currently only assigned an incremental version when publishing image metadata on update.
@@ -174,7 +179,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	}
 }
 
-func createChannel(t *testing.T, bucketSlug, channel string) {
+func createChannel(t *testing.T, bucketSlug, channelSlug string) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -188,15 +193,48 @@ func createChannel(t *testing.T, bucketSlug, channel string) {
 	createChParams.LocationProjectID = loc.ProjectID
 	createChParams.BucketSlug = bucketSlug
 	createChParams.Body = &models.HashicorpCloudPackerCreateChannelRequest{
-		Slug:               channel,
+		Slug:               channelSlug,
 		IncrementalVersion: 1,
 	}
 
 	_, err := client.Packer.CreateChannel(createChParams, nil)
-	if err != nil {
-		t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
+	if err == nil {
+		return
+	}
+	if err, ok := err.(*packer_service.CreateChannelDefault); ok {
+		switch err.Code() {
+		case int(codes.Aborted), http.StatusConflict:
+			// all good here !
+			updateChannel(t, bucketSlug, channelSlug)
+			return
+		}
+	}
+	t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
+}
+
+func updateChannel(t *testing.T, bucketSlug, channelSlug string) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
+	updateChParams := packer_service.NewUpdateChannelParams()
+	updateChParams.LocationOrganizationID = loc.OrganizationID
+	updateChParams.LocationProjectID = loc.ProjectID
+	updateChParams.BucketSlug = bucketSlug
+	updateChParams.Slug = channelSlug
+	updateChParams.Body = &models.HashicorpCloudPackerUpdateChannelRequest{
+		IncrementalVersion: 1,
+	}
+
+	_, err := client.Packer.UpdateChannel(updateChParams, nil)
+	if err == nil {
+		return
+	}
+	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
 }
 
 func deleteBucket(t *testing.T, bucketSlug string) {
