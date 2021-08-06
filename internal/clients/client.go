@@ -1,8 +1,6 @@
 package clients
 
 import (
-	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
@@ -10,8 +8,16 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
+
+	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
+
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client/vault_service"
+
+	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
+
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
 
@@ -25,6 +31,7 @@ type Client struct {
 	Organization organization_service.ClientService
 	Consul       consul_service.ClientService
 	Vault        vault_service.ClientService
+	Packer       packer_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -69,6 +76,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 		Vault:        cloud_vault.New(httpClient, nil).VaultService,
+		Packer:       cloud_packer.New(httpClient, nil).PackerService,
 	}
 
 	return client, nil
