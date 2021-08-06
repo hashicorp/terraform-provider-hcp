@@ -1,3 +1,9 @@
+## 0.13.0 (Unreleased)
+
+FEATURES
+
+* **New data source** `packer_image_iteration` [GH-169]
+
 ## 0.12.0 (August 04, 2021)
 
 FEATURES:
