@@ -1,8 +1,8 @@
-## 0.13.0 (Unreleased)
+## 0.13.0 (August 06, 2021)
 
 FEATURES
 
-* **New data source** `packer_image_iteration` [GH-169]
+* **New data source** `packer_image_iteration` ([#169](https://github.com/hashicorp/terraform-provider-hcp/issues/169))
 
 ## 0.12.0 (August 04, 2021)
 
