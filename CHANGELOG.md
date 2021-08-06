@@ -2,7 +2,7 @@
 
 FEATURES
 
-* **New data source** `packer_image_iteration` ([#169](https://github.com/hashicorp/terraform-provider-hcp/issues/169))
+* **New data source** `packer_image_iteration` ([#169](https://github.com/hashicorp/terraform-provider-hcp/issues/169)) in **private beta**
 
 ## 0.12.0 (August 04, 2021)
 
