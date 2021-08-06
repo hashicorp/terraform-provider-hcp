@@ -164,6 +164,10 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
+	if channel.Pointer == nil {
+		return diag.Errorf("no iteration information found for the specified channel %s", channelSlug)
+	}
+
 	iteration := channel.Pointer.Iteration
 
 	d.SetId(channel.Pointer.Iteration.ID)
