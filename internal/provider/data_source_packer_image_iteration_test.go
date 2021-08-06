@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -9,16 +10,22 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"google.golang.org/grpc/codes"
 )
 
+const (
+	bucket  = "alpine-acctest"
+	channel = "production"
+)
+
 var (
-	testAccPackerAlpineProductionImage = `
+	testAccPackerAlpineProductionImage = fmt.Sprintf(`
 	data "hcp_packer_image_iteration" "alpine" {
-		bucket  = "alpine"
-		channel = "production"
-	}`
+		bucket  = %q
+		channel = %q
+	}`, bucket, channel)
 )
 
 func upsertBucket(t *testing.T, bucketSlug string) {
@@ -130,37 +137,148 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 		CloudProvider: "aws",
 		ComponentType: "amazon-ebs.example",
 		IterationID:   iterationID,
-		Status:        models.HashicorpCloudPackerBuildStatusDONE,
-		Images: []*models.HashicorpCloudPackerImage{
-			{
-				ImageID: "ami-42",
-			},
-			{
-				ImageID: "ami-43",
+		Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
+	}
+
+	build, err := client.Packer.CreateBuild(createBuildParams, nil)
+	if err, ok := err.(*packer_service.CreateBuildDefault); ok {
+		t.Errorf("unexpected CreateBuild error, expected nil or 409. Got %v", err)
+	}
+
+	if build == nil {
+		t.Errorf("unexpected CreateBuild error, expected non nil build response. Got %v", err)
+	}
+
+	// Iterations are currently only assigned an incremental version when publishing image metadata on update.
+	// Incremental versions are a requirement for assigning the channel.
+	updateBuildParams := packer_service.NewUpdateBuildParams()
+	updateBuildParams.LocationOrganizationID = loc.OrganizationID
+	updateBuildParams.LocationProjectID = loc.ProjectID
+	updateBuildParams.BuildID = build.Payload.Build.ID
+	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
+		Updates: &models.HashicorpCloudPackerBuildUpdates{
+			Status: models.HashicorpCloudPackerBuildStatusDONE,
+			Images: []*models.HashicorpCloudPackerImage{
+				{
+					ImageID: "ami-42",
+				},
+				{
+					ImageID: "ami-43",
+				},
 			},
 		},
 	}
-	_, err := client.Packer.CreateBuild(createBuildParams, nil)
+	_, err = client.Packer.UpdateBuild(updateBuildParams, nil)
+	if err, ok := err.(*packer_service.UpdateBuildDefault); ok {
+		t.Errorf("unexpected UpdateBuild error, expected nil. Got %v", err)
+	}
+}
+
+func createChannel(t *testing.T, bucketSlug, channel string) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	createChParams := packer_service.NewCreateChannelParams()
+	createChParams.LocationOrganizationID = loc.OrganizationID
+	createChParams.LocationProjectID = loc.ProjectID
+	createChParams.BucketSlug = bucketSlug
+	createChParams.Body = &models.HashicorpCloudPackerCreateChannelRequest{
+		Slug:               channel,
+		IncrementalVersion: 1,
+	}
+
+	_, err := client.Packer.CreateChannel(createChParams, nil)
+	if err != nil {
+		t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
+	}
+
+}
+
+func deleteBucket(t *testing.T, bucketSlug string) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	deleteBktParams := packer_service.NewDeleteBucketParams()
+	deleteBktParams.LocationOrganizationID = loc.OrganizationID
+	deleteBktParams.LocationProjectID = loc.ProjectID
+	deleteBktParams.BucketSlug = bucketSlug
+
+	_, err := client.Packer.DeleteBucket(deleteBktParams, nil)
 	if err == nil {
 		return
 	}
-	if err, ok := err.(*packer_service.CreateBuildDefault); ok {
-		switch err.Code() {
-		case int(codes.AlreadyExists), http.StatusConflict:
-			// all good here !
-			return
-		}
+	t.Errorf("unexpected DeleteBucket error, expected nil. Got %v", err)
+}
+
+func deleteIteration(t *testing.T, bucketSlug string, iterationID string) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
 	}
 
-	t.Errorf("unexpected CreateBuild error, expected nil or 409. Got %v", err)
+	deleteItParams := packer_service.NewDeleteIterationParams()
+	deleteItParams.LocationOrganizationID = loc.OrganizationID
+	deleteItParams.LocationProjectID = loc.ProjectID
+	deleteItParams.BucketSlug = &bucketSlug
+	deleteItParams.IterationID = iterationID
+
+	_, err := client.Packer.DeleteIteration(deleteItParams, nil)
+	if err == nil {
+		return
+	}
+	t.Errorf("unexpected DeleteIteration error, expected nil. Got %v", err)
+}
+
+func deleteChannel(t *testing.T, bucketSlug string, channelSlug string) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	deleteChParams := packer_service.NewDeleteChannelParams()
+	deleteChParams.LocationOrganizationID = loc.OrganizationID
+	deleteChParams.LocationProjectID = loc.ProjectID
+	deleteChParams.BucketSlug = bucketSlug
+	deleteChParams.Slug = channelSlug
+
+	_, err := client.Packer.DeleteChannel(deleteChParams, nil)
+	if err == nil {
+		return
+	}
+	t.Errorf("unexpected DeleteChannel error, expected nil. Got %v", err)
 }
 
 func TestAcc_dataSourcePacker(t *testing.T) {
 	resourceName := "data.hcp_packer_image_iteration.alpine"
+	fingerprint := "42"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			itID := getIterationIDFromFingerPrint(t, bucket, fingerprint)
+			// delete iteration before channel to ensure hard delete of channel.
+			deleteIteration(t, bucket, itID)
+			deleteChannel(t, bucket, channel)
+			deleteBucket(t, bucket)
+			return nil
+		},
 
 		Steps: []resource.TestStep{
 			// testing that getting the production channel of the alpine image
@@ -168,12 +286,11 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 
 			{
 				PreConfig: func() {
-					bucket := "alpine"
-					fingerprint := "42"
 					upsertBucket(t, bucket)
 					upsertIteration(t, bucket, fingerprint)
 					itID := getIterationIDFromFingerPrint(t, bucket, fingerprint)
 					upsertBuild(t, bucket, fingerprint, itID)
+					createChannel(t, bucket, channel)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
 				Check: resource.ComposeTestCheckFunc(
