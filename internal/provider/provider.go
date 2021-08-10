@@ -141,7 +141,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			SourceChannel: userAgent,
 		})
 		if err != nil {
-			return nil, diag.Errorf("unable to create HCP api client: %v", err)
+			diags = append(diags, diag.Errorf("unable to create HCP api client", err)...)
+			return nil, diags
 		}
 
 		// For the initial release, since only one project is allowed per organization, the
@@ -151,7 +152,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// on the provider or on each resource.
 		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			diags = append(diags, diag.Errorf("unable to create HCP api client", err)...)
+			return nil, diags
 		}
 		client.Config.OrganizationID = project.Parent.ID
 		client.Config.ProjectID = project.ID
