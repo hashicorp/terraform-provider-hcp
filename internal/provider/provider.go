@@ -159,7 +159,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			SourceChannel: userAgent,
 		})
 		if err != nil {
-			diags = append(diags, diag.Errorf("unable to create HCP api client", err)...)
+			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
 			return nil, diags
 		}
 
@@ -170,7 +170,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// on the provider or on each resource.
 		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
-			diags = append(diags, diag.Errorf("unable to create HCP api client", err)...)
+			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
 			return nil, diags
 		}
 		client.Config.OrganizationID = project.Parent.ID
