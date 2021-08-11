@@ -164,28 +164,15 @@ func ListConsulUpgradeVersions(ctx context.Context, client *Client, loc *sharedm
 
 // UpdateConsulCluster will make a call to the Consul service to initiate the update Consul
 // cluster workflow.
-func UpdateConsulCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID, newConsulVersion string) (*consulmodels.HashicorpCloudConsul20210204UpdateResponse, error) {
-
-	cluster := consulmodels.HashicorpCloudConsul20210204Cluster{
-		ConsulVersion: newConsulVersion,
-		ID:            clusterID,
-		Location: &sharedmodels.HashicorpCloudLocationLocation{
-			ProjectID:      loc.ProjectID,
-			OrganizationID: loc.OrganizationID,
-			Region: &sharedmodels.HashicorpCloudLocationRegion{
-				Region:   loc.Region.Region,
-				Provider: loc.Region.Provider,
-			},
-		},
-	}
+func UpdateConsulCluster(ctx context.Context, client *Client,
+	newCluster *consulmodels.HashicorpCloudConsul20210204Cluster) (*consulmodels.HashicorpCloudConsul20210204UpdateResponse, error) {
 
 	updateParams := consul_service.NewUpdateParams()
 	updateParams.Context = ctx
-	updateParams.ClusterID = cluster.ID
-	updateParams.ClusterLocationProjectID = loc.ProjectID
-	updateParams.ClusterLocationOrganizationID = loc.OrganizationID
-	updateParams.Body = &cluster
+	updateParams.ClusterID = newCluster.ID
+	updateParams.ClusterLocationProjectID = newCluster.Location.ProjectID
+	updateParams.ClusterLocationOrganizationID = newCluster.Location.OrganizationID
+	updateParams.Body = newCluster
 
 	// Invoke update cluster endpoint
 	updateResp, err := client.Consul.Update(updateParams, nil)
