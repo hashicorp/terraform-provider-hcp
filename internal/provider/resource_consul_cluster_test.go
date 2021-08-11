@@ -10,27 +10,42 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccConsulClusterConfig = `
-resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
-	cloud_provider = "aws"
-	region         = "us-west-2"
-}
-
+var consulCluster = `
 resource "hcp_consul_cluster" "test" {
 	cluster_id = "test-consul-cluster"
 	hvn_id     = hcp_hvn.test.hvn_id
-	tier       = "development"
-}
-
-data "hcp_consul_cluster" "test" {
-	cluster_id = hcp_consul_cluster.test.cluster_id
-}
-
-resource "hcp_consul_cluster_root_token" "test" {
-	cluster_id = hcp_consul_cluster.test.cluster_id
+	tier       = "standard"
 }
 `
+
+var updatedConsulCluster = `
+resource "hcp_consul_cluster" "test" {
+	cluster_id = "test-consul-cluster"
+	hvn_id     = hcp_hvn.test.hvn_id
+	tier       = "standard"
+	size	   = "medium"
+}
+`
+
+func setTestAccConsulClusterConfig(consulCluster string) string {
+	return fmt.Sprintf(`
+	resource "hcp_hvn" "test" {
+		hvn_id         = "test-hvn"
+		cloud_provider = "aws"
+		region         = "us-west-2"
+	}
+
+	%s
+	
+	data "hcp_consul_cluster" "test" {
+		cluster_id = hcp_consul_cluster.test.cluster_id
+	}
+	
+	resource "hcp_consul_cluster_root_token" "test" {
+		cluster_id = hcp_consul_cluster.test.cluster_id
+	}
+`, consulCluster)
+}
 
 // This includes tests against both the resource, the corresponding datasource,
 // and creation of the Consul cluster root token resource in order to shorten
@@ -47,17 +62,17 @@ func TestAccConsulCluster(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Tests create
 			{
-				Config: testConfig(testAccConsulClusterConfig),
+				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
@@ -94,17 +109,17 @@ func TestAccConsulCluster(t *testing.T) {
 			},
 			// Tests read
 			{
-				Config: testConfig(testAccConsulClusterConfig),
+				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
@@ -125,7 +140,7 @@ func TestAccConsulCluster(t *testing.T) {
 			},
 			// Tests datasource
 			{
-				Config: testConfig(testAccConsulClusterConfig),
+				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", dataSourceName, "cluster_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
@@ -154,12 +169,20 @@ func TestAccConsulCluster(t *testing.T) {
 			},
 			// Tests root token
 			{
-				Config: testConfig(testAccConsulClusterConfig),
+				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(rootTokenResourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "accessor_id"),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "secret_id"),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "kubernetes_secret"),
+				),
+			},
+			// Tests update
+			{
+				Config: testConfig(setTestAccConsulClusterConfig(updatedConsulCluster)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConsulClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "size", "MEDIUM"),
 				),
 			},
 		},

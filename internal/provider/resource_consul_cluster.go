@@ -131,7 +131,6 @@ func resourceConsulCluster() *schema.Resource {
 				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateConsulClusterSize,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
@@ -583,30 +582,59 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
 	}
 
-	// Fetch available upgrade versions
-	upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
-	if err != nil {
-		return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
+	// Confirm update fields have been changed
+	sizeChanged := d.HasChange("size")
+	versionChanged := d.HasChange("min_consul_version")
+
+	if !sizeChanged && !versionChanged {
+		return diag.Errorf("at least one of: [min_consul_version, size] is required in order to update the cluster")
 	}
 
-	v, ok := d.GetOk("min_consul_version")
-	if !ok {
-		return diag.Errorf("min_consul_version is required in order to upgrade the cluster")
+	targetCluster := consulmodels.HashicorpCloudConsul20210204Cluster{
+		ID: clusterID,
+		Location: &sharedmodels.HashicorpCloudLocationLocation{
+			ProjectID:      cluster.Location.ProjectID,
+			OrganizationID: cluster.Location.OrganizationID,
+			Region: &sharedmodels.HashicorpCloudLocationRegion{
+				Region:   cluster.Location.Region.Region,
+				Provider: cluster.Location.Region.Provider,
+			},
+		},
 	}
-	newConsulVersion := input.NormalizeVersion(v.(string))
 
-	// Check that there are any valid upgrade versions
-	if upgradeVersions == nil {
-		return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCP")
+	if versionChanged {
+		// Fetch available upgrade versions
+		upgradeVersions, err := clients.ListConsulUpgradeVersions(ctx, client, cluster.Location, clusterID)
+		if err != nil {
+			return diag.Errorf("unable to list Consul upgrade versions (%s): %v", clusterID, err)
+		}
+		version := d.Get("min_consul_version")
+		newConsulVersion := input.NormalizeVersion(version.(string))
+
+		// Check that there are any valid upgrade versions
+		if upgradeVersions == nil {
+			return diag.Errorf("no upgrade versions of Consul are available for this cluster; you may already be on the latest Consul version supported by HCP")
+		}
+
+		// Validate that the upgrade version is valid
+		if !consul.IsValidVersion(newConsulVersion, upgradeVersions) {
+			return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: [%s]", newConsulVersion, consul.VersionsToString(upgradeVersions))
+		}
+
+		targetCluster.ConsulVersion = newConsulVersion
 	}
 
-	// Validate that the upgrade version is valid
-	if !consul.IsValidVersion(newConsulVersion, upgradeVersions) {
-		return diag.Errorf("specified Consul version (%s) is unavailable; must be one of: [%s]", newConsulVersion, consul.VersionsToString(upgradeVersions))
+	if sizeChanged {
+		newSize := d.Get("size").(string)
+		targetCluster.Config = &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
+			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
+				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize)),
+			},
+		}
 	}
 
 	// Invoke update cluster endpoint
-	updateResp, err := clients.UpdateConsulCluster(ctx, client, cluster.Location, clusterID, newConsulVersion)
+	updateResp, err := clients.UpdateConsulCluster(ctx, client, &targetCluster)
 	if err != nil {
 		return diag.Errorf("error updating Consul cluster (%s): %v", clusterID, err)
 	}
@@ -616,13 +644,19 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to update Consul cluster (%s): %v", clusterID, err)
 	}
 
+	// Get updated Consul cluster
+	updatedCluster, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", clusterID, err)
+	}
+
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+	if err := setConsulClusterResourceData(d, updatedCluster, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
