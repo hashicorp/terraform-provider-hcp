@@ -68,19 +68,10 @@ func New() func() *schema.Provider {
 	}
 }
 
-type statuspage struct {
-	Components []component `json:"components"`
-}
-
-type status string
-
-type component struct {
-	ID     string `json:"id"`
-	Status status `json:"status"`
-}
-
 const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
 const statuspageHcpComponentId = "ym75hzpmfq4q"
+
+type status string
 
 // Possible statuses returned by statuspage.io.
 const (
@@ -90,6 +81,15 @@ const (
 	majorOutage                = "major_outage"
 	underMaintenance           = "under_maintenance"
 )
+
+type statuspage struct {
+	Components []component `json:"components"`
+}
+
+type component struct {
+	ID     string `json:"id"`
+	Status status `json:"status"`
+}
 
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -176,7 +176,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		client.Config.OrganizationID = project.Parent.ID
 		client.Config.ProjectID = project.ID
 
-		return client, nil
+		return client, diags
 	}
 }
 
