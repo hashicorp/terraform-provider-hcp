@@ -131,20 +131,20 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		case operational:
 			log.Printf("HCP is fully operational.")
 		case partialOutage, majorOutage:
-			return nil, diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com/ for more details.")
+			return nil, diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com for more details.")
 		case degradedPerformance:
-			log.Printf("HCP is experiencing degraded performance. Please check https://status.hashicorp.com/ for more details.")
+			log.Printf("HCP is experiencing degraded performance. Please check https://status.hashicorp.com for more details.")
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "HCP is experiencing degraded performance.",
-				Detail:   "Please check https://status.hashicorp.com/ for more details.",
+				Detail:   "Please check https://status.hashicorp.com for more details.",
 			})
 		case underMaintenance:
-			log.Printf("HCP is undergoing maintenance that may affect performance. Please check https://status.hashicorp.com/ for more details.")
+			log.Printf("HCP is undergoing maintenance that may affect performance. Please check https://status.hashicorp.com for more details.")
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "HCP is undergoing maintenance that may affect performance.",
-				Detail:   "Please check https://status.hashicorp.com/ for more details.",
+				Detail:   "Please check https://status.hashicorp.com for more details.",
 			})
 		}
 
