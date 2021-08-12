@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -70,11 +71,17 @@ func New() func() *schema.Provider {
 
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		// Check the Hashicorp status page. This helper returns warnings for degraded performance
-		// or errors out if there's an outage.
-		diags := isHCPOperational()
 
-		// Set up HCP SDK client.
+		var diags diag.Diagnostics
+		// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
+		// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
+		if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
+			// This helper verifies HCP's status and either returns a warning for degraded performance
+			// or errors out if there's an outage.
+			diags = isHCPOperational()
+		}
+
+		// Sets up HCP SDK client.
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
@@ -139,6 +146,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 	return project, nil
 }
 
+// Status endpoint for prod.
 const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
 const statuspageHcpComponentId = "ym75hzpmfq4q"
 
@@ -192,8 +200,6 @@ func isHCPOperational() diag.Diagnostics {
 			st = c.Status
 		}
 	}
-
-	st = "major_outage"
 
 	var diags diag.Diagnostics
 
