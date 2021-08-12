@@ -2,7 +2,12 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -66,6 +71,17 @@ func New() func() *schema.Provider {
 
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+
+		var diags diag.Diagnostics
+		// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
+		// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
+		if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
+			// This helper verifies HCP's status and either returns a warning for degraded performance
+			// or errors out if there's an outage.
+			diags = isHCPOperational()
+		}
+
+		// Sets up HCP SDK client.
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
@@ -76,7 +92,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			SourceChannel: userAgent,
 		})
 		if err != nil {
-			return nil, diag.Errorf("unable to create HCP api client: %v", err)
+			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
+			return nil, diags
 		}
 
 		// For the initial release, since only one project is allowed per organization, the
@@ -86,12 +103,13 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// on the provider or on each resource.
 		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
+			return nil, diags
 		}
 		client.Config.OrganizationID = project.Parent.ID
 		client.Config.ProjectID = project.ID
 
-		return client, nil
+		return client, diags
 	}
 }
 
@@ -126,4 +144,84 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 
 	project := listProjResp.Payload.Projects[0]
 	return project, nil
+}
+
+// Status endpoint for prod.
+const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
+const statuspageHcpComponentId = "ym75hzpmfq4q"
+
+type status string
+
+// Possible statuses returned by statuspage.io.
+const (
+	operational         status = "operational"
+	degradedPerformance        = "degraded_performance"
+	partialOutage              = "partial_outage"
+	majorOutage                = "major_outage"
+	underMaintenance           = "under_maintenance"
+)
+
+type statuspage struct {
+	Components []component `json:"components"`
+}
+
+type component struct {
+	ID     string `json:"id"`
+	Status status `json:"status"`
+}
+
+func isHCPOperational() diag.Diagnostics {
+	req, err := http.NewRequest("GET", statuspageUrl, nil)
+	if err != nil {
+		log.Printf("Unable to create request to verify HCP status: %s", err)
+	}
+
+	var cl = http.Client{}
+	resp, err := cl.Do(req)
+	if err != nil {
+		log.Printf("Unable complete request to verify HCP status: %s", err)
+	}
+	defer resp.Body.Close()
+
+	jsBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Unable read response to verify HCP status: %s", err)
+	}
+
+	sp := statuspage{}
+	err = json.Unmarshal(jsBytes, &sp)
+	if err != nil {
+		log.Printf("Unable unmarshal response to verify HCP status: %s", err)
+	}
+
+	var st status
+	for _, c := range sp.Components {
+		if c.ID == statuspageHcpComponentId {
+			st = c.Status
+		}
+	}
+
+	var diags diag.Diagnostics
+
+	switch st {
+	case operational:
+		log.Printf("HCP is fully operational.")
+	case partialOutage, majorOutage:
+		return diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com for more details.")
+	case degradedPerformance:
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "HCP is experiencing degraded performance.",
+			Detail:   "Please check https://status.hashicorp.com for more details.",
+		})
+	case underMaintenance:
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "HCP is undergoing maintenance that may affect performance.",
+			Detail:   "Please check https://status.hashicorp.com for more details.",
+		})
+	}
+
+	return diags
+
 }
