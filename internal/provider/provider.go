@@ -68,85 +68,11 @@ func New() func() *schema.Provider {
 	}
 }
 
-const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
-const statuspageHcpComponentId = "ym75hzpmfq4q"
-
-type status string
-
-// Possible statuses returned by statuspage.io.
-const (
-	operational         status = "operational"
-	degradedPerformance        = "degraded_performance"
-	partialOutage              = "partial_outage"
-	majorOutage                = "major_outage"
-	underMaintenance           = "under_maintenance"
-)
-
-type statuspage struct {
-	Components []component `json:"components"`
-}
-
-type component struct {
-	ID     string `json:"id"`
-	Status status `json:"status"`
-}
-
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-
-		// Check the Hashicorp status page in case there's an outage.
-		req, err := http.NewRequest("GET", statuspageUrl, nil)
-		if err != nil {
-			log.Printf("Unable to create request to verify HCP status: %s", err)
-		}
-
-		var cl = http.Client{}
-		resp, err := cl.Do(req)
-		if err != nil {
-			log.Printf("Unable complete request to verify HCP status: %s", err)
-		}
-		defer resp.Body.Close()
-
-		jsBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("Unable read response to verify HCP status: %s", err)
-		}
-
-		sp := statuspage{}
-		err = json.Unmarshal(jsBytes, &sp)
-		if err != nil {
-			log.Printf("Unable unmarshal response to verify HCP status: %s", err)
-		}
-
-		var st status
-		for _, c := range sp.Components {
-			if c.ID == statuspageHcpComponentId {
-				st = c.Status
-			}
-		}
-
-		var diags diag.Diagnostics
-
-		switch st {
-		case operational:
-			log.Printf("HCP is fully operational.")
-		case partialOutage, majorOutage:
-			return nil, diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com for more details.")
-		case degradedPerformance:
-			log.Printf("HCP is experiencing degraded performance. Please check https://status.hashicorp.com for more details.")
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "HCP is experiencing degraded performance.",
-				Detail:   "Please check https://status.hashicorp.com for more details.",
-			})
-		case underMaintenance:
-			log.Printf("HCP is undergoing maintenance that may affect performance. Please check https://status.hashicorp.com for more details.")
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "HCP is undergoing maintenance that may affect performance.",
-				Detail:   "Please check https://status.hashicorp.com for more details.",
-			})
-		}
+		// Check the Hashicorp status page. This helper returns warnings for degraded performance
+		// or errors out if there's an outage.
+		diags := isHCPOperational()
 
 		// Set up HCP SDK client.
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
@@ -211,4 +137,85 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 
 	project := listProjResp.Payload.Projects[0]
 	return project, nil
+}
+
+const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
+const statuspageHcpComponentId = "ym75hzpmfq4q"
+
+type status string
+
+// Possible statuses returned by statuspage.io.
+const (
+	operational         status = "operational"
+	degradedPerformance        = "degraded_performance"
+	partialOutage              = "partial_outage"
+	majorOutage                = "major_outage"
+	underMaintenance           = "under_maintenance"
+)
+
+type statuspage struct {
+	Components []component `json:"components"`
+}
+
+type component struct {
+	ID     string `json:"id"`
+	Status status `json:"status"`
+}
+
+func isHCPOperational() diag.Diagnostics {
+	req, err := http.NewRequest("GET", statuspageUrl, nil)
+	if err != nil {
+		log.Printf("Unable to create request to verify HCP status: %s", err)
+	}
+
+	var cl = http.Client{}
+	resp, err := cl.Do(req)
+	if err != nil {
+		log.Printf("Unable complete request to verify HCP status: %s", err)
+	}
+	defer resp.Body.Close()
+
+	jsBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Unable read response to verify HCP status: %s", err)
+	}
+
+	sp := statuspage{}
+	err = json.Unmarshal(jsBytes, &sp)
+	if err != nil {
+		log.Printf("Unable unmarshal response to verify HCP status: %s", err)
+	}
+
+	var st status
+	for _, c := range sp.Components {
+		if c.ID == statuspageHcpComponentId {
+			st = c.Status
+		}
+	}
+
+	st = "major_outage"
+
+	var diags diag.Diagnostics
+
+	switch st {
+	case operational:
+		log.Printf("HCP is fully operational.")
+	case partialOutage, majorOutage:
+		return diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com for more details.")
+	case degradedPerformance:
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "HCP is experiencing degraded performance.",
+			Detail:   "Please check https://status.hashicorp.com for more details.",
+		})
+	case underMaintenance:
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "HCP is undergoing maintenance that may affect performance.",
+			Detail:   "Please check https://status.hashicorp.com for more details.",
+		})
+	}
+
+	return diags
+
 }
