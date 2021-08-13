@@ -1,6 +1,17 @@
+## 0.14.0 (Unreleased)
+
+FEATURES:
+
+* resource/hcp_consul_cluster: Add size upgrade field for consul cluster update [GH-168]
+
+IMPROVEMENTS:
+* provider: Add HCP status check to run before TF commands [GH-184]
+* provider: Bump `google.golang.org/grpc` dependency [GH-185]
+* provider: Bump `github.com/go-openapi/runtime` dependency [GH-183]
+
 ## 0.13.0 (August 06, 2021)
 
-FEATURES
+FEATURES:
 
 * **New data source** `packer_image_iteration` ([#169](https://github.com/hashicorp/terraform-provider-hcp/issues/169)) in **private beta**
 
