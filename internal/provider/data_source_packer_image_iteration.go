@@ -23,7 +23,7 @@ func dataSourcePackerImageIteration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"bucket": {
+			"bucket_name": {
 				Description:      "The slug of the HCP Packer Registry image bucket to pull from.",
 				Type:             schema.TypeString,
 				Required:         true,
@@ -144,7 +144,7 @@ func dataSourcePackerImageIteration() *schema.Resource {
 }
 
 func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket").(string)
+	bucketName := d.Get("bucket_name").(string)
 	channelSlug := d.Get("channel").(string)
 	client := meta.(*clients.Client)
 

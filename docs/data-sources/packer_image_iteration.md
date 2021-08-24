@@ -15,7 +15,7 @@ The Packer Image data source iteration gets the most recent iteration (or build)
 
 ```terraform
 data "hcp_packer_image_iteration" "alpine" {
-  bucket  = "alpine"
+  bucket_name  = "alpine"
   channel = "production"
 }
 ```
@@ -24,7 +24,7 @@ data "hcp_packer_image_iteration" "alpine" {
 
 ### Required
 
-- **bucket** (String) The slug of the HCP Packer Registry image bucket to pull from.
+- **bucket_name** (String) The slug of the HCP Packer Registry image bucket to pull from.
 - **channel** (String) The channel that points to the version of the image you want.
 
 ### Optional

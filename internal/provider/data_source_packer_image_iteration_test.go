@@ -23,7 +23,7 @@ const (
 var (
 	testAccPackerAlpineProductionImage = fmt.Sprintf(`
 	data "hcp_packer_image_iteration" "alpine" {
-		bucket  = %q
+		bucket_name  = %q
 		channel = %q
 	}`, bucket, channel)
 )
