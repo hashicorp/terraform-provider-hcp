@@ -1,4 +1,4 @@
-## 0.15.0 (Unreleased)
+## 0.15.0 (September 01, 2021)
 
 IMPROVEMENTS:
 
