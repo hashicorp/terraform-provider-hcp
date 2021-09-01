@@ -2,10 +2,10 @@
 
 IMPROVEMENTS:
 
-* change field 'bucket' to 'bucket_name' to remain consistent with Packer ([#188](https://github.com/hashicorp/terraform-provider-hcp/issues/188))
+* resource/packer_image_iteration: Change field 'bucket' to 'bucket_name' to remain consistent with Packer ([#188](https://github.com/hashicorp/terraform-provider-hcp/issues/188))
 * provider: Bump `terraform-plugin-sdk/v2` dependency ([#191](https://github.com/hashicorp/terraform-provider-hcp/issues/191))
 * provider: Bump `go-openapi/runtime` dependency ([#190](https://github.com/hashicorp/terraform-provider-hcp/issues/190))
-* * provider: Bump `go-openapi/strfmt` dependency ([#187](https://github.com/hashicorp/terraform-provider-hcp/issues/187))
+* provider: Bump `go-openapi/strfmt` dependency ([#187](https://github.com/hashicorp/terraform-provider-hcp/issues/187))
 * provider: Bump `actions/setup-go` dependency ([#189](https://github.com/hashicorp/terraform-provider-hcp/issues/189))
 
 ## 0.14.0 (August 13, 2021)
