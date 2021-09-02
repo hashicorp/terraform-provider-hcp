@@ -128,7 +128,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"size": {
-				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul",
+				Description:      "The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul. Upgrading the size of a cluster after creation is allowed.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
