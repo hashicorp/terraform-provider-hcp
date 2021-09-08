@@ -1,24 +1,19 @@
 ---
-page_title: "hcp_packer_iteration Data Source - terraform-provider-hcp"
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
 subcategory: ""
 description: |-
-  The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-# hcp_packer_iteration (Data Source)
+# {{.Type}} ({{.Name}})
 
 -> **Note:** This feature is currently in private beta.
 
-The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.
+{{ .Description | trimspace }}
 
 ## Example Usage
 
-```terraform
-data "hcp_packer_iteration" "hardened-source" {
-  bucket_name = "hardened-ubuntu-16-04"
-  channel     = "megan-test"
-}
-```
+{{ tffile "examples/data-sources/hcp_packer_iteration/data-source.tf" }}
 
 ## Schema
 
