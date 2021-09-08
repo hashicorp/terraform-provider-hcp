@@ -106,12 +106,14 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
+	found := false
 	for _, build := range iteration.Builds {
 		if build.CloudProvider != cloudProvider {
 			continue
 		}
 		for _, image := range build.Images {
 			if image.Region == region {
+				found = true
 				d.SetId(image.ImageID)
 				if err := d.Set("component_type", build.ComponentType); err != nil {
 					return diag.FromErr(err)
@@ -130,6 +132,10 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 		}
+	}
+
+	if !found {
+		return diag.Errorf("Unable to load image with region %s and cloud %s for iteration %s.", region, cloudProvider, iterationID)
 	}
 
 	return nil
