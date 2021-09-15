@@ -1,3 +1,10 @@
+## 0.16.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* resource/hcp_consul_cluster: Updated 'size' description to specify support for size upgrade. ([#193](https://github.com/hashicorp/terraform-provider-hcp/issues/193))
+* provider: Bump `terraform-plugin-docs` dependency ([#195](https://github.com/hashicorp/terraform-provider-hcp/issues/195))
+
 ## 0.15.0 (September 01, 2021)
 
 IMPROVEMENTS:
