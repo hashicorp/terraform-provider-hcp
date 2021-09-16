@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -63,12 +64,23 @@ func New() func() *schema.Provider {
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
 			},
+			ProviderMetaSchema: map[string]*schema.Schema{
+				"module_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the module used with the provider. Should be set in the terraform config block of the module.",
+				},
+			},
 		}
 
 		p.ConfigureContextFunc = configure(p)
 
 		return p
 	}
+}
+
+type providerMeta struct {
+	ModuleName string `cty:"module_name"`
 }
 
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -88,6 +100,19 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
 
+		// Adds module metadata if any.
+		var m providerMeta
+
+		err := d.GetProviderMeta(&m)
+		if err != nil {
+			diags = append(diags, diag.Errorf("unable to get provider meta: %v", err)...)
+			return nil, diags
+		}
+
+		if m.ModuleName != "" {
+			userAgent = strings.Join([]string{userAgent, m.ModuleName}, " ")
+		}
+
 		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:      clientID,
 			ClientSecret:  clientSecret,
@@ -105,7 +130,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// on the provider or on each resource.
 		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
-			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
+			diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
 			return nil, diags
 		}
 		client.Config.OrganizationID = project.Parent.ID
