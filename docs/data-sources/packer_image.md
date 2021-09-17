@@ -16,18 +16,18 @@ The Packer Image data source iteration gets the most recent iteration (or build)
 ```terraform
 data "hcp_packer_iteration" "hardened-source" {
   bucket_name = "hardened-ubuntu-16-04"
-  channel     = "production-stable"
+  channel     = "production"
 }
 
 data "hcp_packer_image" "foo" {
   bucket_name    = "hardened-ubuntu-16-04"
   cloud_provider = "aws"
-  iteration_id   = data.hcp_packer_iteration.hardened-source.id
+  iteration_id   = data.hcp_packer_iteration.hardened-source.ulid
   region         = "us-east-1"
 }
 
 output "packer-registry-ubuntu" {
-  value = data.hcp_packer_image.foo.id
+  value = data.hcp_packer_image.foo.cloud_image_id
 }
 ```
 
