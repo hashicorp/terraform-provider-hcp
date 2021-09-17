@@ -52,7 +52,7 @@ func dataSourcePackerIteration() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"id": {
+			"ulid": {
 				Description: "The ULID of this iteration.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -118,7 +118,7 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("fingerprint", iteration.Fingerprint); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("id", iteration.ID); err != nil {
+	if err := d.Set("ulid", iteration.ID); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("incremental_version", iteration.IncrementalVersion); err != nil {

@@ -29,7 +29,7 @@ func dataSourcePackerImage() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description: "Name of the cloud provider this image is stored-in, if any.",
+				Description: "Name of the cloud provider this image is stored-in.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -69,7 +69,7 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"id": {
+			"cloud_image_id": {
 				Description: "Cloud Image ID or URL string identifying this image for the builder that built it.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -114,7 +114,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		for _, image := range build.Images {
 			if image.Region == region {
 				found = true
-				d.SetId(image.ImageID)
+				d.SetId(image.ID)
 				if err := d.Set("component_type", build.ComponentType); err != nil {
 					return diag.FromErr(err)
 				}
@@ -122,6 +122,9 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 					return diag.FromErr(err)
 				}
 				if err := d.Set("build_id", build.ID); err != nil {
+					return diag.FromErr(err)
+				}
+				if err := d.Set("cloud_image_id", image.ImageID); err != nil {
 					return diag.FromErr(err)
 				}
 				if err := d.Set("iteration_id", iteration.ID); err != nil {
