@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	bucket  = "alpine-acctest"
-	channel = "production"
+	acctestBucket  = "alpine-acctest"
+	acctestChannel = "production"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 	data "hcp_packer_image_iteration" "alpine" {
 		bucket_name  = %q
 		channel = %q
-	}`, bucket, channel)
+	}`, acctestBucket, acctestChannel)
 )
 
 func upsertBucket(t *testing.T, bucketSlug string) {
@@ -162,13 +162,16 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams.BuildID = build.Payload.Build.ID
 	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
-			Status: models.HashicorpCloudPackerBuildStatusDONE,
+			CloudProvider: "aws",
+			Status:        models.HashicorpCloudPackerBuildStatusDONE,
 			Images: []*models.HashicorpCloudPackerImage{
 				{
 					ImageID: "ami-42",
+					Region:  "us-east-1",
 				},
 				{
 					ImageID: "ami-43",
+					Region:  "us-east-1",
 				},
 			},
 		},
@@ -310,11 +313,11 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, bucket, fingerprint)
+			itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
 			// delete iteration before channel to ensure hard delete of channel.
-			deleteIteration(t, bucket, itID)
-			deleteChannel(t, bucket, channel)
-			deleteBucket(t, bucket)
+			deleteIteration(t, acctestBucket, itID)
+			deleteChannel(t, acctestBucket, acctestChannel)
+			deleteBucket(t, acctestBucket)
 			return nil
 		},
 
@@ -324,11 +327,11 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 
 			{
 				PreConfig: func() {
-					upsertBucket(t, bucket)
-					upsertIteration(t, bucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, bucket, fingerprint)
-					upsertBuild(t, bucket, fingerprint, itID)
-					createChannel(t, bucket, channel)
+					upsertBucket(t, acctestBucket)
+					upsertIteration(t, acctestBucket, fingerprint)
+					itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
+					upsertBuild(t, acctestBucket, fingerprint, itID)
+					createChannel(t, acctestBucket, acctestChannel)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
 				Check: resource.ComposeTestCheckFunc(
