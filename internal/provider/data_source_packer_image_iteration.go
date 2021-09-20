@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"log"
-	"time"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -12,12 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var defaultPackerTimeout = time.Minute
-
 func dataSourcePackerImageIteration() *schema.Resource {
 	return &schema.Resource{
 		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.",
-		ReadContext: dataSourcePackerImageRead,
+		ReadContext: dataSourcePackerImageIterationRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
 		},
@@ -143,7 +140,7 @@ func dataSourcePackerImageIteration() *schema.Resource {
 	}
 }
 
-func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePackerImageIterationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	bucketName := d.Get("bucket_name").(string)
 	channelSlug := d.Get("channel").(string)
 	client := meta.(*clients.Client)
