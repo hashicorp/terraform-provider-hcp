@@ -4,8 +4,14 @@ import (
 	"context"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
+
 	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+)
+
+var (
+	platformType = string(models.HashicorpCloudConsul20210204PlatformTypeHCP)
 )
 
 // GetConsulClusterByID gets an Consul cluster by its ID
@@ -99,6 +105,7 @@ func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmo
 	p.Context = ctx
 	p.LocationProjectID = loc.ProjectID
 	p.LocationOrganizationID = loc.OrganizationID
+	p.PlatformType = &platformType
 
 	resp, err := client.Consul.ListVersions(p, nil)
 
@@ -113,6 +120,7 @@ func GetAvailableHCPConsulVersionsForLocation(ctx context.Context, loc *sharedmo
 func GetAvailableHCPConsulVersions(ctx context.Context, client *Client) ([]*consulmodels.HashicorpCloudConsul20210204Version, error) {
 	p := consul_service.NewListVersions2Params()
 	p.Context = ctx
+	p.PlatformType = &platformType
 
 	resp, err := client.Consul.ListVersions2(p, nil)
 
