@@ -1,3 +1,14 @@
+## 0.17.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* provider: Bump `hcp-sdk-go` dependency ([#199](https://github.com/hashicorp/terraform-provider-hcp/pull/199))
+
+FEATURES:
+
+* **New data source** `hcp_packer_image` ([#194](https://github.com/hashicorp/terraform-provider-hcp/pull/194))
+* **New data source** `hcp_packer_iteration` ([#194](https://github.com/hashicorp/terraform-provider-hcp/pull/194))
+
 ## 0.16.0 (September 15, 2021)
 
 IMPROVEMENTS:
