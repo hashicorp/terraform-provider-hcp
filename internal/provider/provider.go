@@ -79,10 +79,6 @@ func New() func() *schema.Provider {
 	}
 }
 
-type providerMeta struct {
-	ModuleName string `cty:"module_name"`
-}
-
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
@@ -99,19 +95,6 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
 		clientID := d.Get("client_id").(string)
 		clientSecret := d.Get("client_secret").(string)
-
-		// Adds module metadata if any.
-		var m providerMeta
-
-		err := d.GetProviderMeta(&m)
-		if err != nil {
-			diags = append(diags, diag.Errorf("unable to get provider meta: %v", err)...)
-			return nil, diags
-		}
-
-		if m.ModuleName != "" {
-			userAgent = strings.Join([]string{userAgent, m.ModuleName}, " ")
-		}
 
 		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:      clientID,

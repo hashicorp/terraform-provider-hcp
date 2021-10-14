@@ -78,6 +78,13 @@ func resourceHvnPeeringConnection() *schema.Resource {
 
 func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
+
+	// Updates the source channel to include data about the module used.
+	client, err := client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
+
 	orgID := client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: orgID,

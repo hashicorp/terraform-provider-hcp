@@ -290,6 +290,12 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
+	// Updates the source channel to include data about the module used.
+	client, err := client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
+
 	idParts := strings.SplitN(d.Id(), ":", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())

@@ -1,6 +1,9 @@
 package clients
 
 import (
+	"fmt"
+	"strings"
+
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
@@ -8,6 +11,8 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
@@ -80,4 +85,28 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	return client, nil
+}
+
+type providerMeta struct {
+	ModuleName string `cty:"module_name"`
+}
+
+// updateSourceChannel updates the SourceChannel of the client
+func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
+
+	// Adds module metadata if any.
+	var m providerMeta
+
+	err := d.GetProviderMeta(&m)
+	if err != nil {
+		diag.FromErr(err)
+	}
+
+	if m.ModuleName != "" {
+		sc := cl.Config.SourceChannel
+		sc = strings.Join([]string{sc, fmt.Sprintf("terraform-module/%s", m.ModuleName)}, " ")
+		cl.Config.SourceChannel = sc
+	}
+
+	return cl, nil
 }
