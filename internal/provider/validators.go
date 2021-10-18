@@ -74,12 +74,39 @@ func validateSemVer(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
+// matchesID matches /project/11eabb9f-d2ee-9c80-9483-0242ac110013/hashicorp.consul.cluster/example
+func matchesID(id string) bool {
+	return regexp.MustCompile(`/project/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/hashicorp\.consul\.cluster/.*`).MatchString(id)
+}
+
+func matchesSlugID(slugID string) bool {
+	return regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`).MatchString(slugID)
+}
+
+// validateSlugIDOrID validates that the string value matches the HCP requirements for
+// an id or slug id.
+func validateSlugIDOrID(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	if !matchesID(v.(string)) && !matchesSlugID(v.(string)) {
+		msg := "must be between 3 and 36 characters in length and contains only letters, numbers or hyphens OR must match /project/uuid/hashicorp.consul.cluster/id format"
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
 // validateSlugID validates that the string value matches the HCP requirements for
 // a user-settable slug.
 func validateSlugID(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	if !regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`).MatchString(v.(string)) {
+	if !matchesSlugID(v.(string)) {
 		msg := "must be between 3 and 36 characters in length and contains only letters, numbers or hyphens"
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -47,7 +48,7 @@ func resourceConsulClusterRootToken() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateSlugID,
+				ValidateDiagFunc: validateSlugIDOrID,
 			},
 			// Computed outputs
 			"accessor_id": {
@@ -76,6 +77,9 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
+	if matchesID(clusterID) {
+		clusterID = filepath.Base(clusterID)
+	}
 
 	// fetch organizationID by project ID
 	organizationID := client.Config.OrganizationID
@@ -140,6 +144,9 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
+	if matchesID(clusterID) {
+		clusterID = filepath.Base(clusterID)
+	}
 	organizationID := client.Config.OrganizationID
 	projectID := client.Config.ProjectID
 
@@ -178,6 +185,9 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
+	if matchesID(clusterID) {
+		clusterID = filepath.Base(clusterID)
+	}
 	organizationID := client.Config.OrganizationID
 	projectID := client.Config.ProjectID
 

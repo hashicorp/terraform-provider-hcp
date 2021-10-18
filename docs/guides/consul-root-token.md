@@ -28,7 +28,7 @@ resource "hcp_consul_cluster" "example" {
 
 // Create a new ACL root token
 resource "hcp_consul_cluster_root_token" "example" {
-  cluster_id = hcp_consul_cluster.example.cluster_id
+  cluster_id = hcp_consul_cluster.example.id
 }
 ```
 
