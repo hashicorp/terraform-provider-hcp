@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,7 +12,6 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
@@ -99,7 +99,7 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 
 	err := d.GetProviderMeta(&m)
 	if err != nil {
-		diag.FromErr(err)
+		return cl, errors.New("failed to get provider meta")
 	}
 
 	if m.ModuleName != "" {
