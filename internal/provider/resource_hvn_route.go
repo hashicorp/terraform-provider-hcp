@@ -290,8 +290,9 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
+	var err error
 	// Updates the source channel to include data about the module used.
-	client, err := client.UpdateSourceChannel(d)
+	client, err = client.UpdateSourceChannel(d)
 	if err != nil {
 		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
 	}

@@ -106,6 +106,9 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 		sc := cl.Config.SourceChannel
 		sc = strings.Join([]string{sc, fmt.Sprintf("terraform-module/%s", m.ModuleName)}, " ")
 		cl.Config.SourceChannel = sc
+
+		// Return a new client with the updated source channel
+		cl, err = NewClient(cl.Config)
 	}
 
 	return cl, nil
