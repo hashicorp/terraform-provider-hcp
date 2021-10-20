@@ -63,6 +63,13 @@ func New() func() *schema.Provider {
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
 			},
+			ProviderMetaSchema: map[string]*schema.Schema{
+				"module_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the module used with the provider. Should be set in the terraform config block of the module.",
+				},
+			},
 		}
 
 		p.ConfigureContextFunc = configure(p)
@@ -105,7 +112,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// on the provider or on each resource.
 		project, err := getProjectFromCredentials(ctx, client)
 		if err != nil {
-			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
+			diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
 			return nil, diags
 		}
 		client.Config.OrganizationID = project.Parent.ID
