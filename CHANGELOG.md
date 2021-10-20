@@ -1,3 +1,15 @@
+## 0.18.0 (Unreleased)
+
+FIXES:
+
+* resource/hcp_consul_cluster: Make cluster_id understand id as well ([#205](https://github.com/hashicorp/terraform-provider-hcp/pull/205))
+
+IMPROVEMENTS:
+
+* datasource/packer: Bump Packer datasources to public beta ([#207](https://github.com/hashicorp/terraform-provider-hcp/pull/207))
+* provider: Bump several dependencies ([#208](https://github.com/hashicorp/terraform-provider-hcp/pull/208))
+* provider: Add provider meta schema with module_name field ([#197](https://github.com/hashicorp/terraform-provider-hcp/pull/197))
+
 ## 0.17.0 (September 23, 2021)
 
 IMPROVEMENTS:
