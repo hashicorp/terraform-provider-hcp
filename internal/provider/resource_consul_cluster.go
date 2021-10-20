@@ -230,8 +230,19 @@ func resourceConsulCluster() *schema.Resource {
 	}
 }
 
+type providerMeta struct {
+	ModuleName string `cty:"module_name"`
+}
+
 func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
+
+	var err error
+	// Updates the source channel to include data about the module used.
+	client, err = client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
 
 	clusterID := d.Get("cluster_id").(string)
 	hvnID := d.Get("hvn_id").(string)
