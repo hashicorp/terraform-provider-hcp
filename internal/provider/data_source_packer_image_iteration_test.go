@@ -128,16 +128,16 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	createBuildParams.IterationID = iterationID
 
 	createBuildParams.Body = &models.HashicorpCloudPackerCreateBuildRequest{
+		BucketSlug: bucketSlug,
+		Build: &models.HashicorpCloudPackerBuildCreateBody{
+			CloudProvider: "aws",
+			ComponentType: "amazon-ebs.example",
+			PackerRunUUID: uuid.New().String(),
+			Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
+		},
 		Fingerprint: fingerprint,
-		BucketSlug:  bucketSlug,
+		IterationID: iterationID,
 		Location:    loc,
-	}
-	createBuildParams.Body.Build = &models.HashicorpCloudPackerBuild{
-		PackerRunUUID: uuid.New().String(),
-		CloudProvider: "aws",
-		ComponentType: "amazon-ebs.example",
-		IterationID:   iterationID,
-		Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
 	}
 
 	build, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil)
@@ -164,7 +164,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
 			CloudProvider: "aws",
 			Status:        models.HashicorpCloudPackerBuildStatusDONE,
-			Images: []*models.HashicorpCloudPackerImage{
+			Images: []*models.HashicorpCloudPackerImageCreateBody{
 				{
 					ImageID: "ami-42",
 					Region:  "us-east-1",
