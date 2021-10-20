@@ -1,4 +1,4 @@
-## 0.18.0 (Unreleased)
+## 0.18.0 (October 20, 2021)
 
 FIXES:
 
