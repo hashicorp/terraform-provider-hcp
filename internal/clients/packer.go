@@ -13,13 +13,13 @@ import (
 func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketName string, channel string) (*packermodels.HashicorpCloudPackerChannel, error) {
 
-	getParams := packer_service.NewGetChannelParams()
+	getParams := packer_service.NewPackerServiceGetChannelParams()
 	getParams.BucketSlug = bucketName
 	getParams.Slug = channel
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
 
-	getResp, err := client.Packer.GetChannel(getParams, nil)
+	getResp, err := client.Packer.PackerServiceGetChannel(getParams, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 // GetIteration queries the HCP Packer registry for an existing bucket iteration.
 func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketslug string, iterationId string) (*packermodels.HashicorpCloudPackerIteration, error) {
-	params := packer_service.NewGetIterationParamsWithContext(ctx)
+	params := packer_service.NewPackerServiceGetIterationParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketslug
@@ -39,7 +39,7 @@ func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.H
 	// for now, we only care about id so we're hardcoding it.
 	params.IterationID = &iterationId
 
-	it, err := client.Packer.GetIteration(params, nil)
+	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {
 		return nil, err
 	}
