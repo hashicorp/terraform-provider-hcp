@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
-	github.com/go-openapi/runtime v0.19.31
+	github.com/go-openapi/runtime v0.20.0
 	github.com/go-openapi/strfmt v0.20.3
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
