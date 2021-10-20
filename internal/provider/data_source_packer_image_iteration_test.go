@@ -37,18 +37,18 @@ func upsertBucket(t *testing.T, bucketSlug string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	createBktParams := packer_service.NewCreateBucketParams()
+	createBktParams := packer_service.NewPackerServiceCreateBucketParams()
 	createBktParams.LocationOrganizationID = loc.OrganizationID
 	createBktParams.LocationProjectID = loc.ProjectID
 	createBktParams.Body = &models.HashicorpCloudPackerCreateBucketRequest{
 		BucketSlug: bucketSlug,
 		Location:   loc,
 	}
-	_, err := client.Packer.CreateBucket(createBktParams, nil)
+	_, err := client.Packer.PackerServiceCreateBucket(createBktParams, nil)
 	if err == nil {
 		return
 	}
-	if err, ok := err.(*packer_service.CreateBucketDefault); ok {
+	if err, ok := err.(*packer_service.PackerServiceCreateBucketDefault); ok {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
@@ -68,7 +68,7 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	createItParams := packer_service.NewCreateIterationParams()
+	createItParams := packer_service.NewPackerServiceCreateIterationParams()
 	createItParams.LocationOrganizationID = loc.OrganizationID
 	createItParams.LocationProjectID = loc.ProjectID
 	createItParams.BucketSlug = bucketSlug
@@ -77,11 +77,11 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 		BucketSlug:  bucketSlug,
 		Fingerprint: fingerprint,
 	}
-	_, err := client.Packer.CreateIteration(createItParams, nil)
+	_, err := client.Packer.PackerServiceCreateIteration(createItParams, nil)
 	if err == nil {
 		return
 	}
-	if err, ok := err.(*packer_service.CreateIterationDefault); ok {
+	if err, ok := err.(*packer_service.PackerServiceCreateIterationDefault); ok {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
@@ -101,13 +101,13 @@ func getIterationIDFromFingerPrint(t *testing.T, bucketSlug, fingerprint string)
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	getItParams := packer_service.NewGetIterationParams()
+	getItParams := packer_service.NewPackerServiceGetIterationParams()
 	getItParams.LocationOrganizationID = loc.OrganizationID
 	getItParams.LocationProjectID = loc.ProjectID
 	getItParams.BucketSlug = bucketSlug
 	getItParams.Fingerprint = &fingerprint
 
-	ok, err := client.Packer.GetIteration(getItParams, nil)
+	ok, err := client.Packer.PackerServiceGetIteration(getItParams, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func getIterationIDFromFingerPrint(t *testing.T, bucketSlug, fingerprint string)
 func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	client := testAccProvider.Meta().(*clients.Client)
 
-	createBuildParams := packer_service.NewCreateBuildParams()
+	createBuildParams := packer_service.NewPackerServiceCreateBuildParams()
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
@@ -125,23 +125,23 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	createBuildParams.LocationOrganizationID = loc.OrganizationID
 	createBuildParams.LocationProjectID = loc.ProjectID
 	createBuildParams.BucketSlug = bucketSlug
-	createBuildParams.BuildIterationID = iterationID
+	createBuildParams.IterationID = iterationID
 
 	createBuildParams.Body = &models.HashicorpCloudPackerCreateBuildRequest{
+		BucketSlug: bucketSlug,
+		Build: &models.HashicorpCloudPackerBuildCreateBody{
+			CloudProvider: "aws",
+			ComponentType: "amazon-ebs.example",
+			PackerRunUUID: uuid.New().String(),
+			Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
+		},
 		Fingerprint: fingerprint,
-		BucketSlug:  bucketSlug,
+		IterationID: iterationID,
 		Location:    loc,
 	}
-	createBuildParams.Body.Build = &models.HashicorpCloudPackerBuild{
-		PackerRunUUID: uuid.New().String(),
-		CloudProvider: "aws",
-		ComponentType: "amazon-ebs.example",
-		IterationID:   iterationID,
-		Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
-	}
 
-	build, err := client.Packer.CreateBuild(createBuildParams, nil)
-	if err, ok := err.(*packer_service.CreateBuildDefault); ok {
+	build, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil)
+	if err, ok := err.(*packer_service.PackerServiceCreateBuildDefault); ok {
 		switch err.Code() {
 		case int(codes.Aborted), http.StatusConflict:
 			// all good here !
@@ -156,7 +156,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 
 	// Iterations are currently only assigned an incremental version when publishing image metadata on update.
 	// Incremental versions are a requirement for assigning the channel.
-	updateBuildParams := packer_service.NewUpdateBuildParams()
+	updateBuildParams := packer_service.NewPackerServiceUpdateBuildParams()
 	updateBuildParams.LocationOrganizationID = loc.OrganizationID
 	updateBuildParams.LocationProjectID = loc.ProjectID
 	updateBuildParams.BuildID = build.Payload.Build.ID
@@ -164,7 +164,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
 			CloudProvider: "aws",
 			Status:        models.HashicorpCloudPackerBuildStatusDONE,
-			Images: []*models.HashicorpCloudPackerImage{
+			Images: []*models.HashicorpCloudPackerImageCreateBody{
 				{
 					ImageID: "ami-42",
 					Region:  "us-east-1",
@@ -176,8 +176,8 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 			},
 		},
 	}
-	_, err = client.Packer.UpdateBuild(updateBuildParams, nil)
-	if err, ok := err.(*packer_service.UpdateBuildDefault); ok {
+	_, err = client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil)
+	if err, ok := err.(*packer_service.PackerServiceUpdateBuildDefault); ok {
 		t.Errorf("unexpected UpdateBuild error, expected nil. Got %v", err)
 	}
 }
@@ -191,7 +191,7 @@ func createChannel(t *testing.T, bucketSlug, channelSlug string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	createChParams := packer_service.NewCreateChannelParams()
+	createChParams := packer_service.NewPackerServiceCreateChannelParams()
 	createChParams.LocationOrganizationID = loc.OrganizationID
 	createChParams.LocationProjectID = loc.ProjectID
 	createChParams.BucketSlug = bucketSlug
@@ -200,11 +200,11 @@ func createChannel(t *testing.T, bucketSlug, channelSlug string) {
 		IncrementalVersion: 1,
 	}
 
-	_, err := client.Packer.CreateChannel(createChParams, nil)
+	_, err := client.Packer.PackerServiceCreateChannel(createChParams, nil)
 	if err == nil {
 		return
 	}
-	if err, ok := err.(*packer_service.CreateChannelDefault); ok {
+	if err, ok := err.(*packer_service.PackerServiceCreateChannelDefault); ok {
 		switch err.Code() {
 		case int(codes.Aborted), http.StatusConflict:
 			// all good here !
@@ -224,7 +224,7 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	updateChParams := packer_service.NewUpdateChannelParams()
+	updateChParams := packer_service.NewPackerServiceUpdateChannelParams()
 	updateChParams.LocationOrganizationID = loc.OrganizationID
 	updateChParams.LocationProjectID = loc.ProjectID
 	updateChParams.BucketSlug = bucketSlug
@@ -233,7 +233,7 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug string) {
 		IncrementalVersion: 1,
 	}
 
-	_, err := client.Packer.UpdateChannel(updateChParams, nil)
+	_, err := client.Packer.PackerServiceUpdateChannel(updateChParams, nil)
 	if err == nil {
 		return
 	}
@@ -249,12 +249,12 @@ func deleteBucket(t *testing.T, bucketSlug string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	deleteBktParams := packer_service.NewDeleteBucketParams()
+	deleteBktParams := packer_service.NewPackerServiceDeleteBucketParams()
 	deleteBktParams.LocationOrganizationID = loc.OrganizationID
 	deleteBktParams.LocationProjectID = loc.ProjectID
 	deleteBktParams.BucketSlug = bucketSlug
 
-	_, err := client.Packer.DeleteBucket(deleteBktParams, nil)
+	_, err := client.Packer.PackerServiceDeleteBucket(deleteBktParams, nil)
 	if err == nil {
 		return
 	}
@@ -270,13 +270,13 @@ func deleteIteration(t *testing.T, bucketSlug string, iterationID string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	deleteItParams := packer_service.NewDeleteIterationParams()
+	deleteItParams := packer_service.NewPackerServiceDeleteIterationParams()
 	deleteItParams.LocationOrganizationID = loc.OrganizationID
 	deleteItParams.LocationProjectID = loc.ProjectID
 	deleteItParams.BucketSlug = &bucketSlug
 	deleteItParams.IterationID = iterationID
 
-	_, err := client.Packer.DeleteIteration(deleteItParams, nil)
+	_, err := client.Packer.PackerServiceDeleteIteration(deleteItParams, nil)
 	if err == nil {
 		return
 	}
@@ -292,13 +292,13 @@ func deleteChannel(t *testing.T, bucketSlug string, channelSlug string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	deleteChParams := packer_service.NewDeleteChannelParams()
+	deleteChParams := packer_service.NewPackerServiceDeleteChannelParams()
 	deleteChParams.LocationOrganizationID = loc.OrganizationID
 	deleteChParams.LocationProjectID = loc.ProjectID
 	deleteChParams.BucketSlug = bucketSlug
 	deleteChParams.Slug = channelSlug
 
-	_, err := client.Packer.DeleteChannel(deleteChParams, nil)
+	_, err := client.Packer.PackerServiceDeleteChannel(deleteChParams, nil)
 	if err == nil {
 		return
 	}
