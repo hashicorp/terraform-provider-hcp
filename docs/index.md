@@ -7,9 +7,11 @@ description: |-
 
 # HashiCorp Cloud Platform (HCP) Provider
 
+-> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
--> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+![HCP Architecture Diagram](https://cloud.hashicorp.com/img/docs/hcp-arch-diagram.png)
 
 ## Authenticating with HCP
 
@@ -120,3 +122,5 @@ resource "hcp_vault_cluster" "example" {
 
 - **client_id** (String) The OAuth2 Client ID for API operations.
 - **client_secret** (String) The OAuth2 Client Secret for API operations.
+
+For more information about HCP, please review our [documentation page](https://cloud.hashicorp.com/docs/hcp).
