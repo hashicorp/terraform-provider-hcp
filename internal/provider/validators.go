@@ -197,7 +197,7 @@ func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateCidrBlock(v interface{}, path cty.Path) diag.Diagnostics {
+func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	// validRanges contains the set of IP ranges considered valid.

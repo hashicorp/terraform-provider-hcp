@@ -55,7 +55,7 @@ func resourceHvnRoute() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateCidrBlock,
+				ValidateDiagFunc: validateCIDRBlock,
 			},
 			"target_link": {
 				Description: "A unique URL identifying the target of the HVN route. Examples of the target: [`aws_network_peering`](aws_network_peering.md), [`aws_transit_gateway_attachment`](aws_transit_gateway_attachment.md)",

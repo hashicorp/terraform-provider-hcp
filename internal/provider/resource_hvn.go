@@ -74,7 +74,7 @@ func resourceHvn() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateCidrBlock,
+				ValidateDiagFunc: validateCIDRBlock,
 				Computed:         true,
 			},
 			// Computed outputs

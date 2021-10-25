@@ -392,7 +392,7 @@ func Test_validateVaultClusterTier(t *testing.T) {
 	}
 }
 
-func Test_validateCidrBlock(t *testing.T) {
+func Test_validateCIDRBlock(t *testing.T) {
 	tcs := map[string]struct {
 		input    string
 		expected diag.Diagnostics
@@ -628,7 +628,7 @@ func Test_validateCidrBlock(t *testing.T) {
 	for n, tc := range tcs {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
-			result := validateCidrBlock(tc.input, nil)
+			result := validateCIDRBlock(tc.input, nil)
 			r.Equal(tc.expected, result)
 		})
 	}
