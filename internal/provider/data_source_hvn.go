@@ -38,10 +38,9 @@ func dataSourceHvn() *schema.Resource {
 				Computed:    true,
 			},
 			"cidr_block": {
-				Description:      "The CIDR range of the HVN.",
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: validateCidrBlock,
+				Description: "The CIDR range of the HVN.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"organization_id": {
 				Description: "The ID of the HCP organization where the HVN is located.",
