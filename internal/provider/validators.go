@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strings"
 
@@ -189,6 +190,83 @@ func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 			Severity:      diag.Error,
 			Summary:       msg,
 			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateCidrBlock(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	// validRanges contains the set of IP ranges considered valid.
+	var validRanges = []net.IPNet{
+		{
+			// 10.*.*.*
+			IP:   net.IPv4(10, 0, 0, 0),
+			Mask: net.IPv4Mask(255, 0, 0, 0),
+		},
+		{
+			// 192.168.*.*
+			IP:   net.IPv4(192, 168, 0, 0),
+			Mask: net.IPv4Mask(255, 255, 0, 0),
+		},
+		{
+			// 172.[16-31].*.*
+			IP:   net.IPv4(172, 16, 0, 0),
+			Mask: net.IPv4Mask(255, 240, 0, 0),
+		},
+	}
+
+	// parse the string as CIDR notation IP address and prefix length.
+	ip, net, err := net.ParseCIDR(v.(string))
+	if err != nil {
+		msg := "unable to parse string as CIDR notation IP address"
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+
+		return diagnostics
+	}
+
+	// validate if the IP address is contained in one of the expected ranges.
+	valid := false
+	for _, validRange := range validRanges {
+		valueSize, _ := net.Mask.Size()
+		validRangeSize, _ := validRange.Mask.Size()
+		if validRange.Contains(ip) && valueSize >= validRangeSize {
+			// Flip flag if IP is found within any 1 of 3 ranges.
+			valid = true
+		}
+	}
+
+	// Check flag and return an error if the IP address is not contained within
+	// any of the expected ranges.
+	if !valid {
+		msg := fmt.Sprintf("must match pattern of 10.*.*.* with prefix greater than /8," +
+			"or 172.[16-31].*.* with prefix greater than /12, or " +
+			"192.168.*.* with prefix greater than /16; where * is any number from [0-255]")
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	// Validate the address passed is the start of the CIDR range.
+	// This happens after we verify the IP address is a valid RFC 1819
+	// range to avoid causing confusion with a misguiding error message.
+	if !ip.Equal(net.IP) {
+		msg := fmt.Sprintf("invalid CIDR range start %s, should have been %s", ip, net.IP)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
 			AttributePath: path,
 		})
 	}

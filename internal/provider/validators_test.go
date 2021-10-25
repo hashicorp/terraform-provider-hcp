@@ -391,3 +391,7 @@ func Test_validateVaultClusterTier(t *testing.T) {
 		})
 	}
 }
+
+func Test_validateCidrBlock(t *testing.T) {
+	// TODO
+}
