@@ -105,6 +105,13 @@ func resourceAwsNetworkPeering() *schema.Resource {
 func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
+	var err error
+	// Updates the source channel to include data about the module used.
+	client, err = client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
+
 	peeringID := d.Get("peering_id").(string)
 	hvnID := d.Get("hvn_id").(string)
 	peerAccountID := d.Get("peer_account_id").(string)
@@ -117,7 +124,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Check for an existing HVN
-	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to find the HVN (%s) for the network peering", hvnID)
