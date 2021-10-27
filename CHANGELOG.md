@@ -1,3 +1,12 @@
+## 0.19.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* resource/hvn: Add CIDR Validator that matches backend validator ([#214](https://github.com/hashicorp/terraform-provider-hcp/pull/214))
+* resource/hcp_aws_network_peering: Update source channel with metadata ([#213](https://github.com/hashicorp/terraform-provider-hcp/pull/213))
+* docs: Add HCP arch image and documentation link ([#212](https://github.com/hashicorp/terraform-provider-hcp/pull/212))
+* docs: Rearrange banners in documentation for consistency ([#211](https://github.com/hashicorp/terraform-provider-hcp/pull/211))
+
 ## 0.18.0 (October 20, 2021)
 
 FIXES:
