@@ -12,7 +12,6 @@ import (
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -71,12 +70,12 @@ func resourceHvn() *schema.Resource {
 			},
 			// Optional inputs
 			"cidr_block": {
-				Description:  "The CIDR range of the HVN. If this is not provided, the service will provide a default value.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-				Computed:     true,
+				Description:      "The CIDR range of the HVN. If this is not provided, the service will provide a default value.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateCIDRBlock,
+				Computed:         true,
 			},
 			// Computed outputs
 			"organization_id": {
