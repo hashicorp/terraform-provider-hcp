@@ -1,3 +1,13 @@
+## 0.20.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* datasource/hcp_packer_image: Add build labels to the hcp_packer_image data source [GH-217]
+* provider: Bump `go-openapi/runtime` dependency [GH-218]
+* provider: Bump `go-openapi/strfmt` dependency [GH-218]
+* provider: Bump `actions/checkout` dependency [GH-219]
+* provider: Bump `google.golang.org/grpc` dependency [GH-220]
+
 ## 0.19.0 (October 27, 2021)
 
 IMPROVEMENTS:
