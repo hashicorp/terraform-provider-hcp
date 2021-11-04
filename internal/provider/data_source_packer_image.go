@@ -79,6 +79,11 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"labels": {
+				Description: "Labels associated with this build.",
+				Type:        schema.TypeMap,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -131,6 +136,9 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 					return diag.FromErr(err)
 				}
 				if err := d.Set("packer_run_uuid", build.PackerRunUUID); err != nil {
+					return diag.FromErr(err)
+				}
+				if err := d.Set("labels", build.Labels); err != nil {
 					return diag.FromErr(err)
 				}
 			}
