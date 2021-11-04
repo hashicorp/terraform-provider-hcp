@@ -174,6 +174,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 					Region:  "us-east-1",
 				},
 			},
+			Labels: map[string]string{"test-key": "test-value"},
 		},
 	}
 	_, err = client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil)
