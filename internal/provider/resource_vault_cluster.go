@@ -291,21 +291,37 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
-	// Confirm public_endpoint has changed. This is currently the only field that can be updated.
-	changed := d.HasChange("public_endpoint")
+	// Confirm public_endpoint or tier have changed.
+	changed := d.HasChange("public_endpoint") || d.HasChange("tier")
 	if !changed {
 		return nil
 	}
 
-	// Invoke update cluster endpoint.
-	updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, cluster.Location, clusterID, d.Get("public_endpoint").(bool))
-	if err != nil {
-		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
+	if d.HasChange("public_endpoint") {
+		// Invoke update public IPs endpoint.
+		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, cluster.Location, clusterID, d.Get("public_endpoint").(bool))
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster public endpoint (%s): %v", clusterID, err)
+		}
+
+		// Wait for the update cluster operation.
+		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", cluster.Location, updateResp.Operation.ID); err != nil {
+			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
+		}
 	}
 
-	// Wait for the update cluster operation.
-	if err := clients.WaitForOperation(ctx, client, "update Vault cluster", cluster.Location, updateResp.Operation.ID); err != nil {
-		return diag.Errorf("unable to update Vault cluster (%s): %v", clusterID, err)
+	if d.HasChange("tier") {
+		// Invoke update tier endpoint.
+		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
+		updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
+		}
+
+		// Wait for the update cluster operation.
+		if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
+			return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+		}
 	}
 
 	// Get the updated Vault cluster.
