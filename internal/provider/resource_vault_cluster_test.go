@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var vaultCluster = `
+const vaultCluster = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
@@ -19,7 +19,7 @@ resource "hcp_vault_cluster" "test" {
 `
 
 // sets public_endpoint to true
-var updatedVaultClusterPublic = `
+const updatedVaultClusterPublic = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
@@ -29,7 +29,7 @@ resource "hcp_vault_cluster" "test" {
 `
 
 // changes tier
-var updatedVaultClusterTier = `
+const updatedVaultClusterTier = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
