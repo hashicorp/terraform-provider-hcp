@@ -37,6 +37,16 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
+// changes tier and sets public_endpoint to true
+const updatedVaultClusterTierAndPublic = `
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "standard_medium"
+	public_endpoint    = true
+}
+`
+
 func setTestAccVaultClusterConfig(vaultCluster string) string {
 	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
@@ -169,6 +179,19 @@ func TestAccVaultCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(vaultClusterResourceName),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_SMALL"),
+				),
+			},
+			// This step verifies the successful update of both "tier" and "public_endpoint".
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTierAndPublic)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_MEDIUM"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 				),
 			},
 		},

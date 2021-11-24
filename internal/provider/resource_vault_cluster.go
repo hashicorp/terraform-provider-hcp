@@ -292,22 +292,8 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm public_endpoint or tier have changed.
-	changed := d.HasChange("public_endpoint") || d.HasChange("tier")
-	if !changed {
+	if !(d.HasChange("tier") || d.HasChange("public_endpoint")) {
 		return nil
-	}
-
-	if d.HasChange("public_endpoint") {
-		// Invoke update public IPs endpoint.
-		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, cluster.Location, clusterID, d.Get("public_endpoint").(bool))
-		if err != nil {
-			return diag.Errorf("error updating Vault cluster public endpoint (%s): %v", clusterID, err)
-		}
-
-		// Wait for the update cluster operation.
-		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", cluster.Location, updateResp.Operation.ID); err != nil {
-			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
-		}
 	}
 
 	if d.HasChange("tier") {
@@ -321,6 +307,19 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		// Wait for the update cluster operation.
 		if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
 			return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+		}
+	}
+
+	if d.HasChange("public_endpoint") {
+		// Invoke update public IPs endpoint.
+		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, cluster.Location, clusterID, d.Get("public_endpoint").(bool))
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster public endpoint (%s): %v", clusterID, err)
+		}
+
+		// Wait for the update cluster operation.
+		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", cluster.Location, updateResp.Operation.ID); err != nil {
+			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
 		}
 	}
 
