@@ -110,3 +110,31 @@ func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *share
 
 	return updateResp.Payload, nil
 }
+
+// UpdateVaultCluster will make a call to the Vault service to update the Vault cluster configuration.
+func UpdateVaultClusterTier(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string, tier vaultmodels.HashicorpCloudVault20201125Tier) (*vaultmodels.HashicorpCloudVault20201125UpdateResponse, error) {
+
+	updateParams := vault_service.NewUpdateParams()
+	updateParams.Context = ctx
+	updateParams.ClusterID = clusterID
+	updateParams.ClusterLocationProjectID = loc.ProjectID
+	updateParams.ClusterLocationOrganizationID = loc.OrganizationID
+	updateParams.Body = &vaultmodels.HashicorpCloudVault20201125InputCluster{
+		// ClusterID and Location are repeated because the values above are required to populate the URL,
+		// and the values below are required in the API request body
+		ID:       clusterID,
+		Location: loc,
+		// NOTE: if this function is ever modified to update more than just the tier,
+		// the tier must ALWAYS be specified, since the 0-value is valid and will not
+		// be ignored.
+		Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{Tier: tier},
+	}
+
+	updateResp, err := client.Vault.Update(updateParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResp.Payload, nil
+}
