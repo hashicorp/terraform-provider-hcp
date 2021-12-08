@@ -37,9 +37,8 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
 			itID := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)
-			// delete iteration before channel to ensure hard delete of channel.
-			deleteIteration(t, acctestImageBucket, itID)
 			deleteChannel(t, acctestImageBucket, acctestImageChannel)
+			deleteIteration(t, acctestImageBucket, itID)
 			deleteBucket(t, acctestImageBucket)
 			return nil
 		},
