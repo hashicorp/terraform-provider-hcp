@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var vaultCluster = `
+const vaultCluster = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
@@ -19,11 +19,30 @@ resource "hcp_vault_cluster" "test" {
 `
 
 // sets public_endpoint to true
-var updatedVaultCluster = `
+const updatedVaultClusterPublic = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "dev"
+	public_endpoint    = true
+}
+`
+
+// changes tier
+const updatedVaultClusterTier = `
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "standard_small"
+}
+`
+
+// changes tier and sets public_endpoint to true
+const updatedVaultClusterTierAndPublic = `
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "test-vault-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "standard_medium"
 	public_endpoint    = true
 }
 `
@@ -142,11 +161,32 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
 				),
 			},
-			// This step verifies the successful update of updatable fields.
+			// This step verifies the successful update of "public_endpoint".
 			{
-				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultCluster)),
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublic)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+				),
+			},
+			// This step verifies the successful update of "tier".
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTier)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_SMALL"),
+				),
+			},
+			// This step verifies the successful update of both "tier" and "public_endpoint".
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTierAndPublic)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_MEDIUM"),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
