@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"errors"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
@@ -21,7 +22,7 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 
 	getResp, err := client.Packer.PackerServiceGetChannel(getParams, nil)
 	if err != nil {
-		return nil, err
+		return nil, handleGetChannelError(err.(*packer_service.PackerServiceGetChannelDefault))
 	}
 
 	return getResp.Payload.Channel, nil
@@ -41,8 +42,20 @@ func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {
-		return nil, err
+		return nil, handleGetIterationError(err.(*packer_service.PackerServiceGetIterationDefault))
 	}
 
 	return it.Payload.Iteration, nil
+}
+
+// handleGetChannelError returns a formatted error for the GetChannel error.
+// The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
+func handleGetChannelError(err *packer_service.PackerServiceGetChannelDefault) error {
+	return errors.New(err.Payload.Error)
+}
+
+// handleGetIterationError returns a formatted error for the GetIteration error.
+// The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
+func handleGetIterationError(err *packer_service.PackerServiceGetIterationDefault) error {
+	return errors.New(err.Payload.Error)
 }
