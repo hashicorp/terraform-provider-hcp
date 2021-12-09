@@ -1,16 +1,16 @@
-## 0.21.0 (Unreleased)
+## 0.21.0 (December 09, 2021)
 
 FEATURES:
 
-* resource/vault: Implement cluster tier scaling [GH-228]
-* docs: Add cluster tier scaling guide [GH-228]
+* resource/vault: Implement cluster tier scaling ([#228](https://github.com/hashicorp/terraform-provider-hcp/issues/228))
+* docs: Add cluster tier scaling guide ([#228](https://github.com/hashicorp/terraform-provider-hcp/issues/228))
 
 IMPROVEMENTS:
 
-* datasource/packer: Improve error messages for requests made to HCP Packer. [GH-229]
-* provider: Bump `terraform-plugin-sdk/v2` dependency [GH-230]
-* provider: Bump `terraform-plugin-docs` from 0.5.0 to 0.5.1 [GH-223]
-* provider: Bump `go-openapi/strfmt` from 0.21.0 to 0.21.1 [GH-226]
+* datasource/packer: Improve error messages for requests made to HCP Packer. ([#229](https://github.com/hashicorp/terraform-provider-hcp/issues/229))
+* provider: Bump `terraform-plugin-sdk/v2` dependency ([#230](https://github.com/hashicorp/terraform-provider-hcp/issues/230))
+* provider: Bump `terraform-plugin-docs` from 0.5.0 to 0.5.1 ([#223](https://github.com/hashicorp/terraform-provider-hcp/issues/223))
+* provider: Bump `go-openapi/strfmt` from 0.21.0 to 0.21.1 ([#226](https://github.com/hashicorp/terraform-provider-hcp/issues/226))
 
 ## 0.20.0 (November 04, 2021)
 
