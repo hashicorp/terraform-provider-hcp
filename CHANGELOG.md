@@ -1,3 +1,17 @@
+## 0.21.0 (Unreleased)
+
+FEATURES:
+
+* resource/vault: Implement cluster tier scaling [GH-228]
+* docs: Add cluster tier scaling guide [GH-228]
+
+IMPROVEMENTS:
+
+* datasource/packer: Improve error messages for requests made to HCP Packer. [GH-229]
+* provider: Bump `terraform-plugin-sdk/v2` dependency [GH-230]
+* provider: Bump `terraform-plugin-docs` from 0.5.0 to 0.5.1 [GH-223]
+* provider: Bump `go-openapi/strfmt` from 0.21.0 to 0.21.1 [GH-226]
+
 ## 0.20.0 (November 04, 2021)
 
 IMPROVEMENTS:
