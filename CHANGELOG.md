@@ -1,9 +1,13 @@
-## 0.21.0 (December 09, 2021)
+## 0.21.1 (Unreleased)
 
 FEATURES:
 
 * resource/vault: Implement cluster tier scaling ([#228](https://github.com/hashicorp/terraform-provider-hcp/issues/228))
 * docs: Add cluster tier scaling guide ([#228](https://github.com/hashicorp/terraform-provider-hcp/issues/228))
+
+FIXES:
+
+* resource/vault: when changing tiers, do not force new ([#233](https://github.com/hashicorp/terraform-provider-hcp/issues/233))
 
 IMPROVEMENTS:
 
@@ -11,6 +15,10 @@ IMPROVEMENTS:
 * provider: Bump `terraform-plugin-sdk/v2` dependency ([#230](https://github.com/hashicorp/terraform-provider-hcp/issues/230))
 * provider: Bump `terraform-plugin-docs` from 0.5.0 to 0.5.1 ([#223](https://github.com/hashicorp/terraform-provider-hcp/issues/223))
 * provider: Bump `go-openapi/strfmt` from 0.21.0 to 0.21.1 ([#226](https://github.com/hashicorp/terraform-provider-hcp/issues/226))
+
+## 0.21.0 (December 08, 2021)
+
+⚠️ Note: There is an issue with this version of the HCP Provider in which Terraform will incorrectly recommend a rebuild of a Vault cluster if the tier is changed, which could result in data loss. For this reason, the v0.21.0 release and tag is no longer available to use. Please upgrade to the patch v0.21.1 or beyond. ⚠️
 
 ## 0.20.0 (November 04, 2021)
 
