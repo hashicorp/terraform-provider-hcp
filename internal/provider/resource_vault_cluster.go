@@ -65,7 +65,6 @@ func resourceVaultCluster() *schema.Resource {
 				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`, `starter_small`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
