@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
@@ -90,6 +91,26 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	}
 
 	t.Errorf("unexpected CreateIteration error, expected nil or 409. Got %v", err)
+}
+
+func revokeIteration(t *testing.T, iterationID, revokeIn string) {
+	t.Helper()
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	params := packer_service.NewPackerServiceUpdateIterationParams()
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.IterationID = iterationID
+	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{RevokeIn: revokeIn}
+
+	_, err := client.Packer.PackerServiceUpdateIteration(params, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func getIterationIDFromFingerPrint(t *testing.T, bucketSlug, fingerprint string) string {
@@ -332,6 +353,45 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 					itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
 					upsertBuild(t, acctestBucket, fingerprint, itID)
 					createChannel(t, acctestBucket, acctestChannel)
+				},
+				Config: testConfig(testAccPackerAlpineProductionImage),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
+	resourceName := "data.hcp_packer_image_iteration.alpine"
+	fingerprint := "43"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t, false) },
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
+			deleteChannel(t, acctestBucket, acctestChannel)
+			deleteIteration(t, acctestBucket, itID)
+			deleteBucket(t, acctestBucket)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			// testing that getting a revoked iteration fails properly
+			{
+				PreConfig: func() {
+					upsertBucket(t, acctestBucket)
+					upsertIteration(t, acctestBucket, fingerprint)
+					itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
+					upsertBuild(t, acctestBucket, fingerprint, itID)
+					createChannel(t, acctestBucket, acctestChannel)
+					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
+					// it's assigned to a channel
+					revokeIteration(t, itID, "5s")
+					// Sleep to make sure the iteration is revoked when we test
+					time.Sleep(5 * time.Second)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
 				Check: resource.ComposeTestCheckFunc(

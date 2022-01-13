@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"time"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -161,13 +162,19 @@ func dataSourcePackerImageIterationRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	if channel.Pointer == nil {
+	if channel.Iteration == nil {
 		return diag.Errorf("no iteration information found for the specified channel %s", channelSlug)
 	}
 
-	iteration := channel.Pointer.Iteration
+	iteration := channel.Iteration
 
-	d.SetId(channel.Pointer.Iteration.ID)
+	if !time.Time(iteration.RevokeAt).IsZero() {
+		// If RevokeAt is not a zero date, it means this iteration is revoked and should not be used
+		// to build new images.
+		return diag.Errorf("the iteration %s is revoked and can not be used", iteration.ID)
+	}
+
+	d.SetId(iteration.ID)
 
 	if err := d.Set("incremental_version", iteration.IncrementalVersion); err != nil {
 		return diag.FromErr(err)
