@@ -323,6 +323,46 @@ func resourceAzurePeeringConnectionDelete(ctx context.Context, d *schema.Resourc
 }
 
 func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.HashicorpCloudNetwork20200907Peering) error {
+	if err := d.Set("organization_id", peering.Hvn.Location.OrganizationID); err != nil {
+		return err
+	}
+	if err := d.Set("project_id", peering.Hvn.Location.ProjectID); err != nil {
+		return err
+	}
+	if err := d.Set("peering_id", peering.ID); err != nil {
+		return err
+	}
+	if err := d.Set("peer_subscription_id", peering.Target.AzureTarget.SubscriptionID); err != nil {
+		return err
+	}
+	if err := d.Set("peer_vnet_id", peering.Target.AzureTarget.VnetName); err != nil {
+		return err
+	}
+	if err := d.Set("peer_vnet_region", peering.Target.AzureTarget.Region); err != nil {
+		return err
+	}
+	if err := d.Set("provider_peering_id", peering.ProviderPeeringID); err != nil {
+		return err
+	}
+	if err := d.Set("application_id", peering.Target.AzureTarget.ApplicationID); err != nil {
+		return err
+	}				
+	if err := d.Set("created_at", peering.CreatedAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
+		return err
+	}	
+
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", selfLink); err != nil {
+		return err
+	}
+	
 	return nil
 }
 
