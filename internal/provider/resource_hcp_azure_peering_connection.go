@@ -278,6 +278,47 @@ func resourceAzurePeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAzurePeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	peeringID := link.ID
+	loc := link.Location
+	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, loc.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	deletePeeringParams := network_service.NewDeletePeeringParams()
+	deletePeeringParams.Context = ctx
+	deletePeeringParams.ID = peeringID
+	deletePeeringParams.HvnID = hvnLink.ID.
+	deletePeeringParams.LocationOrganizationID = loc.OrganizationID
+	deletePeeringParams.LocationProjectID = loc.ProjectID
+	log.Printf("[INFO] Deleting peering connection (%s)", peeringID)
+	deletePeeringResponse, err := client.Network.DeletePeering(deletePeeringParams, nil)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] peering connection (%s) not found, so no action was taken", peeringID)
+			return nil
+		}
+
+		return diag.Errorf("unable to delete peering connection (%s): %v", peeringID, err)
+	}
+
+	// Wait for peering to be deleted
+	if err := clients.WaitForOperation(ctx, client, "delete peering connection", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
+		if strings.Contains(err.Error(), "execution already started") {
+			return nil
+		}
+		return diag.Errorf("unable to delete peering connection (%s): %v", peeringID, err)
+	}
+
+	log.Printf("[INFO] peering connection (%s) deleted, removing from state", peeringID)
+
 	return nil
 }
 
