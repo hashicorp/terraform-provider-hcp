@@ -233,6 +233,47 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAzurePeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	peeringID := link.ID
+	loc := link.Location
+
+	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, loc.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
+	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink.ID, loc)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] peering connection (%s) not found, removing from state", peeringID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
+	}
+
+	// The peering connection failed to provision properly so we want to let the user know and
+	// remove it from state
+	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
+		log.Printf("[WARN] peering connection (%s) failed to provision, removing from state", peering.ID)
+		d.SetId("")
+		return nil
+	}
+
+	// peering connection found, update resource data
+	if err := setAzurePeeringResourceData(d, peering); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
