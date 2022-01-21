@@ -369,5 +369,33 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 // resourceAzurePeeringConnectionImport implements the logic necessary to import an
 // un-tracked (by Terraform) peering connection resource into Terraform state.
 func resourceAzurePeeringConnectionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	return nil, nil
+	client := meta.(*clients.Client)
+
+	hvnID, peeringID, err := parsePeeringResourceID(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		ProjectID: client.Config.ProjectID,
+	}
+
+	link := newLink(loc, PeeringResourceType, peeringID)
+	url, err := linkURL(link)
+	if err != nil {
+		return nil, err
+	}
+
+	hvnLink := newLink(loc, HvnResourceType, hvnID)
+	hvnUrl, err := linkURL(hvnLink)
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(url)
+	if err := d.Set("hvn", hvnUrl); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
