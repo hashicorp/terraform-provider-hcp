@@ -2,11 +2,15 @@ package provider
 
 import (
 	"context"
+	"log"
 	"strings"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 func resourceAzurePeeringConnection() *schema.Resource {
@@ -114,6 +118,117 @@ func resourceAzurePeeringConnection() *schema.Resource {
 }
 
 func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
+	client := meta.(*clients.Client)
+
+	var err error
+	// Updates the source channel to include data about the module used.
+	client, err = client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
+
+	peeringID := d.Get("peering_id").(string)
+	peerSubscriptionID := d.Get("peer_subscription_id").(string)
+	peerVnetID := d.Get("peer_vnet_id").(string)
+	peerVnetRegion := d.Get("peer_vnet_region").(string)
+	peerTenantID := d.Get("peer_tenant_id").(string)
+	peerResourceGroupName := d.Get("peer_resource_group_name").(string)
+
+	orgID := client.Config.OrganizationID
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: orgID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, orgID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Check for an existing HVN
+	_, err = clients.GetHvnByID(ctx, client, hvnLink.Location, hvnLink.ID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("unable to find the HVN (%s) for the peering connection", hvnLink.ID)
+		}
+
+		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnLink.ID, err)
+	}
+	log.Printf("[INFO] HVN (%s) found, proceeding with peering connection create", hvnLink.ID)
+
+	// Check if peering already exists
+	if peeringID != "" {
+		_, err = clients.GetPeeringByID(ctx, client, peeringID, hvnLink.ID, loc)
+		if err != nil {
+			if !clients.IsResponseCodeNotFound(err) {
+				return diag.Errorf("unable to check for presence of an existing peering connection (%s): %v", peeringID, err)
+			}
+
+			log.Printf("[INFO] peering connection (%s) not found, proceeding with peering connection create", peeringID)
+		} else {
+			return diag.Errorf("a peering connection with peering_id=%s, hvn_id=%s and project_id=%s already exists - to be managed via Terraform this resource needs to be imported into the state. Please see the resource documentation for hcp_Azure_network_peering for more information", peeringID, hvnLink.ID, loc.ProjectID)
+		}
+	}
+
+	peerNetworkParams := network_service.NewCreatePeeringParams()
+	peerNetworkParams.Context = ctx
+	peerNetworkParams.PeeringHvnID = hvnLink.ID
+	peerNetworkParams.PeeringHvnLocationOrganizationID = loc.OrganizationID
+	peerNetworkParams.PeeringHvnLocationProjectID = loc.ProjectID
+	peerNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreatePeeringRequest{
+		Peering: &networkmodels.HashicorpCloudNetwork20200907Peering{
+			ID: peeringID,
+			Hvn: &sharedmodels.HashicorpCloudLocationLink{
+				ID:       hvnLink.ID,
+				Location: loc,
+			},
+			Target: &networkmodels.HashicorpCloudNetwork20200907PeeringTarget{
+				AzureTarget: &networkmodels.HashicorpCloudNetwork20200907AzurePeeringTarget{
+					Region:            peerVnetRegion,
+					ResourceGroupName: peerResourceGroupName,
+					SubscriptionID:    peerSubscriptionID,
+					TenantID:          peerTenantID,
+					VnetName:          peerVnetID,
+				},
+			},
+		},
+	}
+	log.Printf("[INFO] Creating peering connection between HVN (%s) and peer (%s)", hvnLink.ID, peerVnetID)
+	peeringResponse, err := client.Network.CreatePeering(peerNetworkParams, nil)
+	if err != nil {
+		return diag.Errorf("unable to create peering connection between HVN (%s) and peer (%s): %v", hvnLink.ID, peerVnetID, err)
+	}
+
+	peering := peeringResponse.Payload.Peering
+
+	// Set the globally unique id of this peering in the state now since it has
+	// been created, and from this point forward should be deletable
+	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
+	url, err := linkURL(link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(url)
+
+	// Wait for peering connection to be created
+	if err := clients.WaitForOperation(ctx, client, "create peering connection", loc, peeringResponse.Payload.Operation.ID); err != nil {
+		return diag.Errorf("unable to create peering connection (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VpcID, err)
+	}
+
+	log.Printf("[INFO] Created peering connection (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VpcID)
+
+	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnLink.ID, loc, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[INFO] peering connection (%s) is now in PENDING_ACCEPTANCE state", peering.ID)
+
+	if err := setAzurePeeringResourceData(d, peering); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
