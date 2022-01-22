@@ -213,10 +213,10 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 
 	// Wait for peering connection to be created
 	if err := clients.WaitForOperation(ctx, client, "create peering connection", loc, peeringResponse.Payload.Operation.ID); err != nil {
-		return diag.Errorf("unable to create peering connection (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VpcID, err)
+		return diag.Errorf("unable to create peering connection (%s) between HVN (%s) and peer (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VnetName, err)
 	}
 
-	log.Printf("[INFO] Created peering connection (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VpcID)
+	log.Printf("[INFO] Created peering connection (%s) between HVN (%s) and peer (%s)", peering.ID, peering.Hvn.ID, peering.Target.AzureTarget.VnetName)
 
 	peering, err = clients.WaitForPeeringToBePendingAcceptance(ctx, client, peering.ID, hvnLink.ID, loc, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
@@ -295,7 +295,7 @@ func resourceAzurePeeringConnectionDelete(ctx context.Context, d *schema.Resourc
 	deletePeeringParams := network_service.NewDeletePeeringParams()
 	deletePeeringParams.Context = ctx
 	deletePeeringParams.ID = peeringID
-	deletePeeringParams.HvnID = hvnLink.ID.
+	deletePeeringParams.HvnID = hvnLink.ID
 	deletePeeringParams.LocationOrganizationID = loc.OrganizationID
 	deletePeeringParams.LocationProjectID = loc.ProjectID
 	log.Printf("[INFO] Deleting peering connection (%s)", peeringID)
@@ -346,13 +346,13 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 	}
 	if err := d.Set("application_id", peering.Target.AzureTarget.ApplicationID); err != nil {
 		return err
-	}				
+	}
 	if err := d.Set("created_at", peering.CreatedAt.String()); err != nil {
 		return err
 	}
 	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
 		return err
-	}	
+	}
 
 	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
 	selfLink, err := linkURL(link)
@@ -362,7 +362,7 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
