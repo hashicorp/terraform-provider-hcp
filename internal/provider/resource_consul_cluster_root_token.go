@@ -33,8 +33,8 @@ data:
 // resourceConsulClusterRootToken represents an HCP Consul cluster.
 func resourceConsulClusterRootToken() *schema.Resource {
 	return &schema.Resource{
-		Description: "The cluster root token resource is the token used to bootstrap the cluster's ACL system." +
-			"You can also generate this root token from the HCP Consul UI",
+		Description: "The cluster root token resource is the token used to bootstrap the cluster's ACL system. " +
+			"You can also generate this root token from the HCP Consul UI.",
 		CreateContext: resourceConsulClusterRootTokenCreate,
 		ReadContext:   resourceConsulClusterRootTokenRead,
 		DeleteContext: resourceConsulClusterRootTokenDelete,
