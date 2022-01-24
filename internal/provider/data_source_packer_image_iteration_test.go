@@ -2,11 +2,15 @@ package provider
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
+	"regexp"
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -17,8 +21,9 @@ import (
 )
 
 const (
-	acctestBucket  = "alpine-acctest"
-	acctestChannel = "production"
+	acctestAlpineBucket      = "alpine-acctest"
+	acctestUbuntuBucket      = "ubuntu-acctest"
+	acctestProductionChannel = "production"
 )
 
 var (
@@ -26,8 +31,95 @@ var (
 	data "hcp_packer_image_iteration" "alpine" {
 		bucket_name  = %q
 		channel = %q
-	}`, acctestBucket, acctestChannel)
+	}`, acctestAlpineBucket, acctestProductionChannel)
+	testAccPackerUbuntuProductionImage = fmt.Sprintf(`
+	data "hcp_packer_image_iteration" "ubuntu" {
+		bucket_name  = %q
+		channel = %q
+	}`, acctestUbuntuBucket, acctestProductionChannel)
 )
+
+func upsertRegistry(t *testing.T) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	params := packer_service.NewPackerServiceCreateRegistryParams()
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.Body = &models.HashicorpCloudPackerCreateRegistryRequest{
+		FeatureTier: models.HashicorpCloudPackerRegistryConfigTierSTANDARD,
+	}
+
+	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
+	if err, ok := err.(*packer_service.PackerServiceCreateRegistryDefault); ok {
+		switch err.Code() {
+		case int(codes.AlreadyExists), http.StatusConflict:
+			// all good here !
+			return
+		default:
+			t.Errorf("unexpected CreateRegistry error, expected nil or 409. Got code: %d err: %v", err.Code(), err)
+			return
+		}
+	}
+
+	waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
+	return
+}
+
+func waitForOperation(
+	t *testing.T,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	operationName string,
+	operationID string,
+	client *clients.Client,
+) {
+	timeout := "5s"
+	params := operation_service.NewWaitParams()
+	params.ID = operationID
+	params.Timeout = &timeout
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+
+	operation := func() error {
+		resp, err := client.Operation.Wait(params, nil)
+		if err != nil {
+			t.Errorf("unexpected error %#v", err)
+		}
+
+		if resp.Payload.Operation.Error != nil {
+			t.Errorf("Operation failed: %s", resp.Payload.Operation.Error.Message)
+		}
+
+		switch resp.Payload.Operation.State {
+		case "PENDING":
+			msg := fmt.Sprintf("==> Operation \"%s\" pending...", operationName)
+			return fmt.Errorf(msg)
+		case "RUNNING":
+			msg := fmt.Sprintf("==> Operation \"%s\" running...", operationName)
+			return fmt.Errorf(msg)
+		case "DONE":
+		default:
+			t.Errorf("Operation returned unknown state: %s", resp.Payload.Operation.State)
+		}
+		return nil
+	}
+
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 10 * time.Second
+	bo.RandomizationFactor = 0.5
+	bo.Multiplier = 1.5
+	bo.MaxInterval = 30 * time.Second
+	bo.MaxElapsedTime = 40 * time.Minute
+	err := backoff.Retry(operation, bo)
+	if err != nil {
+		t.Errorf("unexpected error: %#v", err)
+	}
+}
 
 func upsertBucket(t *testing.T, bucketSlug string) {
 	t.Helper()
@@ -93,7 +185,7 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	t.Errorf("unexpected CreateIteration error, expected nil or 409. Got %v", err)
 }
 
-func revokeIteration(t *testing.T, iterationID, revokeIn string) {
+func revokeIteration(t *testing.T, iterationID, bucketSlug, revokeIn string) {
 	t.Helper()
 	client := testAccProvider.Meta().(*clients.Client)
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -105,7 +197,10 @@ func revokeIteration(t *testing.T, iterationID, revokeIn string) {
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.IterationID = iterationID
-	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{RevokeIn: revokeIn}
+	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{
+		BucketSlug: bucketSlug,
+		RevokeIn:   revokeIn,
+	}
 
 	_, err := client.Packer.PackerServiceUpdateIteration(params, nil)
 	if err != nil {
@@ -204,7 +299,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	}
 }
 
-func createChannel(t *testing.T, bucketSlug, channelSlug string) {
+func createChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -218,8 +313,8 @@ func createChannel(t *testing.T, bucketSlug, channelSlug string) {
 	createChParams.LocationProjectID = loc.ProjectID
 	createChParams.BucketSlug = bucketSlug
 	createChParams.Body = &models.HashicorpCloudPackerCreateChannelRequest{
-		Slug:               channelSlug,
-		IncrementalVersion: 1,
+		Slug:        channelSlug,
+		IterationID: iterationID,
 	}
 
 	_, err := client.Packer.PackerServiceCreateChannel(createChParams, nil)
@@ -228,16 +323,16 @@ func createChannel(t *testing.T, bucketSlug, channelSlug string) {
 	}
 	if err, ok := err.(*packer_service.PackerServiceCreateChannelDefault); ok {
 		switch err.Code() {
-		case int(codes.Aborted), http.StatusConflict:
+		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
-			updateChannel(t, bucketSlug, channelSlug)
+			updateChannel(t, bucketSlug, channelSlug, iterationID)
 			return
 		}
 	}
 	t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
 }
 
-func updateChannel(t *testing.T, bucketSlug, channelSlug string) {
+func updateChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -252,7 +347,7 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug string) {
 	updateChParams.BucketSlug = bucketSlug
 	updateChParams.Slug = channelSlug
 	updateChParams.Body = &models.HashicorpCloudPackerUpdateChannelRequest{
-		IncrementalVersion: 1,
+		IterationID: iterationID,
 	}
 
 	_, err := client.Packer.PackerServiceUpdateChannel(updateChParams, nil)
@@ -335,24 +430,24 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
-			deleteChannel(t, acctestBucket, acctestChannel)
-			deleteIteration(t, acctestBucket, itID)
-			deleteBucket(t, acctestBucket)
+			itID := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
+			deleteChannel(t, acctestAlpineBucket, acctestProductionChannel)
+			deleteIteration(t, acctestAlpineBucket, itID)
+			deleteBucket(t, acctestAlpineBucket)
 			return nil
 		},
 
 		Steps: []resource.TestStep{
 			// testing that getting the production channel of the alpine image
 			// works.
-
 			{
 				PreConfig: func() {
-					upsertBucket(t, acctestBucket)
-					upsertIteration(t, acctestBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
-					upsertBuild(t, acctestBucket, fingerprint, itID)
-					createChannel(t, acctestBucket, acctestChannel)
+					upsertRegistry(t)
+					upsertBucket(t, acctestAlpineBucket)
+					upsertIteration(t, acctestAlpineBucket, fingerprint)
+					itID := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
+					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
+					createChannel(t, acctestAlpineBucket, acctestProductionChannel, itID)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
 				Check: resource.ComposeTestCheckFunc(
@@ -365,39 +460,37 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 }
 
 func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
-	resourceName := "data.hcp_packer_image_iteration.alpine"
-	fingerprint := "43"
+	fingerprint := fmt.Sprintf("%d", rand.Int())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
-			deleteChannel(t, acctestBucket, acctestChannel)
-			deleteIteration(t, acctestBucket, itID)
-			deleteBucket(t, acctestBucket)
+			itID := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
+			deleteChannel(t, acctestUbuntuBucket, acctestProductionChannel)
+			deleteIteration(t, acctestUbuntuBucket, itID)
+			deleteBucket(t, acctestUbuntuBucket)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			// testing that getting a revoked iteration fails properly
 			{
 				PreConfig: func() {
-					upsertBucket(t, acctestBucket)
-					upsertIteration(t, acctestBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestBucket, fingerprint)
-					upsertBuild(t, acctestBucket, fingerprint, itID)
-					createChannel(t, acctestBucket, acctestChannel)
+					upsertRegistry(t)
+					upsertBucket(t, acctestUbuntuBucket)
+					upsertIteration(t, acctestUbuntuBucket, fingerprint)
+					itID := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
+					upsertBuild(t, acctestUbuntuBucket, fingerprint, itID)
+					createChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
-					revokeIteration(t, itID, "5s")
+					revokeIteration(t, itID, acctestUbuntuBucket, "5s")
 					// Sleep to make sure the iteration is revoked when we test
 					time.Sleep(5 * time.Second)
 				},
-				Config: testConfig(testAccPackerAlpineProductionImage),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-				),
+				Config:      testConfig(testAccPackerUbuntuProductionImage),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Error: the iteration (\d|\w){26} is revoked and can not be used`),
 			},
 		},
 	})
