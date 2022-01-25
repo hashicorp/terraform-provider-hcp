@@ -208,7 +208,7 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug, revokeIn string) {
 	}
 }
 
-func getIterationIDFromFingerPrint(t *testing.T, bucketSlug, fingerprint string) string {
+func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint string) (string, error) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -225,9 +225,9 @@ func getIterationIDFromFingerPrint(t *testing.T, bucketSlug, fingerprint string)
 
 	ok, err := client.Packer.PackerServiceGetIteration(getItParams, nil)
 	if err != nil {
-		t.Fatal(err)
+		return "", err
 	}
-	return ok.Payload.Iteration.ID
+	return ok.Payload.Iteration.ID, nil
 }
 
 func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
@@ -357,7 +357,7 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
 }
 
-func deleteBucket(t *testing.T, bucketSlug string) {
+func deleteBucket(t *testing.T, bucketSlug string, logOnError bool) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -375,10 +375,12 @@ func deleteBucket(t *testing.T, bucketSlug string) {
 	if err == nil {
 		return
 	}
-	t.Errorf("unexpected DeleteBucket error, expected nil. Got %v", err)
+	if logOnError {
+		t.Logf("unexpected DeleteBucket error, expected nil. Got %v", err)
+	}
 }
 
-func deleteIteration(t *testing.T, bucketSlug string, iterationID string) {
+func deleteIteration(t *testing.T, bucketSlug string, iterationFingerprint string, logOnError bool) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -387,20 +389,30 @@ func deleteIteration(t *testing.T, bucketSlug string, iterationID string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
+	iterationID, err := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, iterationFingerprint)
+	if err != nil {
+		if logOnError {
+			t.Logf(err.Error())
+		}
+		return
+	}
+
 	deleteItParams := packer_service.NewPackerServiceDeleteIterationParams()
 	deleteItParams.LocationOrganizationID = loc.OrganizationID
 	deleteItParams.LocationProjectID = loc.ProjectID
 	deleteItParams.BucketSlug = &bucketSlug
 	deleteItParams.IterationID = iterationID
 
-	_, err := client.Packer.PackerServiceDeleteIteration(deleteItParams, nil)
+	_, err = client.Packer.PackerServiceDeleteIteration(deleteItParams, nil)
 	if err == nil {
 		return
 	}
-	t.Errorf("unexpected DeleteIteration error, expected nil. Got %v", err)
+	if logOnError {
+		t.Logf("unexpected DeleteIteration error, expected nil. Got %v", err)
+	}
 }
 
-func deleteChannel(t *testing.T, bucketSlug string, channelSlug string) {
+func deleteChannel(t *testing.T, bucketSlug string, channelSlug string, logOnError bool) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -419,7 +431,9 @@ func deleteChannel(t *testing.T, bucketSlug string, channelSlug string) {
 	if err == nil {
 		return
 	}
-	t.Errorf("unexpected DeleteChannel error, expected nil. Got %v", err)
+	if logOnError {
+		t.Logf("unexpected DeleteChannel error, expected nil. Got %v", err)
+	}
 }
 
 func TestAcc_dataSourcePacker(t *testing.T) {
@@ -430,10 +444,9 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
-			deleteChannel(t, acctestAlpineBucket, acctestProductionChannel)
-			deleteIteration(t, acctestAlpineBucket, itID)
-			deleteBucket(t, acctestAlpineBucket)
+			deleteChannel(t, acctestAlpineBucket, acctestProductionChannel, false)
+			deleteIteration(t, acctestAlpineBucket, fingerprint, false)
+			deleteBucket(t, acctestAlpineBucket, false)
 			return nil
 		},
 
@@ -445,7 +458,10 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 					upsertRegistry(t)
 					upsertBucket(t, acctestAlpineBucket)
 					upsertIteration(t, acctestAlpineBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
 					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
 					createChannel(t, acctestAlpineBucket, acctestProductionChannel, itID)
 				},
@@ -465,21 +481,24 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
-			deleteChannel(t, acctestUbuntuBucket, acctestProductionChannel)
-			deleteIteration(t, acctestUbuntuBucket, itID)
-			deleteBucket(t, acctestUbuntuBucket)
-			return nil
-		},
 		Steps: []resource.TestStep{
 			// testing that getting a revoked iteration fails properly
 			{
 				PreConfig: func() {
+					// CheckDestroy doesn't get called when the test fails and doesn't
+					// produce any tf state. In this case we destroy any existing resource
+					// before creating them.
+					deleteChannel(t, acctestUbuntuBucket, acctestProductionChannel, false)
+					deleteIteration(t, acctestUbuntuBucket, fingerprint, false)
+					deleteBucket(t, acctestUbuntuBucket, false)
+
 					upsertRegistry(t)
 					upsertBucket(t, acctestUbuntuBucket)
 					upsertIteration(t, acctestUbuntuBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
 					upsertBuild(t, acctestUbuntuBucket, fingerprint, itID)
 					createChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
@@ -489,8 +508,7 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 					time.Sleep(5 * time.Second)
 				},
 				Config:      testConfig(testAccPackerUbuntuProductionImage),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`Error: the iteration (\d|\w){26} is revoked and can not be used`),
+				ExpectError: regexp.MustCompile(`Error: the iteration (\d|\w){26} assigned to channel (\w|\W)* is revoked and can not be used. A valid iteration must be assigned to this channel before proceeding`),
 			},
 		},
 	})

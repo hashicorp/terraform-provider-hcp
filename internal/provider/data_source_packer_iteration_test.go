@@ -38,10 +38,9 @@ func TestAcc_dataSourcePackerIteration(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestIterationBucket, fingerprint)
-			deleteChannel(t, acctestIterationBucket, acctestIterationChannel)
-			deleteIteration(t, acctestIterationBucket, itID)
-			deleteBucket(t, acctestIterationBucket)
+			deleteChannel(t, acctestIterationBucket, acctestIterationChannel, false)
+			deleteIteration(t, acctestIterationBucket, fingerprint, false)
+			deleteBucket(t, acctestIterationBucket, false)
 			return nil
 		},
 
@@ -52,7 +51,10 @@ func TestAcc_dataSourcePackerIteration(t *testing.T) {
 				PreConfig: func() {
 					upsertBucket(t, acctestIterationBucket)
 					upsertIteration(t, acctestIterationBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestIterationBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestIterationBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
 					upsertBuild(t, acctestIterationBucket, fingerprint, itID)
 					createChannel(t, acctestIterationBucket, acctestIterationChannel, itID)
 				},
@@ -73,10 +75,9 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, fingerprint)
-			deleteChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel)
-			deleteIteration(t, acctestIterationUbuntuBucket, itID)
-			deleteBucket(t, acctestIterationUbuntuBucket)
+			deleteChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, false)
+			deleteIteration(t, acctestIterationUbuntuBucket, fingerprint, false)
+			deleteBucket(t, acctestIterationUbuntuBucket, false)
 			return nil
 		},
 
@@ -85,9 +86,19 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 			// works.
 			{
 				PreConfig: func() {
+					// CheckDestroy doesn't get called when the test fails and doesn't
+					// produce any tf state. In this case we destroy any existing resource
+					// before creating them.
+					deleteChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, false)
+					deleteIteration(t, acctestIterationUbuntuBucket, fingerprint, false)
+					deleteBucket(t, acctestIterationUbuntuBucket, false)
+
 					upsertBucket(t, acctestIterationUbuntuBucket)
 					upsertIteration(t, acctestIterationUbuntuBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
 					upsertBuild(t, acctestIterationUbuntuBucket, fingerprint, itID)
 					createChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
@@ -97,8 +108,7 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 					time.Sleep(5 * time.Second)
 				},
 				Config:      testConfig(testAccPackerIterationUbuntuProduction),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`Error: the iteration (\d|\w){26} is revoked and can not be used`),
+				ExpectError: regexp.MustCompile(`Error: the iteration (\d|\w){26} assigned to channel (\w|\W)* is revoked and can not be used. A valid iteration must be assigned to this channel before proceeding`),
 			},
 		},
 	})

@@ -114,7 +114,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	if !time.Time(iteration.RevokeAt).IsZero() {
 		// If RevokeAt is not a zero date, it means this iteration is revoked and should not be used
 		// to build new images.
-		return diag.Errorf("the iteration %s is revoked and can not be used", iteration.ID)
+		return diag.Errorf("the iteration %s is revoked and can not be used. A valid iteration should be used instead.", iteration.ID)
 	}
 
 	found := false
