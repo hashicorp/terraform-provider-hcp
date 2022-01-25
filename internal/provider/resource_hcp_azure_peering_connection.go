@@ -31,8 +31,8 @@ func resourceAzurePeeringConnection() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			// Required inputs
-			"hvn": {
-				Description: "The unique URL of the HashiCorp Virtual Network (HVN).",
+			"hvn_link": {
+				Description: "The `self_link` of the HashiCorp Virtual Network (HVN).",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -44,8 +44,8 @@ func resourceAzurePeeringConnection() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			"peer_vnet_id": {
-				Description: "The ID of the peer VNet in Azure.",
+			"peer_vnet_name": {
+				Description: "The name of the peer VNet in Azure.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -141,7 +141,7 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, orgID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -244,7 +244,7 @@ func resourceAzurePeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	peeringID := link.ID
 	loc := link.Location
 
-	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, loc.OrganizationID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -287,7 +287,7 @@ func resourceAzurePeeringConnectionDelete(ctx context.Context, d *schema.Resourc
 
 	peeringID := link.ID
 	loc := link.Location
-	hvnLink, err := buildLinkFromURL(d.Get("hvn").(string), HvnResourceType, loc.OrganizationID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -393,7 +393,7 @@ func resourceAzurePeeringConnectionImport(ctx context.Context, d *schema.Resourc
 	}
 
 	d.SetId(url)
-	if err := d.Set("hvn", hvnUrl); err != nil {
+	if err := d.Set("hvn_link", hvnUrl); err != nil {
 		return nil, err
 	}
 
