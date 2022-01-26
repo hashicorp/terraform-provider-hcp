@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	uniqueID                  = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
-	hvnID                     = uniqueID + "-hvn"
-	peeringID                 = uniqueID + "-peering"
-	routeID                   = uniqueID + "-route"
-	vnetName                  = uniqueID + "-vnet"
+	uniqueAzurePeeringTestID  = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
+	azureHvnID                = uniqueAzurePeeringTestID + "-hvn"
+	azurePeeringID            = uniqueAzurePeeringTestID + "-peering"
+	azureRouteID              = uniqueAzurePeeringTestID + "-route"
+	azureVnetName             = uniqueAzurePeeringTestID + "-vnet"
 	testAccAzurePeeringConfig = fmt.Sprintf(`
 provider "azurem" {
   features {}
@@ -88,7 +88,7 @@ resource "azurerm_role_assignment" "assignment" {
   scope              = azurerm_virtual_network.vnet.id
   role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 }
-`, hvnID, peeringID, routeID, vnetName)
+`, azureHvnID, azurePeeringID, azureRouteID, azureVnetName)
 )
 
 func TestAccAzurePeeringConnection(t *testing.T) {
@@ -108,8 +108,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 				Config: testConfig(testAccAzurePeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", peeringID),
-					testLink(resourceName, "hvn_link", hvnID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", azurePeeringID),
+					testLink(resourceName, "hvn_link", azureHvnID, HvnResourceType, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_subscription_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_tenant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_name"),
@@ -119,14 +119,14 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					testLink(resourceName, "self_link", peeringID, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", azurePeeringID, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 			// Tests import
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     "test-hvn:" + peeringID,
+				ImportStateId:     "test-hvn:" + azurePeeringID,
 				ImportStateVerify: true,
 			},
 			// Tests read
@@ -134,8 +134,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 				Config: testConfig(testAccAzurePeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", peeringID),
-					testLink(resourceName, "hvn_link", hvnID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", azurePeeringID),
+					testLink(resourceName, "hvn_link", azureHvnID, HvnResourceType, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_subscription_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_tenant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_name"),
@@ -145,7 +145,7 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					testLink(resourceName, "self_link", peeringID, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", azurePeeringID, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 		},
@@ -181,10 +181,10 @@ func testAccCheckAzurePeeringExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("unable to parse hvn_link link URL for %q: %v", id, err)
 		}
 
-		peeringID := peeringLink.ID
+		azurePeeringID := peeringLink.ID
 		loc := peeringLink.Location
 
-		if _, err := clients.GetPeeringByID(context.Background(), client, peeringID, hvnLink.ID, loc); err != nil {
+		if _, err := clients.GetPeeringByID(context.Background(), client, azurePeeringID, hvnLink.ID, loc); err != nil {
 			return fmt.Errorf("unable to get peering connection %q: %v", id, err)
 		}
 
@@ -220,10 +220,10 @@ func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
 				return fmt.Errorf("unable to parse hvn_link link URL for %q: %v", id, err)
 			}
 
-			peeringID := peeringLink.ID
+			azurePeeringID := peeringLink.ID
 			loc := peeringLink.Location
 
-			_, err = clients.GetPeeringByID(context.Background(), client, peeringID, hvnLink.ID, loc)
+			_, err = clients.GetPeeringByID(context.Background(), client, azurePeeringID, hvnLink.ID, loc)
 			if err == nil || !clients.IsResponseCodeNotFound(err) {
 				return fmt.Errorf("didn't get a 404 when reading destroyed HVN %q: %v", id, err)
 			}
