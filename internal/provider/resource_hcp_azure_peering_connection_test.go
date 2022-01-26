@@ -23,7 +23,7 @@ provider "azurem" {
 }
 
 resource "hcp_hvn" "test" {
-  hvn_link         = "%[1]s"
+  hvn_id         = "%[1]s"
   cloud_provider = "azure"
   region         = "westus2"
   cidr_block     = "172.25.16.0/20"
