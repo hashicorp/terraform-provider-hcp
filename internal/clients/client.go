@@ -17,8 +17,8 @@ import (
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/client/consul_service"
 
-	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/preview/2020-11-25/client/vault_service"
+	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2021-04-30/client/packer_service"
