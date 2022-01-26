@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
 	github.com/hashicorp/hcp-sdk-go v0.16.0
 	github.com/hashicorp/terraform-plugin-docs v0.5.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/posener/complete v1.2.1 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/tools v0.0.0-20201028111035-eafbe7b904eb // indirect
