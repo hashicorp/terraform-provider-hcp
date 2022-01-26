@@ -36,10 +36,9 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, false) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
-			itID := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)
-			deleteChannel(t, acctestImageBucket, acctestImageChannel)
-			deleteIteration(t, acctestImageBucket, itID)
-			deleteBucket(t, acctestImageBucket)
+			deleteChannel(t, acctestImageBucket, acctestImageChannel, false)
+			deleteIteration(t, acctestImageBucket, fingerprint, false)
+			deleteBucket(t, acctestImageBucket, false)
 			return nil
 		},
 		PreventPostDestroyRefresh: true,
@@ -50,9 +49,12 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 				PreConfig: func() {
 					upsertBucket(t, acctestImageBucket)
 					upsertIteration(t, acctestImageBucket, fingerprint)
-					itID := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
 					upsertBuild(t, acctestImageBucket, fingerprint, itID)
-					createChannel(t, acctestImageBucket, acctestImageChannel)
+					createChannel(t, acctestImageBucket, acctestImageChannel, itID)
 				},
 				Config: testAccPackerImageAlpineProduction,
 				Check: resource.ComposeTestCheckFunc(
