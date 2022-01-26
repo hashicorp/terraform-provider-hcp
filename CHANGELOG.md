@@ -1,3 +1,13 @@
+## 0.22.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* datasource/packer: Add check for revoked iterations to HCP Packer datasources ([#240](https://github.com/hashicorp/terraform-provider-hcp/issues/240))
+
+FIXES:
+
+* docs: Correct root token documentation ([#241](https://github.com/hashicorp/terraform-provider-hcp/issues/241))
+
 ## 0.21.1 (December 09, 2021)
 
 FEATURES:
