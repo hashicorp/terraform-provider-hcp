@@ -277,7 +277,16 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 	if err := d.Set("created_at", hvn.CreatedAt.String()); err != nil {
 		return err
 	}
-	if err := d.Set("provider_account_id", hvn.ProviderNetworkData.AwsNetworkData.AccountID); err != nil {
+
+	var providerAccountID string
+	switch d.Get("cloud_provider") {
+	case "aws":
+		providerAccountID = hvn.ProviderNetworkData.AwsNetworkData.AccountID
+	case "azure":
+		providerAccountID = "azure-todo"
+		// TODO: providerAccountID = hvn.ProviderNetworkData.AzureNetworkData.TenantID
+	}
+	if err := d.Set("provider_account_id", providerAccountID); err != nil {
 		return err
 	}
 
