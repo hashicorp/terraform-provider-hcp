@@ -39,7 +39,7 @@ resource "hcp_aws_network_peering" "peering" {
 }
 
 resource "hcp_peering_connection_activation" "activation" {
-	peering_id  = hcp_aws_network_peering.peering.peering_id
+  peering_id  = hcp_aws_network_peering.peering.peering_id
   hvn_link    = hcp_hvn.test.self_link
 }
 
@@ -80,7 +80,7 @@ func TestAccPeeringConnectionActivation(t *testing.T) {
 				Config: testConfig(testAccPeeringActivationConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "peering_id", activationPeeringID),
-					testLink(resourceName, "hvn_link", activationHvnID, PeeringResourceType, resourceName),
+					testLink(resourceName, "hvn_link", activationHvnID, HvnResourceType, "hcp_hvn.test"),
 				),
 			},
 		},
