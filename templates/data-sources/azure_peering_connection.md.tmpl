@@ -1,0 +1,18 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Type}} ({{.Name}})
+
+-> **Note:** This data source is currently in internal preview only. 
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_azure_peering_connection/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
