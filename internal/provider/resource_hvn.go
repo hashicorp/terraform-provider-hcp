@@ -22,6 +22,7 @@ var hvnDeleteTimeout = time.Minute * 10
 
 var hvnResourceCloudProviders = []string{
 	"aws",
+	// Available to internal users only
 	"azure",
 }
 
@@ -51,7 +52,7 @@ func resourceHvn() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description:      "The provider where the HVN is located. Only 'aws' and 'azure' are available at this time.",
+				Description:      "The provider where the HVN is located. Only 'aws' is available at this time.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
