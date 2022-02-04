@@ -29,7 +29,7 @@ var testAccAzureHvnConfig = `
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
 	cloud_provider = "azure"
-	region         = "westus2"
+	region         = "useast"
 }
 
 data "hcp_hvn" "test" {
@@ -57,7 +57,7 @@ func TestAccHvn(t *testing.T) {
 		"when the cloud provider is Azure": {
 			testAccAzureHvnConfig,
 			"azure",
-			"westus2",
+			"useast",
 		},
 	}
 
