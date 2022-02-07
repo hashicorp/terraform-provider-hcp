@@ -130,7 +130,7 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 
 	peeringID := d.Get("peering_id").(string)
 	peerSubscriptionID := d.Get("peer_subscription_id").(string)
-	peerVnetID := d.Get("peer_vnet_id").(string)
+	peerVnetID := d.Get("peer_vnet_name").(string)
 	peerVnetRegion := d.Get("peer_vnet_region").(string)
 	peerTenantID := d.Get("peer_tenant_id").(string)
 	peerResourceGroupName := d.Get("peer_resource_group_name").(string)
@@ -335,7 +335,7 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 	if err := d.Set("peer_subscription_id", peering.Target.AzureTarget.SubscriptionID); err != nil {
 		return err
 	}
-	if err := d.Set("peer_vnet_id", peering.Target.AzureTarget.VnetName); err != nil {
+	if err := d.Set("peer_vnet_name", peering.Target.AzureTarget.VnetName); err != nil {
 		return err
 	}
 	if err := d.Set("peer_vnet_region", peering.Target.AzureTarget.Region); err != nil {
