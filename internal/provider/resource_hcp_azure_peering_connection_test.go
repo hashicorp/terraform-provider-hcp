@@ -98,7 +98,7 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, true) },
 		ProviderFactories: providerFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"azure": {VersionConstraint: "~> 2.46.0"},
+			"azurerm": {VersionConstraint: "~> 2.46.0"},
 		},
 		CheckDestroy: testAccCheckAzurePeeringDestroy,
 
