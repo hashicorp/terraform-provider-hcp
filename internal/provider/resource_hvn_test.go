@@ -12,11 +12,24 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccHvnConfig = `
+var testAccAwsHvnConfig = `
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
 	cloud_provider = "aws"
 	region         = "us-west-2"
+}
+
+data "hcp_hvn" "test" {
+	hvn_id = hcp_hvn.test.hvn_id
+}
+`
+
+// Currently internal only
+var testAccAzureHvnConfig = `
+resource "hcp_hvn" "test" {
+	hvn_id         = "test-hvn"
+	cloud_provider = "azure"
+	region         = "useast"
 }
 
 data "hcp_hvn" "test" {
@@ -30,74 +43,94 @@ func TestAccHvn(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckHvnDestroy,
-		Steps: []resource.TestStep{
-			// Tests create
-			{
-				Config: testConfig(testAccHvnConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
-					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
-					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
-				),
-			},
-			// Tests import
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					return rs.Primary.Attributes["hvn_id"], nil
-				},
-				ImportStateVerify: true,
-			},
-			// Tests read
-			{
-				Config: testConfig(testAccHvnConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
-					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
-					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
-				),
-			},
-			// Tests datasource
-			{
-				Config: testConfig(testAccHvnConfig),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", dataSourceName, "hvn_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloud_provider", dataSourceName, "cloud_provider"),
-					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "region"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", dataSourceName, "cidr_block"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "provider_account_id", dataSourceName, "provider_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
-				),
-			},
+	cases := map[string]struct {
+		config   string
+		provider string
+		region   string
+	}{
+		"when the cloud provider is AWS": {
+			testAccAwsHvnConfig,
+			"aws",
+			"us-west-2",
 		},
-	})
+		// Currently internal only
+		"when the cloud provider is Azure": {
+			testAccAzureHvnConfig,
+			"azure",
+			"useast",
+		},
+	}
+
+	for _, tc := range cases {
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t, false) },
+			ProviderFactories: providerFactories,
+			CheckDestroy:      testAccCheckHvnDestroy,
+			Steps: []resource.TestStep{
+				// Tests create
+				{
+					Config: testConfig(tc.config),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckHvnExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+						resource.TestCheckResourceAttr(resourceName, "cloud_provider", tc.provider),
+						resource.TestCheckResourceAttr(resourceName, "region", tc.region),
+						resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
+						resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+						resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+						resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+						resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
+						testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					),
+				},
+				// Tests import
+				{
+					ResourceName: resourceName,
+					ImportState:  true,
+					ImportStateIdFunc: func(s *terraform.State) (string, error) {
+						rs, ok := s.RootModule().Resources[resourceName]
+						if !ok {
+							return "", fmt.Errorf("not found: %s", resourceName)
+						}
+
+						return rs.Primary.Attributes["hvn_id"], nil
+					},
+					ImportStateVerify: true,
+				},
+				// Tests read
+				{
+					Config: testConfig(tc.config),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckHvnExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+						resource.TestCheckResourceAttr(resourceName, "cloud_provider", tc.provider),
+						resource.TestCheckResourceAttr(resourceName, "region", tc.region),
+						resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
+						resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+						resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+						resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+						resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
+						testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					),
+				},
+				// Tests datasource
+				{
+					Config: testConfig(tc.config),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrPair(resourceName, "hvn_id", dataSourceName, "hvn_id"),
+						resource.TestCheckResourceAttrPair(resourceName, "cloud_provider", dataSourceName, "cloud_provider"),
+						resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "region"),
+						resource.TestCheckResourceAttrPair(resourceName, "cidr_block", dataSourceName, "cidr_block"),
+						resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
+						resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
+						resource.TestCheckResourceAttrPair(resourceName, "provider_account_id", dataSourceName, "provider_account_id"),
+						resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
+						resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
+					),
+				},
+			},
+		})
+	}
 }
 
 func testAccCheckHvnExists(name string) resource.TestCheckFunc {

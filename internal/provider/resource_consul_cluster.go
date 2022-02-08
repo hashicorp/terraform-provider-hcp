@@ -34,6 +34,8 @@ var deleteConsulClusterTimeout = time.Minute * 25
 // where a HCP Consul cluster can be provisioned.
 var consulCusterResourceCloudProviders = []string{
 	"aws",
+	// Available to internal users only
+	"azure",
 }
 
 // resourceConsulCluster represents an HCP Consul cluster.
