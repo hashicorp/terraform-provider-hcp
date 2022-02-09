@@ -36,6 +36,7 @@ func New() func() *schema.Provider {
 				"hcp_packer_image_iteration":         dataSourcePackerImageIteration(),
 				"hcp_packer_image":                   dataSourcePackerImage(),
 				"hcp_packer_iteration":               dataSourcePackerIteration(),
+				"hcp_peering_activation":             dataSourcePeeringActivation(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
@@ -46,7 +47,6 @@ func New() func() *schema.Provider {
 				"hcp_hvn":                            resourceHvn(),
 				"hcp_hvn_peering_connection":         resourceHvnPeeringConnection(),
 				"hcp_hvn_route":                      resourceHvnRoute(),
-				"hcp_peering_connection_activation":  resourcePeeringConnectionActivation(),
 				"hcp_vault_cluster":                  resourceVaultCluster(),
 				"hcp_vault_cluster_admin_token":      resourceVaultClusterAdminToken(),
 			},
