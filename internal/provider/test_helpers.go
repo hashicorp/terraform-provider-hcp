@@ -30,3 +30,19 @@ func testAccCheckFullURL(name, key, port string) resource.TestCheckFunc {
 		return nil
 	}
 }
+
+func testAccResourceExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("no ID is set")
+		}
+
+		return nil
+	}
+}
