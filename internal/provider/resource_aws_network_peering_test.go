@@ -48,6 +48,11 @@ resource "hcp_hvn_route" "route" {
   target_link = hcp_aws_network_peering.peering.self_link
 }
 
+data "hcp_peering_activation" "activation" {
+	peering_id = hcp_aws_network_peering.peering.peering_id
+	hvn_link   = hcp_hvn.test.self_link
+}
+
 resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
   vpc_peering_connection_id = hcp_aws_network_peering.peering.provider_peering_id
   auto_accept               = true
@@ -56,7 +61,7 @@ resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
 
 	 // we need to have these tags here because peering-accepter will turn into
      // an actual peering which HCP will populate with a set of tags (the ones below).
-     // After succesfull "apply"" test will try to run "plan" operation
+     // After succesful "apply" test will try to run "plan" operation
      // to make sure there are no changes to the state and if we don't specify these
      // tags here then it will fail. 
 	 hvn_id          = hcp_hvn.test.hvn_id
@@ -65,7 +70,7 @@ resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
 	 peering_id      = hcp_aws_network_peering.peering.peering_id
   }
 }
-`, hvnRouteUniqueAWSName)
+`, hvnPeeringUniqueAWSName)
 )
 
 func TestAccHvnPeering(t *testing.T) {
@@ -96,6 +101,9 @@ func TestAccHvnPeering(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					testLink(resourceName, "self_link", "test-peering", PeeringResourceType, "hcp_hvn.test"),
+
+					// testing the peering activation resource as a bonus to save test time
+					testAccResourceExists("data.hcp_peering_activation.activation"),
 				),
 			},
 			// Testing that we can import HVN route created in the previous step and that the
@@ -122,6 +130,7 @@ func TestAccHvnPeering(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					testLink(resourceName, "self_link", "test-peering", PeeringResourceType, "hcp_hvn.test"),
+					testAccResourceExists("data.hcp_peering_activation.activation"),
 				),
 			},
 		},
