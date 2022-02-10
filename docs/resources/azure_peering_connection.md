@@ -28,7 +28,7 @@ resource "hcp_azure_peering_connection" "peer" {
   peer_subscription_id     = "subscription-uuid"
   peer_tenant_id           = "tenant-uuid"
   peer_resource_group_name = azurerm_resource_group.rg.name
-  peer_vnet_region         = hcp_hvn.hvn.region
+  peer_vnet_region         = azure_rm_virtual_network.region
 }
 
 resource "hcp_peering_connection_activation" "activation" {
