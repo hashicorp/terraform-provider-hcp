@@ -284,7 +284,7 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 	case "aws":
 		providerAccountID = hvn.ProviderNetworkData.AwsNetworkData.AccountID
 	case "azure":
-		// TODO: providerAccountID = hvn.ProviderNetworkData.AzureNetworkData.TenantID
+		// No equivalent field exposed in Azure HVNs at this time
 		providerAccountID = ""
 	}
 	if err := d.Set("provider_account_id", providerAccountID); err != nil {
