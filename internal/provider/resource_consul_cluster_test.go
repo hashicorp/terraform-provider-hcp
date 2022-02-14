@@ -12,9 +12,10 @@ import (
 
 var consulCluster = `
 resource "hcp_consul_cluster" "test" {
-	cluster_id = "test-consul-cluster"
-	hvn_id     = hcp_hvn.test.hvn_id
-	tier       = "standard"
+	cluster_id         = "test-consul-cluster"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "standard"
+	min_consul_version = "v1.10.6"
 }
 `
 
@@ -81,7 +82,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_ca_file"),
-					resource.TestCheckResourceAttrSet(resourceName, "consul_version"),
+					resource.TestCheckResourceAttr(resourceName, "consul_version", "v1.10.6"),
 					resource.TestCheckNoResourceAttr(resourceName, "consul_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_private_endpoint_url"),
 					testAccCheckFullURL(resourceName, "consul_private_endpoint_url", ""),
