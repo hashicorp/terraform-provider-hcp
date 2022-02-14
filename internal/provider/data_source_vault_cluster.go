@@ -92,6 +92,11 @@ func dataSourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
