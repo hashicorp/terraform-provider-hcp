@@ -277,7 +277,7 @@ resource "hcp_hvn" "hvn2" {
 `, vaultCluster)
 }
 
-func TestAccPerformanceReplication_CreateValidations(t *testing.T) {
+func TestAccPerformanceReplication_Validations(t *testing.T) {
 	hvn1ResourceName := "hcp_hvn.hvn1"
 	hvn2ResourceName := "hcp_hvn.hvn2"
 	primaryVaultResourceName := "hcp_vault_cluster.c1"

@@ -481,9 +481,12 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
-	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
-	if primaryClusterLinkStr != "" {
-		if err := d.Set("primary_link", primaryClusterLinkStr); err != nil {
+	if cluster.PerformanceReplicationInfo != nil && cluster.PerformanceReplicationInfo.PrimaryClusterLink != nil {
+		primaryLink, err := linkURL(cluster.PerformanceReplicationInfo.PrimaryClusterLink)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("primary_link", primaryLink); err != nil {
 			return err
 		}
 	}
