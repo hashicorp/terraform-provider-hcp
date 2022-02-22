@@ -191,8 +191,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
 	// ensure Plus tier performance replication params are legit
-	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
-	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d, primaryClusterLinkStr)
+	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -200,7 +199,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
 
 	var vaultCluster *vaultmodels.HashicorpCloudVault20201125InputCluster
-	if primaryClusterLinkStr != "" {
+	if getPrimaryLinkIfAny(d) != "" {
 		// performance replication secondary cluster creation request.
 		primaryClusterLink := newLink(primaryClusterModel.Location, VaultClusterResourceType, primaryClusterModel.ID)
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
@@ -335,22 +334,36 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
+	if d.HasChange("primary_link") {
+		return diag.Errorf("primary_link may not be changed after a cluster is created")
+	}
+
 	// Confirm public_endpoint or tier have changed.
 	if !(d.HasChange("tier") || d.HasChange("public_endpoint")) {
 		return nil
 	}
 
 	if d.HasChange("tier") {
-		// Invoke update tier endpoint.
-		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
-		updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
-		if err != nil {
-			return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
-		}
+		if _, has_primary := d.GetOk("primary_link"); has_primary {
+			// Note: secondaries are scaled via their primaries. This field may be updated
+			// because the entire replication group is scaling, but after validation that
+			// the tier matches the primary, changing the tier of a secondary is a no-op.
+			diagErr, _ := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
+			if diagErr != nil {
+				return diagErr
+			}
+		} else {
+			// Invoke update tier endpoint.
+			tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
+			updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
+			if err != nil {
+				return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
+			}
 
-		// Wait for the update cluster operation.
-		if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
-			return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+			// Wait for the update cluster operation.
+			if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
+				return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+			}
 		}
 	}
 
@@ -519,13 +532,14 @@ func inPlusTier(tier string) bool {
 		tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSLARGE)
 }
 
-func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData, primaryClusterlinkStr string) ([]diag.Diagnostic, *vaultmodels.HashicorpCloudVault20201125Cluster) {
+func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) ([]diag.Diagnostic, *vaultmodels.HashicorpCloudVault20201125Cluster) {
+	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
 	// if no primary_link has been supplied, then treat this as as single cluster creation.
-	if primaryClusterlinkStr == "" {
+	if primaryClusterLinkStr == "" {
 		return nil, nil
 	}
 
-	primaryClusterLink, err := buildLinkFromURL(primaryClusterlinkStr, VaultClusterResourceType, client.Config.OrganizationID)
+	primaryClusterLink, err := buildLinkFromURL(primaryClusterLinkStr, VaultClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.Errorf("invalid primary_link supplied %v", err), nil
 	}
@@ -545,7 +559,7 @@ func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Conte
 
 	// tier should be specified, even if secondary inherits it from the primary cluster.
 	if !strings.EqualFold(d.Get("tier").(string), string(primaryCluster.Config.Tier)) {
-		return diag.Errorf("secondaries inherit tier from their primary (%s)", primaryClusterLink.ID), primaryCluster
+		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryClusterLink.ID), primaryCluster
 	}
 
 	if primaryCluster.PerformanceReplicationInfo != nil && primaryCluster.PerformanceReplicationInfo.Mode == vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationInfoModeSECONDARY {
