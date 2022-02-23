@@ -45,6 +45,7 @@ data "hcp_vault_cluster" "example" {
 - **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
 - **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - **vault_version** (String) The Vault version of the cluster.
+- **primary_link** (String) the `self_link` of the HCP Vault cluster which is the primary in the performance replication setup with this HCP Vault cluster. If not specified, it is a primary or standalone cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

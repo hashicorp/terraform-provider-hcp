@@ -13,16 +13,32 @@ The Vault cluster resource allows you to manage an HCP Vault cluster.
 ## Example Usage
 
 ```terraform
-resource "hcp_hvn" "example" {
-  hvn_id         = "hvn"
+resource "hcp_hvn" "example1" {
+  hvn_id         = "hvn1"
   cloud_provider = "aws"
   region         = "us-west-2"
   cidr_block     = "172.25.16.0/20"
 }
 
-resource "hcp_vault_cluster" "example" {
-  cluster_id = "vault-cluster"
-  hvn_id     = hcp_hvn.example.hvn_id
+resource "hcp_hvn" "example2" {
+  hvn_id         = "hvn2"
+  cloud_provider = "aws"
+  region         = "eu-central-1"
+  cidr_block     = "172.26.16.0/20"
+}
+
+
+resource "hcp_vault_cluster" "example_primary" {
+  cluster_id = "vault-cluster-primary"
+  hvn_id     = hcp_hvn.example1.hvn_id
+  tier       = "plus_medium"
+}
+
+resource "hcp_vault_cluster" "example_secondary" {
+  cluster_id   = "vault-cluster-secondary"
+  hvn_id       = hcp_hvn.example2.hvn_id
+  tier         = "plus_medium"
+  primary_link = hcp_vault_cluster.example_primary.self_link
 }
 ```
 
@@ -39,8 +55,11 @@ resource "hcp_vault_cluster" "example" {
 - **id** (String) The ID of this resource.
 - **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
-- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`, `starter_small`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).
+- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault). Not specified for performance replication secondaries.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **primary_link** (String) the `self_link` of the HCP Vault cluster which is the primary in the performance replication setup with this HCP Vault cluster. If not specified, it is a primary or standalone cluster.
+
+-> **Note:** When establishing performance replication links between clusters in different HVNs, an HVN peering connection is required. This can be defined explicitly using an [`hcp_hvn_peering_connection`](hvn_peering_connection.md), or HCP will create the connection automatically (peering connections can be imported after creation using [terraform import](https://www.terraform.io/cli/import)). Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
 
 ### Read-Only
 
