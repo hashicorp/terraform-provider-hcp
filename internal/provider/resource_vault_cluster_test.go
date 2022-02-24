@@ -358,7 +358,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)))),
-				ExpectError: regexp.MustCompile(`secondaries inherit tier from their primary`),
+				ExpectError: regexp.MustCompile(`a secondary's tier must match that of its primary`),
 			},
 			{
 				// secondary cluster creation failed as primary link is invalid
@@ -505,7 +505,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				ExpectError: regexp.MustCompile(`error updating Vault cluster tier`),
 			},
 			{
-				// primary cluster scales out of Plus tier
+				// scaling out of the Plus tier not yet allowed
 				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
@@ -514,10 +514,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					public_endpoint = true
 				}
 				`)))),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultClusterExists(primaryVaultResourceName),
-					resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", "STARTER_SMALL"),
-				),
+				ExpectError: regexp.MustCompile(`scaling Plus tier clusters is not yet allowed`),
 			},
 		},
 	})

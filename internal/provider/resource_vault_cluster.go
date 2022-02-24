@@ -91,8 +91,7 @@ func resourceVaultCluster() *schema.Resource {
 				Description: "The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				// If primary_link is desired to be changed, then don't want it to be changed and will be rejected at terraform apply step.
-				ForceNew: false,
+				ForceNew:    true,
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
@@ -334,36 +333,26 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
-	if d.HasChange("primary_link") {
-		return diag.Errorf("primary_link may not be changed after a cluster is created")
-	}
-
 	// Confirm public_endpoint or tier have changed.
 	if !(d.HasChange("tier") || d.HasChange("public_endpoint")) {
 		return nil
 	}
 
 	if d.HasChange("tier") {
-		if _, has_primary := d.GetOk("primary_link"); has_primary {
-			// Note: secondaries are scaled via their primaries. This field may be updated
-			// because the entire replication group is scaling, but after validation that
-			// the tier matches the primary, changing the tier of a secondary is a no-op.
-			diagErr, _ := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
-			if diagErr != nil {
-				return diagErr
-			}
-		} else {
-			// Invoke update tier endpoint.
-			tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
-			updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
-			if err != nil {
-				return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
-			}
+		if inPlusTier(string(cluster.Config.Tier)) {
+			return diag.Errorf("scaling Plus tier clusters is not yet allowed")
+		}
 
-			// Wait for the update cluster operation.
-			if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
-				return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
-			}
+		// Invoke update tier endpoint.
+		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
+		updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
+		}
+
+		// Wait for the update cluster operation.
+		if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
+			return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
 		}
 	}
 
