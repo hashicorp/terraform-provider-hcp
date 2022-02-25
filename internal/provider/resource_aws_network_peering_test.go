@@ -15,7 +15,7 @@ import (
 var (
 	// using unique names for AWS resource to make debugging easier
 	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
-	testAccHvnPeeringConfig = fmt.Sprintf(`
+	testAccAwsPeeringConfig = fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
 }
@@ -68,11 +68,11 @@ resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
 `, hvnRouteUniqueAWSName)
 )
 
-func TestAccHvnPeering(t *testing.T) {
+func TestAccAwsPeering(t *testing.T) {
 	resourceName := "hcp_aws_network_peering.peering"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, true) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProviderFactories: providerFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"aws": {VersionConstraint: "~> 2.64.0"},
@@ -82,7 +82,7 @@ func TestAccHvnPeering(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnPeeringConfig),
+				Config: testConfig(testAccAwsPeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnPeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", "test-peering"),
@@ -108,7 +108,7 @@ func TestAccHvnPeering(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnPeeringConfig),
+				Config: testConfig(testAccAwsPeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnPeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", "test-peering"),
