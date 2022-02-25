@@ -334,6 +334,12 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 	if err := d.Set("peer_vnet_region", peering.Target.AzureTarget.Region); err != nil {
 		return err
 	}
+	if err := d.Set("peer_resource_group_name", peering.Target.AzureTarget.ResourceGroupName); err != nil {
+		return err
+	}
+	if err := d.Set("peer_tenant_id", peering.Target.AzureTarget.TenantID); err != nil {
+		return err
+	}
 	if err := d.Set("provider_peering_id", peering.ProviderPeeringID); err != nil {
 		return err
 	}
