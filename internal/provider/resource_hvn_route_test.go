@@ -72,7 +72,7 @@ func TestAccHvnRoute(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, true) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProviderFactories: providerFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"aws": {VersionConstraint: "~> 2.64.0"},
