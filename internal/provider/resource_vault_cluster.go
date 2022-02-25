@@ -91,6 +91,16 @@ func resourceVaultCluster() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 			},
+			"paths_filter": {
+				Description: "The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in \"deny\" mode only.",
+				Type:        schema.TypeList,
+				MinItems:    1,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validateVaultPathsFilter,
+				},
+				Optional: true,
+			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -198,6 +208,14 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	var vaultCluster *vaultmodels.HashicorpCloudVault20201125InputCluster
 	if getPrimaryLinkIfAny(d) != "" {
 		primaryClusterLink := newLink(primaryClusterModel.Location, VaultClusterResourceType, primaryClusterModel.ID)
+		var pathsFilter *vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter
+		if paths, ok := d.GetOk("paths_filter"); ok {
+			pathStrings := getPathStrings(paths)
+			pathsFilter = &vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
+				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY,
+				Paths: pathStrings,
+			}
+		}
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
@@ -213,8 +231,13 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			ID:                                   clusterID,
 			Location:                             loc,
 			PerformanceReplicationPrimaryCluster: primaryClusterLink,
+			PerformanceReplicationPathsFilter:    pathsFilter,
 		}
 	} else {
+		if _, ok := d.GetOk("paths_filter"); ok {
+			return diag.Errorf("only performance replication secondaries may specify a paths_filter")
+		}
+
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
@@ -328,26 +351,45 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
-	// Confirm public_endpoint or tier have changed.
-	if !(d.HasChange("tier") || d.HasChange("public_endpoint")) {
+	// Confirm at least on modifiable field has changed
+	if !d.HasChanges("tier", "public_endpoint", "paths_filter") {
 		return nil
 	}
 
 	if d.HasChange("tier") {
+		clusterToScale := cluster
+		destTier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
 		if inPlusTier(string(cluster.Config.Tier)) {
-			return diag.Errorf("scaling Plus tier clusters is not yet allowed")
+			// Plus tier clusters scale as a group via the primary cluster.
+			// Therefore, the cluster may have already scaled due to another resource's update.
+			// First, check that the scaling operation is necessary.
+			if cluster.Config.Tier == destTier {
+				clusterToScale = nil
+			} else {
+				printPlusScalingWarningMsg()
+				primaryLink := getPrimaryLinkIfAny(d)
+				if primaryLink != "" {
+					// If the cluster is a secondary, issue the actual API request to the primary.
+					var getPrimaryErr diag.Diagnostics
+					clusterToScale, getPrimaryErr = getPrimaryClusterFromLink(ctx, client, primaryLink)
+					if getPrimaryErr != nil {
+						return getPrimaryErr
+					}
+				}
+			}
 		}
 
-		// Invoke update tier endpoint.
-		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
-		updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
-		if err != nil {
-			return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
-		}
+		if clusterToScale != nil {
+			// Invoke update tier endpoint.
+			updateResp, err := clients.UpdateVaultClusterTier(ctx, client, clusterToScale.Location, clusterToScale.ID, destTier)
+			if err != nil {
+				return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
+			}
 
-		// Wait for the update cluster operation.
-		if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", cluster.Location, updateResp.Operation.ID); err != nil {
-			return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+			// Wait for the update cluster operation.
+			if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", clusterToScale.Location, updateResp.Operation.ID); err != nil {
+				return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
+			}
 		}
 	}
 
@@ -361,6 +403,41 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		// Wait for the update cluster operation.
 		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", cluster.Location, updateResp.Operation.ID); err != nil {
 			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
+		}
+	}
+
+	if d.HasChange("paths_filter") {
+		if paths, ok := d.GetOk("paths_filter"); ok {
+			// paths_filter is present. Check that it is a secondary, then update.
+			if _, ok := d.GetOk("primary_link"); !ok {
+				return diag.Errorf("only performance replication secondaries may specify a paths_filter")
+			}
+
+			// Invoke update paths filter endpoint.
+			pathStrings := getPathStrings(paths)
+			updateResp, err := clients.UpdateVaultPathsFilter(ctx, client, cluster.Location, clusterID, vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
+				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY,
+				Paths: pathStrings,
+			})
+			if err != nil {
+				return diag.Errorf("error updating Vault cluster paths filter (%s): %v", clusterID, err)
+			}
+
+			// Wait for the update paths filter operation.
+			if err := clients.WaitForOperation(ctx, client, "update Vault cluster paths filter", cluster.Location, updateResp.Operation.ID); err != nil {
+				return diag.Errorf("unable to update Vault cluster paths filter (%s): %v", clusterID, err)
+			}
+		} else {
+			// paths_filter is not present. Delete the paths_filter.
+			deleteResp, err := clients.DeleteVaultPathsFilter(ctx, client, cluster.Location, clusterID)
+			if err != nil {
+				return diag.Errorf("error deleting Vault cluster paths filter (%s): %v", clusterID, err)
+			}
+
+			// Wait for the delete paths filter operation.
+			if err := clients.WaitForOperation(ctx, client, "delete Vault cluster paths filter", cluster.Location, deleteResp.Operation.ID); err != nil {
+				return diag.Errorf("unable to delete Vault cluster paths filter (%s): %v", clusterID, err)
+			}
 		}
 	}
 
@@ -478,13 +555,24 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
-	if cluster.PerformanceReplicationInfo != nil && cluster.PerformanceReplicationInfo.PrimaryClusterLink != nil {
-		primaryLink, err := linkURL(cluster.PerformanceReplicationInfo.PrimaryClusterLink)
-		if err != nil {
-			return err
+	if cluster.PerformanceReplicationInfo != nil {
+		prInfo := cluster.PerformanceReplicationInfo
+		if prInfo.PrimaryClusterLink != nil {
+			primaryLink, err := linkURL(cluster.PerformanceReplicationInfo.PrimaryClusterLink)
+			if err != nil {
+				return err
+			}
+			if err := d.Set("primary_link", primaryLink); err != nil {
+				return err
+			}
 		}
-		if err := d.Set("primary_link", primaryLink); err != nil {
-			return err
+
+		if prInfo.PathsFilter != nil && prInfo.PathsFilter.Paths != nil {
+			if err := d.Set("paths_filter", prInfo.PathsFilter.Paths); err != nil {
+				return err
+			}
+		} else {
+			d.Set("paths_filter", nil)
 		}
 	}
 
@@ -516,44 +604,35 @@ func inPlusTier(tier string) bool {
 		tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSLARGE)
 }
 
-func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) ([]diag.Diagnostic, *vaultmodels.HashicorpCloudVault20201125Cluster) {
+func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) (diag.Diagnostics, *vaultmodels.HashicorpCloudVault20201125Cluster) {
 	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
 	// If no primary_link has been supplied, treat this as as single cluster creation.
 	if primaryClusterLinkStr == "" {
 		return nil, nil
 	}
 
-	primaryClusterLink, err := buildLinkFromURL(primaryClusterLinkStr, VaultClusterResourceType, client.Config.OrganizationID)
+	primaryCluster, err := getPrimaryClusterFromLink(ctx, client, primaryClusterLinkStr)
 	if err != nil {
-		return diag.Errorf("invalid primary_link supplied %v", err), nil
-	}
-
-	primaryCluster, err := clients.GetVaultClusterByID(ctx, client, primaryClusterLink.Location, primaryClusterLink.ID)
-	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("primary cluster (%s) must exist", primaryClusterLink.ID), nil
-
-		}
-		return diag.Errorf("unable to check for presence of an existing primary Vault cluster (%s): %v", primaryClusterLink.ID, err), nil
+		return err, nil
 	}
 
 	if !inPlusTier(string(primaryCluster.Config.Tier)) {
-		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryClusterLink.ID), primaryCluster
+		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryCluster.ID), primaryCluster
 	}
 
 	// Tier should be specified, even if secondary inherits it from the primary cluster.
 	if !strings.EqualFold(d.Get("tier").(string), string(primaryCluster.Config.Tier)) {
-		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryClusterLink.ID), primaryCluster
+		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryCluster.ID), primaryCluster
 	}
 
 	if primaryCluster.PerformanceReplicationInfo != nil && primaryCluster.PerformanceReplicationInfo.Mode == vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationInfoModeSECONDARY {
-		return diag.Errorf("primary cluster (%s) is already a secondary", primaryClusterLink.ID), primaryCluster
+		return diag.Errorf("primary cluster (%s) is already a secondary", primaryCluster.ID), primaryCluster
 	}
 
 	// min_vault_version should either be empty or match the primary's initial version
 	minVaultVersion := d.Get("min_vault_version").(string)
 	if minVaultVersion != "" && !strings.EqualFold(minVaultVersion, primaryCluster.Config.VaultConfig.InitialVersion) {
-		return diag.Errorf("min_vault_version should either be unset or match the primary cluster's (%s) initial version (%s)", primaryClusterLink.ID, primaryCluster.Config.VaultConfig.InitialVersion), primaryCluster
+		return diag.Errorf("min_vault_version should either be unset or match the primary cluster's (%s) initial version (%s)", primaryCluster.ID, primaryCluster.Config.VaultConfig.InitialVersion), primaryCluster
 	}
 	return nil, primaryCluster
 }
@@ -564,4 +643,34 @@ func getPrimaryLinkIfAny(d *schema.ResourceData) string {
 		return ""
 	}
 	return primaryClusterLinkIface.(string)
+}
+
+func getPrimaryClusterFromLink(ctx context.Context, client *clients.Client, link string) (*vaultmodels.HashicorpCloudVault20201125Cluster, diag.Diagnostics) {
+	primaryClusterLink, err := buildLinkFromURL(link, VaultClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return nil, diag.Errorf("invalid primary_link supplied %v", err)
+	}
+
+	primaryCluster, err := clients.GetVaultClusterByID(ctx, client, primaryClusterLink.Location, primaryClusterLink.ID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return nil, diag.Errorf("primary cluster (%s) does not exist", primaryClusterLink.ID)
+
+		}
+		return nil, diag.Errorf("unable to check for presence of an existing primary Vault cluster (%s): %v", primaryClusterLink.ID, err)
+	}
+	return primaryCluster, nil
+}
+
+func getPathStrings(pathFilter interface{}) []string {
+	pathFilterArr := pathFilter.([]interface{})
+	var paths []string
+	for _, pathFilter := range pathFilterArr {
+		paths = append(paths, pathFilter.(string))
+	}
+	return paths
+}
+
+func printPlusScalingWarningMsg() {
+	log.Printf("[WARN] When scaling Plus-tier Vault clusters, be sure to keep the size of all clusters in a replication group in sync")
 }

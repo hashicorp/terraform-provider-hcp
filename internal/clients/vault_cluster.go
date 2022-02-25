@@ -138,3 +138,49 @@ func UpdateVaultClusterTier(ctx context.Context, client *Client, loc *sharedmode
 
 	return updateResp.Payload, nil
 }
+
+// UpdateVaultPathsFilter will make a call to the Vault service to update the paths filter for a secondary cluster
+func UpdateVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string, params vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter) (*vaultmodels.HashicorpCloudVault20201125UpdatePathsFilterResponse, error) {
+
+	updateParams := vault_service.NewUpdatePathsFilterParams()
+	updateParams.Context = ctx
+	updateParams.ClusterID = clusterID
+	updateParams.LocationProjectID = loc.ProjectID
+	updateParams.LocationOrganizationID = loc.OrganizationID
+	updateParams.Body = &vaultmodels.HashicorpCloudVault20201125UpdatePathsFilterRequest{
+		// ClusterID and Location are repeated because the values above are required to populate the URL,
+		// and the values below are required in the API request body
+		ClusterID: clusterID,
+		Location:  loc,
+		Mode:      params.Mode,
+		Paths:     params.Paths,
+	}
+
+	updateResp, err := client.Vault.UpdatePathsFilter(updateParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResp.Payload, nil
+}
+
+// DeleteVaultPathsFilter will make a call to the Vault service to delete the paths filter for a secondary cluster
+func DeleteVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string) (*vaultmodels.HashicorpCloudVault20201125DeletePathsFilterResponse, error) {
+
+	deleteParams := vault_service.NewDeletePathsFilterParams()
+	deleteParams.Context = ctx
+	deleteParams.ClusterID = clusterID
+	deleteParams.LocationProjectID = loc.ProjectID
+	deleteParams.LocationOrganizationID = loc.OrganizationID
+	deleteParams.LocationRegionProvider = &loc.Region.Provider
+	deleteParams.LocationRegionRegion = &loc.Region.Region
+
+	deleteResp, err := client.Vault.DeletePathsFilter(deleteParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResp.Payload, nil
+}

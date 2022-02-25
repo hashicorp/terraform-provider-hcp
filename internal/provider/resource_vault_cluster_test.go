@@ -311,6 +311,18 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				ExpectError: regexp.MustCompile(`invalid primary_link supplied*`),
 			},
 			{
+				// incorrectly specify a paths_filter on a non-secondary
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				resource "hcp_vault_cluster" "c1" {
+					cluster_id   = "test-primary"
+					hvn_id       = hcp_hvn.hvn1.hvn_id
+					tier         = "plus_small"
+					paths_filter = ["path/a"]
+				}
+				`)),
+				ExpectError: regexp.MustCompile(`only performance replication secondaries may specify a paths_filter`),
+			},
+			{
 				// create a plus tier cluster successfully
 				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
@@ -347,9 +359,6 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					hvn_id          = hcp_hvn.hvn1.hvn_id
 					tier            = "plus_small"
 					public_endpoint = true
-					depends_on = [
-						hcp_hvn.hvn1
-					]
 				}
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
@@ -395,7 +404,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					min_vault_version = "v1.0.1"
 				}
 				`)),
-				ExpectError: regexp.MustCompile(`min_vault_version does not apply to secondary`),
+				ExpectError: regexp.MustCompile(`min_vault_version should either be unset or match the primary cluster's`),
 			},
 			{
 				// secondary cluster created successfully (same hvn)
@@ -411,6 +420,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					hvn_id       = hcp_hvn.hvn1.hvn_id
 					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
+					paths_filter = ["path/a", "path/b"]
 				}
 				`)),
 				Check: resource.ComposeTestCheckFunc(
@@ -421,6 +431,8 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					resource.TestCheckResourceAttr(secondaryVaultResourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(secondaryVaultResourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(secondaryVaultResourceName, "public_endpoint", "false"),
+					resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.0", "path/a"),
+					resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.1", "path/b"),
 					resource.TestCheckResourceAttr(secondaryVaultResourceName, "namespace", "admin"),
 					resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "vault_version"),
 					resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "organization_id"),
@@ -430,6 +442,48 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(secondaryVaultResourceName, "vault_private_endpoint_url", ""),
 					resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "created_at"),
+				),
+			},
+			{
+				// update paths filter
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				resource "hcp_vault_cluster" "c1" {
+					cluster_id      = "test-primary"
+					hvn_id          = hcp_hvn.hvn1.hvn_id
+					tier            = "plus_small"
+					public_endpoint = true
+				}
+				resource "hcp_vault_cluster" "c2" {
+					cluster_id   = "test-secondary"
+					hvn_id       = hcp_hvn.hvn1.hvn_id
+					tier         = "plus_small"
+					primary_link = hcp_vault_cluster.c1.self_link
+					paths_filter = ["path/a", "path/c"]
+				}
+				`)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.0", "path/a"),
+					resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.1", "path/c"),
+				),
+			},
+			{
+				// delete paths filter
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				resource "hcp_vault_cluster" "c1" {
+					cluster_id      = "test-primary"
+					hvn_id          = hcp_hvn.hvn1.hvn_id
+					tier            = "plus_small"
+					public_endpoint = true
+				}
+				resource "hcp_vault_cluster" "c2" {
+					cluster_id   = "test-secondary"
+					hvn_id       = hcp_hvn.hvn1.hvn_id
+					tier         = "plus_small"
+					primary_link = hcp_vault_cluster.c1.self_link
+				}
+				`)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(secondaryVaultResourceName, "paths_filter.0"),
 				),
 			},
 			{
@@ -469,7 +523,42 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				),
 			},
 			{
-				// scaling out of the Plus tier not yet allowed
+				// successfully scale replication group
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				resource "hcp_vault_cluster" "c1" {
+					cluster_id      = "test-primary"
+					hvn_id          = hcp_hvn.hvn1.hvn_id
+					tier            = "plus_medium"
+					public_endpoint = true
+				}
+				resource "hcp_vault_cluster" "c2" {
+					cluster_id   = "test-secondary"
+					hvn_id       = hcp_hvn.hvn2.hvn_id
+					tier         = "plus_medium"
+					primary_link = hcp_vault_cluster.c1.self_link
+				}
+				`)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", "PLUS_MEDIUM"),
+					resource.TestCheckResourceAttr(secondaryVaultResourceName, "tier", "PLUS_MEDIUM"),
+				),
+			},
+			{
+				// successfully disable replication
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				resource "hcp_vault_cluster" "c1" {
+					cluster_id      = "test-primary"
+					hvn_id          = hcp_hvn.hvn1.hvn_id
+					tier            = "plus_medium"
+					public_endpoint = true
+				}
+				`)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(primaryVaultResourceName),
+				),
+			},
+			{
+				// successfully scale out of the Plus tier
 				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
@@ -478,7 +567,10 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					public_endpoint = true
 				}
 				`)),
-				ExpectError: regexp.MustCompile(`scaling Plus tier clusters is not yet allowed`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(primaryVaultResourceName),
+					resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", "STARTER_SMALL"),
+				),
 			},
 		},
 	})
