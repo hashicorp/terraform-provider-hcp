@@ -28,6 +28,7 @@ resource "hcp_hvn" "test" {
   cidr_block     = "172.25.16.0/20"
 }
 
+// This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
 resource "hcp_azure_peering_connection" "peering" {
   hvn_link                 = hcp_hvn.test.self_link
   peering_id               = "%[1]s"
@@ -38,18 +39,19 @@ resource "hcp_azure_peering_connection" "peering" {
   peer_vnet_region         = "eastus"
 }
 
-data "hcp_peering_activation" "activation" {
-	peering_id = hcp_azure_peering_connection.peering.peering_id
-	hvn_link   = hcp_hvn.test.self_link
+// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+data "hcp_azure_peering_connection" "peering" {
+  hvn_link                 = hcp_hvn.azure.self_link
+  peering_id               = hcp_azure_peering_connection.peering.peering_id
+  wait_for_active_state    = true
 }
 
+// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
 resource "hcp_hvn_route" "route" {
   hvn_route_id = "%[1]s"
   hvn_link = hcp_hvn.test.self_link
   destination_cidr = "172.31.0.0/16"
-  target_link = hcp_azure_peering_connection.peering.self_link
-
-  depends_on = [ data.hcp_peering_activation.activation ]
+  target_link = data.hcp_azure_peering_connection.peering.self_link
 }
 
 resource "azurerm_resource_group" "rg" {

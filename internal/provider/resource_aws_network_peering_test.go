@@ -33,6 +33,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
+// This resource initially returns in a Pending state, because its provider_peering_id is required to complete acceptance of the connection.
 resource "hcp_aws_network_peering" "peering" {	
   peering_id      = "test-peering"
   hvn_id          = hcp_hvn.test.hvn_id
@@ -41,11 +42,19 @@ resource "hcp_aws_network_peering" "peering" {
   peer_vpc_region = "us-west-2"
 }
 
+// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+data "hcp_azure_peering_connection" "peering" {
+  hvn_link                 = hcp_hvn.test.self_link
+  peering_id               = hcp_aws_network_peering.peering.peering_id
+  wait_for_active_state  = true
+}
+
+// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
 resource "hcp_hvn_route" "route" {
-  hvn_route_id = "peering-route"
+  hvn_route_id = "%[1]s"
   hvn_link = hcp_hvn.test.self_link
   destination_cidr = "172.31.0.0/16"
-  target_link = hcp_aws_network_peering.peering.self_link
+  target_link = data.hcp_aws_network_peering.peering.self_link
 }
 
 resource "aws_vpc_peering_connection_accepter" "peering-accepter" {

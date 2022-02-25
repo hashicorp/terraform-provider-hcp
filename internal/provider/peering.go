@@ -7,6 +7,7 @@ import (
 )
 
 var peeringDefaultTimeout = time.Minute * 1
+var peeringActiveTimeout = time.Minute * 5
 var peeringCreateTimeout = time.Minute * 35
 var peeringDeleteTimeout = time.Minute * 35
 

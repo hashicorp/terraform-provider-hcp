@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,7 +16,7 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 		Description: "The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.",
 		ReadContext: dataSourceAzurePeeringConnectionRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &peeringDefaultTimeout,
+			Default: &peeringActiveTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -28,6 +29,13 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 				Description: "The `self_link` of the HashiCorp Virtual Network (HVN).",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			// Optional inputs
+			"wait_for_active_state": {
+				Description: "If `true`, Terraform will wait for the peering connection to reach an `ACTIVE` state before continuing. Default `false`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 			// Computed outputs
 			"organization_id": {
@@ -70,6 +78,11 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"provider_peering_id": {
+				Description: "The peering connection ID used by Azure.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"created_at": {
 				Description: "The time that the peering connection was created.",
 				Type:        schema.TypeString,
@@ -102,11 +115,19 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	waitForActive := d.Get("wait_for_active_state").(bool)
 
 	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink.ID, loc)
 	if err != nil {
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
+	}
+
+	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACCEPTED {
+		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringActiveTimeout)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// Peering connection found, update resource data.
