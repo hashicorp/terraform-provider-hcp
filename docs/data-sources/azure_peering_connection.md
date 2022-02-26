@@ -32,6 +32,7 @@ data "hcp_azure_peering_connection" "test" {
 
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **wait_for_active_state** (Boolean) If `true`, Terraform will wait for the peering connection to reach an `ACTIVE` state before continuing. Default `false`.
 
 ### Read-Only
 
@@ -45,6 +46,7 @@ data "hcp_azure_peering_connection" "test" {
 - **peer_vnet_name** (String) The name of the peer VNet in Azure.
 - **peer_vnet_region** (String) The region of the peer VNet in Azure.
 - **project_id** (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
+- **provider_peering_id** (String) The peering connection ID used by Azure.
 - **self_link** (String) A unique URL identifying the peering connection
 
 <a id="nestedblock--timeouts"></a>
