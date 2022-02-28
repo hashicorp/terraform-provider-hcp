@@ -16,7 +16,7 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 		Description: "The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.",
 		ReadContext: dataSourceAzurePeeringConnectionRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &peeringActiveTimeout,
+			Default: &peeringCreateTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -123,8 +123,8 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
-	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACCEPTED {
-		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringActiveTimeout)
+	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
+		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringCreateTimeout)
 		if err != nil {
 			return diag.FromErr(err)
 		}
