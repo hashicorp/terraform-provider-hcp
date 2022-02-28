@@ -78,7 +78,7 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"provider_peering_id": {
+			"azure_peering_id": {
 				Description: "The peering connection ID used by Azure.",
 				Type:        schema.TypeString,
 				Computed:    true,

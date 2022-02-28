@@ -21,30 +21,38 @@ resource "hcp_hvn" "hvn" {
   cidr_block     = "172.25.16.0/20"
 }
 
+// This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
 resource "hcp_azure_peering_connection" "peer" {
   hvn_link                 = hcp_hvn.hvn.self_link
   peering_id               = "dev"
   peer_vnet_name           = azurerm_virtual_network.vnet.name
-  peer_subscription_id     = "subscription-uuid"
-  peer_tenant_id           = "tenant-uuid"
+  peer_subscription_id     = azurerm_subscription.sub.subscription_id
+  peer_tenant_id           = "<tenant UUID>"
   peer_resource_group_name = azurerm_resource_group.rg.name
   peer_vnet_region         = azure_rm_virtual_network.region
 }
 
-resource "hcp_peering_connection_activation" "activation" {
-  peering_id = hcp_azure_peering_connection.peer.peering_id
-  hvn_link   = hcp_hvn.hvn.self_link
+// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+data "hcp_azure_peering_connection" "peer" {
+  hvn_link              = hcp_hvn.hvn.self_link
+  peering_id            = hcp_azure_peering_connection.peer.peering_id
+  wait_for_active_state = true
 }
 
+// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
 resource "hcp_hvn_route" "route" {
   hvn_link         = hcp_hvn.hvn.self_link
   hvn_route_id     = "azure-route"
   destination_cidr = "172.31.0.0/16"
-  target_link      = hcp_azure_peering_connection.peer.self_link
+  target_link      = data.hcp_azure_peering_connection.peer.self_link
 }
 
 provider "azurerm" {
   features {}
+}
+
+data "azurerm_subscription" "sub" {
+  subscription_id = "<subscription UUID>"
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -109,12 +117,12 @@ resource "azurerm_role_assignment" "assignment" {
 
 ### Read-Only
 
-- **application_id** (String) The application ID of the HCP VNet backing the HVN.
+- **application_id** (String) The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.
+- **azure_peering_id** (String) The peering connection ID used by Azure.
 - **created_at** (String) The time that the peering connection was created.
 - **expires_at** (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - **organization_id** (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
 - **project_id** (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
-- **provider_peering_id** (String) The peering connection ID used by Azure.
 - **self_link** (String) A unique URL identifying the peering connection.
 
 <a id="nestedblock--timeouts"></a>

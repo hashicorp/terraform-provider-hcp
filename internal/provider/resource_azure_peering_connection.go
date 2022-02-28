@@ -89,11 +89,11 @@ func resourceAzurePeeringConnection() *schema.Resource {
 				Computed:    true,
 			},
 			"application_id": {
-				Description: "The application ID of the HCP VNet backing the HVN.",
+				Description: "The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"provider_peering_id": {
+			"azure_peering_id": {
 				Description: "The peering connection ID used by Azure.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -340,7 +340,7 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 	if err := d.Set("peer_tenant_id", peering.Target.AzureTarget.TenantID); err != nil {
 		return err
 	}
-	if err := d.Set("provider_peering_id", peering.ProviderPeeringID); err != nil {
+	if err := d.Set("azure_peering_id", peering.ProviderPeeringID); err != nil {
 		return err
 	}
 	if err := d.Set("application_id", peering.Target.AzureTarget.ApplicationID); err != nil {
