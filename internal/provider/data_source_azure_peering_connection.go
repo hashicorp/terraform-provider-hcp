@@ -49,7 +49,7 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 				Computed:    true,
 			},
 			"application_id": {
-				Description: "The application ID of the HCP VNet backing the HVN.",
+				Description: "The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

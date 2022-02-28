@@ -37,7 +37,7 @@ data "hcp_azure_peering_connection" "test" {
 
 ### Read-Only
 
-- **application_id** (String) The application ID of the HCP VNet backing the HVN.
+- **application_id** (String) The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.
 - **azure_peering_id** (String) The peering connection ID used by Azure.
 - **created_at** (String) The time that the peering connection was created.
 - **expires_at** (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
