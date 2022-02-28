@@ -15,8 +15,9 @@ The Azure peering connection data source provides information about a peering co
 
 ```terraform
 data "hcp_azure_peering_connection" "test" {
-  hvn_id     = var.hvn_id
-  peering_id = var.peering_id
+  hvn_id                = var.hvn_id
+  peering_id            = var.peering_id
+  wait_for_active_state = true
 }
 ```
 
