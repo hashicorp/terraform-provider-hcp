@@ -41,7 +41,7 @@ resource "hcp_azure_peering_connection" "peering" {
 
 // This data source is the same as the resource above, but waits for the connection to be Active before returning.
 data "hcp_azure_peering_connection" "peering" {
-  hvn_link                 = hcp_hvn.azure.self_link
+  hvn_link                 = hcp_hvn.test.self_link
   peering_id               = hcp_azure_peering_connection.peering.peering_id
   wait_for_active_state    = true
 }
