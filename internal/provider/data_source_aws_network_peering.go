@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,7 +16,7 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 		Description: "The AWS network peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.",
 		ReadContext: dataSourceAwsNetworkPeeringRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &peeringDefaultTimeout,
+			Default: &peeringCreateTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -30,6 +31,13 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
+			},
+			// Optional inputs
+			"wait_for_active_state": {
+				Description: "If `true`, Terraform will wait for the network peering to reach an `ACTIVE` state before continuing. Default `false`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 			// Computed outputs
 			"organization_id": {
@@ -92,11 +100,19 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	}
 	hvnID := d.Get("hvn_id").(string)
 	peeringID := d.Get("peering_id").(string)
+	waitForActive := d.Get("wait_for_active_state").(bool)
 
 	log.Printf("[INFO] Reading network peering (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 	if err != nil {
 		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
+	}
+
+	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
+		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, peeringCreateTimeout)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// Network peering found, update resource data.
