@@ -200,7 +200,7 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Network peering (%s) is now in PENDING_ACCEPTANCE state", peering.ID)
 
-	if err := setPeeringResourceData(d, peering); err != nil {
+	if err := setAwsPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -240,7 +240,7 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Network peering found, update resource data
-	if err := setPeeringResourceData(d, peering); err != nil {
+	if err := setAwsPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -293,7 +293,7 @@ func resourceAwsNetworkPeeringDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func setPeeringResourceData(d *schema.ResourceData, peering *networkmodels.HashicorpCloudNetwork20200907Peering) error {
+func setAwsPeeringResourceData(d *schema.ResourceData, peering *networkmodels.HashicorpCloudNetwork20200907Peering) error {
 	if err := d.Set("peering_id", peering.ID); err != nil {
 		return err
 	}

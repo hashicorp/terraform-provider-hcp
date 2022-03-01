@@ -54,7 +54,7 @@ func TestProvider(t *testing.T) {
 //
 // These verifications and configuration are preferred at this level to prevent
 // provider developers from experiencing less clear errors for every test.
-func testAccPreCheck(t *testing.T, requireAWSCreds bool) {
+func testAccPreCheck(t *testing.T, requiredCreds map[string]bool) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
@@ -66,7 +66,7 @@ func testAccPreCheck(t *testing.T, requireAWSCreds bool) {
 			t.Fatal("HCP_CLIENT_SECRET must be set for acceptance tests")
 		}
 
-		if requireAWSCreds {
+		if requiredCreds["aws"] {
 			if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
 				t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
 			}
@@ -77,6 +77,16 @@ func testAccPreCheck(t *testing.T, requireAWSCreds bool) {
 
 			if os.Getenv("AWS_SESSION_TOKEN") == "" {
 				t.Fatal("AWS_SESSION_TOKEN must be set for acceptance tests")
+			}
+		}
+
+		if requiredCreds["azure"] {
+			if os.Getenv("AZURE_TENANT_ID") == "" {
+				t.Fatal("AZURE_TENANT_ID must be set for acceptance tests")
+			}
+
+			if os.Getenv("AZURE_SUBSCRIPTION_ID") == "" {
+				t.Fatal("AZURE_SUBSCRIPTION_ID must be set for acceptance tests")
 			}
 		}
 

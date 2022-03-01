@@ -100,7 +100,7 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Network peering found, update resource data.
-	if err := setPeeringResourceData(d, peering); err != nil {
+	if err := setAwsPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
 

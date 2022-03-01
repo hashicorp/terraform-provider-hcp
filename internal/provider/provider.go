@@ -25,6 +25,7 @@ func New() func() *schema.Provider {
 			DataSourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            dataSourceAwsNetworkPeering(),
 				"hcp_aws_transit_gateway_attachment": dataSourceAwsTransitGatewayAttachment(),
+				"hcp_azure_peering_connection":       dataSourceAzurePeeringConnection(),
 				"hcp_consul_agent_helm_config":       dataSourceConsulAgentHelmConfig(),
 				"hcp_consul_agent_kubernetes_secret": dataSourceConsulAgentKubernetesSecret(),
 				"hcp_consul_cluster":                 dataSourceConsulCluster(),
@@ -40,6 +41,7 @@ func New() func() *schema.Provider {
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
 				"hcp_aws_transit_gateway_attachment": resourceAwsTransitGatewayAttachment(),
+				"hcp_azure_peering_connection":       resourceAzurePeeringConnection(),
 				"hcp_consul_cluster":                 resourceConsulCluster(),
 				"hcp_consul_cluster_root_token":      resourceConsulClusterRootToken(),
 				"hcp_consul_snapshot":                resourceConsulSnapshot(),

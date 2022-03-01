@@ -441,7 +441,7 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 	fingerprint := "42"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteChannel(t, acctestAlpineBucket, acctestProductionChannel, false)
@@ -479,7 +479,7 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 	fingerprint := fmt.Sprintf("%d", rand.Int())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			// testing that getting a revoked iteration fails properly

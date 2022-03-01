@@ -39,7 +39,7 @@ data "hcp_hvn" "test" {
 
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time.
-func TestAccHvn(t *testing.T) {
+func TestAccHvnOnly(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
@@ -54,16 +54,16 @@ func TestAccHvn(t *testing.T) {
 			"us-west-2",
 		},
 		// Currently internal only
-		"when the cloud provider is Azure": {
-			testAccAzureHvnConfig,
-			"azure",
-			"useast",
-		},
+		// "when the cloud provider is Azure": {
+		// 	testAccAzureHvnConfig,
+		// 	"azure",
+		// 	"useast",
+		// },
 	}
 
 	for _, tc := range cases {
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t, false) },
+			PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 			ProviderFactories: providerFactories,
 			CheckDestroy:      testAccCheckHvnDestroy,
 			Steps: []resource.TestStep{
