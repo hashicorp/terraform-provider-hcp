@@ -33,7 +33,7 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 	fingerprint := "44"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteChannel(t, acctestImageBucket, acctestImageChannel, false)

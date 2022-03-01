@@ -75,7 +75,7 @@ func TestAccVaultCluster(t *testing.T) {
 	adminTokenResourceName := "hcp_vault_cluster_admin_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{

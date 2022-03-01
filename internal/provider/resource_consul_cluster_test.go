@@ -56,7 +56,7 @@ func TestAccConsulCluster(t *testing.T) {
 	rootTokenResourceName := "hcp_consul_cluster_root_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{

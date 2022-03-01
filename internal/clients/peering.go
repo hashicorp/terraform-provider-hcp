@@ -28,17 +28,20 @@ func GetPeeringByID(ctx context.Context, client *Client, peeringID string, hvnID
 }
 
 const (
-	// PeeringStateCreating is the CREATING state of a network peering
+	// PeeringStateCreating is the CREATING state of a peering connection
 	PeeringStateCreating = string(networkmodels.HashicorpCloudNetwork20200907PeeringStateCREATING)
 
-	// PeeringStatePendingAcceptance is the PENDING_ACCEPTANCE state of a network peering
+	// PeeringStatePendingAcceptance is the PENDING_ACCEPTANCE state of a peering connection
 	PeeringStatePendingAcceptance = string(networkmodels.HashicorpCloudNetwork20200907PeeringStatePENDINGACCEPTANCE)
 
-	// PeeringStateAccepted is the ACCEPTED state of a network peering
+	// PeeringStateAccepted is the ACCEPTED state of a peering connection
 	PeeringStateAccepted = string(networkmodels.HashicorpCloudNetwork20200907PeeringStateACCEPTED)
+
+	// PeeringStateActive is the ACTIVE state of a peering connection
+	PeeringStateActive = string(networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE)
 )
 
-// peeringRefreshState refreshes the state of the network peering by calling
+// peeringRefreshState refreshes the state of the peering connection by calling
 // the GET endpoint
 func peeringRefreshState(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -53,14 +56,18 @@ func peeringRefreshState(ctx context.Context, client *Client, peeringID string, 
 
 type WaitFor = func(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error)
 
-func waitForPeeringToBe(state string) WaitFor {
+// peeringState contains a target peering state and a list of every allowed pending state
+type peeringState struct {
+	Target  string
+	Pending []string
+}
+
+func waitForPeeringToBe(ps peeringState) WaitFor {
 	return func(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
 		stateChangeConfig := resource.StateChangeConf{
-			Pending: []string{
-				PeeringStateCreating,
-			},
+			Pending: ps.Pending,
 			Target: []string{
-				state,
+				ps.Target,
 			},
 			Refresh:      peeringRefreshState(ctx, client, peeringID, hvnID, loc),
 			Timeout:      timeout,
@@ -69,7 +76,7 @@ func waitForPeeringToBe(state string) WaitFor {
 
 		result, err := stateChangeConfig.WaitForStateContext(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("error waiting for network peering (%s) to become '%s'", peeringID, state)
+			return nil, fmt.Errorf("error waiting for peering connection (%s) to become '%s'", peeringID, ps.Target)
 		}
 
 		return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
@@ -78,7 +85,19 @@ func waitForPeeringToBe(state string) WaitFor {
 
 // WaitForPeeringToBePendingAcceptance will poll the GET peering endpoint until
 // the state is PENDING_ACCEPTANCE, ctx is canceled, or an error occurs.
-var WaitForPeeringToBePendingAcceptance = waitForPeeringToBe(PeeringStatePendingAcceptance)
+var WaitForPeeringToBePendingAcceptance = waitForPeeringToBe(peeringState{
+	Target:  PeeringStatePendingAcceptance,
+	Pending: []string{PeeringStateCreating},
+})
 
-// WaitForPeeringToBeAccepted will poll the GET peering endpoint until the state is ACCEPTED, ctx in canceled, or an error occurs.
-var WaitForPeeringToBeAccepted = waitForPeeringToBe(PeeringStateAccepted)
+// WaitForPeeringToBeAccepted will poll the GET peering endpoint until the state is ACCEPTED, ctx is canceled, or an error occurs.
+var WaitForPeeringToBeAccepted = waitForPeeringToBe(peeringState{
+	Target:  PeeringStateAccepted,
+	Pending: []string{PeeringStateCreating, PeeringStatePendingAcceptance},
+})
+
+// WaitForPeeringToBeActive will poll the GET peering endpoint until the state is ACTIVE, ctx is canceled, or an error occurs.
+var WaitForPeeringToBeActive = waitForPeeringToBe(peeringState{
+	Target:  PeeringStateActive,
+	Pending: []string{PeeringStateCreating, PeeringStatePendingAcceptance, PeeringStateAccepted},
+})

@@ -1,0 +1,24 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Type}} ({{.Name}})
+
+-> **Note:** This resource is currently in internal preview only.
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_azure_peering_connection/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" "examples/resources/hcp_azure_peering_connection/import.sh" }}
