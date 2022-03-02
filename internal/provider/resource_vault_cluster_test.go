@@ -284,7 +284,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 	secondaryVaultResourceName := "hcp_vault_cluster.c2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, false) },
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
@@ -299,7 +299,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// invalid primary link supplied
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id   = "test-primary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
@@ -307,19 +307,19 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					primary_link = "something"
 					public_endpoint = true
 				}
-				`)))),
+				`)),
 				ExpectError: regexp.MustCompile(`invalid primary_link supplied*`),
 			},
 			{
 				// create a plus tier cluster successfully
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
 					tier            = "plus_small"
 					public_endpoint = true
 				}
-				`)))),
+				`)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(primaryVaultResourceName),
 					resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", "test-primary"),
@@ -341,7 +341,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster creation failed as tier doesn't match the tier of primary
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -357,12 +357,12 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					tier         = "plus_medium"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
-				`)))),
+				`)),
 				ExpectError: regexp.MustCompile(`a secondary's tier must match that of its primary`),
 			},
 			{
 				// secondary cluster creation failed as primary link is invalid
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -375,12 +375,12 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					tier         = "plus_medium"
 					primary_link = "not-present"
 				}
-				`)))),
+				`)),
 				ExpectError: regexp.MustCompile(`invalid primary_link supplied url`),
 			},
 			{
 				// secondary cluster creation failed as min_vault_version is specified.
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -394,12 +394,12 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					primary_link      = hcp_vault_cluster.c1.self_link
 					min_vault_version = "v1.0.1"
 				}
-				`)))),
+				`)),
 				ExpectError: regexp.MustCompile(`min_vault_version does not apply to secondary`),
 			},
 			{
 				// secondary cluster created successfully (same hvn)
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -412,7 +412,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
-				`)))),
+				`)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(primaryVaultResourceName),
 					resource.TestCheckResourceAttr(secondaryVaultResourceName, "cluster_id", "test-secondary"),
@@ -434,7 +434,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster created successfully (different hvn)
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -447,7 +447,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
-				`)))),
+				`)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(primaryVaultResourceName),
 					testAccCheckVaultClusterExists(secondaryVaultResourceName),
@@ -469,51 +469,15 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				),
 			},
 			{
-				// secondary cluster fails to scale to different tier than primary
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
-				resource "hcp_vault_cluster" "c1" {
-					cluster_id      = "test-primary"
-					hvn_id          = hcp_hvn.hvn1.hvn_id
-					tier            = "plus_small"
-					public_endpoint = true
-				}
-				resource "hcp_vault_cluster" "c2" {
-					cluster_id   = "test-secondary"
-					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = "plus_large"
-					primary_link = hcp_vault_cluster.c1.self_link
-				}
-				`)))),
-				ExpectError: regexp.MustCompile(`a secondary's tier must match that of its primary`),
-			},
-			{
-				// primary cluster fails to scale out of Plus tier with a secondary
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
-				resource "hcp_vault_cluster" "c1" {
-					cluster_id      = "test-primary"
-					hvn_id          = hcp_hvn.hvn1.hvn_id
-					tier            = "starter_small"
-					public_endpoint = true
-				}
-				resource "hcp_vault_cluster" "c2" {
-					cluster_id   = "test-secondary"
-					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = "plus_small"
-					primary_link = hcp_vault_cluster.c1.self_link
-				}
-				`)))),
-				ExpectError: regexp.MustCompile(`error updating Vault cluster tier`),
-			},
-			{
 				// scaling out of the Plus tier not yet allowed
-				Config: testConfig(setTestAccPerformanceReplication_e2e(string([]byte(`
+				Config: testConfig(setTestAccPerformanceReplication_e2e(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
 					tier            = "starter_small"
 					public_endpoint = true
 				}
-				`)))),
+				`)),
 				ExpectError: regexp.MustCompile(`scaling Plus tier clusters is not yet allowed`),
 			},
 		},
