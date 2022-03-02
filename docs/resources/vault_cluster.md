@@ -10,35 +10,25 @@ description: |-
 
 The Vault cluster resource allows you to manage an HCP Vault cluster.
 
+-> **Note:** It is recommended to set `lifecycle { prevent_destroy = true }` on production Vault instances to prevent accidental cluster deletion. This setting rejects plans that would destroy the cluster, such as attempting to change the `hvn_id`. Read more about it in the [Terraform docs](https://www.terraform.io/language/meta-arguments/lifecycle#prevent_destroy).
+
 ## Example Usage
 
 ```terraform
-resource "hcp_hvn" "example1" {
+resource "hcp_hvn" "example" {
   hvn_id         = "hvn1"
   cloud_provider = "aws"
   region         = "us-west-2"
   cidr_block     = "172.25.16.0/20"
 }
 
-resource "hcp_hvn" "example2" {
-  hvn_id         = "hvn2"
-  cloud_provider = "aws"
-  region         = "eu-central-1"
-  cidr_block     = "172.26.16.0/20"
-}
-
-
-resource "hcp_vault_cluster" "example_primary" {
-  cluster_id = "vault-cluster-primary"
-  hvn_id     = hcp_hvn.example1.hvn_id
-  tier       = "plus_medium"
-}
-
-resource "hcp_vault_cluster" "example_secondary" {
-  cluster_id   = "vault-cluster-secondary"
-  hvn_id       = hcp_hvn.example2.hvn_id
-  tier         = "plus_medium"
-  primary_link = hcp_vault_cluster.example_primary.self_link
+resource "hcp_vault_cluster" "example" {
+  cluster_id = "vault-cluster"
+  hvn_id     = hcp_hvn.example.hvn_id
+  tier       = "standard_large"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 ```
 
