@@ -527,17 +527,16 @@ func TestAcc_dataSourcePacker_iterationScheduledToBeRevoked(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			deleteChannel(t, acctestAnotherUbuntuBucket, acctestProductionChannel, false)
+			deleteIteration(t, acctestAnotherUbuntuBucket, fingerprint, false)
+			deleteBucket(t, acctestAnotherUbuntuBucket, false)
+			return nil
+		},
 		Steps: []resource.TestStep{
 			// testing that getting an iteration with scheduled revocation works
 			{
 				PreConfig: func() {
-					// CheckDestroy doesn't get called when the test fails and doesn't
-					// produce any tf state. In this case we destroy any existing resource
-					// before creating them.
-					deleteChannel(t, acctestAnotherUbuntuBucket, acctestProductionChannel, false)
-					deleteIteration(t, acctestAnotherUbuntuBucket, fingerprint, false)
-					deleteBucket(t, acctestAnotherUbuntuBucket, false)
-
 					upsertRegistry(t)
 					upsertBucket(t, acctestAnotherUbuntuBucket)
 					upsertIteration(t, acctestAnotherUbuntuBucket, fingerprint)

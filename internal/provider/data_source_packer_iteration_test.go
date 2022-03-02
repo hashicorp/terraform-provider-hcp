@@ -80,13 +80,6 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, false)
-			deleteIteration(t, acctestIterationUbuntuBucket, fingerprint, false)
-			deleteBucket(t, acctestIterationUbuntuBucket, false)
-			return nil
-		},
-
 		Steps: []resource.TestStep{
 			// testing that getting the production channel of the alpine image
 			// works.
@@ -133,18 +126,10 @@ func TestAcc_dataSourcePackerIteration_iterationScheduledToBeRevoked(t *testing.
 			deleteBucket(t, acctestIterationAnotherUbuntuBucket, false)
 			return nil
 		},
-
 		Steps: []resource.TestStep{
 			// testing that getting an iteration with scheduled revocation works
 			{
 				PreConfig: func() {
-					// CheckDestroy doesn't get called when the test fails and doesn't
-					// produce any tf state. In this case we destroy any existing resource
-					// before creating them.
-					deleteChannel(t, acctestIterationAnotherUbuntuBucket, acctestIterationChannel, false)
-					deleteIteration(t, acctestIterationAnotherUbuntuBucket, fingerprint, false)
-					deleteBucket(t, acctestIterationAnotherUbuntuBucket, false)
-
 					upsertBucket(t, acctestIterationAnotherUbuntuBucket)
 					upsertIteration(t, acctestIterationAnotherUbuntuBucket, fingerprint)
 					itID, err := getIterationIDFromFingerPrint(t, acctestIterationAnotherUbuntuBucket, fingerprint)
