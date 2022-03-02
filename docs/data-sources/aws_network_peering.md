@@ -14,8 +14,9 @@ The AWS network peering data source provides information about an existing netwo
 
 ```terraform
 data "hcp_aws_network_peering" "test" {
-  hvn_id     = var.hvn_id
-  peering_id = var.peering_id
+  hvn_id                = var.hvn_id
+  peering_id            = var.peering_id
+  wait_for_active_state = true
 }
 ```
 
@@ -31,6 +32,7 @@ data "hcp_aws_network_peering" "test" {
 
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **wait_for_active_state** (Boolean) If `true`, Terraform will wait for the network peering to reach an `ACTIVE` state before continuing. Default `false`.
 
 ### Read-Only
 
