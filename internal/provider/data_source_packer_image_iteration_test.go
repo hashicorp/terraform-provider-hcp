@@ -278,8 +278,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams.BuildID = build.Payload.Build.ID
 	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
-			CloudProvider: "aws",
-			Status:        models.HashicorpCloudPackerBuildStatusDONE,
+			Status: models.HashicorpCloudPackerBuildStatusDONE,
 			Images: []*models.HashicorpCloudPackerImageCreateBody{
 				{
 					ImageID: "ami-42",
