@@ -15,7 +15,7 @@ resource "hcp_consul_cluster" "test" {
 	cluster_id         = "test-consul-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "standard"
-	min_consul_version = "v1.10.6"
+	min_consul_version = data.hcp_consul_versions.test.recommended
 }
 `
 
@@ -36,6 +36,8 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 		region         = "us-west-2"
 	}
 
+	data "hcp_consul_versions" "test" {}
+
 	%s
 	
 	data "hcp_consul_cluster" "test" {
@@ -54,6 +56,7 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 func TestAccConsulCluster(t *testing.T) {
 	resourceName := "hcp_consul_cluster.test"
 	dataSourceName := "data.hcp_consul_cluster.test"
+	dataSourceVersionName := "data.hcp_consul_versions.test"
 	rootTokenResourceName := "hcp_consul_cluster_root_token.test"
 
 	resource.Test(t, resource.TestCase{
@@ -82,7 +85,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_ca_file"),
-					resource.TestCheckResourceAttr(resourceName, "consul_version", "v1.10.6"),
+					resource.TestCheckResourceAttrPair(resourceName, "consul_version", dataSourceVersionName, "recommended"),
 					resource.TestCheckNoResourceAttr(resourceName, "consul_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_private_endpoint_url"),
 					testAccCheckFullURL(resourceName, "consul_private_endpoint_url", ""),
