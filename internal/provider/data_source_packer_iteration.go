@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"log"
-	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -104,14 +103,6 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	iteration := channel.Iteration
-
-	revokeAt := time.Time(iteration.RevokeAt)
-	if !revokeAt.IsZero() && revokeAt.Before(time.Now().UTC()) {
-		// If RevokeAt is not a zero date and is before NOW, it means this iteration is revoked and should not be used
-		// to build new images.
-		return diag.Errorf("the iteration %s assigned to channel %s is revoked and can not be used. A valid iteration"+
-			" must be assigned to this channel before proceeding", iteration.ID, channelSlug)
-	}
 
 	d.SetId(iteration.ID)
 
