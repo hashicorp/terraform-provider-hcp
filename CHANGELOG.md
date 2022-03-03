@@ -1,3 +1,11 @@
+## 0.23.1 (Unreleased)
+
+FIXES:
+
+* datasource/hcp_packer_image: Remove check for revoked iterations [GH-264]
+* datasource/hcp_packer_iteration: Remove check for revoked iterations [GH-264]
+* datasource/hcp_packer_image_iteration: Remove check for revoked iterations [GH-264]
+
 ## 0.23.0 (March 03, 2022)
 
 :tada: Azure support is coming soon!
