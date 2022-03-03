@@ -177,6 +177,29 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	t.Errorf("unexpected CreateIteration error, expected nil or 409. Got %v", err)
 }
 
+func revokeIteration(t *testing.T, iterationID, bucketSlug, revokeIn string) {
+	t.Helper()
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	params := packer_service.NewPackerServiceUpdateIterationParams()
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.IterationID = iterationID
+	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{
+		BucketSlug: bucketSlug,
+		RevokeIn:   revokeIn,
+	}
+
+	_, err := client.Packer.PackerServiceUpdateIteration(params, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint string) (string, error) {
 	t.Helper()
 
