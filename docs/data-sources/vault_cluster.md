@@ -38,14 +38,15 @@ data "hcp_vault_cluster" "example" {
 - **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **namespace** (String) The name of the customer namespace this HCP Vault cluster is located in.
 - **organization_id** (String) The ID of the organization this HCP Vault cluster is located in.
+- **primary_link** (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
 - **project_id** (String) The ID of the project this HCP Vault cluster is located in.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - **region** (String) The region where the HCP Vault cluster is located.
+- **self_link** (String) A unique URL identifying the Vault cluster.
 - **tier** (String) The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.
 - **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
 - **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - **vault_version** (String) The Vault version of the cluster.
-- **primary_link** (String) the `self_link` of the HCP Vault cluster which is the primary in the performance replication setup with this HCP Vault cluster. If not specified, it is a primary or standalone cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

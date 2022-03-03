@@ -8,7 +8,7 @@ description: |-
 
 # hcp_hvn_peering_connection (Resource)
 
-The HVN peering connection resource allows you to manage a peering connection between HVNs. Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
+The HVN peering connection resource allows you to manage a peering connection between HVNs.
 
 ## Example Usage
 
