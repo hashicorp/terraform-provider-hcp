@@ -67,11 +67,19 @@ resource "hcp_aws_transit_gateway_attachment" "example" {
   resource_share_arn            = aws_ram_resource_share.example.arn
 }
 
+// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+data "hcp_aws_transit_gateway_attachment" "example" {
+  hvn_id                               = hcp_hvn.test.hvn_id
+  transit_gateway_attachment_id        = hcp_aws_transit_gateway_attachment.example.transit_gateway_attachment_id
+  wait_for_active_state                = true
+}
+
+// The route depends on the data source, rather than the resource, to ensure the TGW is in an Active state.
 resource "hcp_hvn_route" "route" {
  hvn_link         = hcp_hvn.test.self_link
  hvn_route_id     = "hvn-to-tgw-attachment"
  destination_cidr = aws_vpc.example.cidr_block
- target_link      = hcp_aws_transit_gateway_attachment.example.self_link
+ target_link      = data.hcp_aws_transit_gateway_attachment.example.self_link
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {

@@ -1,3 +1,27 @@
+## 0.23.0 (Unreleased)
+
+:tada: Azure support is coming soon!
+
+FEATURES:
+
+* resource/consul_cluster: adds Azure on Consul (internal only)  [GH-247]
+* resource/azure_peering_connection: adds Azure peering resource (internal only)  [GH-248]
+
+FIXES:
+
+* datasource/hcp_packer: Update tests to only set CloudProvider on CreateBuild [GH-260]
+* datasource/hcp_packer: Do not fail packer datasources for iteration with revoke_at set to the future [GH-262]
+
+IMPROVEMENTS:
+
+* resource/aws_network_peering: add wait_for_active_state input [GH-258]
+* provider: Bump `actions/setup-go` from 2.1.4 to 2.2.0 ([#251](https://github.com/hashicorp/terraform-provider-hcp/issues/251))
+* provider: Bump `github.com/go-openapi/strfmt` from 0.21.1 to 0.21.2 ([#253](https://github.com/hashicorp/terraform-provider-hcp/pull/253))
+* provider: Bump `google.golang.org/grpc` from 1.42.0 to 1.44.0 ([#253](https://github.com/hashicorp/terraform-provider-hcp/pull/253))
+* provider: Bump `github.com/hashicorp/go-version` from 1.3.0 to 1.4.0 ([#253](https://github.com/hashicorp/terraform-provider-hcp/pull/253))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.10.0 to 2.10.1 ([#253](https://github.com/hashicorp/terraform-provider-hcp/pull/253))
+* provider: Bump `github.com/go-openapi/runtime` from 0.21.0 to 0.23.1 ([#255](https://github.com/hashicorp/terraform-provider-hcp/pull/253))
+
 ## 0.22.0 (January 26, 2022)
 
 IMPROVEMENTS:
