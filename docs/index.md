@@ -7,9 +7,9 @@ description: |-
 
 # HashiCorp Cloud Platform (HCP) Provider
 
-~> **Known Issue:** There is a known issue with v0.21.0 of the HCP Provider in which Terraform will incorrectly recommend a rebuild of a Vault cluster if the tier is changed, which could result in data loss. See the Release Notes on Github for more detail. Please upgrade to the patch v0.21.1 or beyond to avoid this issue.
+-> Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
 
--> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+-> Azure support coming soon!
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
@@ -38,7 +38,7 @@ terraform {
   required_providers {
     hcp = {
       source  = "hashicorp/hcp"
-      version = "~> 0.22.0"
+      version = "~> 0.23.0"
     }
   }
 }
