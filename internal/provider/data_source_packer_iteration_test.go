@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	acctestIterationBucket              = "alpine-acctest-itertest"
-	acctestIterationUbuntuBucket        = "ubuntu-acctest-itertest"
-	acctestIterationChannel             = "production-iter-test"
+	acctestIterationBucket       = "alpine-acctest-itertest"
+	acctestIterationUbuntuBucket = "ubuntu-acctest-itertest"
+	acctestIterationChannel      = "production-iter-test"
 )
 
 var (

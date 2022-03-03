@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	acctestAlpineBucket        = "alpine-acctest"
-	acctestProductionChannel   = "production"
+	acctestAlpineBucket      = "alpine-acctest"
+	acctestProductionChannel = "production"
 )
 
 var (
