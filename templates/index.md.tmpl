@@ -7,7 +7,9 @@ description: |-
 
 # HashiCorp Cloud Platform (HCP) Provider
 
--> **Note:** Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+-> Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
+
+-> Azure support coming soon!
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
