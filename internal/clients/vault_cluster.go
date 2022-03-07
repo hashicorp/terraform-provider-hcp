@@ -26,7 +26,7 @@ func GetVaultClusterByID(ctx context.Context, client *Client, loc *sharedmodels.
 	return getResp.Payload.Cluster, nil
 }
 
-// CreateVaultCluster will make a call to the Consul service to initiate the create Consul
+// CreateVaultCluster will make a call to the Vault service to initiate the create Vault
 // cluster workflow.
 func CreateVaultCluster(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	vaultCluster *vaultmodels.HashicorpCloudVault20201125InputCluster) (*vaultmodels.HashicorpCloudVault20201125CreateResponse, error) {
