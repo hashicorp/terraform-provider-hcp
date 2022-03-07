@@ -82,9 +82,7 @@ func resourceVaultCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
-				// Given that Plus tier clusters will have Primary and Secondary on same version, changing the min vault version on primary shouldn't be possible. We need to handle this during apply
-				// constraints and fail. Only Plus tier clusters with no secondary should be allowed to re-create a new cluster.
-				ForceNew: true,
+				ForceNew:         true,
 			},
 			// Only applies to Plus tier HCP Vault clusters
 			"primary_link": {
@@ -189,7 +187,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	// ensure Plus tier performance replication params are legit
+	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
 		return diagErr
@@ -199,13 +197,11 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var vaultCluster *vaultmodels.HashicorpCloudVault20201125InputCluster
 	if getPrimaryLinkIfAny(d) != "" {
-		// performance replication secondary cluster creation request.
 		primaryClusterLink := newLink(primaryClusterModel.Location, VaultClusterResourceType, primaryClusterModel.ID)
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
-					// inherit the setting from Primary cluster - always use current version as primary can be created with no
-					// initial version to begin with.
+					// Secondary clusters inherit InitialVersion from their primary's current version
 					InitialVersion: primaryClusterModel.CurrentVersion,
 				},
 				Tier: primaryClusterModel.Config.Tier,
@@ -214,9 +210,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					PublicIpsEnabled: publicEndpoint,
 				},
 			},
-			ID:       clusterID,
-			Location: loc,
-			// needs primary's cluster link to create a performance replicated secondary.
+			ID:                                   clusterID,
+			Location:                             loc,
 			PerformanceReplicationPrimaryCluster: primaryClusterLink,
 		}
 	} else {
@@ -523,7 +518,7 @@ func inPlusTier(tier string) bool {
 
 func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) ([]diag.Diagnostic, *vaultmodels.HashicorpCloudVault20201125Cluster) {
 	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
-	// if no primary_link has been supplied, then treat this as as single cluster creation.
+	// If no primary_link has been supplied, treat this as as single cluster creation.
 	if primaryClusterLinkStr == "" {
 		return nil, nil
 	}
@@ -546,7 +541,7 @@ func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Conte
 		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryClusterLink.ID), primaryCluster
 	}
 
-	// tier should be specified, even if secondary inherits it from the primary cluster.
+	// Tier should be specified, even if secondary inherits it from the primary cluster.
 	if !strings.EqualFold(d.Get("tier").(string), string(primaryCluster.Config.Tier)) {
 		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryClusterLink.ID), primaryCluster
 	}
@@ -555,11 +550,10 @@ func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Conte
 		return diag.Errorf("primary cluster (%s) is already a secondary", primaryClusterLink.ID), primaryCluster
 	}
 
-	// min_vault_version is not actually set in the terraform state, however it can force a new deployment. hence, defend against cases where it can
-	// be specified on a secondary as we don't that to ever happen. Secondary inherits version from the Primary.
+	// min_vault_version should either be empty or match the primary's initial version
 	minVaultVersion := d.Get("min_vault_version").(string)
 	if minVaultVersion != "" && !strings.EqualFold(minVaultVersion, primaryCluster.Config.VaultConfig.InitialVersion) {
-		return diag.Errorf("min_vault_version does not apply to secondary as it inherits the version from the primary (%s)", primaryClusterLink.ID), primaryCluster
+		return diag.Errorf("min_vault_version should either be unset or match the primary cluster's (%s) initial version (%s)", primaryClusterLink.ID, primaryCluster.Config.VaultConfig.InitialVersion), primaryCluster
 	}
 	return nil, primaryCluster
 }

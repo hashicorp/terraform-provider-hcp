@@ -1,5 +1,5 @@
 resource "hcp_hvn" "primary_network" {
-  hvn_id         = "hvn"
+  hvn_id         = "hvn1"
   cloud_provider = "aws"
   region         = "us-west-2"
   cidr_block     = "172.25.16.0/20"
@@ -12,7 +12,7 @@ resource "hcp_vault_cluster" "primary" {
 }
 
 resource "hcp_hvn" "secondary_network" {
-  hvn_id         = "hvn"
+  hvn_id         = "hvn2"
   cloud_provider = "aws"
   region         = "eu-central-1"
   cidr_block     = "172.26.16.0/20"
