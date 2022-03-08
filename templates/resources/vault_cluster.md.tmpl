@@ -1,0 +1,26 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Type}} ({{.Name}})
+
+{{ .Description | trimspace }}
+
+-> **Note:** It is recommended to set `lifecycle { prevent_destroy = true }` on production Vault instances to prevent accidental cluster deletion. This setting rejects plans that would destroy the cluster, such as attempting to change the `hvn_id`. Read more about it in the [Terraform docs](https://www.terraform.io/language/meta-arguments/lifecycle#prevent_destroy).
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_vault_cluster/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+-> **Note:** When establishing performance replication links between clusters in different HVNs, an HVN peering connection is required. This can be defined explicitly using an [`hcp_hvn_peering_connection`](hvn_peering_connection.md), or HCP will create the connection automatically (peering connections can be imported after creation using [terraform import](https://www.terraform.io/cli/import)). Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" "examples/resources/hcp_vault_cluster/import.sh" }}
