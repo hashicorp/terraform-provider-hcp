@@ -92,6 +92,16 @@ func dataSourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"self_link": {
+				Description: "A unique URL identifying the Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"primary_link": {
+				Description: "The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

@@ -62,13 +62,13 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			// Optional fields
 			"tier": {
-				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `standard_small`, `standard_medium`, `standard_large`, `starter_small`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).",
+				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).",
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"public_endpoint": {
@@ -84,7 +84,13 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSemVer,
 				ForceNew:         true,
 			},
-			// Computed outputs
+			// Only applies to Plus tier HCP Vault clusters
+			"primary_link": {
+				Description: "The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
@@ -127,6 +133,11 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			"created_at": {
 				Description: "The time that the Vault cluster was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"self_link": {
+				Description: "A unique URL identifying the Vault cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -176,24 +187,51 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
-	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
-
-	vaultCuster := &vaultmodels.HashicorpCloudVault20201125InputCluster{
-		Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
-			VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
-				InitialVersion: vaultVersion,
-			},
-			Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
-			NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
-				NetworkID:        hvn.ID,
-				PublicIpsEnabled: publicEndpoint,
-			},
-		},
-		ID:       clusterID,
-		Location: loc,
+	// If the cluster has a primary_link, make sure the link is valid
+	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
+	if diagErr != nil {
+		return diagErr
 	}
 
-	payload, err := clients.CreateVaultCluster(ctx, client, loc, vaultCuster)
+	log.Printf("[INFO] Creating Vault cluster (%s)", clusterID)
+
+	var vaultCluster *vaultmodels.HashicorpCloudVault20201125InputCluster
+	if getPrimaryLinkIfAny(d) != "" {
+		primaryClusterLink := newLink(primaryClusterModel.Location, VaultClusterResourceType, primaryClusterModel.ID)
+		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
+			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
+				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
+					// Secondary clusters inherit InitialVersion from their primary's current version
+					InitialVersion: primaryClusterModel.CurrentVersion,
+				},
+				Tier: primaryClusterModel.Config.Tier,
+				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
+					NetworkID:        hvn.ID,
+					PublicIpsEnabled: publicEndpoint,
+				},
+			},
+			ID:                                   clusterID,
+			Location:                             loc,
+			PerformanceReplicationPrimaryCluster: primaryClusterLink,
+		}
+	} else {
+		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
+			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
+				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
+					InitialVersion: vaultVersion,
+				},
+				Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
+				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
+					NetworkID:        hvn.ID,
+					PublicIpsEnabled: publicEndpoint,
+				},
+			},
+			ID:       clusterID,
+			Location: loc,
+		}
+	}
+
+	payload, err := clients.CreateVaultCluster(ctx, client, loc, vaultCluster)
 	if err != nil {
 		return diag.Errorf("unable to create Vault cluster (%s): %v", clusterID, err)
 	}
@@ -296,6 +334,10 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("tier") {
+		if inPlusTier(string(cluster.Config.Tier)) {
+			return diag.Errorf("scaling Plus tier clusters is not yet allowed")
+		}
+
 		// Invoke update tier endpoint.
 		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
 		updateResp, err := clients.UpdateVaultClusterTier(ctx, client, cluster.Location, clusterID, tier)
@@ -427,6 +469,25 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
+	link := newLink(cluster.Location, VaultClusterResourceType, cluster.ID)
+	selfLink, err := linkURL(link)
+	if err != nil {
+		return err
+	}
+	if err := d.Set("self_link", selfLink); err != nil {
+		return err
+	}
+
+	if cluster.PerformanceReplicationInfo != nil && cluster.PerformanceReplicationInfo.PrimaryClusterLink != nil {
+		primaryLink, err := linkURL(cluster.PerformanceReplicationInfo.PrimaryClusterLink)
+		if err != nil {
+			return err
+		}
+		if err := d.Set("primary_link", primaryLink); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -447,4 +508,60 @@ func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(url)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func inPlusTier(tier string) bool {
+	return tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSSMALL) ||
+		tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSMEDIUM) ||
+		tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSLARGE)
+}
+
+func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) ([]diag.Diagnostic, *vaultmodels.HashicorpCloudVault20201125Cluster) {
+	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
+	// If no primary_link has been supplied, treat this as as single cluster creation.
+	if primaryClusterLinkStr == "" {
+		return nil, nil
+	}
+
+	primaryClusterLink, err := buildLinkFromURL(primaryClusterLinkStr, VaultClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.Errorf("invalid primary_link supplied %v", err), nil
+	}
+
+	primaryCluster, err := clients.GetVaultClusterByID(ctx, client, primaryClusterLink.Location, primaryClusterLink.ID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			return diag.Errorf("primary cluster (%s) must exist", primaryClusterLink.ID), nil
+
+		}
+		return diag.Errorf("unable to check for presence of an existing primary Vault cluster (%s): %v", primaryClusterLink.ID, err), nil
+	}
+
+	if !inPlusTier(string(primaryCluster.Config.Tier)) {
+		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryClusterLink.ID), primaryCluster
+	}
+
+	// Tier should be specified, even if secondary inherits it from the primary cluster.
+	if !strings.EqualFold(d.Get("tier").(string), string(primaryCluster.Config.Tier)) {
+		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryClusterLink.ID), primaryCluster
+	}
+
+	if primaryCluster.PerformanceReplicationInfo != nil && primaryCluster.PerformanceReplicationInfo.Mode == vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationInfoModeSECONDARY {
+		return diag.Errorf("primary cluster (%s) is already a secondary", primaryClusterLink.ID), primaryCluster
+	}
+
+	// min_vault_version should either be empty or match the primary's initial version
+	minVaultVersion := d.Get("min_vault_version").(string)
+	if minVaultVersion != "" && !strings.EqualFold(minVaultVersion, primaryCluster.Config.VaultConfig.InitialVersion) {
+		return diag.Errorf("min_vault_version should either be unset or match the primary cluster's (%s) initial version (%s)", primaryClusterLink.ID, primaryCluster.Config.VaultConfig.InitialVersion), primaryCluster
+	}
+	return nil, primaryCluster
+}
+
+func getPrimaryLinkIfAny(d *schema.ResourceData) string {
+	primaryClusterLinkIface, ok := d.GetOk("primary_link")
+	if !ok {
+		return ""
+	}
+	return primaryClusterLinkIface.(string)
 }
