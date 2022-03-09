@@ -1,3 +1,13 @@
+## 0.24.0 (Unreleased)
+
+FEATURES:
+
+* hcp_vault_cluster: add support for performance replication in Plus tier clusters [GH-266]
+
+FIXES:
+
+* hcp_consul_cluster: Fix min_consul_version on creation not taking affect [GH-252]
+
 ## 0.23.1 (March 03, 2022)
 
 FIXES:
