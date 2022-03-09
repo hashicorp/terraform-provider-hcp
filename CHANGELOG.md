@@ -1,12 +1,12 @@
-## 0.24.0 (Unreleased)
+## 0.24.0 (March 09, 2022)
 
 FEATURES:
 
-* hcp_vault_cluster: add support for performance replication in Plus tier clusters [GH-266]
+* hcp_vault_cluster: add support for performance replication in Plus tier clusters ([#266](https://github.com/hashicorp/terraform-provider-hcp/issues/266))
 
 FIXES:
 
-* hcp_consul_cluster: Fix min_consul_version on creation not taking affect [GH-252]
+* hcp_consul_cluster: Fix min_consul_version on creation not taking affect ([#252](https://github.com/hashicorp/terraform-provider-hcp/issues/252))
 
 ## 0.23.1 (March 03, 2022)
 
