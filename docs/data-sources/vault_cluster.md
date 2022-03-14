@@ -43,7 +43,7 @@ data "hcp_vault_cluster" "example" {
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - **region** (String) The region where the HCP Vault cluster is located.
 - **self_link** (String) A unique URL identifying the Vault cluster.
-- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`.
+- **tier** (String) The tier that the HCP Vault cluster will be provisioned as.  Only 'development' is available at this time.
 - **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
 - **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - **vault_version** (String) The Vault version of the cluster.
