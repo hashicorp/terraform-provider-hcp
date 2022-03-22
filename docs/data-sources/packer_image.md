@@ -7,8 +7,6 @@ description: |-
 
 # hcp_packer_image (Data Source)
 
--> **Note:** This feature is currently in beta.
-
 The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
 
 ## Example Usage
