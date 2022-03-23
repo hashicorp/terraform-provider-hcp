@@ -1,3 +1,9 @@
+## 0.24.1 (Unreleased)
+
+FIXES:
+
+* docs: Remove beta notes from Packer data sources ([#278](https://github.com/hashicorp/terraform-provider-hcp/pull/278))
+
 ## 0.24.0 (March 09, 2022)
 
 FEATURES:
