@@ -1,4 +1,4 @@
-## 0.24.1 (Unreleased)
+## 0.24.1 (March 23, 2022)
 
 FIXES:
 
