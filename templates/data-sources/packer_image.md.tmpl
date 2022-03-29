@@ -13,5 +13,7 @@ description: |-
 
 {{ tffile "examples/data-sources/hcp_packer_image/data-source.tf" }}
 
+~> **Note:** This data source only returns the first found image's metadata filtered by the given schema values, from the returned list of images associated with the specified iteration. Therefore, if multiple images exist in the same region, it will only pick one of them. If that's the case, you may consider separating your builds into different buckets.
+
 {{ .SchemaMarkdown | trimspace }}
 
