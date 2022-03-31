@@ -23,4 +23,5 @@ resource "hcp_vault_cluster" "secondary" {
   hvn_id       = hcp_hvn.secondary_network.hvn_id
   tier         = "plus_medium"
   primary_link = hcp_vault_cluster.primary.self_link
+  paths_filter = ["path/a", "path/b"]
 }

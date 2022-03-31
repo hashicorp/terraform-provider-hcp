@@ -38,6 +38,7 @@ data "hcp_vault_cluster" "example" {
 - **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - **namespace** (String) The name of the customer namespace this HCP Vault cluster is located in.
 - **organization_id** (String) The ID of the organization this HCP Vault cluster is located in.
+- **paths_filter** (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
 - **primary_link** (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
 - **project_id** (String) The ID of the project this HCP Vault cluster is located in.
 - **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
