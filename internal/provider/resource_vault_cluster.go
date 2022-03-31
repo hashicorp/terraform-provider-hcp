@@ -361,15 +361,22 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		destTier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
 		if inPlusTier(string(cluster.Config.Tier)) {
 			// Plus tier clusters scale as a group via the primary cluster.
-			// Therefore, the cluster may have already scaled due to another resource's update.
-			// First, check that the scaling operation is necessary.
+			// However, it is still worth individually tracking the tier of each cluster so that the
+			// provider has the same information as the portal UI and can detect a scaling operation that
+			// fails part way through to enable retries.
+			// Because the clusters scale as group,
+			//  a) replicated clusters may have already scaled due to another resource's update
+			//  b) all scaling requests are routed through the primary
+			// It is important to keep the tier of all replicated clusters in sync.
+
+			// Because of (a), check that the scaling operation is necessary.
 			if cluster.Config.Tier == destTier {
 				clusterToScale = nil
 			} else {
 				printPlusScalingWarningMsg()
 				primaryLink := getPrimaryLinkIfAny(d)
 				if primaryLink != "" {
-					// If the cluster is a secondary, issue the actual API request to the primary.
+					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					var getPrimaryErr diag.Diagnostics
 					clusterToScale, getPrimaryErr = getPrimaryClusterFromLink(ctx, client, primaryLink)
 					if getPrimaryErr != nil {
