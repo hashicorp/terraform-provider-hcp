@@ -392,6 +392,73 @@ func Test_validateVaultClusterTier(t *testing.T) {
 	}
 }
 
+func Test_validateVaultPathsFilter(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid path": {
+			input:    "valid/path",
+			expected: nil,
+		},
+		"different valid path": {
+			input:    "_valid-path/2/2/2/valid",
+			expected: nil,
+		},
+		"invalid path with :": {
+			input: "valid/path:",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "paths filter path 'valid/path:' is invalid",
+					Detail:        "paths filter path 'valid/path:' is invalid (paths must match regex '\\A[\\w-]+(/[\\w-]+)*\\z').",
+					AttributePath: nil,
+				},
+			},
+		},
+		"invalid path with trailing /": {
+			input: "trailing/",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "paths filter path 'trailing/' is invalid",
+					Detail:        "paths filter path 'trailing/' is invalid (paths must match regex '\\A[\\w-]+(/[\\w-]+)*\\z').",
+					AttributePath: nil,
+				},
+			},
+		},
+		"invalid path with leading /": {
+			input: "/leading",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "paths filter path '/leading' is invalid",
+					Detail:        "paths filter path '/leading' is invalid (paths must match regex '\\A[\\w-]+(/[\\w-]+)*\\z').",
+					AttributePath: nil,
+				},
+			},
+		},
+		"invalid empty path": {
+			input: "",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "paths filter path '' is invalid",
+					Detail:        "paths filter path '' is invalid (paths must match regex '\\A[\\w-]+(/[\\w-]+)*\\z').",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateVaultPathsFilter(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
+
 func Test_validateCIDRBlock(t *testing.T) {
 	tcs := map[string]struct {
 		input    string

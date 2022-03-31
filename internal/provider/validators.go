@@ -197,6 +197,22 @@ func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
+func validateVaultPathsFilter(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+	p := v.(string)
+	pathRegex := regexp.MustCompile(`\A[\w-]+(/[\w-]+)*\z`)
+	if !pathRegex.MatchString(p) {
+		msg := fmt.Sprintf("paths filter path '%v' is invalid", p)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + fmt.Sprintf(" (paths must match regex '%s').", pathRegex.String()),
+			AttributePath: path,
+		})
+	}
+	return diagnostics
+}
+
 func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 

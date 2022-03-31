@@ -11,7 +11,7 @@ Admins and Contributors can use the provider to create Plus tier clusters with V
 
 Although the clusters may reside in the same HVN, it is more likely that you will want to station your performance replication secondary in a different region, and therefore HVN, than your primary. When establishing performance replication links between clusters in different HVNs, an HVN peering connection is required. This can be defined explicitly using an [`hcp_hvn_peering_connection`](../resources/hvn_peering_connection.md), or HCP will create the connection automatically (peering connections can be imported after creation using [terraform import](https://www.terraform.io/cli/import)). Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
 
--> **Note**: At this time, Plus tier clusters cannot be scaled.
+-> **Note:** Remember, when scaling performance replicated clusters, be sure to keep the size of all clusters in the group in sync.
 
 ### Performance replication example
 
@@ -42,5 +42,6 @@ resource "hcp_vault_cluster" "secondary" {
   hvn_id       = hcp_hvn.secondary_network.hvn_id
   tier         = "plus_medium"
   primary_link = hcp_vault_cluster.primary.self_link
+  paths_filter = ["path/a", "path/b"]
 }
 ```
