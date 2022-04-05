@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_hvn_route Resource - terraform-provider-hcp"
+page_title: "Resource hcp_hvn_route - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The HVN route resource allows you to manage an HVN route.
 ---
 
-# hcp_hvn_route (Resource)
+# Resource (hcp_hvn_route)
 
 ~> **Migration Required:** The release of HVN Routes in v0.7.0 includes breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This guide](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/hvn-route-migration-guide) walks through how to migrate to the new resource syntax.
 Please pin to the previous version to avoid disruption until you are ready to migrate.
@@ -57,30 +57,30 @@ resource "hcp_hvn_route" "example-peering-route" {
 
 ### Required
 
-- **destination_cidr** (String) The destination CIDR of the HVN route.
-- **hvn_link** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
-- **hvn_route_id** (String) The ID of the HVN route.
-- **target_link** (String) A unique URL identifying the target of the HVN route. Examples of the target: [`aws_network_peering`](aws_network_peering.md), [`aws_transit_gateway_attachment`](aws_transit_gateway_attachment.md)
+- `destination_cidr` (String) The destination CIDR of the HVN route.
+- `hvn_link` (String) The `self_link` of the HashiCorp Virtual Network (HVN).
+- `hvn_route_id` (String) The ID of the HVN route.
+- `target_link` (String) A unique URL identifying the target of the HVN route. Examples of the target: [`aws_network_peering`](aws_network_peering.md), [`aws_transit_gateway_attachment`](aws_transit_gateway_attachment.md)
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **created_at** (String) The time that the HVN route was created.
-- **self_link** (String) A unique URL identifying the HVN route.
-- **state** (String) The state of the HVN route.
+- `created_at` (String) The time that the HVN route was created.
+- `self_link` (String) A unique URL identifying the HVN route.
+- `state` (String) The state of the HVN route.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
-- **default** (String)
-- **delete** (String)
+- `create` (String)
+- `default` (String)
+- `delete` (String)
 
 ## Import
 

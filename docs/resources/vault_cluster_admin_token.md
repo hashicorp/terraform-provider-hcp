@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_vault_cluster_admin_token Resource - terraform-provider-hcp"
+page_title: "Resource hcp_vault_cluster_admin_token - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.
 ---
 
-# hcp_vault_cluster_admin_token (Resource)
+# Resource (hcp_vault_cluster_admin_token)
 
 ~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
@@ -31,23 +31,23 @@ resource "hcp_vault_cluster_admin_token" "example" {
 
 ### Required
 
-- **cluster_id** (String) The ID of the HCP Vault cluster.
+- `cluster_id` (String) The ID of the HCP Vault cluster.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **created_at** (String) The time that the admin token was created.
-- **token** (String, Sensitive) The admin token of this HCP Vault cluster.
+- `created_at` (String) The time that the admin token was created.
+- `token` (String, Sensitive) The admin token of this HCP Vault cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
-- **delete** (String)
-- **read** (String)
+- `create` (String)
+- `delete` (String)
+- `read` (String)

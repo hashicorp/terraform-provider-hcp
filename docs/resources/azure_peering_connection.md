@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_azure_peering_connection Resource - terraform-provider-hcp"
+page_title: "Resource hcp_azure_peering_connection - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The Azure peering connection resource allows you to manage a peering connection between an HVN and a peer Azure VNet.
 ---
 
-# hcp_azure_peering_connection (Resource)
+# Resource (hcp_azure_peering_connection)
 
 -> **Note:** Azure support coming soon. This resource is currently in internal preview only.
 
@@ -102,37 +102,37 @@ resource "azurerm_role_assignment" "assignment" {
 
 ### Required
 
-- **hvn_link** (String) The `self_link` of the HashiCorp Virtual Network (HVN).
-- **peer_resource_group_name** (String) The resource group name of the peer VNet in Azure.
-- **peer_subscription_id** (String) The subscription ID of the peer VNet in Azure.
-- **peer_tenant_id** (String) The tenant ID of the peer VNet in Azure.
-- **peer_vnet_name** (String) The name of the peer VNet in Azure.
-- **peer_vnet_region** (String) The region of the peer VNet in Azure.
-- **peering_id** (String) The ID of the peering connection.
+- `hvn_link` (String) The `self_link` of the HashiCorp Virtual Network (HVN).
+- `peer_resource_group_name` (String) The resource group name of the peer VNet in Azure.
+- `peer_subscription_id` (String) The subscription ID of the peer VNet in Azure.
+- `peer_tenant_id` (String) The tenant ID of the peer VNet in Azure.
+- `peer_vnet_name` (String) The name of the peer VNet in Azure.
+- `peer_vnet_region` (String) The region of the peer VNet in Azure.
+- `peering_id` (String) The ID of the peering connection.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **application_id** (String) The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.
-- **azure_peering_id** (String) The peering connection ID used by Azure.
-- **created_at** (String) The time that the peering connection was created.
-- **expires_at** (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
-- **organization_id** (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
-- **project_id** (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
-- **self_link** (String) A unique URL identifying the peering connection.
+- `application_id` (String) The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.
+- `azure_peering_id` (String) The peering connection ID used by Azure.
+- `created_at` (String) The time that the peering connection was created.
+- `expires_at` (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
+- `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
+- `self_link` (String) A unique URL identifying the peering connection.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
-- **default** (String)
-- **delete** (String)
+- `create` (String)
+- `default` (String)
+- `delete` (String)
 
 ## Import
 

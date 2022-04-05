@@ -23,29 +23,29 @@ data "hcp_hvn" "example" {
 
 ### Required
 
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
+- `hvn_id` (String) The ID of the HashiCorp Virtual Network (HVN).
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **cidr_block** (String) The CIDR range of the HVN.
-- **cloud_provider** (String) The provider where the HVN is located.
-- **created_at** (String) The time that the HVN was created.
-- **organization_id** (String) The ID of the HCP organization where the HVN is located.
-- **project_id** (String) The ID of the HCP project where the HVN is located.
-- **provider_account_id** (String) The provider account ID where the HVN is located.
-- **region** (String) The region where the HVN is located.
-- **self_link** (String) A unique URL identifying the HVN.
+- `cidr_block` (String) The CIDR range of the HVN.
+- `cloud_provider` (String) The provider where the HVN is located.
+- `created_at` (String) The time that the HVN was created.
+- `organization_id` (String) The ID of the HCP organization where the HVN is located.
+- `project_id` (String) The ID of the HCP project where the HVN is located.
+- `provider_account_id` (String) The provider account ID where the HVN is located.
+- `region` (String) The region where the HVN is located.
+- `self_link` (String) A unique URL identifying the HVN.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **default** (String)
+- `default` (String)
 
 

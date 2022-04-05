@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_consul_cluster_root_token Resource - terraform-provider-hcp"
+page_title: "Resource hcp_consul_cluster_root_token - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The cluster root token resource is the token used to bootstrap the cluster's ACL system. You can also generate this root token from the HCP Consul UI.
 ---
 
-# hcp_consul_cluster_root_token (Resource)
+# Resource (hcp_consul_cluster_root_token)
 
 ~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
@@ -24,22 +24,22 @@ resource "hcp_consul_cluster_root_token" "example" {
 
 ### Required
 
-- **cluster_id** (String) The ID of the HCP Consul cluster.
+- `cluster_id` (String) The ID of the HCP Consul cluster.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **accessor_id** (String) The accessor ID of the root ACL token.
-- **kubernetes_secret** (String, Sensitive) The root ACL token Base64 encoded in a Kubernetes secret.
-- **secret_id** (String, Sensitive) The secret ID of the root ACL token.
+- `accessor_id` (String) The accessor ID of the root ACL token.
+- `kubernetes_secret` (String, Sensitive) The root ACL token Base64 encoded in a Kubernetes secret.
+- `secret_id` (String, Sensitive) The secret ID of the root ACL token.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **default** (String)
+- `default` (String)
