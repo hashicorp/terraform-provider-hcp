@@ -44,14 +44,36 @@ func upsertRegistry(t *testing.T) {
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.Body = &models.HashicorpCloudPackerCreateRegistryRequest{
-		FeatureTier: models.HashicorpCloudPackerRegistryConfigTierSTANDARD,
+		FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS,
 	}
 
 	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
 	if err, ok := err.(*packer_service.PackerServiceCreateRegistryDefault); ok {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
-			// all good here !
+			getParams := packer_service.NewPackerServiceGetRegistryParams()
+			getParams.LocationOrganizationID = loc.OrganizationID
+			getParams.LocationProjectID = loc.ProjectID
+			getResp, err := client.Packer.PackerServiceGetRegistry(getParams, nil)
+			if err != nil {
+				t.Errorf("unexpected GetRegistry error: %v", err)
+				return
+			}
+			if getResp.Payload.Registry.Config.FeatureTier != models.HashicorpCloudPackerRegistryConfigTierPLUS {
+				// Make sure is a plus registry
+				params := packer_service.NewPackerServiceUpdateRegistryParams()
+				params.LocationOrganizationID = loc.OrganizationID
+				params.LocationProjectID = loc.ProjectID
+				params.Body = &models.HashicorpCloudPackerUpdateRegistryRequest{
+					FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS,
+				}
+				resp, err := client.Packer.PackerServiceUpdateRegistry(params, nil)
+				if err != nil {
+					t.Errorf("unexpected UpdateRegistry error: %v", err)
+					return
+				}
+				waitForOperation(t, loc, "Reactivate Registry", resp.Payload.Operation.ID, client)
+			}
 			return
 		default:
 			t.Errorf("unexpected CreateRegistry error, expected nil or 409. Got code: %d err: %v", err.Code(), err)
