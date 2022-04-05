@@ -8,6 +8,13 @@ FIXES:
 
 * datasource/hcp_packer_iteration: make sure test registry is plus [GH-284]
 
+IMPROVEMENTS:
+
+* provider: Bump `actions/setup-go` from 2.2.0 to 3.0.0 ([#285](https://github.com/hashicorp/terraform-provider-hcp/issues/285))
+* provider: Bump `actions/checkout` from 2.2.0 to 3.0.0 ([#285](https://github.com/hashicorp/terraform-provider-hcp/issues/285))
+* provider: Bump `google.golang.org/grpc` from 1.44.0 to 1.45.0 ([#285](https://github.com/hashicorp/terraform-provider-hcp/issues/285))
+* provider: Bump `terraform-plugin-docs` from 0.5.1 to 0.7.0 ([#285](https://github.com/hashicorp/terraform-provider-hcp/issues/285))
+
 ## 0.24.1 (March 23, 2022)
 
 FIXES:
