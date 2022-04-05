@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_vault_cluster Resource - terraform-provider-hcp"
+page_title: "Resource hcp_vault_cluster - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The Vault cluster resource allows you to manage an HCP Vault cluster.
 ---
 
-# hcp_vault_cluster (Resource)
+# Resource (hcp_vault_cluster)
 
 The Vault cluster resource allows you to manage an HCP Vault cluster.
 
@@ -36,41 +36,41 @@ resource "hcp_vault_cluster" "example" {
 
 ### Required
 
-- **cluster_id** (String) The ID of the HCP Vault cluster.
-- **hvn_id** (String) The ID of the HVN this HCP Vault cluster is associated to.
+- `cluster_id` (String) The ID of the HCP Vault cluster.
+- `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **min_vault_version** (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
-- **paths_filter** (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
-- **primary_link** (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
-- **public_endpoint** (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
-- **tier** (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
+- `paths_filter` (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
+- `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
+- `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
+- `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **cloud_provider** (String) The provider where the HCP Vault cluster is located.
-- **created_at** (String) The time that the Vault cluster was created.
-- **namespace** (String) The name of the customer namespace this HCP Vault cluster is located in.
-- **organization_id** (String) The ID of the organization this HCP Vault cluster is located in.
-- **project_id** (String) The ID of the project this HCP Vault cluster is located in.
-- **region** (String) The region where the HCP Vault cluster is located.
-- **self_link** (String) A unique URL identifying the Vault cluster.
-- **vault_private_endpoint_url** (String) The private URL for the Vault cluster.
-- **vault_public_endpoint_url** (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
-- **vault_version** (String) The Vault version of the cluster.
+- `cloud_provider` (String) The provider where the HCP Vault cluster is located.
+- `created_at` (String) The time that the Vault cluster was created.
+- `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
+- `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
+- `project_id` (String) The ID of the project this HCP Vault cluster is located in.
+- `region` (String) The region where the HCP Vault cluster is located.
+- `self_link` (String) A unique URL identifying the Vault cluster.
+- `vault_private_endpoint_url` (String) The private URL for the Vault cluster.
+- `vault_public_endpoint_url` (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
+- `vault_version` (String) The Vault version of the cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
-- **default** (String)
-- **delete** (String)
-- **update** (String)
+- `create` (String)
+- `default` (String)
+- `delete` (String)
+- `update` (String)
 
 -> **Note:** When establishing performance replication links between clusters in different HVNs, an HVN peering connection is required. This can be defined explicitly using an [`hcp_hvn_peering_connection`](hvn_peering_connection.md), or HCP will create the connection automatically (peering connections can be imported after creation using [terraform import](https://www.terraform.io/cli/import)). Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
 

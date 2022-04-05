@@ -23,22 +23,22 @@ data "hcp_consul_agent_kubernetes_secret" "test" {
 
 ### Required
 
-- **cluster_id** (String) The ID of the HCP Consul cluster.
+- `cluster_id` (String) The ID of the HCP Consul cluster.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **secret** (String) The Consul agent configuration in the format of a Kubernetes secret (YAML).
+- `secret` (String) The Consul agent configuration in the format of a Kubernetes secret (YAML).
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **default** (String)
+- `default` (String)
 
 

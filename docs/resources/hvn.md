@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_hvn Resource - terraform-provider-hcp"
+page_title: "Resource hcp_hvn - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 ---
 
-# hcp_hvn (Resource)
+# Resource (hcp_hvn)
 
 The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 
@@ -37,32 +37,32 @@ resource "hcp_hvn" "example" {
 
 ### Required
 
-- **cloud_provider** (String) The provider where the HVN is located. Only 'aws' is available at this time.
-- **hvn_id** (String) The ID of the HashiCorp Virtual Network (HVN).
-- **region** (String) The region where the HVN is located.
+- `cloud_provider` (String) The provider where the HVN is located. Only 'aws' is available at this time.
+- `hvn_id` (String) The ID of the HashiCorp Virtual Network (HVN).
+- `region` (String) The region where the HVN is located.
 
 ### Optional
 
-- **cidr_block** (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `cidr_block` (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **created_at** (String) The time that the HVN was created.
-- **organization_id** (String) The ID of the HCP organization where the HVN is located.
-- **project_id** (String) The ID of the HCP project where the HVN is located.
-- **provider_account_id** (String) The provider account ID where the HVN is located.
-- **self_link** (String) A unique URL identifying the HVN.
+- `created_at` (String) The time that the HVN was created.
+- `organization_id` (String) The ID of the HCP organization where the HVN is located.
+- `project_id` (String) The ID of the HCP project where the HVN is located.
+- `provider_account_id` (String) The provider account ID where the HVN is located.
+- `self_link` (String) A unique URL identifying the HVN.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
-- **default** (String)
-- **delete** (String)
+- `create` (String)
+- `default` (String)
+- `delete` (String)
 
 ## Import
 

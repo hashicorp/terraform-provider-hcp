@@ -24,24 +24,24 @@ data "hcp_consul_agent_helm_config" "example" {
 
 ### Required
 
-- **cluster_id** (String) The ID of the HCP Consul cluster.
-- **kubernetes_endpoint** (String) The FQDN for the Kubernetes API.
+- `cluster_id` (String) The ID of the HCP Consul cluster.
+- `kubernetes_endpoint` (String) The FQDN for the Kubernetes API.
 
 ### Optional
 
-- **expose_gossip_ports** (Boolean) Denotes that the gossip ports should be exposed.
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `expose_gossip_ports` (Boolean) Denotes that the gossip ports should be exposed.
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **config** (String) The agent Helm config.
+- `config` (String) The agent Helm config.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **default** (String)
+- `default` (String)
 
 

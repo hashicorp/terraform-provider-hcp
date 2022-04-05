@@ -38,7 +38,7 @@ terraform {
   required_providers {
     hcp = {
       source  = "hashicorp/hcp"
-      version = "~> 0.24.1"
+      version = "~> 0.25.0"
     }
   }
 }
@@ -122,7 +122,7 @@ resource "hcp_vault_cluster" "example" {
 
 ### Optional
 
-- **client_id** (String) The OAuth2 Client ID for API operations.
-- **client_secret** (String) The OAuth2 Client Secret for API operations.
+- `client_id` (String) The OAuth2 Client ID for API operations.
+- `client_secret` (String) The OAuth2 Client Secret for API operations.
 
 For more information about HCP, please review our [documentation page](https://cloud.hashicorp.com/docs/hcp).

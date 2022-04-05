@@ -1,11 +1,11 @@
 ---
-page_title: "hcp_packer_image Data Source - terraform-provider-hcp"
+page_title: "Data Source hcp_packer_image - terraform-provider-hcp"
 subcategory: ""
 description: |-
   The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
 ---
 
-# hcp_packer_image (Data Source)
+# Data Source (hcp_packer_image)
 
 The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
 
@@ -36,31 +36,31 @@ output "packer-registry-ubuntu" {
 
 ### Required
 
-- **bucket_name** (String) The slug of the HCP Packer Registry image bucket to pull from.
-- **cloud_provider** (String) Name of the cloud provider this image is stored-in.
-- **iteration_id** (String) HCP ID of this image.
-- **region** (String) Region this image is stored in, if any.
+- `bucket_name` (String) The slug of the HCP Packer Registry image bucket to pull from.
+- `cloud_provider` (String) Name of the cloud provider this image is stored-in.
+- `iteration_id` (String) HCP ID of this image.
+- `region` (String) Region this image is stored in, if any.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `id` (String) The ID of this resource.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- **build_id** (String) HCP ID of this build.
-- **cloud_image_id** (String) Cloud Image ID or URL string identifying this image for the builder that built it.
-- **component_type** (String) Name of the builder that built this. Ex: 'amazon-ebs.example'
-- **created_at** (String) Creation time of this build.
-- **labels** (Map of String) Labels associated with this build.
-- **organization_id** (String) The ID of the organization this HCP Packer registry is located in.
-- **packer_run_uuid** (String) UUID of this build.
-- **project_id** (String) The ID of the project this HCP Packer registry is located in.
+- `build_id` (String) HCP ID of this build.
+- `cloud_image_id` (String) Cloud Image ID or URL string identifying this image for the builder that built it.
+- `component_type` (String) Name of the builder that built this. Ex: 'amazon-ebs.example'
+- `created_at` (String) Creation time of this build.
+- `labels` (Map of String) Labels associated with this build.
+- `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
+- `packer_run_uuid` (String) UUID of this build.
+- `project_id` (String) The ID of the project this HCP Packer registry is located in.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **default** (String)
+- `default` (String)
 
