@@ -1,12 +1,12 @@
-## 0.25.0 (Unreleased)
+## 0.25.0 (April 05, 2022)
 
 FEATURES:
 
-* resource/vault_cluster: enable paths_filter and scaling in Plus-tier [GH-281]
+* resource/vault_cluster: enable paths_filter and scaling in Plus-tier ([#281](https://github.com/hashicorp/terraform-provider-hcp/issues/281))
 
 FIXES:
 
-* datasource/hcp_packer_iteration: make sure test registry is plus [GH-284]
+* datasource/hcp_packer_iteration: make sure test registry is plus ([#284](https://github.com/hashicorp/terraform-provider-hcp/issues/284))
 
 IMPROVEMENTS:
 
