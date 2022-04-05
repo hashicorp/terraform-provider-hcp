@@ -1,3 +1,13 @@
+## 0.25.0 (Unreleased)
+
+FEATURES:
+
+* resource/vault_cluster: enable paths_filter and scaling in Plus-tier [GH-281]
+
+FIXES:
+
+* datasource/hcp_packer_iteration: make sure test registry is plus [GH-284]
+
 ## 0.24.1 (March 23, 2022)
 
 FIXES:
@@ -8,11 +18,11 @@ FIXES:
 
 FEATURES:
 
-* hcp_vault_cluster: add support for performance replication in Plus tier clusters ([#266](https://github.com/hashicorp/terraform-provider-hcp/issues/266))
+* resource/vault_cluster: add support for performance replication in Plus tier clusters ([#266](https://github.com/hashicorp/terraform-provider-hcp/issues/266))
 
 FIXES:
 
-* hcp_consul_cluster: Fix min_consul_version on creation not taking affect ([#252](https://github.com/hashicorp/terraform-provider-hcp/issues/252))
+* resource/consul_cluster: Fix min_consul_version on creation not taking affect ([#252](https://github.com/hashicorp/terraform-provider-hcp/issues/252))
 
 ## 0.23.1 (March 03, 2022)
 
