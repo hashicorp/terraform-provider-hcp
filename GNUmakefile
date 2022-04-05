@@ -44,7 +44,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 210m
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
