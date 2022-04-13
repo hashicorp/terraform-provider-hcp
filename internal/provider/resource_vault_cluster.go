@@ -68,7 +68,7 @@ func resourceVaultCluster() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
 			"public_endpoint": {
