@@ -1,3 +1,9 @@
+## 0.26.0 (April 14, 2022)
+
+FIXES:
+
+* provider: only warn on all platform outage statuses ([#290](https://github.com/hashicorp/terraform-provider-hcp/issues/290))
+
 ## 0.25.0 (April 05, 2022)
 
 FEATURES:
