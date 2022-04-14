@@ -218,7 +218,11 @@ func isHCPOperational() diag.Diagnostics {
 	case operational:
 		log.Printf("HCP is fully operational.")
 	case partialOutage, majorOutage:
-		return diag.Errorf("HCP is experiencing an outage. Please check https://status.hashicorp.com for more details.")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "HCP is experiencing an outage, you may encounter errors.",
+			Detail:   "Please check https://status.hashicorp.com for more details.",
+		})
 	case degradedPerformance:
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
