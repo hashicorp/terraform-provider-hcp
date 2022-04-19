@@ -1,7 +1,10 @@
 <!--
 Adding a new resource or datasource? Use this checklist to get started: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/checklist-resource.md
 
+Updating a resource? Avoid accidental breaking changes by reviewing this guide: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/breaking-changes.md
+
 HashiCorp contributors, please consider: what stage of release is your feature in?
+
 If the feature is for internal Hashicorp usage only, it should be maintained on a feature branch until ready for beta release.
 If the feature is for select beta users, it can be merged to main and released as a new minor version. A beta banner must be added to the documentation.
 If the feature is ready for all HCP users, it can be merged to main and released as a new minor version. You may wish to coordinate with the release of the feature in the UI.
