@@ -51,9 +51,7 @@ provider "azurerm" {
   features {}
 }
 
-provider "azuread" {
-  features {}
-}
+provider "azuread" {}
 
 data "azurerm_subscription" "sub" {
   subscription_id = "<subscription UUID>"
