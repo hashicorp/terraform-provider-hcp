@@ -45,7 +45,7 @@ publishers:
     # Terraform CLI 0.10 - 0.11 perform discovery via HTTP headers on releases.hashicorp.com
     # For providers which have existed since those CLI versions, exclude
     # discovery by setting the protocol version headers to 5.
-    cmd: hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }}}={{ .ArtifactName }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
+    cmd: hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }}={{ .ArtifactName }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
     env:
       - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST }}
       - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY }}
