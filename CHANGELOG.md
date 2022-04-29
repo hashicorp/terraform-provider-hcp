@@ -1,3 +1,9 @@
+## 0.27.0 (May 2, 2022)
+
+⚠️ Note: To continue receiving warnings when HCP is reporting degraded performance or an outage, upgrade to this version. ⚠️
+
+* provider: provider reports all HCP component statuses [GH-298]
+
 ## 0.26.0 (April 14, 2022)
 
 FIXES:
