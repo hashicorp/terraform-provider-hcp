@@ -9,8 +9,11 @@
 # all Networking resources and clients are owned by the cloud-control-plane team
 *hvn* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
 *aws* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
-*tgw* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
+*azure* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
 *peering* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
+
+# all Packer resources and clients are owned by the cloud-packer team
+*packer* @hashicorp/cloud-packer @hashicorp/cloud-experiences-go
 
 # all Vault resources and clients are owned by the vault-cloud team
 *vault* @hashicorp/vault-cloud @hashicorp/cloud-experiences-go
