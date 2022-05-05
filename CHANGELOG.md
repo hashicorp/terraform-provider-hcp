@@ -1,8 +1,13 @@
-## 0.27.0 (May 2, 2022)
+## 0.27.0 (May 5, 2022)
 
 ⚠️ Note: To continue receiving warnings when HCP is reporting degraded performance or an outage, upgrade to this version. ⚠️
 
 * provider: provider reports all HCP component statuses [GH-298]
+* provider: Bump `actions/upload-artifact` from 2 to 3 [GH-288]
+* provider: Bump `google.golang.org/grpc` from 1.45.0 to 1.46.0 [GH-296]
+* provider: Bump `github.com/go-openapi/runtime` from 0.23.3 to 0.24.0 [GH-300]
+* docs: fix peer_vnet_region in azure_peering example [GH-303]
+* docs: add contributors guide on breaking changes [GH-294]
 
 ## 0.26.0 (April 14, 2022)
 
