@@ -161,11 +161,11 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 const statuspageUrl = "https://status.hashicorp.com/api/v2/components.json"
 
 var hcpComponentIds = map[string]string{
-	// TODO: HCP API, component ID is TBD)
-	"b4pr9x7288zy": "HCP Consul",
+	"0q55nwmxngkc": "HCP API",
+	"sxffkgfb4fhb": "HCP Consul",
 	"0mbkqnrzg33w": "HCP Packer",
 	"mgv1p2j9x444": "HCP Portal",
-	"c32yfw32879v": "HCP Vault",
+	"mb7xrbx9gjnq": "HCP Vault",
 }
 
 type statuspage struct {
