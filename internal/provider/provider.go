@@ -158,8 +158,24 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 }
 
 // Status endpoint for prod.
-const statuspageUrl = "https://pdrzb3d64wsj.statuspage.io/api/v2/components.json"
-const statuspageHcpComponentId = "ym75hzpmfq4q"
+const statuspageUrl = "https://status.hashicorp.com/api/v2/components.json"
+
+var hcpComponentIds = map[string]string{
+	"0q55nwmxngkc": "HCP API",
+	"sxffkgfb4fhb": "HCP Consul",
+	"0mbkqnrzg33w": "HCP Packer",
+	"mgv1p2j9x444": "HCP Portal",
+	"mb7xrbx9gjnq": "HCP Vault",
+}
+
+type statuspage struct {
+	Components []component `json:"components"`
+}
+
+type component struct {
+	ID     string `json:"id"`
+	Status status `json:"status"`
+}
 
 type status string
 
@@ -171,15 +187,6 @@ const (
 	majorOutage                = "major_outage"
 	underMaintenance           = "under_maintenance"
 )
-
-type statuspage struct {
-	Components []component `json:"components"`
-}
-
-type component struct {
-	ID     string `json:"id"`
-	Status status `json:"status"`
-}
 
 func isHCPOperational() diag.Diagnostics {
 	req, err := http.NewRequest("GET", statuspageUrl, nil)
@@ -205,38 +212,50 @@ func isHCPOperational() diag.Diagnostics {
 		log.Printf("Unable unmarshal response to verify HCP status: %s", err)
 	}
 
-	var st status
+	// Translate the status page component IDs into a map of component name and operation status.
+	var systemStatus = map[string]status{}
+
 	for _, c := range sp.Components {
-		if c.ID == statuspageHcpComponentId {
-			st = c.Status
+		name, ok := hcpComponentIds[c.ID]
+		if ok {
+			systemStatus[name] = c.Status
+		}
+	}
+
+	operational := true
+	for _, st := range systemStatus {
+		if st != "operational" {
+			operational = false
 		}
 	}
 
 	var diags diag.Diagnostics
 
-	switch st {
-	case operational:
-		log.Printf("HCP is fully operational.")
-	case partialOutage, majorOutage:
+	if !operational {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  "HCP is experiencing an outage, you may encounter errors.",
-			Detail:   "Please check https://status.hashicorp.com for more details.",
-		})
-	case degradedPerformance:
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "HCP is experiencing degraded performance.",
-			Detail:   "Please check https://status.hashicorp.com for more details.",
-		})
-	case underMaintenance:
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "HCP is undergoing maintenance that may affect performance.",
-			Detail:   "Please check https://status.hashicorp.com for more details.",
+			Summary:  "You may experience issues using HCP.",
+			Detail: fmt.Sprintf("HCP is reporting the following:\n\n") +
+				printStatus(systemStatus) +
+				"\nPlease check https://status.hashicorp.com for more details.",
 		})
 	}
 
 	return diags
+}
 
+func printStatus(m map[string]status) string {
+	var maxLenKey int
+	for k := range m {
+		if len(k) > maxLenKey {
+			maxLenKey = len(k)
+		}
+	}
+
+	pr := ""
+	for k, v := range m {
+		pr = pr + fmt.Sprintf("%s:%*s %s\n", k, 5+(maxLenKey-len(k)), " ", v)
+	}
+
+	return pr
 }
