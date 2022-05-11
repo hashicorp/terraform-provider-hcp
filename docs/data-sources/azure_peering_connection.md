@@ -31,7 +31,6 @@ data "hcp_azure_peering_connection" "test" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `wait_for_active_state` (Boolean) If `true`, Terraform will wait for the peering connection to reach an `ACTIVE` state before continuing. Default `false`.
 
@@ -41,6 +40,7 @@ data "hcp_azure_peering_connection" "test" {
 - `azure_peering_id` (String) The peering connection ID used by Azure.
 - `created_at` (String) The time that the peering connection was created.
 - `expires_at` (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
 - `peer_resource_group_name` (String) The resource group name of the peer VNet in Azure.
 - `peer_subscription_id` (String) The subscription ID of the peer VNet in Azure.

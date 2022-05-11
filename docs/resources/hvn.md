@@ -44,12 +44,12 @@ resource "hcp_hvn" "example" {
 ### Optional
 
 - `cidr_block` (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_at` (String) The time that the HVN was created.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the HVN is located.
 - `project_id` (String) The ID of the HCP project where the HVN is located.
 - `provider_account_id` (String) The provider account ID where the HVN is located.

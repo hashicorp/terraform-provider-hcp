@@ -40,7 +40,6 @@ resource "hcp_consul_cluster" "example" {
 - `auto_hvn_to_hvn_peering` (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation. The alternative to using the auto-accept feature is to create an [`hcp_hvn_peering_connection`](hvn_peering_connection.md) resource that explicitly defines the HVN resources that are allowed to communicate with each other.
 - `connect_enabled` (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - `datacenter` (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
-- `id` (String) The ID of this resource.
 - `min_consul_version` (String) The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
@@ -60,6 +59,7 @@ resource "hcp_consul_cluster" "example" {
 - `consul_snapshot_interval` (String) The Consul snapshot interval.
 - `consul_snapshot_retention` (String) The retention policy for Consul snapshots.
 - `consul_version` (String) The Consul version of the cluster.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the organization this HCP Consul cluster is located in.
 - `project_id` (String) The ID of the project this HCP Consul cluster is located in.
 - `region` (String) The region where the HCP Consul cluster is located.

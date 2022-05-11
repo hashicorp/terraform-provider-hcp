@@ -43,13 +43,13 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_at` (String) The time that the peering connection was created.
 - `expires_at` (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.
 - `peering_id` (String) The ID of the peering connection.
 - `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.

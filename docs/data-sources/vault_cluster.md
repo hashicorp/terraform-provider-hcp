@@ -27,7 +27,6 @@ data "hcp_vault_cluster" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -35,6 +34,7 @@ data "hcp_vault_cluster" "example" {
 - `cloud_provider` (String) The provider where the HCP Vault cluster is located.
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
+- `id` (String) The ID of this resource.
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.

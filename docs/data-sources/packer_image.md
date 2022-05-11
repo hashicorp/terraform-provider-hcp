@@ -43,7 +43,6 @@ output "packer-registry-ubuntu" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -52,6 +51,7 @@ output "packer-registry-ubuntu" {
 - `cloud_image_id` (String) Cloud Image ID or URL string identifying this image for the builder that built it.
 - `component_type` (String) Name of the builder that built this. Ex: 'amazon-ebs.example'
 - `created_at` (String) Creation time of this build.
+- `id` (String) The ID of this resource.
 - `labels` (Map of String) Labels associated with this build.
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `packer_run_uuid` (String) UUID of this build.

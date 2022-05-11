@@ -35,12 +35,12 @@ resource "hcp_vault_cluster_admin_token" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_at` (String) The time that the admin token was created.
+- `id` (String) The ID of this resource.
 - `token` (String, Sensitive) The admin token of this HCP Vault cluster.
 
 <a id="nestedblock--timeouts"></a>

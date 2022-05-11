@@ -27,7 +27,6 @@ data "hcp_consul_cluster" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -45,6 +44,7 @@ data "hcp_consul_cluster" "example" {
 - `consul_version` (String) The Consul version of the cluster.
 - `datacenter` (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
 - `hvn_id` (String) The ID of the HVN this HCP Consul cluster is associated to.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the organization the project for this HCP Consul cluster is located.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - `project_id` (String) The ID of the project this HCP Consul cluster is located.
