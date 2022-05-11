@@ -1,13 +1,21 @@
+## 0.28.0 (May 11, 2022)
+
+IMPROVEMENTS:
+
+* resource/packer_image: bump hcp-sdk-go and fix packer import path ([#307](https://github.com/hashicorp/terraform-provider-hcp/issues/307))
+* provider: Bump `terraform-plugin-sdk/v2` from 2.10.1 to 2.16.0 ([#309](https://github.com/hashicorp/terraform-provider-hcp/issues/309))
+* provider: Bump `terraform-plugin-docs` from 0.7.0 to 0.8.1 ([#308](https://github.com/hashicorp/terraform-provider-hcp/issues/308))
+
 ## 0.27.0 (May 5, 2022)
 
 ⚠️ Note: To continue receiving warnings when HCP is reporting degraded performance or an outage, upgrade to this version. ⚠️
 
-* provider: provider reports all HCP component statuses [GH-298]
-* provider: Bump `actions/upload-artifact` from 2 to 3 [GH-288]
-* provider: Bump `google.golang.org/grpc` from 1.45.0 to 1.46.0 [GH-296]
-* provider: Bump `github.com/go-openapi/runtime` from 0.23.3 to 0.24.0 [GH-300]
-* docs: fix peer_vnet_region in azure_peering example [GH-303]
-* docs: add contributors guide on breaking changes [GH-294]
+* provider: provider reports all HCP component statuses ([303](https://github.com/hashicorp/terraform-provider-hcp/issues/298))
+* provider: Bump `actions/upload-artifact` from 2 to 3 ([#288](https://github.com/hashicorp/terraform-provider-hcp/issues/288))
+* provider: Bump `google.golang.org/grpc` from 1.45.0 to 1.46.0 ([#296](https://github.com/hashicorp/terraform-provider-hcp/issues/296))
+* provider: Bump `github.com/go-openapi/runtime` from 0.23.3 to 0.24.0 ([#300](https://github.com/hashicorp/terraform-provider-hcp/issues/300))
+* docs: fix peer_vnet_region in azure_peering example ([303](https://github.com/hashicorp/terraform-provider-hcp/issues/298))
+* docs: add contributors guide on breaking changes ([#294](https://github.com/hashicorp/terraform-provider-hcp/issues/294))
 
 ## 0.26.0 (April 14, 2022)
 
