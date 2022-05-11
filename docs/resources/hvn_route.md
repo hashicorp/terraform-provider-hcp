@@ -64,12 +64,12 @@ resource "hcp_hvn_route" "example-peering-route" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_at` (String) The time that the HVN route was created.
+- `id` (String) The ID of this resource.
 - `self_link` (String) A unique URL identifying the HVN route.
 - `state` (String) The state of the HVN route.
 

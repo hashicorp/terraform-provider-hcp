@@ -28,12 +28,12 @@ resource "hcp_consul_cluster_root_token" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `accessor_id` (String) The accessor ID of the root ACL token.
+- `id` (String) The ID of this resource.
 - `kubernetes_secret` (String, Sensitive) The root ACL token Base64 encoded in a Kubernetes secret.
 - `secret_id` (String, Sensitive) The secret ID of the root ACL token.
 

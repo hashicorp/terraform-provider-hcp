@@ -27,7 +27,6 @@ data "hcp_hvn" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -35,6 +34,7 @@ data "hcp_hvn" "example" {
 - `cidr_block` (String) The CIDR range of the HVN.
 - `cloud_provider` (String) The provider where the HVN is located.
 - `created_at` (String) The time that the HVN was created.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the HVN is located.
 - `project_id` (String) The ID of the HCP project where the HVN is located.
 - `provider_account_id` (String) The provider account ID where the HVN is located.

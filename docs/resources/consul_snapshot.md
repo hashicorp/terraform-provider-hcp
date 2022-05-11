@@ -31,12 +31,12 @@ resource "hcp_consul_snapshot" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `consul_version` (String) The version of Consul at the time of snapshot creation.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the project the HCP Consul cluster is located.
 - `project_id` (String) The ID of the project the HCP Consul cluster is located.
 - `restored_at` (String) Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.
