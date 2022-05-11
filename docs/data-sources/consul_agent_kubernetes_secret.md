@@ -27,11 +27,11 @@ data "hcp_consul_agent_kubernetes_secret" "test" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
+- `id` (String) The ID of this resource.
 - `secret` (String) The Consul agent configuration in the format of a Kubernetes secret (YAML).
 
 <a id="nestedblock--timeouts"></a>

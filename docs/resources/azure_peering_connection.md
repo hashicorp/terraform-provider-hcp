@@ -114,7 +114,6 @@ resource "azurerm_role_assignment" "assignment" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -123,6 +122,7 @@ resource "azurerm_role_assignment" "assignment" {
 - `azure_peering_id` (String) The peering connection ID used by Azure.
 - `created_at` (String) The time that the peering connection was created.
 - `expires_at` (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
 - `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
 - `self_link` (String) A unique URL identifying the peering connection.

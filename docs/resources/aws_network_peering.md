@@ -66,13 +66,13 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `created_at` (String) The time that the network peering was created.
 - `expires_at` (String) The time after which the network peering will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
+- `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.
 - `project_id` (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
 - `provider_peering_id` (String) The peering connection ID used by AWS.

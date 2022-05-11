@@ -41,7 +41,6 @@ resource "hcp_vault_cluster" "example" {
 
 ### Optional
 
-- `id` (String) The ID of this resource.
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `paths_filter` (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
@@ -53,6 +52,7 @@ resource "hcp_vault_cluster" "example" {
 
 - `cloud_provider` (String) The provider where the HCP Vault cluster is located.
 - `created_at` (String) The time that the Vault cluster was created.
+- `id` (String) The ID of this resource.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
 - `project_id` (String) The ID of the project this HCP Vault cluster is located in.
