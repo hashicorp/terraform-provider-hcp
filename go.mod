@@ -16,5 +16,5 @@ require (
 	github.com/posener/complete v1.2.1 // indirect
 	github.com/stretchr/testify v1.7.1
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d // indirect
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.46.2
 )
