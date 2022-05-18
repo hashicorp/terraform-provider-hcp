@@ -1,3 +1,10 @@
+## 0.29.0 (May 18, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `google.golang.org/grpc` from 1.46.0 to 1.46.2 ([#311](https://github.com/hashicorp/terraform-provider-hcp/issues/311))
+* provider: Bump  `github.com/go-openapi/runtime` from 0.24.0 to 0.24.1 ([#306](https://github.com/hashicorp/terraform-provider-hcp/issues/306))
+
 ## 0.28.0 (May 11, 2022)
 
 IMPROVEMENTS:
