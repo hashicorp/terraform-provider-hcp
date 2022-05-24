@@ -64,7 +64,7 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+					return strings.ToLower(old) == strings.ToLower(new)
 				},
 			},
 			// Computed outputs
