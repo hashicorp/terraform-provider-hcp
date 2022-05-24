@@ -100,7 +100,6 @@ func resourceVaultCluster() *schema.Resource {
 					ValidateDiagFunc: validateVaultPathsFilter,
 				},
 				Optional: true,
-				Computed: true,
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
@@ -582,6 +581,8 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		} else {
 			d.Set("paths_filter", nil)
 		}
+	} else {
+		d.Set("paths_filter", nil)
 	}
 
 	return nil
