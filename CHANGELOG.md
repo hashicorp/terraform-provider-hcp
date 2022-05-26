@@ -1,3 +1,9 @@
+## 0.30.0 (May 26, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/go-version` from 1.4.0 to 1.5.0 ([#313](https://github.com/hashicorp/terraform-provider-hcp/pull/313))
+
 ## 0.29.0 (May 18, 2022)
 
 IMPROVEMENTS:
