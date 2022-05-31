@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * provider: Bump `github.com/hashicorp/go-version` from 1.4.0 to 1.5.0 ([#313](https://github.com/hashicorp/terraform-provider-hcp/pull/313))
+* resource/vault: Vault secondary tier by reference ([#289](https://github.com/hashicorp/terraform-provider-hcp/pull/289))
 
 ## 0.29.0 (May 18, 2022)
 
