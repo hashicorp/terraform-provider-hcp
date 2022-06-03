@@ -7,6 +7,8 @@ description: |-
 
 # Resource (hcp_consul_cluster)
 
+-> Consul on Azure is now available in public beta. [Get started with end-to-end deployment configuration](https://learn.hashicorp.com/tutorials/cloud/consul-end-to-end-overview).
+
 The Consul cluster resource allows you to manage an HCP Consul cluster.
 
 ## Example Usage
