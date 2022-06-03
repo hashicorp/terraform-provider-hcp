@@ -9,7 +9,7 @@ description: |-
 
 -> Please refer to the provider's [Release Notes](https://github.com/hashicorp/terraform-provider-hcp/releases) for critical fixes.
 
--> Azure support coming soon!
+-> Consul on Azure is now available in public beta.
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
