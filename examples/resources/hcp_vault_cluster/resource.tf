@@ -11,7 +11,7 @@ resource "hcp_vault_cluster" "example" {
   tier       = "standard_large"
   metrics_config {
     datadog_api_key = "test_datadog"
-    datadog_region =       "us1"
+    datadog_region  = "us1"
   }
   audit_log_config {
     datadog_api_key = "test_datadog"
