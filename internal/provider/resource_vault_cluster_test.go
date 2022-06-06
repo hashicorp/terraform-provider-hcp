@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,13 +20,21 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// sets public_endpoint to true
-const updatedVaultClusterPublic = `
+// sets public_endpoint to true and add metrics and audit log
+const updatedVaultClusterPublicAndMetricsAuditLog = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
-	tier               = "dev"
+	tier               = "standard_small"
 	public_endpoint    = true
+	metrics_config			   {
+		splunk_hecendpoint = "https://http-input-splunkcloud.com"
+		splunk_token =       "test"
+	}
+	audit_log_config 		    {
+		datadog_api_key = "test_datadog"
+		datadog_region  = "us1"
+	}
 }
 `
 
@@ -38,7 +47,7 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// changes tier and sets public_endpoint to true
+// changes tier and sets public_endpoint to true also removes the metric/audit logs
 const updatedVaultClusterTierAndPublic = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
@@ -162,19 +171,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
 				),
 			},
-			// This step verifies the successful update of "public_endpoint".
-			{
-				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublic)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultClusterExists(vaultClusterResourceName),
-					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
-					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
-					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
-					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
-					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-				),
-			},
-			// This step verifies the successful update of "tier".
+			// This step verifies the successful update of "tier"
 			{
 				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTier)),
 				Check: resource.ComposeTestCheckFunc(
@@ -182,7 +179,24 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_SMALL"),
 				),
 			},
-			// This step verifies the successful update of both "tier" and "public_endpoint".
+			// This step verifies the successful update of "public_endpoint", "audit_log" and "metrics"
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublicAndMetricsAuditLog)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "metrics_config.0.splunk_hecendpoint", "https://http-input-splunkcloud.com"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "metrics_config.0.splunk_token"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
+				),
+			},
+
+			// This step verifies the successful update of both "tier" and "public_endpoint" and removal of "metrics" and "audit_log".
 			{
 				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTierAndPublic)),
 				Check: resource.ComposeTestCheckFunc(
@@ -193,6 +207,8 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "metrics_config.0"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "audit_log_config.0"),
 				),
 			},
 		},
@@ -275,6 +291,78 @@ resource "hcp_hvn" "hvn2" {
 
 %s
 `, vaultCluster)
+}
+
+func TestGetValidObservabilityConfig(t *testing.T) {
+	cases := []struct {
+		config        map[string]interface{}
+		expectedError string
+	}{
+		{
+			config: map[string]interface{}{
+				"grafana_user":       "test",
+				"grafana_password":   "pwd",
+				"grafana_endpoint":   "https://grafana",
+				"splunk_hecendpoint": "https://http-input-splunkcloud.com",
+				"splunk_token":       "test",
+				"datadog_api_key":    "test_datadog",
+				"datadog_region":     "us1",
+			},
+			expectedError: "multiple configurations found: must contain configuration for only one provider",
+		},
+		{
+			config: map[string]interface{}{
+				"grafana_user":       "test",
+				"grafana_password":   "",
+				"grafana_endpoint":   "",
+				"splunk_hecendpoint": "",
+				"splunk_token":       "",
+				"datadog_api_key":    "",
+				"datadog_region":     "",
+			},
+			expectedError: "grafana configuration is invalid: configuration information missing",
+		},
+		{
+			config: map[string]interface{}{
+				"grafana_user":       "",
+				"grafana_password":   "",
+				"grafana_endpoint":   "",
+				"splunk_hecendpoint": "",
+				"splunk_token":       "test",
+				"datadog_api_key":    "",
+				"datadog_region":     "",
+			},
+			expectedError: "splunk configuration is invalid: configuration information missing",
+		},
+		{
+			config: map[string]interface{}{
+				"grafana_user":       "",
+				"grafana_password":   "",
+				"grafana_endpoint":   "",
+				"splunk_hecendpoint": "",
+				"splunk_token":       "",
+				"datadog_api_key":    "",
+				"datadog_region":     "us1",
+			},
+			expectedError: "datadog configuration is invalid: configuration information missing",
+		},
+	}
+
+	for _, c := range cases {
+		_, diags := getValidObservabilityConfig(c.config)
+		foundError := false
+		if diags.HasError() {
+			for _, d := range diags {
+				if strings.Contains(d.Summary, c.expectedError) {
+					foundError = true
+					break
+				}
+			}
+		}
+		if !foundError {
+			t.Fatalf("Expected an error: %v", c.expectedError)
+		}
+	}
 }
 
 func TestAccPerformanceReplication_Validations(t *testing.T) {
@@ -381,7 +469,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_medium"
 					primary_link = "not-present"
 				}
 				`)),
@@ -399,7 +487,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id        = "test-secondary"
 					hvn_id            = hcp_hvn.hvn1.hvn_id
-					tier              = hcp_vault_cluster.c1.tier
+					tier              = "plus_small"
 					primary_link      = hcp_vault_cluster.c1.self_link
 					min_vault_version = "v1.0.1"
 				}
@@ -418,7 +506,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 					paths_filter = ["path/a", "path/b"]
 				}
@@ -456,7 +544,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 					paths_filter = ["path/a", "path/c"]
 				}
@@ -478,7 +566,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
@@ -498,7 +586,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_small"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
@@ -534,7 +622,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = hcp_vault_cluster.c1.tier
+					tier         = "plus_medium"
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
