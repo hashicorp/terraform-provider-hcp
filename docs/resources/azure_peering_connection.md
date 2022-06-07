@@ -7,7 +7,7 @@ description: |-
 
 # Resource (hcp_azure_peering_connection)
 
--> **Note:** Azure support coming soon. This resource is currently in internal preview only.
+-> **Note:** This data source is currently in public beta.
 
 The Azure peering connection resource allows you to manage a peering connection between an HVN and a peer Azure VNet.
 
