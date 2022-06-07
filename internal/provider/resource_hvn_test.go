@@ -29,7 +29,7 @@ var testAccAzureHvnConfig = `
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
 	cloud_provider = "azure"
-	region         = "useast"
+	region         = "eastus"
 }
 
 data "hcp_hvn" "test" {
@@ -130,7 +130,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 					testAccCheckHvnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
-					resource.TestCheckResourceAttr(resourceName, "region", "useast"),
+					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
@@ -159,7 +159,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 					testAccCheckHvnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
-					resource.TestCheckResourceAttr(resourceName, "region", "useast"),
+					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
