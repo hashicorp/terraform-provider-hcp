@@ -68,7 +68,7 @@ func resourceVaultCluster() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: validateVaultClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"public_endpoint": {
@@ -126,6 +126,102 @@ func resourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"metrics_config": {
+				Description: "The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"grafana_endpoint": {
+							Description: "Grafana endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"grafana_user": {
+							Description: "Grafana user for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"grafana_password": {
+							Description: "Grafana password for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"splunk_hecendpoint": {
+							Description: "Splunk endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"splunk_token": {
+							Description: "Splunk token for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"datadog_api_key": {
+							Description: "Datadog api key for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"datadog_region": {
+							Description: "Datadog region for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+			},
+			"audit_log_config": {
+				Description: "The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"grafana_endpoint": {
+							Description: "Grafana endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"grafana_user": {
+							Description: "Grafana user for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"grafana_password": {
+							Description: "Grafana password for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"splunk_hecendpoint": {
+							Description: "Splunk endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"splunk_token": {
+							Description: "Splunk token for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"datadog_api_key": {
+							Description: "Datadog api key for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"datadog_region": {
+							Description: "Datadog region for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+			},
 			"vault_version": {
 				Description: "The Vault version of the cluster.",
 				Type:        schema.TypeString,
@@ -156,6 +252,7 @@ func resourceVaultCluster() *schema.Resource {
 }
 
 func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
@@ -163,6 +260,16 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
+	}
+
+	//get metrics and audit config first so we can validate and fail faster
+	metricsConfig, diagErr := getObservabilityConfig("metrics_config", d)
+	if diagErr != nil {
+		return diagErr
+	}
+	auditConfig, diagErr := getObservabilityConfig("audit_log_config", d)
+	if diagErr != nil {
+		return diagErr
 	}
 
 	// Use the hvn to get provider and region.
@@ -252,6 +359,13 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			ID:       clusterID,
 			Location: loc,
 		}
+	}
+
+	if metricsConfig != nil {
+		vaultCluster.Config.MetricsConfig = metricsConfig
+	}
+	if auditConfig != nil {
+		vaultCluster.Config.AuditLogExportConfig = auditConfig
 	}
 
 	payload, err := clients.CreateVaultCluster(ctx, client, loc, vaultCluster)
@@ -351,52 +465,14 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
-	// Confirm at least on modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "paths_filter") {
+	// Confirm at least one modifiable field has changed
+	if !d.HasChanges("tier", "public_endpoint", "paths_filter", "metrics_config", "audit_log_config") {
 		return nil
 	}
-
-	if d.HasChange("tier") {
-		clusterToScale := cluster
-		destTier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
-		if inPlusTier(string(cluster.Config.Tier)) {
-			// Plus tier clusters scale as a group via the primary cluster.
-			// However, it is still worth individually tracking the tier of each cluster so that the
-			// provider has the same information as the portal UI and can detect a scaling operation that
-			// fails part way through to enable retries.
-			// Because the clusters scale as group,
-			//  a) replicated clusters may have already scaled due to another resource's update
-			//  b) all scaling requests are routed through the primary
-			// It is important to keep the tier of all replicated clusters in sync.
-
-			// Because of (a), check that the scaling operation is necessary.
-			if cluster.Config.Tier == destTier {
-				clusterToScale = nil
-			} else {
-				printPlusScalingWarningMsg()
-				primaryLink := getPrimaryLinkIfAny(d)
-				if primaryLink != "" {
-					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
-					var getPrimaryErr diag.Diagnostics
-					clusterToScale, getPrimaryErr = getPrimaryClusterFromLink(ctx, client, primaryLink)
-					if getPrimaryErr != nil {
-						return getPrimaryErr
-					}
-				}
-			}
-		}
-
-		if clusterToScale != nil {
-			// Invoke update tier endpoint.
-			updateResp, err := clients.UpdateVaultClusterTier(ctx, client, clusterToScale.Location, clusterToScale.ID, destTier)
-			if err != nil {
-				return diag.Errorf("error updating Vault cluster tier (%s): %v", clusterID, err)
-			}
-
-			// Wait for the update cluster operation.
-			if err := clients.WaitForOperation(ctx, client, "update Vault cluster tier", clusterToScale.Location, updateResp.Operation.ID); err != nil {
-				return diag.Errorf("unable to update Vault cluster tier (%s): %v", clusterID, err)
-			}
+	if d.HasChange("tier") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
+		if diagErr != nil {
+			return diagErr
 		}
 	}
 
@@ -492,6 +568,85 @@ func resourceVaultClusterDelete(ctx context.Context, d *schema.ResourceData, met
 
 	return nil
 }
+func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *schema.ResourceData, cluster *vaultmodels.HashicorpCloudVault20201125Cluster, clusterID string) diag.Diagnostics {
+	metricsConfig, diagErr := getObservabilityConfig("metrics_config", d)
+	if diagErr != nil {
+		return diagErr
+	}
+	auditConfig, diagErr := getObservabilityConfig("audit_log_config", d)
+	if diagErr != nil {
+		return diagErr
+	}
+	isSecondary := false
+	destTier := getClusterTier(d)
+	if d.HasChange("tier") {
+		if inPlusTier(string(cluster.Config.Tier)) {
+			// Plus tier clusters scale as a group via the primary cluster.
+			// However, it is still worth individually tracking the tier of each cluster so that the
+			// provider has the same information as the portal UI and can detect a scaling operation that
+			// fails part way through to enable retries.
+			// Because the clusters scale as group,
+			//  a) replicated clusters may have already scaled due to another resource's update
+			//  b) all scaling requests are routed through the primary
+			// It is important to keep the tier of all replicated clusters in sync.
+
+			// Because of (a), check that the scaling operation is necessary.
+			//if the cluster has the same tier but the metrics/audit_log changed, we want to update the cluster anyway to change the info
+			if cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") {
+				return nil
+			} else {
+				printPlusScalingWarningMsg()
+				primaryLink := getPrimaryLinkIfAny(d)
+				if primaryLink != "" {
+					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
+					isSecondary = true
+					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, cluster.Location, cluster.ID, destTier, metricsConfig, auditConfig)
+						if err != nil {
+							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
+						}
+
+						// Wait for the update cluster operation.
+						if err := clients.WaitForOperation(ctx, client, "update Vault cluster", cluster.Location, updateResp.Operation.ID); err != nil {
+							return diag.Errorf("unable to update Vault cluster (%s): %v", clusterID, err)
+						}
+					}
+					var getPrimaryErr diag.Diagnostics
+					cluster, getPrimaryErr = getPrimaryClusterFromLink(ctx, client, primaryLink)
+					if getPrimaryErr != nil {
+						return getPrimaryErr
+					}
+				}
+			}
+		}
+	}
+
+	//if is secondary since we're scaling via the primary we don't update the primary metrics/auditLog
+	if isSecondary {
+		metricsConfig = nil
+		auditConfig = nil
+	}
+	// Invoke update endpoint.
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, cluster.Location, cluster.ID, destTier, metricsConfig, auditConfig)
+	if err != nil {
+		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
+	}
+	// Wait for the update cluster operation.
+	if err := clients.WaitForOperation(ctx, client, "update Vault cluster", cluster.Location, updateResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to update Vault cluster (%s): %v", clusterID, err)
+	}
+
+	return nil
+}
+
+func getClusterTier(d *schema.ResourceData) *string {
+	//if we don't change the tier, return nil so we don't pass the tier to the update
+	if d.HasChange("tier") {
+		tier := strings.ToUpper(d.Get("tier").(string))
+		return &tier
+	}
+	return nil
+}
 
 // setVaultClusterResourceData sets the KV pairs of the Vault cluster resource schema.
 func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.HashicorpCloudVault20201125Cluster) error {
@@ -534,6 +689,14 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 
 	publicEndpoint := cluster.Config.NetworkConfig.PublicIpsEnabled
 	if err := d.Set("public_endpoint", publicEndpoint); err != nil {
+		return err
+	}
+
+	if err := d.Set("metrics_config", flattenObservabilityConfig(cluster.Config.MetricsConfig, d, "metrics_config")); err != nil {
+		return err
+	}
+
+	if err := d.Set("audit_log_config", flattenObservabilityConfig(cluster.Config.AuditLogExportConfig, d, "audit_log_config")); err != nil {
 		return err
 	}
 
@@ -581,11 +744,128 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		} else {
 			d.Set("paths_filter", nil)
 		}
-	} else {
-		d.Set("paths_filter", nil)
 	}
 
 	return nil
+}
+
+func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, d *schema.ResourceData, propertyName string) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	configMap := map[string]interface{}{}
+
+	if grafana := config.Grafana; grafana != nil {
+		configMap["grafana_endpoint"] = grafana.Endpoint
+		configMap["grafana_user"] = grafana.User
+		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+		if grafana.Password != "redacted" {
+			configMap["grafana_password"] = grafana.Password
+		} else {
+			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+				config := configParam.([]interface{})[0].(map[string]interface{})
+				configMap["grafana_password"] = config["grafana_password"].(string)
+			}
+		}
+	}
+
+	if splunk := config.Splunk; splunk != nil {
+		configMap["splunk_hecendpoint"] = splunk.HecEndpoint
+		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+		if splunk.Token != "redacted" {
+			configMap["splunk_token"] = splunk.Token
+		} else {
+			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+				config := configParam.([]interface{})[0].(map[string]interface{})
+				configMap["splunk_token"] = config["splunk_token"].(string)
+			}
+		}
+	}
+
+	if datadog := config.Datadog; datadog != nil {
+		configMap["datadog_region"] = datadog.Region
+		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+		if datadog.APIKey != "redacted" {
+			configMap["datadog_api_key"] = datadog.APIKey
+		} else {
+			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+				config := configParam.([]interface{})[0].(map[string]interface{})
+				configMap["datadog_api_key"] = config["datadog_api_key"].(string)
+			}
+		}
+	}
+	return []interface{}{configMap}
+}
+
+func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
+	if !d.HasChange(propertyName) {
+		return nil, nil
+	}
+
+	//if we don't find the property we return the empty object to be updated and delete the configuration
+	configParam, ok := d.GetOk(propertyName)
+	if !ok {
+		obsconfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Grafana: &vaultmodels.HashicorpCloudVault20201125Grafana{},
+			Splunk:  &vaultmodels.HashicorpCloudVault20201125Splunk{},
+			Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{},
+		}
+		return &obsconfig, nil
+	}
+	config := configParam.([]interface{})[0].(map[string]interface{})
+
+	return getValidObservabilityConfig(config)
+}
+
+func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
+
+	observabilityConfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{}
+
+	grafanaEndpoint := config["grafana_endpoint"].(string)
+	grafanaUser := config["grafana_user"].(string)
+	grafanaPassword := config["grafana_password"].(string)
+	splunkEndpoint := config["splunk_hecendpoint"].(string)
+	splunkToken := config["splunk_token"].(string)
+	datadogAPIKey := config["datadog_api_key"].(string)
+	datadogRegion := config["datadog_region"].(string)
+
+	if grafanaEndpoint != "" || grafanaUser != "" || grafanaPassword != "" {
+		if grafanaEndpoint == "" || grafanaUser == "" || grafanaPassword == "" {
+			return nil, diag.Errorf("grafana configuration is invalid: configuration information missing")
+		} else if splunkEndpoint != "" || splunkToken != "" || datadogAPIKey != "" || datadogRegion != "" {
+			return nil, diag.Errorf("multiple configurations found: must contain configuration for only one provider")
+		}
+		observabilityConfig.Grafana = &vaultmodels.HashicorpCloudVault20201125Grafana{
+			Endpoint: grafanaEndpoint,
+			User:     grafanaUser,
+			Password: grafanaPassword,
+		}
+	}
+
+	if splunkEndpoint != "" || splunkToken != "" {
+		if splunkEndpoint == "" || splunkToken == "" {
+			return nil, diag.Errorf("splunk configuration is invalid: configuration information missing")
+		} else if datadogAPIKey != "" || datadogRegion != "" {
+			return nil, diag.Errorf("multiple configurations found: must contain configuration for only one provider")
+		}
+		observabilityConfig.Splunk = &vaultmodels.HashicorpCloudVault20201125Splunk{
+			HecEndpoint: splunkEndpoint,
+			Token:       splunkToken,
+		}
+	}
+
+	if datadogAPIKey != "" || datadogRegion != "" {
+		if datadogAPIKey == "" || datadogRegion == "" {
+			return nil, diag.Errorf("datadog configuration is invalid: configuration information missing")
+		}
+		observabilityConfig.Datadog = &vaultmodels.HashicorpCloudVault20201125Datadog{
+			APIKey: datadogAPIKey,
+			Region: datadogRegion,
+		}
+	}
+
+	return &observabilityConfig, nil
 }
 
 func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

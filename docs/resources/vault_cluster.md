@@ -25,6 +25,14 @@ resource "hcp_vault_cluster" "example" {
   cluster_id = "vault-cluster"
   hvn_id     = hcp_hvn.example.hvn_id
   tier       = "standard_large"
+  metrics_config {
+    datadog_api_key = "test_datadog"
+    datadog_region  = "us1"
+  }
+  audit_log_config {
+    datadog_api_key = "test_datadog"
+    datadog_region  = "us1"
+  }
   lifecycle {
     prevent_destroy = true
   }
@@ -41,6 +49,8 @@ resource "hcp_vault_cluster" "example" {
 
 ### Optional
 
+- `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `paths_filter` (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
@@ -61,6 +71,34 @@ resource "hcp_vault_cluster" "example" {
 - `vault_private_endpoint_url` (String) The private URL for the Vault cluster.
 - `vault_public_endpoint_url` (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - `vault_version` (String) The Vault version of the cluster.
+
+<a id="nestedblock--audit_log_config"></a>
+### Nested Schema for `audit_log_config`
+
+Optional:
+
+- `datadog_api_key` (String, Sensitive) Datadog api key for streaming audit logs
+- `datadog_region` (String) Datadog region for streaming audit logs
+- `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
+- `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
+- `grafana_user` (String) Grafana user for streaming audit logs
+- `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
+- `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
+
+
+<a id="nestedblock--metrics_config"></a>
+### Nested Schema for `metrics_config`
+
+Optional:
+
+- `datadog_api_key` (String, Sensitive) Datadog api key for streaming metrics
+- `datadog_region` (String) Datadog region for streaming metrics
+- `grafana_endpoint` (String) Grafana endpoint for streaming metrics
+- `grafana_password` (String, Sensitive) Grafana password for streaming metrics
+- `grafana_user` (String) Grafana user for streaming metrics
+- `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
+- `splunk_token` (String, Sensitive) Splunk token for streaming metrics
+
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
