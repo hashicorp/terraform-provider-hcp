@@ -469,7 +469,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = "plus_medium"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = "not-present"
 				}
 				`)),
@@ -487,7 +487,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id        = "test-secondary"
 					hvn_id            = hcp_hvn.hvn1.hvn_id
-					tier              = "plus_small"
+					tier              = hcp_vault_cluster.c1.tier
 					primary_link      = hcp_vault_cluster.c1.self_link
 					min_vault_version = "v1.0.1"
 				}
@@ -506,7 +506,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = "plus_small"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = hcp_vault_cluster.c1.self_link
 					paths_filter = ["path/a", "path/b"]
 				}
@@ -544,7 +544,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = "plus_small"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = hcp_vault_cluster.c1.self_link
 					paths_filter = ["path/a", "path/c"]
 				}
@@ -566,7 +566,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
-					tier         = "plus_small"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
@@ -586,7 +586,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = "plus_small"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
@@ -622,7 +622,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 				resource "hcp_vault_cluster" "c2" {
 					cluster_id   = "test-secondary"
 					hvn_id       = hcp_hvn.hvn2.hvn_id
-					tier         = "plus_medium"
+					tier         = hcp_vault_cluster.c1.tier
 					primary_link = hcp_vault_cluster.c1.self_link
 				}
 				`)),
