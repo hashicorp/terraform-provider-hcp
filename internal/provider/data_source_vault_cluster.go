@@ -110,6 +110,66 @@ func dataSourceVaultCluster() *schema.Resource {
 				},
 				Computed: true,
 			},
+			"metrics_config": {
+				Description: "The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"grafana_endpoint": {
+							Description: "Grafana endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"grafana_user": {
+							Description: "Grafana user for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"splunk_hecendpoint": {
+							Description: "Splunk endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"datadog_region": {
+							Description: "Datadog region for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+			"audit_log_config": {
+				Description: "The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"grafana_endpoint": {
+							Description: "Grafana endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"grafana_user": {
+							Description: "Grafana user for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"splunk_hecendpoint": {
+							Description: "Splunk endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"datadog_region": {
+							Description: "Datadog region for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }

@@ -31,10 +31,12 @@ data "hcp_vault_cluster" "example" {
 
 ### Read-Only
 
+- `audit_log_config` (Block List) The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
 - `cloud_provider` (String) The provider where the HCP Vault cluster is located.
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
+- `metrics_config` (Block List) The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
@@ -55,5 +57,27 @@ data "hcp_vault_cluster" "example" {
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedblock--audit_log_config"></a>
+### Nested Schema for `audit_log_config`
+
+Read-Only:
+
+- `datadog_region` (String) Datadog region for streaming audit logs
+- `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
+- `grafana_user` (String) Grafana user for streaming audit logs
+- `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
+
+
+<a id="nestedblock--metrics_config"></a>
+### Nested Schema for `metrics_config`
+
+Read-Only:
+
+- `datadog_region` (String) Datadog region for streaming metrics
+- `grafana_endpoint` (String) Grafana endpoint for streaming metrics
+- `grafana_user` (String) Grafana user for streaming metrics
+- `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 
 

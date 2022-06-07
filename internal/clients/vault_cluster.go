@@ -112,14 +112,31 @@ func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *share
 }
 
 // UpdateVaultCluster will make a call to the Vault service to update the Vault cluster configuration.
-func UpdateVaultClusterTier(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	clusterID string, tier vaultmodels.HashicorpCloudVault20201125Tier) (*vaultmodels.HashicorpCloudVault20201125UpdateResponse, error) {
+func UpdateVaultClusterConfig(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	clusterID string, tier *string, metrics *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig,
+	auditLog *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig) (*vaultmodels.HashicorpCloudVault20201125UpdateResponse, error) {
 
+	config := &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{}
+	updateMaskPaths := []string{}
+
+	if tier != nil {
+		config.Tier = vaultmodels.HashicorpCloudVault20201125Tier(*tier)
+		updateMaskPaths = append(updateMaskPaths, "config.tier")
+	}
+	if metrics != nil {
+		config.MetricsConfig = metrics
+		updateMaskPaths = append(updateMaskPaths, "config.metrics_config")
+	}
+	if auditLog != nil {
+		config.AuditLogExportConfig = auditLog
+		updateMaskPaths = append(updateMaskPaths, "config.audit_log_export_config")
+	}
 	updateParams := vault_service.NewUpdateParams()
 	updateParams.Context = ctx
 	updateParams.ClusterID = clusterID
 	updateParams.ClusterLocationProjectID = loc.ProjectID
 	updateParams.ClusterLocationOrganizationID = loc.OrganizationID
+	updateParams.UpdateMaskPaths = updateMaskPaths
 	updateParams.Body = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 		// ClusterID and Location are repeated because the values above are required to populate the URL,
 		// and the values below are required in the API request body
@@ -128,7 +145,7 @@ func UpdateVaultClusterTier(ctx context.Context, client *Client, loc *sharedmode
 		// NOTE: if this function is ever modified to update more than just the tier,
 		// the tier must ALWAYS be specified, since the 0-value is valid and will not
 		// be ignored.
-		Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{Tier: tier},
+		Config: config,
 	}
 
 	updateResp, err := client.Vault.Update(updateParams, nil)

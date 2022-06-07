@@ -19,13 +19,21 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// sets public_endpoint to true
-const updatedVaultClusterPublic = `
+// sets public_endpoint to true and add metrics and audit log
+const updatedVaultClusterPublicAndMetricsAuditLog = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
-	tier               = "dev"
+	tier               = "standard_small"
 	public_endpoint    = true
+	metrics_config			   {
+		splunk_hecendpoint = "https://http-input-splunkcloud.com"
+		splunk_token =       "test"
+	}
+	audit_log_config 		    {
+		datadog_api_key = "test_datadog"
+		datadog_region  = "us1"
+	}
 }
 `
 
@@ -38,7 +46,7 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// changes tier and sets public_endpoint to true
+// changes tier and sets public_endpoint to true also removes the metric/audit logs
 const updatedVaultClusterTierAndPublic = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
@@ -162,19 +170,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
 				),
 			},
-			// This step verifies the successful update of "public_endpoint".
-			{
-				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublic)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultClusterExists(vaultClusterResourceName),
-					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
-					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
-					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
-					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
-					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-				),
-			},
-			// This step verifies the successful update of "tier".
+			// This step verifies the successful update of "tier"
 			{
 				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTier)),
 				Check: resource.ComposeTestCheckFunc(
@@ -182,7 +178,24 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_SMALL"),
 				),
 			},
-			// This step verifies the successful update of both "tier" and "public_endpoint".
+			// This step verifies the successful update of "public_endpoint", "audit_log" and "metrics"
+			{
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublicAndMetricsAuditLog)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultClusterExists(vaultClusterResourceName),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "public_endpoint", "true"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_public_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
+					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "metrics_config.0.splunk_hecendpoint", "https://http-input-splunkcloud.com"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "metrics_config.0.splunk_token"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
+				),
+			},
+
+			// This step verifies the successful update of both "tier" and "public_endpoint" and removal of "metrics" and "audit_log".
 			{
 				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTierAndPublic)),
 				Check: resource.ComposeTestCheckFunc(
@@ -193,6 +206,8 @@ func TestAccVaultCluster(t *testing.T) {
 					testAccCheckFullURL(vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "metrics_config.0"),
+					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "audit_log_config.0"),
 				),
 			},
 		},
