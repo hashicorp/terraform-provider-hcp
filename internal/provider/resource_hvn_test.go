@@ -24,7 +24,7 @@ data "hcp_hvn" "test" {
 }
 `
 
-// Currently internal only
+// Currently in public beta
 var testAccAzureHvnConfig = `
 resource "hcp_hvn" "test" {
 	hvn_id         = "test-hvn"
@@ -53,7 +53,7 @@ func TestAccHvnOnly(t *testing.T) {
 			"aws",
 			"us-west-2",
 		},
-		// Currently internal only
+		// Currently in public beta
 		// "when the cloud provider is Azure": {
 		// 	testAccAzureHvnConfig,
 		// 	"azure",
