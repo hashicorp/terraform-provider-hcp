@@ -13,7 +13,6 @@ FEATURES:
 * resource/consul_cluster: Adds Azure on Consul in public beta ([#320](https://github.com/hashicorp/terraform-provider-hcp/pull/320))
 
 
-
 ## 0.30.0 (May 26, 2022)
 
 IMPROVEMENTS:
