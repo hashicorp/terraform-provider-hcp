@@ -1,3 +1,19 @@
+## 0.31.0 (June 7, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `google.golang.org/grpc` from 1.46.2 to 1.47.0 ([#316](https://github.com/hashicorp/terraform-provider-hcp/pull/316))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2 from 2.16.0 to 2.17.0 ([#317](https://github.com/hashicorp/terraform-provider-hcp/pull/317))
+* provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.8.1 to 0.9.` ([#318](https://github.com/hashicorp/terraform-provider-hcp/pull/318))
+* provider: Bump `github.com/stretchr/testify` from 1.7.1 to 1.7.2 ([#321](https://github.com/hashicorp/terraform-provider-hcp/pull/321))
+
+FEATURES: 
+
+* resource/vault: Enable metrics_config and audit_log_config ([#319](https://github.com/hashicorp/terraform-provider-hcp/pull/319))
+* resource/consul_cluster: Adds Azure on Consul in public beta ([#320](https://github.com/hashicorp/terraform-provider-hcp/pull/320))
+
+
+
 ## 0.30.0 (May 26, 2022)
 
 IMPROVEMENTS:
