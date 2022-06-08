@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
@@ -188,28 +187,52 @@ const (
 	underMaintenance           = "under_maintenance"
 )
 
-func isHCPOperational() diag.Diagnostics {
+func isHCPOperational() (diags diag.Diagnostics) {
 	req, err := http.NewRequest("GET", statuspageUrl, nil)
 	if err != nil {
-		log.Printf("Unable to create request to verify HCP status: %s", err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable to create request to verify HCP status: %s", err),
+		})
+
+		return diags
 	}
 
 	var cl = http.Client{}
 	resp, err := cl.Do(req)
 	if err != nil {
-		log.Printf("Unable complete request to verify HCP status: %s", err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable to complete request to verify HCP status: %s", err),
+		})
+
+		return diags
 	}
 	defer resp.Body.Close()
 
 	jsBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Unable read response to verify HCP status: %s", err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable read response to verify HCP status: %s", err),
+		})
+
+		return diags
 	}
 
 	sp := statuspage{}
 	err = json.Unmarshal(jsBytes, &sp)
 	if err != nil {
-		log.Printf("Unable unmarshal response to verify HCP status: %s", err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err),
+		})
+
+		return diags
 	}
 
 	// Translate the status page component IDs into a map of component name and operation status.
@@ -228,8 +251,6 @@ func isHCPOperational() diag.Diagnostics {
 			operational = false
 		}
 	}
-
-	var diags diag.Diagnostics
 
 	if !operational {
 		diags = append(diags, diag.Diagnostic{
