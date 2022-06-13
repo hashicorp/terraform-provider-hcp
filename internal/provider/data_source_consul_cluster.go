@@ -64,7 +64,7 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"cluster_state": {
+			"state": {
 				Description: "The state of the HCP Consul cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -231,7 +231,7 @@ func setConsulClusterDataSourceAttributes(
 		return err
 	}
 
-	if err := d.Set("cluster_state", cluster.State); err != nil {
+	if err := d.Set("state", cluster.State); err != nil {
 		return err
 	}
 

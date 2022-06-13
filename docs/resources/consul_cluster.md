@@ -51,7 +51,6 @@ resource "hcp_consul_cluster" "example" {
 ### Read-Only
 
 - `cloud_provider` (String) The provider where the HCP Consul cluster is located.
-- `cluster_state` (String) The state of the HCP Consul cluster.
 - `consul_automatic_upgrades` (Boolean) Denotes that automatic Consul upgrades are enabled.
 - `consul_ca_file` (String) The cluster CA file encoded as a Base64 string.
 - `consul_config_file` (String) The cluster config encoded as a Base64 string.
@@ -68,6 +67,7 @@ resource "hcp_consul_cluster" "example" {
 - `region` (String) The region where the HCP Consul cluster is located.
 - `scale` (Number) The number of Consul server nodes in the cluster.
 - `self_link` (String) A unique URL identifying the HCP Consul cluster.
+- `state` (String) The state of the HCP Consul cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
