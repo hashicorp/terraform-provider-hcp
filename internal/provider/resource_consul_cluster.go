@@ -150,8 +150,23 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			// computed outputs
+			"organization_id": {
+				Description: "The ID of the organization this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the project this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"cloud_provider": {
 				Description: "The provider where the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"region": {
+				Description: "The region where the HCP Consul cluster is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -165,8 +180,13 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
-			"consul_ca_file": {
-				Description: "The cluster CA file encoded as a Base64 string.",
+			"consul_snapshot_interval": {
+				Description: "The Consul snapshot interval.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_snapshot_retention": {
+				Description: "The retention policy for Consul snapshots.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -175,13 +195,23 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"consul_private_endpoint_url": {
-				Description: "The private URL for the Consul UI.",
+			"consul_ca_file": {
+				Description: "The cluster CA file encoded as a Base64 string.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_version": {
+				Description: "The Consul version of the cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"consul_public_endpoint_url": {
 				Description: "The public URL for the Consul UI. This will be empty if `public_endpoint` is `false`.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_private_endpoint_url": {
+				Description: "The private URL for the Consul UI.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -195,36 +225,6 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
-			},
-			"consul_snapshot_interval": {
-				Description: "The Consul snapshot interval.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"consul_snapshot_retention": {
-				Description: "The retention policy for Consul snapshots.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"consul_version": {
-				Description: "The Consul version of the cluster.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"organization_id": {
-				Description: "The ID of the organization this HCP Consul cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"region": {
-				Description: "The region where the HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
 			},
 			"scale": {
 				Description: "The number of Consul server nodes in the cluster.",
@@ -571,6 +571,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
 	}
 
+	// we should only ever get a CodeNotFound response if the cluster is deleted. The below is precautionary
 	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateDELETED {
 		log.Printf("[WARN] Consul cluster (%s) was deleted", clusterID)
 		d.SetId("")
