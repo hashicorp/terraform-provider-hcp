@@ -25,6 +25,7 @@ resource "hcp_consul_cluster" "test" {
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "standard"
 	size	   = "small"
+}
 `
 
 func setTestAccConsulClusterConfig(consulCluster string) string {
