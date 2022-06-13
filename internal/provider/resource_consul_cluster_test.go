@@ -24,7 +24,7 @@ resource "hcp_consul_cluster" "test" {
 	cluster_id = "test-consul-cluster"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "development"
-	size	   = "medium"
+	size	   = "X_SMALL"
 }
 `
 
@@ -81,12 +81,12 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_hvn_to_hvn_peering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_state", "RUNNING"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_ca_file"),
 					resource.TestCheckResourceAttrPair(resourceName, "consul_version", dataSourceVersionName, "recommended"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_state"),
 					resource.TestCheckNoResourceAttr(resourceName, "consul_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_private_endpoint_url"),
 					testAccCheckFullURL(resourceName, "consul_private_endpoint_url", ""),
@@ -128,12 +128,12 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_state", "RUNNING"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_ca_file"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_state"),
 					resource.TestCheckNoResourceAttr(resourceName, "consul_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_private_endpoint_url"),
 					testAccCheckFullURL(resourceName, "consul_private_endpoint_url", ""),
