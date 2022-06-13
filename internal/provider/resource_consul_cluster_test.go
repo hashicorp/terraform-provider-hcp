@@ -14,7 +14,7 @@ var consulCluster = `
 resource "hcp_consul_cluster" "test" {
 	cluster_id         = "test-consul-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
-	tier               = "standard"
+	tier               = "development"
 	min_consul_version = data.hcp_consul_versions.test.recommended
 }
 `
@@ -23,7 +23,7 @@ var updatedConsulCluster = `
 resource "hcp_consul_cluster" "test" {
 	cluster_id = "test-consul-cluster"
 	hvn_id     = hcp_hvn.test.hvn_id
-	tier       = "standard"
+	tier       = "development"
 	size	   = "medium"
 }
 `
@@ -71,7 +71,7 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
@@ -119,7 +119,7 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
