@@ -33,6 +33,7 @@ data "hcp_consul_cluster" "example" {
 
 - `auto_hvn_to_hvn_peering` (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.
 - `cloud_provider` (String) The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.
+- `cluster_state` (String) The state of the HCP Consul cluster.
 - `connect_enabled` (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - `consul_automatic_upgrades` (Boolean) Denotes that automatic Consul upgrades are enabled.
 - `consul_ca_file` (String) The cluster CA file encoded as a Base64 string.
