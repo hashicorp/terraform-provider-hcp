@@ -150,23 +150,13 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			// computed outputs
-			"organization_id": {
-				Description: "The ID of the organization this HCP Consul cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"cloud_provider": {
 				Description: "The provider where the HCP Consul cluster is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"region": {
-				Description: "The region where the HCP Consul cluster is located.",
+			"cluster_state": {
+				Description: "The state of the HCP Consul cluster.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -175,13 +165,8 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
-			"consul_snapshot_interval": {
-				Description: "The Consul snapshot interval.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"consul_snapshot_retention": {
-				Description: "The retention policy for Consul snapshots.",
+			"consul_ca_file": {
+				Description: "The cluster CA file encoded as a Base64 string.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -190,23 +175,13 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"consul_ca_file": {
-				Description: "The cluster CA file encoded as a Base64 string.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"consul_version": {
-				Description: "The Consul version of the cluster.",
+			"consul_private_endpoint_url": {
+				Description: "The private URL for the Consul UI.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"consul_public_endpoint_url": {
 				Description: "The public URL for the Consul UI. This will be empty if `public_endpoint` is `false`.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"consul_private_endpoint_url": {
-				Description: "The private URL for the Consul UI.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -220,6 +195,36 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
+			},
+			"consul_snapshot_interval": {
+				Description: "The Consul snapshot interval.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_snapshot_retention": {
+				Description: "The retention policy for Consul snapshots.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"consul_version": {
+				Description: "The Consul version of the cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"organization_id": {
+				Description: "The ID of the organization this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"project_id": {
+				Description: "The ID of the project this HCP Consul cluster is located in.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"region": {
+				Description: "The region where the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"scale": {
 				Description: "The number of Consul server nodes in the cluster.",
@@ -382,10 +387,18 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", payload.Cluster.ID, err)
 	}
 
+	if err := setConsulClusterResourceData(d, cluster); err != nil {
+		return diag.FromErr(err)
+	}
+
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", payload.Cluster.ID, err)
+	}
+
+	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// create customer root ACL token
@@ -403,19 +416,13 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
-		return diag.FromErr(err)
-	}
-
 	return nil
 }
 
 // setConsulClusterResourceData sets the KV pairs of the Consul cluster resource schema.
 // We do not set consul_root_token_accessor_id and consul_root_token_secret_id here since
 // the original root token is only available during cluster creation.
-func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20210204Cluster,
-	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse) error {
-
+func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20210204Cluster) error {
 	if err := d.Set("cluster_id", cluster.ID); err != nil {
 		return err
 	}
@@ -437,6 +444,10 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("region", cluster.Location.Region.Region); err != nil {
+		return err
+	}
+
+	if err := d.Set("cluster_state", cluster.State); err != nil {
 		return err
 	}
 
@@ -466,14 +477,6 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	if err := d.Set("consul_snapshot_retention", "30d"); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
 		return err
 	}
 
@@ -528,6 +531,22 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	return nil
 }
 
+// setConsulClusterClientConfigResourceData sets all resource data that's derived from client config meta
+func setConsulClusterClientConfigResourceData(
+	d *schema.ResourceData,
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse,
+) error {
+	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -552,12 +571,14 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("unable to fetch Consul cluster (%s): %v", clusterID, err)
 	}
 
-	// The Consul cluster failed to provision properly so we want to let the user know and
-	// remove it from state
-	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateFAILED {
-		log.Printf("[WARN] Consul cluster (%s) failed to provision, removing from state", clusterID)
+	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateDELETED {
+		log.Printf("[WARN] Consul cluster (%s) was deleted", clusterID)
 		d.SetId("")
 		return nil
+	}
+
+	if err := setConsulClusterResourceData(d, cluster); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// get the cluster's Consul client config files
@@ -566,8 +587,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
-	// Cluster found, update resource data
-	if err := setConsulClusterResourceData(d, cluster, clientConfigFiles); err != nil {
+	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -666,13 +686,17 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to retrieve Consul cluster (%s): %v", clusterID, err)
 	}
 
-	// get the cluster's Consul client config files
+	if err := setConsulClusterResourceData(d, updatedCluster); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
-	if err := setConsulClusterResourceData(d, updatedCluster, clientConfigFiles); err != nil {
+	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
