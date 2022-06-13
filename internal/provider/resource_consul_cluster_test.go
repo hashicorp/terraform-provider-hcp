@@ -23,9 +23,8 @@ var updatedConsulCluster = `
 resource "hcp_consul_cluster" "test" {
 	cluster_id = "test-consul-cluster"
 	hvn_id     = hcp_hvn.test.hvn_id
-	tier       = "development"
-	size	   = "X_SMALL"
-}
+	tier       = "standard"
+	size	   = "small"
 `
 
 func setTestAccConsulClusterConfig(consulCluster string) string {
@@ -189,7 +188,7 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(updatedConsulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "size", "MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "size", "small"),
 				),
 			},
 		},
