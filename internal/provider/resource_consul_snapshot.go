@@ -88,7 +88,7 @@ func resourceConsulSnapshot() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"snapshot_state": {
+			"state": {
 				Description: "The state of an HCP Consul snapshot.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -261,7 +261,7 @@ func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodel
 		return err
 	}
 
-	if err := d.Set("snapshot_state", snapshot.State); err != nil {
+	if err := d.Set("state", snapshot.State); err != nil {
 		return err
 	}
 

@@ -33,7 +33,6 @@ data "hcp_consul_cluster" "example" {
 
 - `auto_hvn_to_hvn_peering` (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation.
 - `cloud_provider` (String) The provider where the HCP Consul cluster is located. Only 'aws' is available at this time.
-- `cluster_state` (String) The state of the HCP Consul cluster.
 - `connect_enabled` (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - `consul_automatic_upgrades` (Boolean) Denotes that automatic Consul upgrades are enabled.
 - `consul_ca_file` (String) The cluster CA file encoded as a Base64 string.
@@ -54,6 +53,7 @@ data "hcp_consul_cluster" "example" {
 - `scale` (Number) The the number of Consul server nodes in the cluster.
 - `self_link` (String) A unique URL identifying the HCP Consul cluster.
 - `size` (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul
+- `state` (String) The state of the HCP Consul cluster.
 - `tier` (String) The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time.
 
 <a id="nestedblock--timeouts"></a>
