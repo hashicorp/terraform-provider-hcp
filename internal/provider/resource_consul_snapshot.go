@@ -58,8 +58,13 @@ func resourceConsulSnapshot() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			// computed outputs
-			"consul_version": {
-				Description: "The version of Consul at the time of snapshot creation.",
+			"project_id": {
+				Description: "The ID of the project the HCP Consul cluster is located.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"snapshot_id": {
+				Description: "The ID of the Consul snapshot",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -68,23 +73,18 @@ func resourceConsulSnapshot() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"project_id": {
-				Description: "The ID of the project the HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"restored_at": {
-				Description: "Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			"size": {
 				Description: "The size of the snapshot in bytes.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
-			"snapshot_id": {
-				Description: "The ID of the Consul snapshot",
+			"consul_version": {
+				Description: "The version of Consul at the time of snapshot creation.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"restored_at": {
+				Description: "Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
