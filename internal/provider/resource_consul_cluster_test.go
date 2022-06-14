@@ -189,7 +189,7 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(updatedConsulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "size", "small"),
+					resource.TestCheckResourceAttr(resourceName, "size", "SMALL"),
 				),
 			},
 		},
