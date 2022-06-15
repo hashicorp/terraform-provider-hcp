@@ -1,3 +1,10 @@
+## 0.32.0 (June 15, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.9.0 to 0.10.1 ([#328](https://github.com/hashicorp/terraform-provider-hcp/pull/328))
+* provider: Fixes error handling when Terraform cannot connect to status.hashicorp.com ([#325](https://github.com/hashicorp/terraform-provider-hcp/pull/325))
+
 ## 0.31.0 (June 8, 2022)
 
 IMPROVEMENTS:
