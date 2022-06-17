@@ -28,7 +28,13 @@ var (
 		cloud_provider = "aws"
 		iteration_id   = data.hcp_packer_iteration.alpine-imagetest.id
 		region         = "us-east-1"
-	}`, acctestImageBucket, acctestImageChannel, acctestImageBucket)
+	}
+
+	# we make sure that this won't fail even when revoke_at is not set
+	output "revoke_at" {
+  		value = data.hcp_packer_iteration.alpine-imagetest.revoke_at
+	}
+`, acctestImageBucket, acctestImageChannel, acctestImageBucket)
 
 	testAccPackerImageUbuntuProduction = fmt.Sprintf(`
 	data "hcp_packer_iteration" "ubuntu-imagetest" {
@@ -41,7 +47,13 @@ var (
 		cloud_provider = "aws"
 		iteration_id   = data.hcp_packer_iteration.ubuntu-imagetest.id
 		region         = "us-east-1"
-	}`, acctestUbuntuImageBucket, acctestImageChannel, acctestUbuntuImageBucket)
+	}
+
+	# we make sure that this won't fail even when revoke_at is not set
+	output "revoke_at" {
+  		value = data.hcp_packer_image.ubuntu-foo.revoke_at
+	}
+`, acctestUbuntuImageBucket, acctestImageChannel, acctestUbuntuImageBucket)
 )
 
 func TestAcc_dataSourcePackerImage(t *testing.T) {

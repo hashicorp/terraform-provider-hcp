@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -73,6 +74,11 @@ func dataSourcePackerIteration() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"revoke_at": {
+				Description: "The revocation time of this iteration",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -126,6 +132,11 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	if err := d.Set("updated_at", iteration.UpdatedAt.String()); err != nil {
 		return diag.FromErr(err)
+	}
+	if !time.Time(iteration.RevokeAt).IsZero() {
+		if err := d.Set("revoke_at", iteration.RevokeAt.String()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

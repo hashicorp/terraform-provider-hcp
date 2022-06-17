@@ -84,6 +84,11 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeMap,
 				Computed:    true,
 			},
+			"revoke_at": {
+				Description: "The revocation time of this build",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -140,6 +145,11 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 				}
 				if err := d.Set("labels", build.Labels); err != nil {
 					return diag.FromErr(err)
+				}
+				if !time.Time(iteration.RevokeAt).IsZero() {
+					if err := d.Set("revoke_at", iteration.RevokeAt.String()); err != nil {
+						return diag.FromErr(err)
+					}
 				}
 			}
 		}

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"log"
+	"time"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -52,6 +53,11 @@ func dataSourcePackerImageIteration() *schema.Resource {
 			},
 			"created_at": {
 				Description: "Creation time of this iteration",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"revoke_at": {
+				Description: "The revocation time of this iteration",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -174,6 +180,11 @@ func dataSourcePackerImageIterationRead(ctx context.Context, d *schema.ResourceD
 	}
 	if err := d.Set("created_at", iteration.CreatedAt.String()); err != nil {
 		return diag.FromErr(err)
+	}
+	if !time.Time(iteration.RevokeAt).IsZero() {
+		if err := d.Set("revoke_at", iteration.RevokeAt.String()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("builds", flattenPackerBuildList(iteration.Builds)); err != nil {
 		return diag.FromErr(err)

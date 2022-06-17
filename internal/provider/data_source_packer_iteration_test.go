@@ -19,7 +19,12 @@ var (
 	data "hcp_packer_iteration" "alpine" {
 		bucket_name  = %q
 		channel = %q
-	}`, acctestIterationBucket, acctestIterationChannel)
+	}
+    # we make sure that this won't fail even when revoke_at is not set
+	output "revoke_at" {
+  		value = data.hcp_packer_iteration.alpine.revoke_at
+	}
+`, acctestIterationBucket, acctestIterationChannel)
 )
 
 func TestAcc_dataSourcePackerIteration(t *testing.T) {
