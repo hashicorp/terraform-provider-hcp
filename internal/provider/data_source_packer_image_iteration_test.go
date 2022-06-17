@@ -21,6 +21,7 @@ import (
 
 const (
 	acctestAlpineBucket      = "alpine-acctest"
+	acctestUbuntuBucket      = "ubuntu-acctest"
 	acctestProductionChannel = "production"
 )
 
@@ -30,6 +31,11 @@ var (
 		bucket_name  = %q
 		channel = %q
 	}`, acctestAlpineBucket, acctestProductionChannel)
+	testAccPackerUbuntuProductionImage = fmt.Sprintf(`
+	data "hcp_packer_image_iteration" "ubuntu" {
+		bucket_name  = %q
+		channel = %q
+	}`, acctestUbuntuBucket, acctestProductionChannel)
 )
 
 func upsertRegistry(t *testing.T) {
@@ -403,7 +409,7 @@ func deleteIteration(t *testing.T, bucketSlug string, iterationFingerprint strin
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	iterationID, err := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, iterationFingerprint)
+	iterationID, err := getIterationIDFromFingerPrint(t, bucketSlug, iterationFingerprint)
 	if err != nil {
 		if logOnError {
 			t.Logf(err.Error())
@@ -483,6 +489,50 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
+	resourceName := "data.hcp_packer_image_iteration.ubuntu"
+	fingerprint := "42"
+	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			deleteChannel(t, acctestUbuntuBucket, acctestProductionChannel, false)
+			deleteIteration(t, acctestUbuntuBucket, fingerprint, false)
+			deleteBucket(t, acctestUbuntuBucket, false)
+			return nil
+		},
+
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					upsertRegistry(t)
+					upsertBucket(t, acctestUbuntuBucket)
+					upsertIteration(t, acctestUbuntuBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
+					upsertBuild(t, acctestUbuntuBucket, fingerprint, itID)
+					createChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
+					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
+					// it's assigned to a channel
+					revokeIteration(t, itID, acctestUbuntuBucket, revokeAt)
+					// Sleep to make sure the iteration is revoked when we test
+					time.Sleep(5 * time.Second)
+				},
+				Config: testConfig(testAccPackerUbuntuProductionImage),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttr(resourceName, "revoke_at", revokeAt.String()),
 				),
 			},
 		},
