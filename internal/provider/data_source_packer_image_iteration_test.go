@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
+	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
@@ -199,7 +200,7 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	t.Errorf("unexpected CreateIteration error, expected nil or 409. Got %v", err)
 }
 
-func revokeIteration(t *testing.T, iterationID, bucketSlug, revokeIn string) {
+func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strfmt.DateTime) {
 	t.Helper()
 	client := testAccProvider.Meta().(*clients.Client)
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -213,7 +214,7 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug, revokeIn string) {
 	params.IterationID = iterationID
 	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{
 		BucketSlug: bucketSlug,
-		RevokeIn:   revokeIn,
+		RevokeAt:   revokeAt,
 	}
 
 	_, err := client.Packer.PackerServiceUpdateIteration(params, nil)

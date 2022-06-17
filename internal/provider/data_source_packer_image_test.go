@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -97,6 +98,7 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 
 func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 	fingerprint := fmt.Sprintf("%d", rand.Int())
+	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
@@ -124,12 +126,13 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 					createChannel(t, acctestUbuntuImageBucket, acctestImageChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
-					revokeIteration(t, itID, acctestUbuntuImageBucket, "5s")
+					revokeIteration(t, itID, acctestUbuntuImageBucket, revokeAt)
 					// Sleep to make sure the iteration is revoked when we test
 					time.Sleep(5 * time.Second)
 				},
 				Config: testConfig(testAccPackerImageUbuntuProduction),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "error_revoked"),
 				),
 			},
