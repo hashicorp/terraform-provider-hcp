@@ -226,14 +226,6 @@ func resourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("unable to retrieve transit gateway attachment (%s): %v", tgwAttID, err)
 	}
 
-	// The TGW attachment failed to provision properly so we want to let the user know and
-	// remove it from state
-	if tgwAtt.State == networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateFAILED {
-		log.Printf("[WARN] Transit gateway attachment (%s) failed to provision, removing from state", tgwAtt.ID)
-		d.SetId("")
-		return nil
-	}
-
 	// TGW attachment has been found, update resource data
 	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)

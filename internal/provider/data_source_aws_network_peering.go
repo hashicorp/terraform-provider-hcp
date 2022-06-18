@@ -85,6 +85,11 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the network peering.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
