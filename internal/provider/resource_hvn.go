@@ -105,6 +105,11 @@ func resourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the HVN.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -203,9 +208,8 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
 	}
 
-	// The HVN failed to provision properly so we want to let the user know and remove it from
-	// state
-	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateFAILED {
+	// The HVN has already been deleted, remove from state.
+	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateDELETED {
 		log.Printf("[WARN] HVN (%s) failed to provision, removing from state", hvnID)
 		d.SetId("")
 		return nil
@@ -276,6 +280,9 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 		return err
 	}
 	if err := d.Set("created_at", hvn.CreatedAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("state", hvn.State); err != nil {
 		return err
 	}
 

@@ -98,6 +98,11 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the Azure peering connection.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

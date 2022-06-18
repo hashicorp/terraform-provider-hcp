@@ -60,6 +60,11 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the HVN peering connection.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }

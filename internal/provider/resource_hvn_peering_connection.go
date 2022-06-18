@@ -72,6 +72,11 @@ func resourceHvnPeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the HVN peering connection.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -188,12 +193,6 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
-	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
-		log.Printf("[WARN] Peering connection (%s) failed to provision, removing from state", peering.ID)
-		d.SetId("")
-		return nil
-	}
-
 	hvnLink2 := newLink(peering.Target.HvnTarget.Hvn.Location, HvnResourceType, peering.Target.HvnTarget.Hvn.ID)
 	hvnURL2, err := linkURL(hvnLink2)
 	if err != nil {
@@ -301,6 +300,9 @@ func setHvnPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 		return err
 	}
 	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("state", peering.ExpiresAt.String()); err != nil {
 		return err
 	}
 
