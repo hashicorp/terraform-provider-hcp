@@ -5,7 +5,7 @@ description: |-
   The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.
 ---
 
-# Data Source (hcp_azure_peering_connection)
+# hcp_azure_peering_connection (Data Source)
 
 -> **Note:** This data source is currently in public beta.
 

@@ -5,7 +5,7 @@ description: |-
   The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 ---
 
-# Resource (hcp_hvn)
+# hcp_hvn (Resource)
 
 The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 

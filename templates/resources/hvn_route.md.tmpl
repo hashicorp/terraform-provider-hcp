@@ -5,7 +5,7 @@ description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
 
-# {{.Type}} ({{.Name}})
+# {{.Name}} ({{.Type}})
 
 ~> **Migration Required:** The release of HVN Routes in v0.7.0 includes breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This guide](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/hvn-route-migration-guide) walks through how to migrate to the new resource syntax.
 Please pin to the previous version to avoid disruption until you are ready to migrate.

@@ -5,7 +5,7 @@ description: |-
   The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.
 ---
 
-# Resource (hcp_vault_cluster_admin_token)
+# hcp_vault_cluster_admin_token (Resource)
 
 ~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
