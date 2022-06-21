@@ -5,7 +5,7 @@ description: |-
   The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
 ---
 
-# Data Source (hcp_packer_image)
+# hcp_packer_image (Data Source)
 
 The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
 

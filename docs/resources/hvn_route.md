@@ -5,7 +5,7 @@ description: |-
   The HVN route resource allows you to manage an HVN route.
 ---
 
-# Resource (hcp_hvn_route)
+# hcp_hvn_route (Resource)
 
 ~> **Migration Required:** The release of HVN Routes in v0.7.0 includes breaking changes that affect `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment`. [This guide](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/hvn-route-migration-guide) walks through how to migrate to the new resource syntax.
 Please pin to the previous version to avoid disruption until you are ready to migrate.

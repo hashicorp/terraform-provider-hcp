@@ -52,7 +52,7 @@ func resourceHvn() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description:      "The provider where the HVN is located. Only 'aws' is available at this time.",
+				Description:      "The provider where the HVN is located. The provider 'aws' is generally available and 'azure' is in public beta.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,

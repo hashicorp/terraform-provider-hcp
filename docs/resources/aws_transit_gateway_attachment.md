@@ -5,7 +5,7 @@ description: |-
   The AWS transit gateway attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.
 ---
 
-# Resource (hcp_aws_transit_gateway_attachment)
+# hcp_aws_transit_gateway_attachment (Resource)
 
 ~> **Security Notice:** This resource contains sensitive input. Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
