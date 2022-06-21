@@ -5,7 +5,7 @@ description: |-
   The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.
 ---
 
-# Data Source (hcp_packer_image_iteration)
+# hcp_packer_image_iteration (Data Source)
 
 The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.
 

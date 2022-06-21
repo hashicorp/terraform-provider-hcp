@@ -5,7 +5,7 @@ description: |-
   The Vault cluster resource allows you to manage an HCP Vault cluster.
 ---
 
-# Resource (hcp_vault_cluster)
+# hcp_vault_cluster (Resource)
 
 The Vault cluster resource allows you to manage an HCP Vault cluster.
 

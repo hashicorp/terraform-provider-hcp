@@ -5,7 +5,7 @@ description: |-
   The cluster root token resource is the token used to bootstrap the cluster's ACL system. You can also generate this root token from the HCP Consul UI.
 ---
 
-# Resource (hcp_consul_cluster_root_token)
+# hcp_consul_cluster_root_token (Resource)
 
 ~> **Security Notice:** Please see this [list of recommendations](https://www.terraform.io/docs/language/state/sensitive-data.html) for storing sensitive information in Terraform.
 
