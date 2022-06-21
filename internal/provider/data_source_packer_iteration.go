@@ -75,7 +75,7 @@ func dataSourcePackerIteration() *schema.Resource {
 				Computed:    true,
 			},
 			"revoke_at": {
-				Description: "The revocation time of this iteration",
+				Description: "The revocation time of this iteration. This field will be null for any iteration that has not been revoked or scheduled for revocation.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

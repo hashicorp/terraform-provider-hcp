@@ -85,7 +85,7 @@ func dataSourcePackerImage() *schema.Resource {
 				Computed:    true,
 			},
 			"revoke_at": {
-				Description: "The revocation time of this build",
+				Description: "The revocation time of this build. This field will be null for any build that has not been revoked or scheduled for revocation.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

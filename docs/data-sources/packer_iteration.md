@@ -39,7 +39,7 @@ data "hcp_packer_iteration" "hardened-source" {
 - `incremental_version` (Number) Incremental version of this iteration
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `project_id` (String) The ID of the project this HCP Packer registry is located in.
-- `revoke_at` (String) The revocation time of this iteration
+- `revoke_at` (String) The revocation time of this iteration. This field will be null for any iteration that has not been revoked or scheduled for revocation.
 - `ulid` (String) The ULID of this iteration.
 - `updated_at` (String) Time this build was last updated.
 
