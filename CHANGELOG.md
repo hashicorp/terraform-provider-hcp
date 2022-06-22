@@ -1,3 +1,13 @@
+## 0.33.0 (June 22, 2022)
+
+IMPROVEMENTS:
+* datasource/hcp_packer_image: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
+* datasource/hcp_packer_iteration: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
+* datasource/hcp_packer_image_iteration: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
+
+FIXES:
+* docs: update HVN with Azure & make resource titles consistent ([#333](https://github.com/hashicorp/terraform-provider-hcp/pull/333))
+
 ## 0.32.0 (June 15, 2022)
 
 IMPROVEMENTS:
