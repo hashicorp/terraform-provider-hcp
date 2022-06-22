@@ -56,6 +56,7 @@ output "packer-registry-ubuntu" {
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `packer_run_uuid` (String) UUID of this build.
 - `project_id` (String) The ID of the project this HCP Packer registry is located in.
+- `revoke_at` (String) The revocation time of this build. This field will be null for any build that has not been revoked or scheduled for revocation.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
