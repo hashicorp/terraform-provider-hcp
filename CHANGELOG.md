@@ -1,4 +1,4 @@
-## 0.33.0 (June 15, 2022)
+## 0.33.0 (June 22, 2022)
 
 IMPROVEMENTS:
 * datasource/hcp_packer_image: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
