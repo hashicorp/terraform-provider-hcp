@@ -106,6 +106,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckNoResourceAttr(vaultClusterResourceName, "vault_public_endpoint_url"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", ""),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "state"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "created_at"),
 
 					// Verifies admin token
@@ -147,6 +148,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "state"),
 				),
 			},
 			// Tests datasource
@@ -168,6 +170,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "vault_private_endpoint_url", vaultClusterDataSourceName, "vault_private_endpoint_url"),
 					testAccCheckFullURL(vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "created_at", vaultClusterDataSourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "state", vaultClusterDataSourceName, "state"),
 				),
 			},
 			// This step verifies the successful update of "tier"

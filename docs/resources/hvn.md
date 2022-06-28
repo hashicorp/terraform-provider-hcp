@@ -54,6 +54,7 @@ resource "hcp_hvn" "example" {
 - `project_id` (String) The ID of the HCP project where the HVN is located.
 - `provider_account_id` (String) The provider account ID where the HVN is located.
 - `self_link` (String) A unique URL identifying the HVN.
+- `state` (String) The state of the HVN.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

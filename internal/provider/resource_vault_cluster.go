@@ -247,6 +247,11 @@ func resourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -425,9 +430,8 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
 
-	// The Vault cluster failed to provision properly so we want to let the user know and
-	// remove it from state.
-	if cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateFAILED {
+	// The Vault cluster was already deleted, remove from state.
+	if cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateDELETED {
 		log.Printf("[WARN] Vault cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil
@@ -684,6 +688,10 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	}
 
 	if err := d.Set("namespace", cluster.Config.VaultConfig.Namespace); err != nil {
+		return err
+	}
+
+	if err := d.Set("state", cluster.State); err != nil {
 		return err
 	}
 

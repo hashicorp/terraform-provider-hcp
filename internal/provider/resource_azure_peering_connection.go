@@ -113,6 +113,11 @@ func resourceAzurePeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the Azure peering connection.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -254,14 +259,6 @@ func resourceAzurePeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
-	// The peering connection failed to provision properly so we want to let the user know and
-	// remove it from state
-	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
-		log.Printf("[WARN] peering connection (%s) failed to provision, removing from state", peering.ID)
-		d.SetId("")
-		return nil
-	}
-
 	// peering connection found, update resource data
 	if err := setAzurePeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
@@ -350,6 +347,9 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 		return err
 	}
 	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("state", peering.State); err != nil {
 		return err
 	}
 

@@ -189,13 +189,6 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("unable to retrieve HVN route (%s): %v", idLink.ID, err)
 	}
 
-	// The HVN route failed to provision properly so we want to let the user know and remove it from state.
-	if route.State == networkmodels.HashicorpCloudNetwork20200907HVNRouteStateFAILED {
-		log.Printf("[WARN] HVN route (%s) failed to provision, removing from state", idLink.ID)
-		d.SetId("")
-		return nil
-	}
-
 	// HVN route found, update resource data.
 	if err := setHVNRouteResourceData(d, route, loc); err != nil {
 		return diag.FromErr(err)

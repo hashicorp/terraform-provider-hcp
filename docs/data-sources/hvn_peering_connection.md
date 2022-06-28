@@ -41,6 +41,7 @@ data "hcp_hvn_peering_connection" "test" {
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.
 - `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.
 - `self_link` (String) A unique URL identifying the peering connection
+- `state` (String) The state of the HVN peering connection.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

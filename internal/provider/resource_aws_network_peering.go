@@ -98,6 +98,11 @@ func resourceAwsNetworkPeering() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the network peering.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -231,14 +236,6 @@ func resourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
-	// The network peering failed to provision properly so we want to let the user know and
-	// remove it from state
-	if peering.State == networkmodels.HashicorpCloudNetwork20200907PeeringStateFAILED {
-		log.Printf("[WARN] Network peering (%s) failed to provision, removing from state", peering.ID)
-		d.SetId("")
-		return nil
-	}
-
 	// Network peering found, update resource data
 	if err := setAwsPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
@@ -319,6 +316,9 @@ func setAwsPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 		return err
 	}
 	if err := d.Set("expires_at", peering.ExpiresAt.String()); err != nil {
+		return err
+	}
+	if err := d.Set("state", peering.State); err != nil {
 		return err
 	}
 

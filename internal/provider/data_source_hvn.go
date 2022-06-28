@@ -67,6 +67,11 @@ func dataSourceHvn() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the HVN route.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
