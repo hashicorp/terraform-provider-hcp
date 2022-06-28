@@ -88,6 +88,11 @@ func resourceConsulSnapshot() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of an HCP Consul snapshot.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -165,14 +170,6 @@ func resourceConsulSnapshotRead(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		return diag.Errorf("unable to fetch Consul snapshot (%s): %v", snapshotID, err)
-	}
-
-	// The Consul snapshot failed to provision properly so we want to let the user know and
-	// remove it from state
-	if snapshotResp.Snapshot.State == consulmodels.HashicorpCloudConsul20210204SnapshotSnapshotStateCREATINGFAILED {
-		log.Printf("[WARN] Consul snapshot (%s) failed to provision, removing from state", snapshotResp.Snapshot.ID)
-		d.SetId("")
-		return nil
 	}
 
 	if err := setConsulSnapshotResourceData(d, snapshotResp.Snapshot); err != nil {
@@ -261,6 +258,10 @@ func setConsulSnapshotResourceData(d *schema.ResourceData, snapshot *consulmodel
 	}
 
 	if err := d.Set("snapshot_id", snapshot.ID); err != nil {
+		return err
+	}
+
+	if err := d.Set("state", snapshot.State); err != nil {
 		return err
 	}
 

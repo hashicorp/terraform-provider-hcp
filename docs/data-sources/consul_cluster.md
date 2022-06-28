@@ -53,6 +53,7 @@ data "hcp_consul_cluster" "example" {
 - `scale` (Number) The the number of Consul server nodes in the cluster.
 - `self_link` (String) A unique URL identifying the HCP Consul cluster.
 - `size` (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul
+- `state` (String) The state of the HCP Consul cluster.
 - `tier` (String) The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time.
 
 <a id="nestedblock--timeouts"></a>
