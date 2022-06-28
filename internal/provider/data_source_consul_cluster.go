@@ -64,6 +64,11 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"state": {
+				Description: "The state of the HCP Consul cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"connect_enabled": {
 				Description: "Denotes the Consul connect feature should be enabled for this cluster.  Default to true.",
 				Type:        schema.TypeBool,
@@ -168,22 +173,30 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(url)
 
+	// cluster found, set data source attributes
+	if err := setConsulClusterDataSourceAttributes(d, cluster); err != nil {
+		return diag.FromErr(err)
+	}
+
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
 	}
 
-	// Cluster found, update resource data
-	if err := setConsulClusterDataSourceAttributes(d, cluster, clientConfigFiles); err != nil {
+	// client config found, set data source attributes
+	if err := setConsulClusterClientConfigDataSourceAttributes(d, clientConfigFiles); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func setConsulClusterDataSourceAttributes(d *schema.ResourceData, cluster *consulmodels.HashicorpCloudConsul20210204Cluster,
-	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse) error {
+// setConsulClusterDataSourceAttributes sets all data source attributes from the cluster
+func setConsulClusterDataSourceAttributes(
+	d *schema.ResourceData,
+	cluster *consulmodels.HashicorpCloudConsul20210204Cluster,
+) error {
 
 	if err := d.Set("cluster_id", cluster.ID); err != nil {
 		return err
@@ -218,6 +231,10 @@ func setConsulClusterDataSourceAttributes(d *schema.ResourceData, cluster *consu
 		return err
 	}
 
+	if err := d.Set("state", cluster.State); err != nil {
+		return err
+	}
+
 	if err := d.Set("scale", cluster.Config.CapacityConfig.Scale); err != nil {
 		return err
 	}
@@ -235,14 +252,6 @@ func setConsulClusterDataSourceAttributes(d *schema.ResourceData, cluster *consu
 	}
 
 	if err := d.Set("consul_snapshot_retention", "30d"); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
-		return err
-	}
-
-	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
 		return err
 	}
 
@@ -288,6 +297,22 @@ func setConsulClusterDataSourceAttributes(d *schema.ResourceData, cluster *consu
 		if err := d.Set("primary_link", primary_link); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// setConsulClusterClientConfigResourceData sets all resource data that's derived from client config meta
+func setConsulClusterClientConfigDataSourceAttributes(
+	d *schema.ResourceData,
+	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse,
+) error {
+	if err := d.Set("consul_config_file", clientConfigFiles.ConsulConfigFile.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("consul_ca_file", clientConfigFiles.CaFile.String()); err != nil {
+		return err
 	}
 
 	return nil

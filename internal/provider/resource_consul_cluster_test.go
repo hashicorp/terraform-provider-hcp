@@ -14,7 +14,7 @@ var consulCluster = `
 resource "hcp_consul_cluster" "test" {
 	cluster_id         = "test-consul-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
-	tier               = "standard"
+	tier               = "development"
 	min_consul_version = data.hcp_consul_versions.test.recommended
 }
 `
@@ -24,7 +24,7 @@ resource "hcp_consul_cluster" "test" {
 	cluster_id = "test-consul-cluster"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "standard"
-	size	   = "medium"
+	size	   = "small"
 }
 `
 
@@ -71,16 +71,17 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_hvn_to_hvn_peering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "state", "RUNNING"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
@@ -118,15 +119,16 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
-					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", "RUNNING"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_config_file"),
@@ -161,6 +163,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "consul_config_file", dataSourceName, "consul_config_file"),
 					resource.TestCheckResourceAttrPair(resourceName, "consul_ca_file", dataSourceName, "consul_ca_file"),
 					resource.TestCheckResourceAttrPair(resourceName, "consul_version", dataSourceName, "consul_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceName, "state"),
 					resource.TestCheckResourceAttrPair(resourceName, "consul_public_endpoint_url", dataSourceName, "consul_public_endpoint_url"),
 					resource.TestCheckResourceAttrPair(resourceName, "consul_private_endpoint_url", dataSourceName, "consul_private_endpoint_url"),
 					testAccCheckFullURL(resourceName, "consul_private_endpoint_url", ""),
@@ -186,7 +189,7 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(updatedConsulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "size", "MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "size", "SMALL"),
 				),
 			},
 		},

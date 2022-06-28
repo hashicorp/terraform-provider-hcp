@@ -42,6 +42,7 @@ resource "hcp_consul_snapshot" "example" {
 - `restored_at` (String) Timestamp of when the snapshot was restored. If the snapshot has not been restored, this field will be blank.
 - `size` (Number) The size of the snapshot in bytes.
 - `snapshot_id` (String) The ID of the Consul snapshot
+- `state` (String) The state of an HCP Consul snapshot.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

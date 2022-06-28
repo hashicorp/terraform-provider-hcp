@@ -67,6 +67,7 @@ resource "hcp_consul_cluster" "example" {
 - `region` (String) The region where the HCP Consul cluster is located.
 - `scale` (Number) The number of Consul server nodes in the cluster.
 - `self_link` (String) A unique URL identifying the HCP Consul cluster.
+- `state` (String) The state of the HCP Consul cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

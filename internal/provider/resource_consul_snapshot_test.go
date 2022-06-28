@@ -47,6 +47,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckNoResourceAttr(resourceName, "restored_at"), // Not a restored snapshot
 				),
 			},
@@ -61,6 +62,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckNoResourceAttr(resourceName, "restored_at"), // Not a restored snapshot
 				),
 			},
