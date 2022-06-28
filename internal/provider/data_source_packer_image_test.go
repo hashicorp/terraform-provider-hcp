@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 const (
 	acctestImageBucket       = "alpine-acctest-imagetest"
 	acctestUbuntuImageBucket = "ubuntu-acctest-imagetest"
+	acctestArchImageBucket   = "arch-acctest-imagetest"
 	acctestImageChannel      = "production-image-test"
 )
 
@@ -50,6 +52,25 @@ var (
 		region         = "us-east-1"
 	}
 `, acctestUbuntuImageBucket, acctestImageChannel, acctestUbuntuImageBucket)
+
+	testAccPackerImageBothChanAndIter = fmt.Sprintf(`
+	data "hcp_packer_image" "arch-btw" {
+		bucket_name = %q
+		cloud_provider = "aws"
+		iteration_id = "234567"
+		channel = "chanSlug"
+		region = "us-east-1"
+	}
+`, acctestArchImageBucket)
+
+	testAccPackerImageArchProduction = fmt.Sprintf(`
+	data "hcp_packer_image" "arch-btw" {
+		bucket_name = %q
+		cloud_provider = "aws"
+		channel = %q
+		region = "us-east-1"
+	}
+`, acctestArchImageBucket, acctestImageChannel)
 )
 
 func TestAcc_dataSourcePackerImage(t *testing.T) {
@@ -129,6 +150,65 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "error_revoked"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePackerImage_channelAndIterationIDReject(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			// basically just testing that we don't pass validation here
+			{
+				PlanOnly:    true,
+				Config:      testConfig(testAccPackerImageBothChanAndIter),
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePackerImage_channelAccept(t *testing.T) {
+	fingerprint := "acceptChannel"
+	resourceName := "data.hcp_packer_image.arch-btw"
+	var buildID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories,
+		Steps: []resource.TestStep{
+			{
+				PlanOnly: true,
+				PreConfig: func() {
+					// CheckDestroy doesn't get called when the test fails and doesn't
+					// produce any tf state. In this case we destroy any existing resource
+					// before creating them.
+					deleteChannel(t, acctestArchImageBucket, acctestImageChannel, false)
+					deleteIteration(t, acctestArchImageBucket, fingerprint, false)
+					deleteBucket(t, acctestArchImageBucket, false)
+
+					upsertRegistry(t)
+					upsertBucket(t, acctestArchImageBucket)
+					upsertIteration(t, acctestArchImageBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestArchImageBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
+					upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
+					createChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
+
+					buildID, err = getBuildIDFromIteration(t, acctestArchImageBucket, itID, "aws")
+					if err != nil {
+						t.Fatal(err.Error())
+					}
+				},
+				Config: testConfig(testAccPackerImageArchProduction),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttr(resourceName, "iteration-id", buildID),
 				),
 			},
 		},

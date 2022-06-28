@@ -2,9 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
+	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,15 +35,23 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"iteration_id": {
-				Description: "HCP ID of this image.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
 			"region": {
 				Description: "Region this image is stored in, if any.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			// Optional inputs
+			"iteration_id": {
+				Description:  "HCP ID of this image. Either this or `channel' must be specified.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"channel"},
+			},
+			"channel": {
+				Description:  "Channel that promotes the latest iteration of the image. Either this or `iteration_id` must be specified.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"iteration_id"},
 			},
 			// computed outputs
 			"organization_id": {
@@ -95,9 +105,10 @@ func dataSourcePackerImage() *schema.Resource {
 
 func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	bucketName := d.Get("bucket_name").(string)
-	iterationID := d.Get("iteration_id").(string)
 	cloudProvider := d.Get("cloud_provider").(string)
 	region := d.Get("region").(string)
+	channelName := d.Get("channel")
+	iterationID := d.Get("iteration_id")
 	client := meta.(*clients.Client)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -111,9 +122,49 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, iteration_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID, iterationID)
 
-	iteration, err := clients.GetIterationFromId(ctx, client, loc, bucketName, iterationID)
-	if err != nil {
-		return diag.FromErr(err)
+	var iteration *packermodels.HashicorpCloudPackerIteration
+	var err error
+
+	if iterID, ok := iterationID.(string); ok && iterID != "" {
+		iteration, err = clients.GetIterationFromId(
+			ctx,
+			client,
+			loc,
+			bucketName,
+			iterID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	var channel *packermodels.HashicorpCloudPackerChannel
+
+	if chanSlug, ok := channelName.(string); ok && chanSlug != "" {
+		channel, err = clients.GetPackerChannelBySlug(
+			ctx,
+			client,
+			loc,
+			bucketName,
+			chanSlug)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	var diags diag.Diagnostics
+
+	if channel != nil && iteration != nil {
+		return diag.FromErr(fmt.Errorf(
+			"iteration mismatch: channel %s's iteration (%s) is different from the explicitely specified iteration: %s",
+			channel.Slug,
+			channel.Iteration.ID,
+			iteration.ID))
+	}
+
+	// Assuming we passed the above check, the rest of the channel is not
+	// used after that,
+	if channel != nil {
+		iteration = channel.Iteration
 	}
 
 	found := false
@@ -159,5 +210,5 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("Unable to load image with region %s and cloud %s for iteration %s.", region, cloudProvider, iterationID)
 	}
 
-	return nil
+	return diags
 }

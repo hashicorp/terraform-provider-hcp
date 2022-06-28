@@ -38,11 +38,12 @@ output "packer-registry-ubuntu" {
 
 - `bucket_name` (String) The slug of the HCP Packer Registry image bucket to pull from.
 - `cloud_provider` (String) Name of the cloud provider this image is stored-in.
-- `iteration_id` (String) HCP ID of this image.
 - `region` (String) Region this image is stored in, if any.
 
 ### Optional
 
+- `channel` (String) Channel that promotes the latest iteration of the image. Either this or `iteration_id` must be specified.
+- `iteration_id` (String) HCP ID of this image. Either this or `channel' must be specified.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
