@@ -2,12 +2,12 @@
 page_title: "Data Source hcp_packer_image - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
+  The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id or a channel.
 ---
 
 # hcp_packer_image (Data Source)
 
-The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id.
+The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id or a channel.
 
 ## Example Usage
 
@@ -38,11 +38,12 @@ output "packer-registry-ubuntu" {
 
 - `bucket_name` (String) The slug of the HCP Packer Registry image bucket to pull from.
 - `cloud_provider` (String) Name of the cloud provider this image is stored-in.
-- `iteration_id` (String) HCP ID of this image.
 - `region` (String) Region this image is stored in, if any.
 
 ### Optional
 
+- `channel` (String) The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified. Note: will incur a billable request
+- `iteration_id` (String) The iteration from which to get the image. Either this or `channel` must be specified.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
