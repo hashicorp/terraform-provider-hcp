@@ -126,6 +126,7 @@ resource "azurerm_role_assignment" "assignment" {
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVN's organization.
 - `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
 - `self_link` (String) A unique URL identifying the peering connection.
+- `state` (String) The state of the Azure peering connection.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -40,6 +40,7 @@ data "hcp_hvn" "example" {
 - `provider_account_id` (String) The provider account ID where the HVN is located.
 - `region` (String) The region where the HVN is located.
 - `self_link` (String) A unique URL identifying the HVN.
+- `state` (String) The state of the HVN route.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
