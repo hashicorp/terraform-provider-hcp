@@ -17,9 +17,9 @@ We recommend the following when selecting the CIDR block of an HVN:
 
 - The CIDR block value must end between /16 and /25.
 
-- If the CIDR block values for your HVN and VPCs overlap, then you will not be able to establish a connection. Ensure that any VPCs you plan to connect do not have overlapping values.
+- If the CIDR block values for your HCP HVN and your cloud provider’s virtual network overlap you will not be able to establish a connection. The following are default CIDR block values to be aware of: HCP HVN (172.25.16.0/20), AWS VPC (172.31.0.0/16), and Azure VNet (172.29.0.0/24). Avoid creating overlapping networks.
 
-- The default HVN CIDR block value does not overlap with the default CIDR block value for AWS VPCs (172.31.0.0/16). However, if you are planning to use this HVN in production, we recommend adding a custom value instead of using the default.
+- If you’re creating a HVN for use in production it's recommended that you specify a CIDR block value that does not overlap with the other HVNs already created in your organization. You will not be able to connect two HVNs with overlapping CIDR block values.
 
 ## Example Usage
 
