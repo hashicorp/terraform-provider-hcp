@@ -251,6 +251,35 @@ func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint 
 	return ok.Payload.Iteration.ID, nil
 }
 
+func getBuildIDFromIteration(t *testing.T, bucketSlug, iterID, cloudProvider string) (string, error) {
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	iterParams := packer_service.NewPackerServiceGetIterationParams()
+	iterParams.LocationOrganizationID = loc.OrganizationID
+	iterParams.LocationProjectID = loc.ProjectID
+	iterParams.BucketSlug = bucketSlug
+	iterParams.IterationID = &iterID
+
+	iterRet, err := client.Packer.PackerServiceGetIteration(iterParams, nil)
+	if err != nil {
+		return "", err
+	}
+	for _, b := range iterRet.Payload.Iteration.Builds {
+		if b.CloudProvider == cloudProvider {
+			return b.ID, nil
+		}
+	}
+
+	return "", fmt.Errorf(
+		"no build found for provider %q in iteration %q",
+		cloudProvider,
+		iterID)
+}
+
 func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	client := testAccProvider.Meta().(*clients.Client)
 
