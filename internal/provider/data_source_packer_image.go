@@ -48,7 +48,7 @@ func dataSourcePackerImage() *schema.Resource {
 				ExactlyOneOf: []string{"channel"},
 			},
 			"channel": {
-				Description:  "Channel that promotes the latest iteration of the image. Either this or `iteration_id` must be specified.",
+				Description:  "The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"iteration_id"},
