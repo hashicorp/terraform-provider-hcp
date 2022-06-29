@@ -51,7 +51,6 @@ func dataSourcePackerImage() *schema.Resource {
 				Description:  "The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified.",
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"iteration_id"},
 			},
 			// computed outputs
 			"organization_id": {
