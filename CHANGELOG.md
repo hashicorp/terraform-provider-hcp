@@ -1,6 +1,19 @@
+## 0.34.0 (June 30, 2022)
+
+IMPROVEMENTS:
+
+* docs: Refactor documentation for `hcp_hvn` resource ([337](https://github.com/hashicorp/terraform-provider-hcp/pull/337))
+
+FIXES:
+
+* resource/consul: Store cluster+snapshot state ([326](https://github.com/hashicorp/terraform-provider-hcp/pull/326))
+* resource/vault: keep failed clusters, export state ([331](https://github.com/hashicorp/terraform-provider-hcp/pull/331))
+* resource/hvn: keep failed networks/peerings, export state ([331](https://github.com/hashicorp/terraform-provider-hcp/pull/331))
+
 ## 0.33.0 (June 22, 2022)
 
 IMPROVEMENTS:
+
 * datasource/hcp_packer_image: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
 * datasource/hcp_packer_iteration: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
 * datasource/hcp_packer_image_iteration: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
