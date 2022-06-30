@@ -11,6 +11,27 @@ The Packer Image data source iteration gets the most recent iteration (or build)
 
 ## Example Usage
 
+### Single image sourcing
+
+```terraform
+data "hcp_packer_image" "baz" {
+  bucket_name    = "hardened-ubuntu-16-04"
+  cloud_provider = "aws"
+  channel        = "production"
+  region         = "us-east-1"
+}
+
+output "packer-registry-ubuntu-east-1" {
+  value = data.hcp_packer_image.baz.cloud_image_id
+}
+```
+
+~> **Note:** The `channel` attribute in this data source may incur a billable request to HCP Packer. This attribute is intended for convenience when using a single image. When sourcing multiple images from a single iteration, the `hcp_packer_iteration` data source is the alternative for querying a channel just once.
+
+~> **Note:** This data source only returns the first found image's metadata filtered by the given schema values, from the returned list of images associated with the specified iteration. Therefore, if multiple images exist in the same region, it will only pick one of them. If that's the case, you may consider separating your builds into different buckets.
+
+### Multiple image sourcing from a single iteration
+
 ```terraform
 data "hcp_packer_iteration" "hardened-source" {
   bucket_name = "hardened-ubuntu-16-04"
@@ -24,8 +45,19 @@ data "hcp_packer_image" "foo" {
   region         = "us-east-1"
 }
 
-output "packer-registry-ubuntu" {
+data "hcp_packer_image" "bar" {
+  bucket_name    = "hardened-ubuntu-16-04"
+  cloud_provider = "aws"
+  iteration_id   = data.hcp_packer_iteration.hardened-source.ulid
+  region         = "us-west-1"
+}
+
+output "packer-registry-ubuntu-east-1" {
   value = data.hcp_packer_image.foo.cloud_image_id
+}
+
+output "packer-registry-ubuntu-west-1" {
+  value = data.hcp_packer_image.bar.cloud_image_id
 }
 ```
 
