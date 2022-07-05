@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 const (
 	acctestImageBucket       = "alpine-acctest-imagetest"
 	acctestUbuntuImageBucket = "ubuntu-acctest-imagetest"
+	acctestArchImageBucket   = "arch-acctest-imagetest"
 	acctestImageChannel      = "production-image-test"
 )
 
@@ -50,6 +52,40 @@ var (
 		region         = "us-east-1"
 	}
 `, acctestUbuntuImageBucket, acctestImageChannel, acctestUbuntuImageBucket)
+
+	testAccPackerImageBothChanAndIter = fmt.Sprintf(`
+	data "hcp_packer_image" "arch-btw" {
+		bucket_name = %q
+		cloud_provider = "aws"
+		iteration_id = "234567"
+		channel = "chanSlug"
+		region = "us-east-1"
+	}
+`, acctestArchImageBucket)
+
+	testAccPackerImageBothChanAndIterRef = fmt.Sprintf(`
+	data "hcp_packer_iteration" "arch-imagetest" {
+		bucket_name = %q
+		channel = %q
+	}
+
+	data "hcp_packer_image" "arch-btw" {
+		bucket_name = %q
+		cloud_provider = "aws"
+		iteration_id = data.hcp_packer_iteration.arch-imagetest.id
+		channel = %q
+		region = "us-east-1"
+	}
+`, acctestArchImageBucket, acctestImageChannel, acctestArchImageBucket, acctestImageChannel)
+
+	testAccPackerImageArchProduction = fmt.Sprintf(`
+	data "hcp_packer_image" "arch-btw" {
+		bucket_name = %q
+		cloud_provider = "aws"
+		channel = %q
+		region = "us-east-1"
+	}
+`, acctestArchImageBucket, acctestImageChannel)
 )
 
 func TestAcc_dataSourcePackerImage(t *testing.T) {
@@ -129,6 +165,81 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "error_revoked"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePackerImage_channelAndIterationIDReject(t *testing.T) {
+	fingerprint := "rejectIterationAndChannel"
+	configs := []string{
+		testAccPackerImageBothChanAndIter,
+		testAccPackerImageBothChanAndIterRef,
+	}
+
+	for _, cfg := range configs {
+		resource.Test(t, resource.TestCase{
+			PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+			ProviderFactories: providerFactories,
+			Steps: []resource.TestStep{
+				// basically just testing that we don't pass validation here
+				{
+					PlanOnly: true,
+					PreConfig: func() {
+						deleteChannel(t, acctestArchImageBucket, acctestImageChannel, false)
+						deleteIteration(t, acctestArchImageBucket, fingerprint, false)
+						deleteBucket(t, acctestArchImageBucket, false)
+
+						upsertRegistry(t)
+						upsertBucket(t, acctestArchImageBucket)
+						upsertIteration(t, acctestArchImageBucket, fingerprint)
+						itID, err := getIterationIDFromFingerPrint(t, acctestArchImageBucket, fingerprint)
+						if err != nil {
+							t.Fatal(err.Error())
+						}
+						upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
+						createChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
+					},
+					Config:      testConfig(cfg),
+					ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+				},
+			},
+		})
+	}
+}
+
+func TestAcc_dataSourcePackerImage_channelAccept(t *testing.T) {
+	fingerprint := "acceptChannel"
+	resourceName := "data.hcp_packer_image.arch-btw"
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			deleteChannel(t, acctestArchImageBucket, acctestImageChannel, false)
+			deleteIteration(t, acctestArchImageBucket, fingerprint, false)
+			deleteBucket(t, acctestArchImageBucket, false)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					upsertRegistry(t)
+					upsertBucket(t, acctestArchImageBucket)
+					upsertIteration(t, acctestArchImageBucket, fingerprint)
+					itID, err := getIterationIDFromFingerPrint(t, acctestArchImageBucket, fingerprint)
+					if err != nil {
+						t.Fatal(err.Error())
+					}
+					upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
+					createChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
+				},
+				Config: testConfig(testAccPackerImageArchProduction),
+				Check: resource.ComposeTestCheckFunc(
+					// build_id is only known at runtime
+					// and the test works on a reset value,
+					// therefore we can only check it's set
+					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
 				),
 			},
 		},
