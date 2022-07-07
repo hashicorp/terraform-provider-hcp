@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcp-sdk-go v0.19.0
 	github.com/hashicorp/terraform-plugin-docs v0.12.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.18.0
 	github.com/stretchr/testify v1.7.4
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d // indirect
 	google.golang.org/grpc v1.47.0
