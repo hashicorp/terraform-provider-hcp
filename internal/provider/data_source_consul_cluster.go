@@ -181,7 +181,8 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		log.Printf("[WARN] unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		return nil
 	}
 
 	// client config found, set data source attributes
@@ -302,7 +303,7 @@ func setConsulClusterDataSourceAttributes(
 	return nil
 }
 
-// setConsulClusterClientConfigResourceData sets all resource data that's derived from client config meta
+// setConsulClusterClientConfigDataSourceAttributes sets all resource data that's derived from client config meta
 func setConsulClusterClientConfigDataSourceAttributes(
 	d *schema.ResourceData,
 	clientConfigFiles *consulmodels.HashicorpCloudConsul20210204GetClientConfigResponse,

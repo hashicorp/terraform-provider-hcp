@@ -394,7 +394,8 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, payload.Cluster.ID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", payload.Cluster.ID, err)
+		log.Printf("[WARN] unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		return nil
 	}
 
 	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
@@ -585,7 +586,8 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	// get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, loc, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		log.Printf("[WARN] unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		return nil
 	}
 
 	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
@@ -694,7 +696,8 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	// Get the cluster's Consul client config files
 	clientConfigFiles, err := clients.GetConsulClientConfigFiles(ctx, client, cluster.Location, clusterID)
 	if err != nil {
-		return diag.Errorf("unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		log.Printf("[WARN] unable to retrieve Consul cluster (%s) client config files: %v", clusterID, err)
+		return nil
 	}
 
 	if err := setConsulClusterClientConfigResourceData(d, clientConfigFiles); err != nil {
