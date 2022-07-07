@@ -1,3 +1,21 @@
+## 0.35.0 (July 07,2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/stretchr/testify` from 1.7.2 to 1.7.4 ([#334](https://github.com/hashicorp/terraform-provider-hcp/pull/334))
+* provider: Bump `github.com/hashicorp/go-version` from 1.5.0 to 1.6.0 ([#341](https://github.com/hashicorp/terraform-provider-hcp/pull/341))
+* provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.10.1 to 0.12.0 ([#342](https://github.com/hashicorp/terraform-provider-hcp/pull/342))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.17.0 to 2.18.0 ([#344](https://github.com/hashicorp/terraform-provider-hcp/pull/344))
+* provider: Bump `github.com/stretchr/testify` from 1.7.4 to 1.8.0 ([#346](https://github.com/hashicorp/terraform-provider-hcp/pull/346))
+
+FEATURES:
+
+* datasource/hcp_packer_image: allow `channel` attribute to get an image ([#339](https://github.com/hashicorp/terraform-provider-hcp/pull/339))
+
+FIXES:
+
+* resource_consul_cluster: only WARN on failed client config calls ([#345](https://github.com/hashicorp/terraform-provider-hcp/pull/345))
+
 ## 0.34.0 (June 30, 2022)
 
 IMPROVEMENTS:
@@ -19,6 +37,7 @@ IMPROVEMENTS:
 * datasource/hcp_packer_image_iteration: Include `revoke_at` in the data source output ([330](https://github.com/hashicorp/terraform-provider-hcp/pull/330))
 
 FIXES:
+
 * docs: update HVN with Azure & make resource titles consistent ([#333](https://github.com/hashicorp/terraform-provider-hcp/pull/333))
 
 ## 0.32.0 (June 15, 2022)
@@ -37,7 +56,7 @@ IMPROVEMENTS:
 * provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.8.1 to 0.9.0 ([#318](https://github.com/hashicorp/terraform-provider-hcp/pull/318))
 * provider: Bump `github.com/stretchr/testify` from 1.7.1 to 1.7.2 ([#321](https://github.com/hashicorp/terraform-provider-hcp/pull/321))
 
-FEATURES: 
+FEATURES:
 
 * resource/vault: Enable metrics_config and audit_log_config ([#319](https://github.com/hashicorp/terraform-provider-hcp/pull/319))
 * resource/consul_cluster: Adds Azure on Consul in public beta ([#320](https://github.com/hashicorp/terraform-provider-hcp/pull/320))
