@@ -17,6 +17,7 @@ const (
 	acctestUbuntuImageBucket = "ubuntu-acctest-imagetest"
 	acctestArchImageBucket   = "arch-acctest-imagetest"
 	acctestImageChannel      = "production-image-test"
+	componentType            = "amazon-ebs.example"
 )
 
 var (
@@ -31,6 +32,27 @@ var (
 		cloud_provider = "aws"
 		iteration_id   = data.hcp_packer_iteration.alpine-imagetest.id
 		region         = "us-east-1"
+		component_type = %q
+	}
+
+	# we make sure that this won't fail even when revoke_at is not set
+	output "revoke_at" {
+  		value = data.hcp_packer_iteration.alpine-imagetest.revoke_at
+	}
+`, acctestImageBucket, acctestImageChannel, acctestImageBucket, componentType)
+
+	testAccPackerImageAlpineProductionError = fmt.Sprintf(`
+	data "hcp_packer_iteration" "alpine-imagetest" {
+		bucket_name  = %q
+		channel = %q
+	}
+
+	data "hcp_packer_image" "foo" {
+		bucket_name    = %q
+		cloud_provider = "aws"
+		iteration_id   = data.hcp_packer_iteration.alpine-imagetest.id
+		region         = "us-east-1"
+		component_type = "amazon-ebs.do-not-exist"
 	}
 
 	# we make sure that this won't fail even when revoke_at is not set
@@ -122,6 +144,12 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttr("data.hcp_packer_image.foo", "labels.test-key", "test-value"),
 				),
+			},
+			// Testing that filtering non-existent image fails properly
+			{
+				PlanOnly:    true,
+				Config:      testAccPackerImageAlpineProductionError,
+				ExpectError: regexp.MustCompile("Error: Unable to load image"),
 			},
 		},
 	})
