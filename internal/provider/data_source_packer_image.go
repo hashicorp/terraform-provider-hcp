@@ -209,10 +209,6 @@ func filterBuildByComponentType(build *packermodels.HashicorpCloudPackerBuild, c
 	if componentType == "" {
 		return true
 	}
-
-	if build.ComponentType == componentType {
-		return true
-	}
-
-	return false
+	// if specified, only the matched image metadata is returned by this effect
+	return build.ComponentType == componentType
 }
