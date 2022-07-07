@@ -198,7 +198,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if !found {
-		return diag.Errorf("Unable to load image with region %s and cloud %s for iteration %s.", region, cloudProvider, iterationID)
+		return diag.Errorf("Unable to load image (region: %s, cloud: %s, iteration: %s, component_type: %s).", region, cloudProvider, iterationID, componentType)
 	}
 
 	return nil
