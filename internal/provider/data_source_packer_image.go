@@ -52,6 +52,12 @@ func dataSourcePackerImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			"component_type": {
+				Description: "Name of the builder that built this image. Ex: `amazon-ebs.example`.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
 			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization this HCP Packer registry is located in.",
@@ -60,11 +66,6 @@ func dataSourcePackerImage() *schema.Resource {
 			},
 			"project_id": {
 				Description: "The ID of the project this HCP Packer registry is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"component_type": {
-				Description: "Name of the builder that built this. Ex: 'amazon-ebs.example'",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -107,6 +108,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	cloudProvider := d.Get("cloud_provider").(string)
 	region := d.Get("region").(string)
 	channelSlug := d.Get("channel").(string)
+	componentType := d.Get("component_type").(string)
 	iterationID := d.Get("iteration_id").(string)
 	client := meta.(*clients.Client)
 
@@ -162,7 +164,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 			continue
 		}
 		for _, image := range build.Images {
-			if image.Region == region {
+			if image.Region == region && filterBuildByComponentType(build, componentType) {
 				found = true
 				d.SetId(image.ID)
 				if err := d.Set("component_type", build.ComponentType); err != nil {
@@ -196,8 +198,17 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if !found {
-		return diag.Errorf("Unable to load image with region %s and cloud %s for iteration %s.", region, cloudProvider, iterationID)
+		return diag.Errorf("Unable to load image (region: %s, cloud: %s, iteration: %s, component_type: %s).", region, cloudProvider, iterationID, componentType)
 	}
 
 	return nil
+}
+
+func filterBuildByComponentType(build *packermodels.HashicorpCloudPackerBuild, componentType string) bool {
+	// optional field is not specified, passthrough
+	if componentType == "" {
+		return true
+	}
+	// if specified, only the matched image metadata is returned by this effect
+	return build.ComponentType == componentType
 }
