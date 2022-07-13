@@ -1,3 +1,11 @@
+## 0.36.0 (July 13,2022)
+
+IMPROVEMENTS:
+
+* provider: Bump google.golang.org/grpc from 1.47.0 to 1.48.0 ([#351](https://github.com/hashicorp/terraform-provider-hcp/pull/351)) 
+* provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.12.0 to 0.13.0 ([#350](https://github.com/hashicorp/terraform-provider-hcp/pull/350))
+* datasource/hcp_packer_image: Add `component_type` optional argument ([#347](https://github.com/hashicorp/terraform-provider-hcp/pull/347))
+
 ## 0.35.0 (July 07,2022)
 
 IMPROVEMENTS:
