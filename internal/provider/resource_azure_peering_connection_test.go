@@ -33,8 +33,8 @@ resource "hcp_azure_peering_connection" "peering" {
   hvn_link                 = hcp_hvn.test.self_link
   peering_id               = "%[1]s"
   peer_vnet_name           = azurerm_virtual_network.vnet.name
-  peer_subscription_id     = "subscription-uuid"
-  peer_tenant_id           = "tenant-uuid"
+  peer_subscription_id     = "%[2]s"
+  peer_tenant_id           = "%[3]s"
   peer_resource_group_name = azurerm_resource_group.rg.name
   peer_vnet_region         = "eastus"
 }
