@@ -121,3 +121,10 @@ Import is supported using the following syntax:
 # The import ID is {cluster_id}
 terraform import hcp_vault_cluster.example vault-cluster
 ```
+
+## Tutorials
+
+Refer to the following tutorials for additional usage examples:
+
+- [Deploy HCP Vault with Terraform](https://learn.hashicorp.com/tutorials/cloud/terraform-hcp-provider-vault) 
+- [Deploy HCP Vault Performance Replication with Terraform](https://learn.hashicorp.com/tutorials/cloud/vault-replication-terraform)
