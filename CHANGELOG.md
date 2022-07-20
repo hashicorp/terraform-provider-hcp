@@ -1,8 +1,17 @@
+## 0.37.0 (July 20,2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/go-openapi/strfmt` from 0.21.2 to 0.21.3  ([#355](https://github.com/hashicorp/terraform-provider-hcp/pull/355))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.18.0 to 2.19.0 ([#354](https://github.com/hashicorp/terraform-provider-hcp/pull/354))
+* resource/vault: Add cross-referencing links to related tutorials ([#353](https://github.com/hashicorp/terraform-provider-hcp/pull/353))
+* resource/azure_peering: fix acceptance test ([#349](https://github.com/hashicorp/terraform-provider-hcp/pull/349))
+
 ## 0.36.0 (July 13,2022)
 
 IMPROVEMENTS:
 
-* provider: Bump google.golang.org/grpc from 1.47.0 to 1.48.0 ([#351](https://github.com/hashicorp/terraform-provider-hcp/pull/351)) 
+* provider: Bump `google.golang.org/grpc` from 1.47.0 to 1.48.0 ([#351](https://github.com/hashicorp/terraform-provider-hcp/pull/351))
 * provider: Bump `github.com/hashicorp/terraform-plugin-docs` from 0.12.0 to 0.13.0 ([#350](https://github.com/hashicorp/terraform-provider-hcp/pull/350))
 * datasource/hcp_packer_image: Add `component_type` optional argument ([#347](https://github.com/hashicorp/terraform-provider-hcp/pull/347))
 
