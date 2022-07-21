@@ -239,8 +239,6 @@ github.com/go-openapi/validate v0.20.1/go.mod h1:b60iJT+xNNLfaQJUqLI7946tYiFEOuE
 github.com/go-openapi/validate v0.20.2/go.mod h1:e7OJoKNgd0twXZwIn0A43tHbvIcr/rZIVCbJBpTUoY0=
 github.com/go-openapi/validate v0.21.0 h1:+Wqk39yKOhfpLqNLEC0/eViCkzM5FVXVqrvt526+wcI=
 github.com/go-openapi/validate v0.21.0/go.mod h1:rjnrwK57VJ7A8xqfpAOEKRH8yQSGUriMu5/zuPSQ1hg=
-github.com/go-ozzo/ozzo-validation v3.6.0+incompatible h1:msy24VGS42fKO9K1vLz82/GeYW1cILu7Nuuj1N3BBkE=
-github.com/go-ozzo/ozzo-validation v3.6.0+incompatible/go.mod h1:gsEKFIVnabGBt6mXmxK0MoFy+cZoTJY6mu5Ll3LVLBU=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-stack/stack v1.8.1/go.mod h1:dcoOX6HbPZSZptuspn9bctJ+N/CnF5gGygcUP3XYfe4=
@@ -365,8 +363,8 @@ github.com/hashicorp/hc-install v0.4.0 h1:cZkRFr1WVa0Ty6x5fTvL1TuO1flul231rWkGH9
 github.com/hashicorp/hc-install v0.4.0/go.mod h1:5d155H8EC5ewegao9A4PUTMNPZaq+TbOzkJJZ4vrXeI=
 github.com/hashicorp/hcl/v2 v2.13.0 h1:0Apadu1w6M11dyGFxWnmhhcMjkbAiKCv7G1r/2QgCNc=
 github.com/hashicorp/hcl/v2 v2.13.0/go.mod h1:e4z5nxYlWNPdDSNYX+ph14EvWYMFm3eP0zIUqPc2jr0=
-github.com/hashicorp/hcp-sdk-go v0.19.0 h1:uaM2YlL84yLz2m9WyeK9HOUmcVkgw1u32aUJx7L64zw=
-github.com/hashicorp/hcp-sdk-go v0.19.0/go.mod h1:z0I0eZ+TVJJ7pycnCzMM/ouOw5D5Qnp/zylNXkqGEX0=
+github.com/hashicorp/hcp-sdk-go v0.20.0 h1:YdzGV98J+TA29W5tvIgTzMBfviVgeCs8eqyAeFzkyoE=
+github.com/hashicorp/hcp-sdk-go v0.20.0/go.mod h1:R44DJFnWufG+C89Ozlg/7ILrK3Ulh8g4zT8t8Ioe0KQ=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/terraform-exec v0.17.2 h1:EU7i3Fh7vDUI9nNRdMATCEfnm9axzTnad8zszYZ73Go=
