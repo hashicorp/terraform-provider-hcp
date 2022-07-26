@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -18,14 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
-
-const (
-	retryCount   = 10
-	retryDelay   = 10
-	counterStart = 1
-)
-
-var errorCodesToRetry = [...]int{502, 503, 504}
 
 func New() func() *schema.Provider {
 	return func() *schema.Provider {
@@ -132,66 +123,13 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 	}
 }
 
-// Helper to check what requests to retry based on the response HTTP code
-func shouldRetryErrorCode(errorCode int, errorCodesToRetry []int) bool {
-	for i := range errorCodesToRetry {
-		if errorCodesToRetry[i] == errorCode {
-			return true
-		}
-	}
-	return false
-}
-
-// Wraps the OrganizationServiceList function in a loop that supports retrying the GET request
-func retryOrganizationServiceList(client *clients.Client, params *organization_service.OrganizationServiceListParams) (*organization_service.OrganizationServiceListOK, error) {
-	resp, err := client.Organization.OrganizationServiceList(params, nil)
-
-	counter := counterStart
-	for err != nil && shouldRetryErrorCode(err.(*organization_service.OrganizationServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
-
-		resp, err = client.Organization.OrganizationServiceList(params, nil)
-		if err == nil {
-			break
-		}
-		// Avoid wasting time if we're not going to retry next loop cycle
-		if (counter + 1) != retryCount {
-			fmt.Printf("Error trying to get list of organizations. Retrying in %d seconds...", retryDelay*counter)
-			time.Sleep(time.Duration(retryDelay*counter) * time.Second)
-		}
-		counter++
-	}
-
-	return resp, err
-}
-
-// Wraps the ProjectServiceList function in a loop that supports retrying the GET request
-func retryProjectServiceList(client *clients.Client, params *project_service.ProjectServiceListParams) (*project_service.ProjectServiceListOK, error) {
-	resp, err := client.Project.ProjectServiceList(params, nil)
-
-	counter := counterStart
-	for err != nil && shouldRetryErrorCode(err.(*project_service.ProjectServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
-		resp, err = client.Project.ProjectServiceList(params, nil)
-		if err == nil {
-			break
-		}
-		// Avoid wasting time if we're not going to retry next loop cycle
-		if (counter + 1) != retryCount {
-			fmt.Printf("Error trying to get list of projects. Retrying in %d seconds...", retryDelay*counter)
-			time.Sleep(time.Duration(retryDelay*counter) * time.Second)
-		}
-		counter++
-	}
-
-	return resp, err
-}
-
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
 func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
-	listOrgResp, err := retryOrganizationServiceList(client, listOrgParams)
+	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch organization list: %v", err)
 	}
@@ -206,7 +144,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 	listProjParams.ScopeID = &orgID
 	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
-	listProjResp, err := retryProjectServiceList(client, listProjParams)
+	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch project id: %v", err)
 	}
