@@ -129,7 +129,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
-	listOrgResp, err := client.Organization.OrganizationServiceList(listOrgParams, nil)
+	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch organization list: %v", err)
 	}
@@ -144,7 +144,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 	listProjParams.ScopeID = &orgID
 	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
-	listProjResp, err := client.Project.ProjectServiceList(listProjParams, nil)
+	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch project id: %v", err)
 	}
