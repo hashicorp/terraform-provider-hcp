@@ -1,3 +1,10 @@
+## 0.38.0 (July 28, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `hcp-sdk-go` from 0.19.0 to 0.20.0 ([#357](https://github.com/hashicorp/terraform-provider-hcp/pull/357))
+* provider: Add retry logic on GET requests when fetching organization and project IDs ([#358](https://github.com/hashicorp/terraform-provider-hcp/pull/358))
+
 ## 0.37.0 (July 20,2022)
 
 IMPROVEMENTS:
