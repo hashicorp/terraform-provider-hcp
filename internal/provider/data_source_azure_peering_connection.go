@@ -16,8 +16,7 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 		Description: "The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.",
 		ReadContext: dataSourceAzurePeeringConnectionRead,
 		Timeouts: &schema.ResourceTimeout{
-			Default: &peeringCreateTimeout,
-			Read:    &peeringCreateTimeout,
+			Read: &peeringCreateTimeout,
 		},
 		Schema: map[string]*schema.Schema{
 			// Required inputs
