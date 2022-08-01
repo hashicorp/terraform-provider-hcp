@@ -9,6 +9,7 @@ import (
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -811,17 +812,25 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		return nil, nil
 	}
 
+	emptyConfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+		Grafana: &vaultmodels.HashicorpCloudVault20201125Grafana{},
+		Splunk:  &vaultmodels.HashicorpCloudVault20201125Splunk{},
+		Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{},
+	}
+
 	//if we don't find the property we return the empty object to be updated and delete the configuration
 	configParam, ok := d.GetOk(propertyName)
 	if !ok {
-		obsconfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
-			Grafana: &vaultmodels.HashicorpCloudVault20201125Grafana{},
-			Splunk:  &vaultmodels.HashicorpCloudVault20201125Splunk{},
-			Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{},
-		}
-		return &obsconfig, nil
+		return &emptyConfig, nil
 	}
-	config := configParam.([]interface{})[0].(map[string]interface{})
+	configIfaceArr, ok := configParam.([]interface{})
+	if !ok || len(configIfaceArr) == 0 {
+		return &emptyConfig, nil
+	}
+	config, ok := configIfaceArr[0].(map[string]interface{})
+	if !ok {
+		return &emptyConfig, nil
+	}
 
 	return getValidObservabilityConfig(config)
 }
