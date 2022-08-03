@@ -52,6 +52,6 @@ data "hcp_aws_network_peering" "test" {
 
 Optional:
 
-- `default` (String)
+- `read` (String)
 
 

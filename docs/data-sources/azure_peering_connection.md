@@ -56,4 +56,4 @@ data "hcp_azure_peering_connection" "test" {
 
 Optional:
 
-- `default` (String)
+- `read` (String)
