@@ -76,7 +76,7 @@ func waitForPeeringToBe(ps peeringState) WaitFor {
 
 		result, err := stateChangeConfig.WaitForStateContext(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("error waiting for peering connection (%s) to become '%s'", peeringID, ps.Target)
+			return nil, fmt.Errorf("error waiting for peering connection (%s) to become '%s': %v", peeringID, ps.Target, err)
 		}
 
 		return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
