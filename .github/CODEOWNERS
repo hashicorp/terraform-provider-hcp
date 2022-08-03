@@ -1,22 +1,22 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-*       @hashicorp/cloud-experiences-go
+*       @hashicorp/cloud-experiences-tooling
 
 # all Consul resources and clients are owned by the cloud-consul team
-*consul* @hashicorp/cloud-consul @hashicorp/cloud-experiences-go
-/internal/consul/ @hashicorp/cloud-consul @hashicorp/cloud-experiences-go
+*consul* @hashicorp/cloud-consul @hashicorp/cloud-experiences-tooling
+/internal/consul/ @hashicorp/cloud-consul @hashicorp/cloud-experiences-tooling
 
 # all Networking resources and clients are owned by the cloud-control-plane team
-*hvn* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
-*aws* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
-*azure* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
-*peering* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-go
+*hvn* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
+*aws* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
+*azure* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
+*peering* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
 
 # all Packer resources and clients are owned by the cloud-packer team
-*packer* @hashicorp/cloud-packer @hashicorp/cloud-experiences-go
+*packer* @hashicorp/cloud-packer @hashicorp/cloud-experiences-tooling
 
 # all Vault resources and clients are owned by the vault-cloud team
-*vault* @hashicorp/vault-cloud @hashicorp/cloud-experiences-go
+*vault* @hashicorp/vault-cloud @hashicorp/cloud-experiences-tooling
 
 # Statuspage.io configuration is owned by the Cloud SRE team
-/internal/provider/provider.go @hashicorp/cloud-sre
+/internal/provider/provider.go @hashicorp/cloud-sre @hashicorp/cloud-experiences-tooling
