@@ -1,3 +1,16 @@
+## 0.39.0 (August 5, 2022)
+
+FIXES:
+
+* provider: Fixes codeowners which showed errors after a recent team name update ([GH-366](https://github.com/hashicorp/terraform-provider-hcp/pull/366))
+* vault_cluster: Check type assertions to fix issue #360 ([GH-364](https://github.com/hashicorp/terraform-provider-hcp/pull/364))
+
+IMPROVEMENTS:
+
+* provider: Upgrade Go to version 1.18 ([GH-365](https://github.com/hashicorp/terraform-provider-hcp/pull/365))
+* data_source_azure_peering_connection: Log failed peering wait errors ([GH-363](https://github.com/hashicorp/terraform-provider-hcp/pull/363))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.19.0 to 2.20.0 ([GH-362](https://github.com/hashicorp/terraform-provider-hcp/pull/362))
+
 ## 0.38.0 (July 28, 2022)
 
 IMPROVEMENTS:
