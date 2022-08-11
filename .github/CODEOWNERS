@@ -18,5 +18,5 @@
 # all Vault resources and clients are owned by the vault-cloud team
 *vault* @hashicorp/vault-cloud @hashicorp/cloud-experiences-tooling
 
-# Statuspage.io configuration is owned by the Cloud SRE team
-/internal/provider/provider.go @hashicorp/cloud-sre @hashicorp/cloud-experiences-tooling
+# Statuspage.io configuration is owned by the Core SRE team
+/internal/provider/provider.go @hashicorp/core-sre @hashicorp/cloud-experiences-tooling
