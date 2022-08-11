@@ -1,3 +1,9 @@
+## 0.40.0 (August 5, 2022)
+
+FIXES:
+
+* provider: Updates codeowners ([GH-369](https://github.com/hashicorp/terraform-provider-hcp/pull/369))
+
 ## 0.39.0 (August 5, 2022)
 
 FIXES:
