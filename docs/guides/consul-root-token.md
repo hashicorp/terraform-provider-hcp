@@ -37,6 +37,6 @@ The secret ID of this root token can be used to configure the Consul provider.
 ```
 provider "consul" {
   address    = "example.consul.io:80"
-  token      = hcp_consul_cluster_root_token.example.root_token_secret_id
+  token      = hcp_consul_cluster_root_token.example.secret_id
 }
 ```
