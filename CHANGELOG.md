@@ -1,3 +1,14 @@
+## 0.41.0 (August 18, 2022)
+
+IMPROVEMENTS:
+
+* provider: Upgrade terraform-plugin-sdk to version 2.21.0 ([GH-371](https://github.com/hashicorp/terraform-provider-hcp/pull/371))
+
+FIXES:
+
+* provider: Updates README examples ([GH-368](https://github.com/hashicorp/terraform-provider-hcp/pull/368))
+* provider: Fix root token example in documentation ([GH-372](https://github.com/hashicorp/terraform-provider-hcp/pull/372))
+
 ## 0.40.0 (August 11, 2022)
 
 FIXES:
