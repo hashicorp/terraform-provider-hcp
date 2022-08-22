@@ -30,6 +30,9 @@ func resourceBoundaryCluster() *schema.Resource {
 		CreateContext: resourceBoundaryClusterCreate,
 		ReadContext:   resourceBoundaryClusterRead,
 		DeleteContext: resourceBoundaryClusterDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceBoundaryClusterImport,
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create:  &createBoundaryClusterTimeout,
 			Delete:  &deleteBoundaryClusterTimeout,
@@ -120,7 +123,7 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[INFO] Creating Boundary cluster (%s)", clusterID)
 	createResp, err := clients.CreateBoundaryCluster(ctx, client, loc, req)
 	if err != nil {
-		return diag.Errorf("unable to create Boundary cluster ", clusterID, err)
+		return diag.Errorf("unable to create Boundary cluster (%s): %v", clusterID, err)
 	}
 	link := newLink(loc, BoundaryClusterResourceType, clusterID)
 	url, err := linkURL(link)
