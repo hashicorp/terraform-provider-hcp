@@ -48,18 +48,18 @@ func resourceBoundaryCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"username": {
-				Description:      "The username of the initial admin user",
+				Description:      "The username of the initial admin user. This must be at least 3 characters in length, alphanumeric, hyphen, or period.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateStringNotEmpty,
+				ValidateDiagFunc: validateBoundaryUsername,
 			},
 			"password": {
-				Description:      "The password of the initial admin user. Note that this may show up in logs, and it will be stored in the state file.",
+				Description:      "The password of the initial admin user. This must be at least 8 characters in length. Note that this may show up in logs, and it will be stored in the state file.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateStringNotEmpty,
+				ValidateDiagFunc: validateBoundaryPassword,
 				Sensitive:        true,
 			},
 			"created_at": {
