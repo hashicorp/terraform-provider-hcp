@@ -55,7 +55,7 @@ func resourceBoundaryCluster() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			"password": {
-				Description:      "The password of the initial admin user",
+				Description:      "The password of the initial admin user. Note that this may show up in logs, and it will be stored in the state file.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
