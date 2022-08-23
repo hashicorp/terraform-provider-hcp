@@ -1,7 +1,9 @@
 package clients
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
@@ -9,9 +11,10 @@ import (
 )
 
 const (
-	retryCount   = 10
-	retryDelay   = 10
-	counterStart = 1
+	retryCount          = 10
+	retryDelay          = 10
+	counterStart        = 1
+	unknownErrorMessage = "Could not complete request. Please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct."
 )
 
 var errorCodesToRetry = [...]int{502, 503, 504}
@@ -30,21 +33,24 @@ func shouldRetryErrorCode(errorCode int, errorCodesToRetry []int) bool {
 func RetryOrganizationServiceList(client *Client, params *organization_service.OrganizationServiceListParams) (*organization_service.OrganizationServiceListOK, error) {
 	resp, err := client.Organization.OrganizationServiceList(params, nil)
 
-	counter := counterStart
-	for err != nil && shouldRetryErrorCode(err.(*organization_service.OrganizationServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
-
-		resp, err = client.Organization.OrganizationServiceList(params, nil)
-		if err == nil {
-			break
+	if err != nil {
+		if reflect.TypeOf(err.Error()).Name() != "organization_service.OrganizationServiceListDefault" {
+			return nil, errors.New(unknownErrorMessage)
 		}
-		// Avoid wasting time if we're not going to retry next loop cycle
-		if (counter + 1) != retryCount {
-			fmt.Printf("Error trying to get list of organizations. Retrying in %d seconds...", retryDelay*counter)
-			time.Sleep(time.Duration(retryDelay*counter) * time.Second)
+		counter := counterStart
+		for shouldRetryErrorCode(err.(*organization_service.OrganizationServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+			resp, err = client.Organization.OrganizationServiceList(params, nil)
+			if err == nil {
+				break
+			}
+			// Avoid wasting time if we're not going to retry next loop cycle
+			if (counter + 1) != retryCount {
+				fmt.Printf("Error trying to get list of organizations. Retrying in %d seconds...", retryDelay*counter)
+				time.Sleep(time.Duration(retryDelay*counter) * time.Second)
+			}
+			counter++
 		}
-		counter++
 	}
-
 	return resp, err
 }
 
@@ -52,19 +58,24 @@ func RetryOrganizationServiceList(client *Client, params *organization_service.O
 func RetryProjectServiceList(client *Client, params *project_service.ProjectServiceListParams) (*project_service.ProjectServiceListOK, error) {
 	resp, err := client.Project.ProjectServiceList(params, nil)
 
-	counter := counterStart
-	for err != nil && shouldRetryErrorCode(err.(*project_service.ProjectServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
-		resp, err = client.Project.ProjectServiceList(params, nil)
-		if err == nil {
-			break
+	if err != nil {
+		if reflect.TypeOf(err.Error()).Name() != "project_service.ProjectServiceListDefault" {
+			return nil, errors.New(unknownErrorMessage)
 		}
-		// Avoid wasting time if we're not going to retry next loop cycle
-		if (counter + 1) != retryCount {
-			fmt.Printf("Error trying to get list of projects. Retrying in %d seconds...", retryDelay*counter)
-			time.Sleep(time.Duration(retryDelay*counter) * time.Second)
-		}
-		counter++
-	}
 
+		counter := counterStart
+		for shouldRetryErrorCode(err.(*project_service.ProjectServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+			resp, err = client.Project.ProjectServiceList(params, nil)
+			if err == nil {
+				break
+			}
+			// Avoid wasting time if we're not going to retry next loop cycle
+			if (counter + 1) != retryCount {
+				fmt.Printf("Error trying to get list of projects. Retrying in %d seconds...", retryDelay*counter)
+				time.Sleep(time.Duration(retryDelay*counter) * time.Second)
+			}
+			counter++
+		}
+	}
 	return resp, err
 }
