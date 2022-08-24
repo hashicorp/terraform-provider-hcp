@@ -1,3 +1,14 @@
+## 0.42.0 (August 24, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump version of Go to 1.18.5 in `.go-version` ([GH-374](https://github.com/hashicorp/terraform-provider-hcp/pull/374))
+*provider: Bump `google.golang.org/grpc` from 1.48.0 to 1.49.0 ([GH-379](https://github.com/hashicorp/terraform-provider-hcp/pull/379))
+
+FIXES:
+
+* all: Prevents the app from crashing when a `*url.Error` is received while retrying HTTP requests. ([GH-376](https://github.com/hashicorp/terraform-provider-hcp/pull/376))
+
 ## 0.41.0 (August 18, 2022)
 
 IMPROVEMENTS:
