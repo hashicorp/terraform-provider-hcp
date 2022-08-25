@@ -228,6 +228,44 @@ func resourceVaultCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"major_version_upgrade_config": {
+				Description: "The Major Version Upgrade configuration.",
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"upgrade_type": {
+							Description:      "The major upgrade type for the cluster. Valid options for upgrade type - `AUTOMATIC`, `SCHEDULED`, `MANUAL`",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateVaultUpgradeType,
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+						},
+						"maintenance_window_day": {
+							Description:      "The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateVaultUpgradeWindowDay,
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+						},
+						"maintenance_window_time": {
+							Description:      "The maintenance time frame for scheduled upgrades. Valid options for maintenance window time - `WINDOW_12AM_4AM`, `WINDOW_6AM_10AM`, `WINDOW_12PM_4PM`, `WINDOW_6PM_10PM`",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateVaultUpgradeWindowTime,
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+						},
+					},
+				},
+			},
 			"vault_public_endpoint_url": {
 				Description: "The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.",
 				Type:        schema.TypeString,
@@ -268,7 +306,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	//get metrics and audit config first so we can validate and fail faster
+	//get metrics audit config and mvu config first so we can validate and fail faster
 	metricsConfig, diagErr := getObservabilityConfig("metrics_config", d)
 	if diagErr != nil {
 		return diagErr
@@ -276,6 +314,10 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	auditConfig, diagErr := getObservabilityConfig("audit_log_config", d)
 	if diagErr != nil {
 		return diagErr
+	}
+	mvuConfig, error := getMajorVersionUpgradeConfig(d)
+	if diagErr != nil {
+		return error
 	}
 
 	// Use the hvn to get provider and region.
@@ -400,6 +442,21 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("unable to retrieve Vault cluster (%s): %v", payload.ClusterID, err)
 	}
 
+	// If we pass the major version upgrade configuration we need to update it after the creation of the cluster,
+	// since the cluster is created by default to automatic upgrade
+	if mvuConfig != nil {
+		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, cluster.Location, payload.ClusterID, mvuConfig)
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", payload.ClusterID, err)
+		}
+
+		// refresh the created Vault cluster.
+		cluster, err = clients.GetVaultClusterByID(ctx, client, loc, payload.ClusterID)
+		if err != nil {
+			return diag.Errorf("unable to retrieve Vault cluster (%s): %v", payload.ClusterID, err)
+		}
+	}
+
 	if err := setVaultClusterResourceData(d, cluster); err != nil {
 		return diag.FromErr(err)
 	}
@@ -471,9 +528,16 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "paths_filter", "metrics_config", "audit_log_config") {
+	if !d.HasChanges("tier", "public_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
 		return nil
 	}
+
+	// Get metrics audit config and mvu config first so we can validate and fail faster
+	mvuConfig, diagErr := getMajorVersionUpgradeConfig(d)
+	if diagErr != nil {
+		return diagErr
+	}
+
 	if d.HasChange("tier") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
@@ -526,6 +590,13 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 			if err := clients.WaitForOperation(ctx, client, "delete Vault cluster paths filter", cluster.Location, deleteResp.Operation.ID); err != nil {
 				return diag.Errorf("unable to delete Vault cluster paths filter (%s): %v", clusterID, err)
 			}
+		}
+	}
+
+	if mvuConfig != nil {
+		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, cluster.Location, clusterID, mvuConfig)
+		if err != nil {
+			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", clusterID, err)
 		}
 	}
 
@@ -709,6 +780,10 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
+	if err := d.Set("major_version_upgrade_config", flattenMajorVersionUpgradeConfig(cluster.Config.MajorVersionUpgradeConfig, d)); err != nil {
+		return err
+	}
+
 	if publicEndpoint {
 		// Port 8200 required to communicate with HCP Vault via HTTPS
 		if err := d.Set("vault_public_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Public)); err != nil {
@@ -883,6 +958,86 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	}
 
 	return &observabilityConfig, nil
+}
+
+func getMajorVersionUpgradeConfig(d *schema.ResourceData) (*vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig, diag.Diagnostics) {
+	if !d.HasChange("major_version_upgrade_config") {
+		return nil, nil
+	}
+	configParam, ok := d.GetOk("major_version_upgrade_config")
+	if !ok {
+		return nil, nil
+	}
+
+	configIfaceArr, ok := configParam.([]interface{})
+	if !ok || len(configIfaceArr) == 0 {
+		return nil, nil
+	}
+
+	config, ok := configIfaceArr[0].(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	tier := vaultmodels.HashicorpCloudVault20201125TierDEV
+	inputTier, ok := d.GetOk("tier")
+	if ok {
+		tier = vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(inputTier.(string)))
+	}
+
+	if !ok || len(configIfaceArr) == 0 {
+		return nil, nil
+	}
+
+	return getValidMajorVersionUpgradeConfig(config, tier)
+}
+
+func getValidMajorVersionUpgradeConfig(config map[string]interface{}, tier vaultmodels.HashicorpCloudVault20201125Tier) (*vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig, diag.Diagnostics) {
+	if tier == vaultmodels.HashicorpCloudVault20201125TierDEV || tier == vaultmodels.HashicorpCloudVault20201125TierSTARTERSMALL {
+		return nil, diag.Errorf("major version configuration is only allowed for STANDARD or PLUS clusters")
+	}
+
+	mvuConfig := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig{}
+
+	upgradeType := config["upgrade_type"].(string)
+	mvuConfig.UpgradeType = vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeType(upgradeType)
+
+	maintenanceWindowDay := config["maintenance_window_day"].(string)
+	maintenanceWindowTime := config["maintenance_window_time"].(string)
+
+	if mvuConfig.UpgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED {
+		if maintenanceWindowDay == "" || maintenanceWindowTime == "" {
+			return nil, diag.Errorf("major version upgrade configuration is invalid: maintenance window configuration information missing")
+		}
+		mvuConfig.MaintenanceWindow = &vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindow{
+			DayOfWeek:     vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowDayOfWeek(maintenanceWindowDay),
+			TimeWindowUtc: vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowTimeWindowUTC(maintenanceWindowTime),
+		}
+	} else {
+		if maintenanceWindowDay != "" || maintenanceWindowTime != "" {
+			return nil, diag.Errorf("major version upgrade configuration is invalid: maintenance window is only allowed to SCHEDULED upgrades")
+		}
+		mvuConfig.MaintenanceWindow = nil
+	}
+
+	return &mvuConfig, nil
+}
+
+func flattenMajorVersionUpgradeConfig(config *vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig, d *schema.ResourceData) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	configMap := map[string]interface{}{}
+	upgradeType := config.UpgradeType
+
+	configMap["upgrade_type"] = upgradeType
+	if upgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED && config.MaintenanceWindow != nil {
+		configMap["maintenance_window_day"] = config.MaintenanceWindow.DayOfWeek
+		configMap["maintenance_window_time"] = config.MaintenanceWindow.TimeWindowUtc
+	}
+
+	return []interface{}{configMap}
 }
 
 func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

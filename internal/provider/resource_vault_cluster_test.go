@@ -34,15 +34,23 @@ resource "hcp_vault_cluster" "test" {
 		datadog_api_key = "test_datadog"
 		datadog_region  = "us1"
 	}
+	major_version_upgrade_config {
+		upgrade_type = "MANUAL"
+	}
 }
 `
 
 // changes tier
-const updatedVaultClusterTier = `
+const updatedVaultClusterTierAndMVUConfig = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "test-vault-cluster"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "standard_small"
+	major_version_upgrade_config {
+		upgrade_type = "SCHEDULED"
+		maintenance_window_day = "WEDNESDAY"
+		maintenance_window_time = "WINDOW_12AM_4AM"
+	}
 }
 `
 
@@ -173,15 +181,18 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(vaultClusterResourceName, "state", vaultClusterDataSourceName, "state"),
 				),
 			},
-			// This step verifies the successful update of "tier"
+			// This step verifies the successful update of "tier" and mvu config
 			{
-				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTier)),
+				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterTierAndMVUConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(vaultClusterResourceName),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "tier", "STANDARD_SMALL"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
 				),
 			},
-			// This step verifies the successful update of "public_endpoint", "audit_log" and "metrics"
+			// This step verifies the successful update of "public_endpoint", "audit_log", "metrics" and MVU config
 			{
 				Config: testConfig(setTestAccVaultClusterConfig(updatedVaultClusterPublicAndMetricsAuditLog)),
 				Check: resource.ComposeTestCheckFunc(
@@ -195,6 +206,7 @@ func TestAccVaultCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "metrics_config.0.splunk_token"),
 					resource.TestCheckResourceAttrSet(vaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
 					resource.TestCheckResourceAttr(vaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
+					resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "MANUAL"),
 				),
 			},
 
