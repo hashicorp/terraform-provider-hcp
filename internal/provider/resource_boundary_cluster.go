@@ -62,6 +62,7 @@ func resourceBoundaryCluster() *schema.Resource {
 				ValidateDiagFunc: validateBoundaryPassword,
 				Sensitive:        true,
 			},
+			// computed outputs
 			"created_at": {
 				Description: "The time that the Boundary cluster was created.",
 				Type:        schema.TypeString,
