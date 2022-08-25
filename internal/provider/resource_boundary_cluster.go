@@ -18,7 +18,7 @@ var defaultBoundaryClusterTimeout = time.Minute * 5
 
 // createUpdateBoundaryClusterTimeout is the amount of time that can elapse
 // before a cluster create operation should timeout.
-var createBoundaryClusterTimeout = time.Minute * 35
+var createBoundaryClusterTimeout = time.Minute * 25
 
 // deleteBoundaryClusterTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
