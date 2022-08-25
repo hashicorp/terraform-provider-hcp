@@ -3,7 +3,7 @@ package consul
 import (
 	"testing"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/models"
 	"github.com/stretchr/testify/require"
 )
 

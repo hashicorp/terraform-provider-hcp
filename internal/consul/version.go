@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/preview/2021-02-04/models"
+	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/models"
 )
 
 // RecommendedVersion returns the recommended version of Consul
