@@ -47,6 +47,9 @@ const (
 
 	// VaultClusterResourceType is the resource type of a Vault cluster
 	VaultClusterResourceType = "hashicorp.vault.cluster"
+
+	// BoundaryClusterResourceType is the resource type of a Boundary Cluster
+	BoundaryClusterResourceType = "hashicorp.boundary.cluster"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the

@@ -289,3 +289,37 @@ func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 
 	return diagnostics
 }
+
+// Validate the provided initial admin username for a boundary cluster
+func validateBoundaryUsername(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	if !regexp.MustCompile("^[a-z0-9.-]{3,}$").MatchString(v.(string)) {
+		msg := "invalid boundary username; login name must be all-lowercase alphanumeric, period or hyphen, and at least 3 characters."
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+// Validate the password for the initial boundary cluster admin user
+func validateBoundaryPassword(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	if len(v.(string)) < 8 {
+		msg := "invalid boundary password; password must be at least 8 characters."
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}

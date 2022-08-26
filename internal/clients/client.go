@@ -23,6 +23,9 @@ import (
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 
+	cloud_boundary "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/client/boundary_service"
+
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
 
@@ -37,6 +40,7 @@ type Client struct {
 	Consul       consul_service.ClientService
 	Vault        vault_service.ClientService
 	Packer       packer_service.ClientService
+	Boundary     boundary_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -82,6 +86,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 		Vault:        cloud_vault.New(httpClient, nil).VaultService,
 		Packer:       cloud_packer.New(httpClient, nil).PackerService,
+		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
 	}
 
 	return client, nil
