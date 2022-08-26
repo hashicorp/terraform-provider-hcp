@@ -93,7 +93,8 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
-		// THIS SHOULDNT BE HARDCODED
+		// This is currently hardcoded, depending on decisions from PM
+		// around regionality this may have to turn into an input
 		Region: &sharedmodels.HashicorpCloudLocationRegion{
 			Provider: "aws",
 			Region:   "us-east-1",
