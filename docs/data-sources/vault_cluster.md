@@ -36,6 +36,7 @@ data "hcp_vault_cluster" "example" {
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
+- `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
 - `metrics_config` (Block List) The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
@@ -69,6 +70,16 @@ Read-Only:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
+
+
+<a id="nestedatt--major_version_upgrade_config"></a>
+### Nested Schema for `major_version_upgrade_config`
+
+Read-Only:
+
+- `maintenance_window_day` (String)
+- `maintenance_window_time` (String)
+- `upgrade_type` (String)
 
 
 <a id="nestedblock--metrics_config"></a>

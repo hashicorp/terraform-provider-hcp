@@ -175,6 +175,29 @@ func dataSourceVaultCluster() *schema.Resource {
 					},
 				},
 			},
+			"major_version_upgrade_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"upgrade_type": {
+							Description: "The major upgrade type for the cluster",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"maintenance_window_day": {
+							Description: "The maintenance day of the week for scheduled updates",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"maintenance_window_time": {
+							Description: "The maintenance time frame for scheduled updates",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
