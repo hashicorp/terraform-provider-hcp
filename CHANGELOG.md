@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* provider: * provider: Bump `github.com/hashicorp/hcp-sdk-go` from 0.20.0 to 0.21.0 ([GH-381](https://github.com/hashicorp/terraform-provider-hcp/pull/381))
+* provider: Bump `github.com/hashicorp/hcp-sdk-go` from 0.20.0 to 0.21.0 ([GH-381](https://github.com/hashicorp/terraform-provider-hcp/pull/381))
 * provider: Added support for HCP Boundary Beta clusters ([GH-378](https://github.com/hashicorp/terraform-provider-hcp/pull/378))
 
 FEATURES:
