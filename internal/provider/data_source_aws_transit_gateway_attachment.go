@@ -101,7 +101,7 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	if waitForActive && tgwAtt.State != networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
+	if waitForActive && *tgwAtt.State.Pointer() != *networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE.Pointer() {
 		tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
 		if err != nil {
 			return diag.FromErr(err)

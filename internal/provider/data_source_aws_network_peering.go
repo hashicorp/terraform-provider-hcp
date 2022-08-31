@@ -113,7 +113,7 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
-	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
+	if waitForActive && *peering.State.Pointer() != *networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE.Pointer() {
 		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, d.Timeout(schema.TimeoutRead))
 		if err != nil {
 			return diag.FromErr(err)

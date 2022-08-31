@@ -340,9 +340,9 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	consulCuster := &consulmodels.HashicorpCloudConsul20210204Cluster{
 		Config: &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
-			Tier: consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string))),
+			Tier: consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string))).Pointer(),
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string))),
+				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string))).Pointer(),
 			},
 			ConsulConfig: &consulmodels.HashicorpCloudConsul20210204ConsulConfig{
 				ConnectEnabled: connectEnabled,
@@ -573,7 +573,7 @@ func resourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// we should only ever get a CodeNotFound response if the cluster is deleted. The below is precautionary
-	if cluster.State == consulmodels.HashicorpCloudConsul20210204ClusterStateDELETED {
+	if *cluster.State.Pointer() == *consulmodels.HashicorpCloudConsul20210204ClusterStateDELETED.Pointer() {
 		log.Printf("[WARN] Consul cluster (%s) was deleted", clusterID)
 		d.SetId("")
 		return nil
@@ -667,7 +667,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		newSize := d.Get("size").(string)
 		targetCluster.Config = &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize)),
+				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize)).Pointer(),
 			},
 		}
 	}

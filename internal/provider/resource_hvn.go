@@ -209,7 +209,7 @@ func resourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	// The HVN has already been deleted, remove from state.
-	if hvn.State == networkmodels.HashicorpCloudNetwork20200907NetworkStateDELETED {
+	if *hvn.State.Pointer() == *networkmodels.HashicorpCloudNetwork20200907NetworkStateDELETED.Pointer() {
 		log.Printf("[WARN] HVN (%s) failed to provision, removing from state", hvnID)
 		d.SetId("")
 		return nil
