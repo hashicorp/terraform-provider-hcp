@@ -1,3 +1,14 @@
+## 0.43.0 (August 31, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/hcp-sdk-go` from 0.20.0 to 0.21.0 ([GH-381](https://github.com/hashicorp/terraform-provider-hcp/pull/381))
+* provider: Added support for HCP Boundary Beta clusters ([GH-378](https://github.com/hashicorp/terraform-provider-hcp/pull/378))
+
+FEATURES:
+
+* Vault: enable changes on mvu configuration  ([GH-383](https://github.com/hashicorp/terraform-provider-hcp/pull/383))
+
 ## 0.42.0 (August 24, 2022)
 
 IMPROVEMENTS:
