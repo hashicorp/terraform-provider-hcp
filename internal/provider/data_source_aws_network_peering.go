@@ -13,8 +13,8 @@ import (
 
 func dataSourceAwsNetworkPeering() *schema.Resource {
 	return &schema.Resource{
-		Description: "The AWS network peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.",
-		ReadContext: dataSourceAwsNetworkPeeringRead,
+		Description:        "The AWS network peering data source provides information about an existing network peering between an HVN and a peer AWS VPC.",
+		ReadWithoutTimeout: dataSourceAwsNetworkPeeringRead,
 		Timeouts: &schema.ResourceTimeout{
 			Read: &peeringCreateTimeout,
 		},
