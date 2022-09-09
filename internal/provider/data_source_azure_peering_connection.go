@@ -13,8 +13,8 @@ import (
 
 func dataSourceAzurePeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.",
-		ReadContext: dataSourceAzurePeeringConnectionRead,
+		Description:        "The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.",
+		ReadWithoutTimeout: dataSourceAzurePeeringConnectionRead,
 		Timeouts: &schema.ResourceTimeout{
 			Read: &peeringCreateTimeout,
 		},
@@ -129,7 +129,7 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
-		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, d.Timeout(schema.TimeoutRead))
+		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringCreateTimeout)
 		if err != nil {
 			return diag.FromErr(err)
 		}
