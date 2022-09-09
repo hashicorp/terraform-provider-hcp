@@ -67,12 +67,12 @@ func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, m
 
 	for _, v := range availableConsulVersions {
 		switch v.Status {
-		case consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer():
 			recommendedVersion = v.Version
 			availableVersions = append(availableVersions, v.Version)
-		case consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer():
 			availableVersions = append(availableVersions, v.Version)
-		case consulmodels.HashicorpCloudConsul20210204VersionStatusPREVIEW:
+		case consulmodels.HashicorpCloudConsul20210204VersionStatusPREVIEW.Pointer():
 			previewVersions = append(previewVersions, v.Version)
 		}
 	}

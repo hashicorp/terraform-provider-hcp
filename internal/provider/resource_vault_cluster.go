@@ -367,7 +367,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		if paths, ok := d.GetOk("paths_filter"); ok {
 			pathStrings := getPathStrings(paths)
 			pathsFilter = &vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
-				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY,
+				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY.Pointer(),
 				Paths: pathStrings,
 			}
 		}
@@ -398,7 +398,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 					InitialVersion: vaultVersion,
 				},
-				Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))),
+				Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))).Pointer(),
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
@@ -489,7 +489,7 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// The Vault cluster was already deleted, remove from state.
-	if cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateDELETED {
+	if *cluster.State == vaultmodels.HashicorpCloudVault20201125ClusterStateDELETED {
 		log.Printf("[WARN] Vault cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil
@@ -568,7 +568,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Invoke update paths filter endpoint.
 			pathStrings := getPathStrings(paths)
 			updateResp, err := clients.UpdateVaultPathsFilter(ctx, client, cluster.Location, clusterID, vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
-				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY,
+				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY.Pointer(),
 				Paths: pathStrings,
 			})
 			if err != nil {
@@ -656,7 +656,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	isSecondary := false
 	destTier := getClusterTier(d)
 	if d.HasChange("tier") {
-		if inPlusTier(string(cluster.Config.Tier)) {
+		if inPlusTier(string(*cluster.Config.Tier.Pointer())) {
 			// Plus tier clusters scale as a group via the primary cluster.
 			// However, it is still worth individually tracking the tier of each cluster so that the
 			// provider has the same information as the portal UI and can detect a scaling operation that
@@ -668,7 +668,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 
 			// Because of (a), check that the scaling operation is necessary.
 			//if the cluster has the same tier but the metrics/audit_log changed, we want to update the cluster anyway to change the info
-			if cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") {
+			if *cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") {
 				return nil
 			} else {
 				printPlusScalingWarningMsg()
@@ -1000,18 +1000,18 @@ func getValidMajorVersionUpgradeConfig(config map[string]interface{}, tier vault
 	mvuConfig := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig{}
 
 	upgradeType := config["upgrade_type"].(string)
-	mvuConfig.UpgradeType = vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeType(upgradeType)
+	mvuConfig.UpgradeType = vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeType(upgradeType).Pointer()
 
 	maintenanceWindowDay := config["maintenance_window_day"].(string)
 	maintenanceWindowTime := config["maintenance_window_time"].(string)
 
-	if mvuConfig.UpgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED {
+	if *mvuConfig.UpgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED {
 		if maintenanceWindowDay == "" || maintenanceWindowTime == "" {
 			return nil, diag.Errorf("major version upgrade configuration is invalid: maintenance window configuration information missing")
 		}
 		mvuConfig.MaintenanceWindow = &vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindow{
-			DayOfWeek:     vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowDayOfWeek(maintenanceWindowDay),
-			TimeWindowUtc: vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowTimeWindowUTC(maintenanceWindowTime),
+			DayOfWeek:     vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowDayOfWeek(maintenanceWindowDay).Pointer(),
+			TimeWindowUtc: vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowTimeWindowUTC(maintenanceWindowTime).Pointer(),
 		}
 	} else {
 		if maintenanceWindowDay != "" || maintenanceWindowTime != "" {
@@ -1032,7 +1032,7 @@ func flattenMajorVersionUpgradeConfig(config *vaultmodels.HashicorpCloudVault202
 	upgradeType := config.UpgradeType
 
 	configMap["upgrade_type"] = upgradeType
-	if upgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED && config.MaintenanceWindow != nil {
+	if *upgradeType == vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeTypeSCHEDULED && config.MaintenanceWindow != nil {
 		configMap["maintenance_window_day"] = config.MaintenanceWindow.DayOfWeek
 		configMap["maintenance_window_time"] = config.MaintenanceWindow.TimeWindowUtc
 	}
@@ -1077,16 +1077,16 @@ func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Conte
 		return err, nil
 	}
 
-	if !inPlusTier(string(primaryCluster.Config.Tier)) {
+	if !inPlusTier(string(*primaryCluster.Config.Tier.Pointer())) {
 		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryCluster.ID), primaryCluster
 	}
 
 	// Tier should be specified, even if secondary inherits it from the primary cluster.
-	if !strings.EqualFold(d.Get("tier").(string), string(primaryCluster.Config.Tier)) {
+	if !strings.EqualFold(d.Get("tier").(string), string(*primaryCluster.Config.Tier.Pointer())) {
 		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryCluster.ID), primaryCluster
 	}
 
-	if primaryCluster.PerformanceReplicationInfo != nil && primaryCluster.PerformanceReplicationInfo.Mode == vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationInfoModeSECONDARY {
+	if primaryCluster.PerformanceReplicationInfo != nil && *primaryCluster.PerformanceReplicationInfo.Mode == vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationInfoModeSECONDARY {
 		return diag.Errorf("primary cluster (%s) is already a secondary", primaryCluster.ID), primaryCluster
 	}
 
