@@ -122,13 +122,13 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
 					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+					// Note: azure_peering_id is not set until the peering is accepted after creation.
 				),
 			},
 			// Tests import
