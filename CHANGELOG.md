@@ -1,3 +1,10 @@
+## 0.44.0 (September 9, 2022)
+
+FIXES:
+
+* Azure/AWS Peering connections: Replace ReadContext with ReadWithoutTimeout  ([GH-389](https://github.com/hashicorp/terraform-provider-hcp/pull/389))
+* Documentation: Correct `hvn_link` to `example` instead of `hvn` ([GH-388](https://github.com/hashicorp/terraform-provider-hcp/pull/388))
+
 ## 0.43.0 (August 31, 2022)
 
 IMPROVEMENTS:
