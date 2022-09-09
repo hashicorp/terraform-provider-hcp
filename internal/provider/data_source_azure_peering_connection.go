@@ -129,7 +129,7 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
-		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, d.Timeout(schema.TimeoutRead))
+		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringCreateTimeout)
 		if err != nil {
 			return diag.FromErr(err)
 		}
