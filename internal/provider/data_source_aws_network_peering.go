@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,31 +106,46 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	peeringID := d.Get("peering_id").(string)
 	waitForActive := d.Get("wait_for_active_state").(bool)
 
+	// Query for the peering.
 	log.Printf("[INFO] Reading network peering (%s)", peeringID)
 	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 	if err != nil {
 		return diag.Errorf("unable to retrieve network peering (%s): %v", peeringID, err)
 	}
 
-	if waitForActive && peering.State != networkmodels.HashicorpCloudNetwork20200907PeeringStateACTIVE {
-		peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, peeringCreateTimeout)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	// Network peering found, update resource data.
-	if err := setAwsPeeringResourceData(d, peering); err != nil {
-		return diag.FromErr(err)
-	}
-
-	// Set the globally unique id of this peering in the state.
+	// Set the globally unique id of this peering in state.
 	link := newLink(peering.Hvn.Location, PeeringResourceType, peering.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(url)
+
+	// Store resource data.
+	if err := setAwsPeeringResourceData(d, peering); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Skip waiting.
+	if !waitForActive {
+		return nil
+	}
+
+	// If it's in a state where it could later become ACTIVE, wait.
+	for _, state := range clients.WaitForPeeringToBeActivePendingStates {
+		if state == string(peering.State) {
+			peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, peeringCreateTimeout)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			break
+		}
+	}
+
+	// Store resource data again, updating Peering state.
+	if err := setAwsPeeringResourceData(d, peering); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }

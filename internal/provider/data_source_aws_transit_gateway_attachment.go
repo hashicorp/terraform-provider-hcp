@@ -101,13 +101,7 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	if waitForActive && tgwAtt.State != networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
-		tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
+	// Set ID for the resource in state.
 	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)
 	url, err := linkURL(link)
 	if err != nil {
@@ -115,6 +109,20 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 	}
 	d.SetId(url)
 
+	// Update TF state for the resource before waiting.
+	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Wait on an ACTIVE state.
+	if waitForActive && tgwAtt.State != networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
+		tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	// Update TF state with new attachment state.
 	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
 	}

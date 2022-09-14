@@ -99,5 +99,8 @@ var WaitForPeeringToBeAccepted = waitForPeeringToBe(peeringState{
 // WaitForPeeringToBeActive will poll the GET peering endpoint until the state is ACTIVE, ctx is canceled, or an error occurs.
 var WaitForPeeringToBeActive = waitForPeeringToBe(peeringState{
 	Target:  PeeringStateActive,
-	Pending: []string{PeeringStateCreating, PeeringStatePendingAcceptance, PeeringStateAccepted},
+	Pending: WaitForPeeringToBeActivePendingStates,
 })
+
+// WaitForPeeringToBeActivePendingStates are those from which we'd expect an ACTIVE state to be possible.
+var WaitForPeeringToBeActivePendingStates = []string{PeeringStateCreating, PeeringStatePendingAcceptance, PeeringStateAccepted}
