@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -127,25 +129,42 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Skip waiting.
-	if !waitForActive {
+	if !waitForActive || peering.State == models.HashicorpCloudNetwork20200907PeeringStateACTIVE {
 		return nil
 	}
 
 	// If it's in a state where it could later become ACTIVE, wait.
-	for _, state := range clients.WaitForPeeringToBeActivePendingStates {
+	waitState := false
+	for _, state := range clients.WaitForPeeringToBeActiveStates {
 		if state == string(peering.State) {
-			peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, peeringCreateTimeout)
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			waitState = true
 			break
 		}
 	}
 
-	// Store resource data again, updating Peering state.
-	if err := setAwsPeeringResourceData(d, peering); err != nil {
-		return diag.FromErr(err)
+	// If it's not in a state that we should wait on, issue a warning and bail.
+	if !waitState {
+		return []diag.Diagnostic{{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Peering is in an unexpected state, connections may fail: %q", string(peering.State)),
+			Detail:   "Expected a CREATING, PENDING_ACCEPTANCE, ACCEPTED, or ACTIVE state",
+		}}
 	}
 
-	return nil
+	// Store resource data again, updating Peering state.
+	var result []diag.Diagnostic
+	peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, peeringID, loc, peeringCreateTimeout)
+	if peering != nil {
+		if err := setAwsPeeringResourceData(d, peering); err != nil {
+			result = diag.FromErr(err)
+		}
+	}
+
+	// If we didn't reach the desired state, throw a diagnostic err.
+	if err != nil {
+		for _, d := range diag.FromErr(err) {
+			result = append(result, d)
+		}
+	}
+	return result
 }
