@@ -153,7 +153,7 @@ func dataSourceAwsNetworkPeeringRead(ctx context.Context, d *schema.ResourceData
 
 	// Store resource data again, updating Peering state.
 	var result []diag.Diagnostic
-	peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, peeringID, loc, peeringCreateTimeout)
+	peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnID, loc, peeringCreateTimeout)
 	if peering != nil {
 		if err := setAwsPeeringResourceData(d, peering); err != nil {
 			result = diag.FromErr(err)

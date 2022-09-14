@@ -168,7 +168,7 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 
 	// Store resource data again, updating Peering state.
 	var result []diag.Diagnostic
-	peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, peeringID, loc, peeringCreateTimeout)
+	peering, err = clients.WaitForPeeringToBeActive(ctx, client, peering.ID, hvnLink.ID, loc, peeringCreateTimeout)
 	if peering != nil {
 		if err := setAzurePeeringResourceData(d, peering); err != nil {
 			result = diag.FromErr(err)
