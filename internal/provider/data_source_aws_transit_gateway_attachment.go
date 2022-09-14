@@ -120,17 +120,17 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 		return nil
 	}
 
-	// If it's in a state where it could later become ACTIVE, wait.
-	waitState := false
+	// If it's not in a state where it could later become ACTIVE, we're going to bail.
+	terminalState := true
 	for _, state := range clients.WaitForTGWAttachmentToBeActiveStates {
 		if state == string(tgwAtt.State) {
-			waitState = true
+			terminalState = false
 			break
 		}
 	}
 
 	// If it's not in a state that we should wait on, issue a warning and bail.
-	if !waitState {
+	if terminalState {
 		return []diag.Diagnostic{{
 			Severity: diag.Warning,
 			Summary:  fmt.Sprintf("Attachment is in an unexpected state, connections may fail: %q", string(tgwAtt.State)),
