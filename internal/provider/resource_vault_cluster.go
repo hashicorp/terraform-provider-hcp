@@ -656,7 +656,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	isSecondary := false
 	destTier := getClusterTier(d)
 	if d.HasChange("tier") {
-		if inPlusTier(string(*cluster.Config.Tier.Pointer())) {
+		if inPlusTier(string(*cluster.Config.Tier)) {
 			// Plus tier clusters scale as a group via the primary cluster.
 			// However, it is still worth individually tracking the tier of each cluster so that the
 			// provider has the same information as the portal UI and can detect a scaling operation that
@@ -1077,12 +1077,12 @@ func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Conte
 		return err, nil
 	}
 
-	if !inPlusTier(string(*primaryCluster.Config.Tier.Pointer())) {
+	if !inPlusTier(string(*primaryCluster.Config.Tier)) {
 		return diag.Errorf("primary cluster (%s) must be plus-tier", primaryCluster.ID), primaryCluster
 	}
 
 	// Tier should be specified, even if secondary inherits it from the primary cluster.
-	if !strings.EqualFold(d.Get("tier").(string), string(*primaryCluster.Config.Tier.Pointer())) {
+	if !strings.EqualFold(d.Get("tier").(string), string(*primaryCluster.Config.Tier)) {
 		return diag.Errorf("a secondary's tier must match that of its primary (%s)", primaryCluster.ID), primaryCluster
 	}
 

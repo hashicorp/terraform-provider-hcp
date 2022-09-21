@@ -50,7 +50,7 @@ func peeringRefreshState(ctx context.Context, client *Client, peeringID string, 
 			return nil, "", err
 		}
 
-		return peering, string(*peering.State.Pointer()), nil
+		return peering, string(*peering.State), nil
 	}
 }
 

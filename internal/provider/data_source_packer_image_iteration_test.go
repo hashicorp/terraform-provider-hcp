@@ -116,16 +116,16 @@ func waitForOperation(
 			t.Errorf("Operation failed: %s", resp.Payload.Operation.Error.Message)
 		}
 
-		switch resp.Payload.Operation.State {
-		case sharedmodels.HashicorpCloudOperationOperationStatePENDING.Pointer():
+		switch *resp.Payload.Operation.State {
+		case sharedmodels.HashicorpCloudOperationOperationStatePENDING:
 			msg := fmt.Sprintf("==> Operation \"%s\" pending...", operationName)
 			return fmt.Errorf(msg)
-		case sharedmodels.HashicorpCloudOperationOperationStateRUNNING.Pointer():
+		case sharedmodels.HashicorpCloudOperationOperationStateRUNNING:
 			msg := fmt.Sprintf("==> Operation \"%s\" running...", operationName)
 			return fmt.Errorf(msg)
-		case sharedmodels.HashicorpCloudOperationOperationStateDONE.Pointer():
+		case sharedmodels.HashicorpCloudOperationOperationStateDONE:
 		default:
-			t.Errorf("Operation returned unknown state: %s", *resp.Payload.Operation.State.Pointer())
+			t.Errorf("Operation returned unknown state: %s", *resp.Payload.Operation.State)
 		}
 		return nil
 	}

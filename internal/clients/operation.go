@@ -55,7 +55,7 @@ func WaitForOperation(ctx context.Context, client *Client, operationName string,
 				// Reset consecutive errors after a successful response.
 				consecutiveErrors = 0
 
-				log.Printf("[INFO] Received state of %s operation (%s): %s", operationName, operationID, *waitResponse.Payload.Operation.State.Pointer())
+				log.Printf("[INFO] Received state of %s operation (%s): %s", operationName, operationID, *waitResponse.Payload.Operation.State)
 				if *waitResponse.Payload.Operation.State == sharedmodels.HashicorpCloudOperationOperationStateDONE {
 					if waitResponse.Payload.Operation.Error != nil {
 						err := fmt.Errorf("%s operation (%s) failed [code=%d, message=%s]",
