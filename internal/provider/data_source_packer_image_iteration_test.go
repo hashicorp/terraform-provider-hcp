@@ -50,8 +50,9 @@ func upsertRegistry(t *testing.T) {
 	params := packer_service.NewPackerServiceCreateRegistryParams()
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
+	featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
 	params.Body = &models.HashicorpCloudPackerCreateRegistryRequest{
-		FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS.Pointer(),
+		FeatureTier: &featureTier,
 	}
 
 	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
@@ -71,8 +72,9 @@ func upsertRegistry(t *testing.T) {
 				params := packer_service.NewPackerServiceUpdateRegistryParams()
 				params.LocationOrganizationID = loc.OrganizationID
 				params.LocationProjectID = loc.ProjectID
+				featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
 				params.Body = &models.HashicorpCloudPackerUpdateRegistryRequest{
-					FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS.Pointer(),
+					FeatureTier: &featureTier,
 				}
 				resp, err := client.Packer.PackerServiceUpdateRegistry(params, nil)
 				if err != nil {
@@ -264,13 +266,14 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	createBuildParams.BucketSlug = bucketSlug
 	createBuildParams.IterationID = iterationID
 
+	status := models.HashicorpCloudPackerBuildStatusRUNNING
 	createBuildParams.Body = &models.HashicorpCloudPackerCreateBuildRequest{
 		BucketSlug: bucketSlug,
 		Build: &models.HashicorpCloudPackerBuildCreateBody{
 			CloudProvider: "aws",
 			ComponentType: "amazon-ebs.example",
 			PackerRunUUID: uuid.New().String(),
-			Status:        models.HashicorpCloudPackerBuildStatusRUNNING.Pointer(),
+			Status:        &status,
 		},
 		Fingerprint: fingerprint,
 		IterationID: iterationID,
@@ -297,9 +300,10 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams.LocationOrganizationID = loc.OrganizationID
 	updateBuildParams.LocationProjectID = loc.ProjectID
 	updateBuildParams.BuildID = build.Payload.Build.ID
+	updatesStatus := models.HashicorpCloudPackerBuildStatusDONE
 	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
-			Status: models.HashicorpCloudPackerBuildStatusDONE.Pointer(),
+			Status: &updatesStatus,
 			Images: []*models.HashicorpCloudPackerImageCreateBody{
 				{
 					ImageID: "ami-42",

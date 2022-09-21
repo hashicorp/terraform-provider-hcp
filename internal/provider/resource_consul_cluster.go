@@ -338,11 +338,14 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
+	tier := consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string)))
+	size := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string)))
+
 	consulCuster := &consulmodels.HashicorpCloudConsul20210204Cluster{
 		Config: &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
-			Tier: consulmodels.HashicorpCloudConsul20210204ClusterConfigTier(strings.ToUpper(d.Get("tier").(string))).Pointer(),
+			Tier: &tier,
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(d.Get("size").(string))).Pointer(),
+				Size: &size,
 			},
 			ConsulConfig: &consulmodels.HashicorpCloudConsul20210204ConsulConfig{
 				ConnectEnabled: connectEnabled,
@@ -665,9 +668,10 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if sizeChanged {
 		newSize := d.Get("size").(string)
+		size := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize))
 		targetCluster.Config = &consulmodels.HashicorpCloudConsul20210204ClusterConfig{
 			CapacityConfig: &consulmodels.HashicorpCloudConsul20210204CapacityConfig{
-				Size: consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(newSize)).Pointer(),
+				Size: &size,
 			},
 		}
 	}

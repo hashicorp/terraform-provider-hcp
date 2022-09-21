@@ -364,10 +364,11 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if getPrimaryLinkIfAny(d) != "" {
 		primaryClusterLink := newLink(primaryClusterModel.Location, VaultClusterResourceType, primaryClusterModel.ID)
 		var pathsFilter *vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter
+		mode := vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY
 		if paths, ok := d.GetOk("paths_filter"); ok {
 			pathStrings := getPathStrings(paths)
 			pathsFilter = &vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
-				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY.Pointer(),
+				Mode:  &mode,
 				Paths: pathStrings,
 			}
 		}
@@ -393,12 +394,13 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("only performance replication secondaries may specify a paths_filter")
 		}
 
+		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 					InitialVersion: vaultVersion,
 				},
-				Tier: vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string))).Pointer(),
+				Tier: &tier,
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
@@ -567,8 +569,9 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			// Invoke update paths filter endpoint.
 			pathStrings := getPathStrings(paths)
+			mode := vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY
 			updateResp, err := clients.UpdateVaultPathsFilter(ctx, client, cluster.Location, clusterID, vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
-				Mode:  vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY.Pointer(),
+				Mode:  &mode,
 				Paths: pathStrings,
 			})
 			if err != nil {
@@ -1000,7 +1003,8 @@ func getValidMajorVersionUpgradeConfig(config map[string]interface{}, tier vault
 	mvuConfig := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig{}
 
 	upgradeType := config["upgrade_type"].(string)
-	mvuConfig.UpgradeType = vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeType(upgradeType).Pointer()
+	mvuConfigpgradeType := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigUpgradeType(upgradeType)
+	mvuConfig.UpgradeType = &mvuConfigpgradeType
 
 	maintenanceWindowDay := config["maintenance_window_day"].(string)
 	maintenanceWindowTime := config["maintenance_window_time"].(string)
@@ -1009,9 +1013,11 @@ func getValidMajorVersionUpgradeConfig(config map[string]interface{}, tier vault
 		if maintenanceWindowDay == "" || maintenanceWindowTime == "" {
 			return nil, diag.Errorf("major version upgrade configuration is invalid: maintenance window configuration information missing")
 		}
+		dayOfWeek := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowDayOfWeek(maintenanceWindowDay)
+		timeWindowUtc := vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowTimeWindowUTC(maintenanceWindowTime)
 		mvuConfig.MaintenanceWindow = &vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindow{
-			DayOfWeek:     vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowDayOfWeek(maintenanceWindowDay).Pointer(),
-			TimeWindowUtc: vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfigMaintenanceWindowTimeWindowUTC(maintenanceWindowTime).Pointer(),
+			DayOfWeek:     &dayOfWeek,
+			TimeWindowUtc: &timeWindowUtc,
 		}
 	} else {
 		if maintenanceWindowDay != "" || maintenanceWindowTime != "" {

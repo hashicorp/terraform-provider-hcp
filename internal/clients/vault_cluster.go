@@ -152,7 +152,8 @@ func UpdateVaultClusterConfig(ctx context.Context, client *Client, loc *sharedmo
 	updateMaskPaths := []string{}
 
 	if tier != nil {
-		config.Tier = vaultmodels.HashicorpCloudVault20201125Tier(*tier).Pointer()
+		tier := vaultmodels.HashicorpCloudVault20201125Tier(*tier)
+		config.Tier = &tier
 		updateMaskPaths = append(updateMaskPaths, "config.tier")
 	}
 	if metrics != nil {
