@@ -2,8 +2,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
-	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -101,13 +102,7 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	if waitForActive && tgwAtt.State != networkmodels.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
-		tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
+	// Set ID for the resource in state.
 	link := newLink(tgwAtt.Location, TgwAttachmentResourceType, tgwAtt.ID)
 	url, err := linkURL(link)
 	if err != nil {
@@ -115,9 +110,48 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 	}
 	d.SetId(url)
 
+	// Update TF state for the resource before waiting.
 	if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
 		return diag.FromErr(err)
 	}
 
-	return nil
+	// Skip waiting.
+	if !waitForActive || tgwAtt.State == models.HashicorpCloudNetwork20200907TGWAttachmentStateACTIVE {
+		return nil
+	}
+
+	// If it's not in a state where it could later become ACTIVE, we're going to bail.
+	terminalState := true
+	for _, state := range clients.WaitForTGWAttachmentToBeActiveStates {
+		if state == string(tgwAtt.State) {
+			terminalState = false
+			break
+		}
+	}
+
+	// If it's not in a state that we should wait on, issue a warning and bail.
+	if terminalState {
+		return []diag.Diagnostic{{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Attachment is in an unexpected state, connections may fail: %q", string(tgwAtt.State)),
+			Detail:   "Expected a CREATING, PENDING_ACCEPTANCE, ACCEPTED, or ACTIVE state",
+		}}
+	}
+
+	// Store resource data again, updating Peering state.
+	var result []diag.Diagnostic
+	tgwAtt, err = clients.WaitForTGWAttachmentToBeActive(ctx, client, tgwAttID, hvnID, loc, d.Timeout(schema.TimeoutDefault))
+	if tgwAtt != nil {
+		if err := setTransitGatewayAttachmentResourceData(d, tgwAtt); err != nil {
+			result = diag.FromErr(err)
+		}
+	}
+
+	// If we didn't reach the desired state, throw a diagnostic err.
+	if err != nil {
+		for _, d := range diag.FromErr(err) {
+			result = append(result, d)
+		}
+	}
+	return result
 }

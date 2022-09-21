@@ -84,7 +84,7 @@ func TestAccAwsPeering(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProviderFactories: providerFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"aws": {VersionConstraint: "~> 2.64.0"},
+			"aws": {VersionConstraint: "~> 4.0.0"},
 		},
 		CheckDestroy: testAccCheckHvnPeeringDestroy,
 
