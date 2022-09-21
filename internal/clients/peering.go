@@ -76,7 +76,11 @@ func waitForPeeringToBe(ps peeringState) WaitFor {
 
 		result, err := stateChangeConfig.WaitForStateContext(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("error waiting for peering connection (%s) to become '%s': %v", peeringID, ps.Target, err)
+			err = fmt.Errorf("error waiting for peering connection (%s) to become '%s': %v", peeringID, ps.Target, err)
+			if result != nil {
+				return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), err
+			}
+			return nil, err
 		}
 
 		return result.(*networkmodels.HashicorpCloudNetwork20200907Peering), nil
@@ -99,5 +103,8 @@ var WaitForPeeringToBeAccepted = waitForPeeringToBe(peeringState{
 // WaitForPeeringToBeActive will poll the GET peering endpoint until the state is ACTIVE, ctx is canceled, or an error occurs.
 var WaitForPeeringToBeActive = waitForPeeringToBe(peeringState{
 	Target:  PeeringStateActive,
-	Pending: []string{PeeringStateCreating, PeeringStatePendingAcceptance, PeeringStateAccepted},
+	Pending: WaitForPeeringToBeActiveStates,
 })
+
+// WaitForPeeringToBeActiveStates are those from which we'd expect an ACTIVE state to be possible.
+var WaitForPeeringToBeActiveStates = []string{PeeringStateCreating, PeeringStatePendingAcceptance, PeeringStateAccepted}

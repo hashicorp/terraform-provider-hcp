@@ -69,7 +69,7 @@ For advanced developers, the acceptance testing framework accepts some additiona
 
 ## Writing an Acceptance Test
 
-Terraform has a framework for writing acceptance tests which minimises the
+Terraform has a framework for writing acceptance tests which minimizes the
 amount of boilerplate code necessary to use common testing patterns. The entry
 point to the framework is the `resource.Test()` function.
 
