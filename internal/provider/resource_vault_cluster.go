@@ -394,13 +394,18 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("only performance replication secondaries may specify a paths_filter")
 		}
 
-		tier := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(d.Get("tier").(string)))
+		var tier *vaultmodels.HashicorpCloudVault20201125Tier
+		t, ok := d.GetOk("tier")
+		if ok {
+			tier = vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(t.(string))).Pointer()
+		}
+
 		vaultCluster = &vaultmodels.HashicorpCloudVault20201125InputCluster{
 			Config: &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 					InitialVersion: vaultVersion,
 				},
-				Tier: &tier,
+				Tier: tier,
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
