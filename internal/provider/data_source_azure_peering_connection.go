@@ -144,14 +144,14 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	// Skip waiting.
-	if !waitForActive || peering.State == models.HashicorpCloudNetwork20200907PeeringStateACTIVE {
+	if !waitForActive || *peering.State == models.HashicorpCloudNetwork20200907PeeringStateACTIVE {
 		return nil
 	}
 
 	// If it's not in a state where it could later become ACTIVE, we're going to bail.
 	terminalState := true
 	for _, state := range clients.WaitForPeeringToBeActiveStates {
-		if state == string(peering.State) {
+		if state == string(*peering.State) {
 			terminalState = false
 			break
 		}
@@ -161,7 +161,7 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	if terminalState {
 		return []diag.Diagnostic{{
 			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("Peering is in an unexpected state, connections may fail: %q", string(peering.State)),
+			Summary:  fmt.Sprintf("Peering is in an unexpected state, connections may fail: %q", string(*peering.State)),
 			Detail:   "Expected a CREATING, PENDING_ACCEPTANCE, ACCEPTED, or ACTIVE state",
 		}}
 	}

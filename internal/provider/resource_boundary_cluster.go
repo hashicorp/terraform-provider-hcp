@@ -179,7 +179,7 @@ func resourceBoundaryClusterRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// The Boundary cluster was already deleted, remove from state.
-	if cluster.State == boundarymodels.HashicorpCloudBoundary20211221ClusterStateSTATEDELETED {
+	if *cluster.State == boundarymodels.HashicorpCloudBoundary20211221ClusterStateSTATEDELETED {
 		log.Printf("[WARN] Boundary cluster (%s) failed to provision, removing from state", clusterID)
 		d.SetId("")
 		return nil
