@@ -50,8 +50,9 @@ func upsertRegistry(t *testing.T) {
 	params := packer_service.NewPackerServiceCreateRegistryParams()
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
+	featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
 	params.Body = &models.HashicorpCloudPackerCreateRegistryRequest{
-		FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS,
+		FeatureTier: &featureTier,
 	}
 
 	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
@@ -66,13 +67,14 @@ func upsertRegistry(t *testing.T) {
 				t.Errorf("unexpected GetRegistry error: %v", err)
 				return
 			}
-			if getResp.Payload.Registry.Config.FeatureTier != models.HashicorpCloudPackerRegistryConfigTierPLUS {
+			if *getResp.Payload.Registry.Config.FeatureTier != models.HashicorpCloudPackerRegistryConfigTierPLUS {
 				// Make sure is a plus registry
 				params := packer_service.NewPackerServiceUpdateRegistryParams()
 				params.LocationOrganizationID = loc.OrganizationID
 				params.LocationProjectID = loc.ProjectID
+				featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
 				params.Body = &models.HashicorpCloudPackerUpdateRegistryRequest{
-					FeatureTier: models.HashicorpCloudPackerRegistryConfigTierPLUS,
+					FeatureTier: &featureTier,
 				}
 				resp, err := client.Packer.PackerServiceUpdateRegistry(params, nil)
 				if err != nil {
@@ -116,16 +118,16 @@ func waitForOperation(
 			t.Errorf("Operation failed: %s", resp.Payload.Operation.Error.Message)
 		}
 
-		switch resp.Payload.Operation.State {
-		case "PENDING":
+		switch *resp.Payload.Operation.State {
+		case sharedmodels.HashicorpCloudOperationOperationStatePENDING:
 			msg := fmt.Sprintf("==> Operation \"%s\" pending...", operationName)
 			return fmt.Errorf(msg)
-		case "RUNNING":
+		case sharedmodels.HashicorpCloudOperationOperationStateRUNNING:
 			msg := fmt.Sprintf("==> Operation \"%s\" running...", operationName)
 			return fmt.Errorf(msg)
-		case "DONE":
+		case sharedmodels.HashicorpCloudOperationOperationStateDONE:
 		default:
-			t.Errorf("Operation returned unknown state: %s", resp.Payload.Operation.State)
+			t.Errorf("Operation returned unknown state: %s", *resp.Payload.Operation.State)
 		}
 		return nil
 	}
@@ -264,13 +266,14 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	createBuildParams.BucketSlug = bucketSlug
 	createBuildParams.IterationID = iterationID
 
+	status := models.HashicorpCloudPackerBuildStatusRUNNING
 	createBuildParams.Body = &models.HashicorpCloudPackerCreateBuildRequest{
 		BucketSlug: bucketSlug,
 		Build: &models.HashicorpCloudPackerBuildCreateBody{
 			CloudProvider: "aws",
 			ComponentType: "amazon-ebs.example",
 			PackerRunUUID: uuid.New().String(),
-			Status:        models.HashicorpCloudPackerBuildStatusRUNNING,
+			Status:        &status,
 		},
 		Fingerprint: fingerprint,
 		IterationID: iterationID,
@@ -297,9 +300,10 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams.LocationOrganizationID = loc.OrganizationID
 	updateBuildParams.LocationProjectID = loc.ProjectID
 	updateBuildParams.BuildID = build.Payload.Build.ID
+	updatesStatus := models.HashicorpCloudPackerBuildStatusDONE
 	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
-			Status: models.HashicorpCloudPackerBuildStatusDONE,
+			Status: &updatesStatus,
 			Images: []*models.HashicorpCloudPackerImageCreateBody{
 				{
 					ImageID: "ami-42",
