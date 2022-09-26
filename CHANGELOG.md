@@ -1,3 +1,13 @@
+## 0.45.0 (September 26, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/hcp-sdk-go` from 0.21.0 to 0.23.0. Note this change introduces some breaking changes when using model enums. More information can be found in the [HCP Go SDK Release](https://github.com/hashicorp/hcp-sdk-go/releases/tag/v0.23.0)  ([GH-392](https://github.com/hashicorp/terraform-provider-hcp/pull/392))
+
+FIXES:
+
+* provider: Prevent FAILED peerings/attachments from failing deletes  ([GH-394](https://github.com/hashicorp/terraform-provider-hcp/pull/394))
+
 ## 0.44.0 (September 9, 2022)
 
 FIXES:
