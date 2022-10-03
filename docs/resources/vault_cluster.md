@@ -56,7 +56,7 @@ resource "hcp_vault_cluster" "example" {
 - `paths_filter` (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
-- `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault).
+- `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
