@@ -1,3 +1,15 @@
+## 0.46.0 (September 26, 2022)
+
+IMPROVEMENTS:
+
+* provider: Update Mozilla Public License 2.0 [GH-402](https://github.com/hashicorp/terraform-provider-hcp/pull/402))
+* provider: Bump `google.golang.org/grpc` from 1.49.0 to 1.50.0 ([GH-401](https://github.com/hashicorp/terraform-provider-hcp/pull/401))
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.21.0 to 2.23.0 ([GH-395](https://github.com/hashicorp/terraform-provider-hcp/pull/395))
+
+FIXES:
+
+* docs: Add note in vault resource that only admins can modify cluster tier and size ([GH-400](https://github.com/hashicorp/terraform-provider-hcp/pull/400))
+
 ## 0.45.0 (September 26, 2022)
 
 IMPROVEMENTS:
