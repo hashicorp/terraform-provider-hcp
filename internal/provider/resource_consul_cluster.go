@@ -30,14 +30,6 @@ var createUpdateConsulClusterTimeout = time.Minute * 35
 // before a cluster delete operation should timeout.
 var deleteConsulClusterTimeout = time.Minute * 25
 
-// consulCusterResourceCloudProviders is the list of cloud providers
-// where a HCP Consul cluster can be provisioned.
-var consulCusterResourceCloudProviders = []string{
-	"aws",
-	// Available to internal users only
-	"azure",
-}
-
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
@@ -78,7 +70,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateConsulClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			// optional fields
@@ -90,7 +82,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"min_consul_version": {
-				Description:      "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Description:      "The minimum Consul patch (rightmost, e.g: 1.13.x) version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
@@ -139,7 +131,7 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: validateConsulClusterSize,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"auto_hvn_to_hvn_peering": {
@@ -238,10 +230,6 @@ func resourceConsulCluster() *schema.Resource {
 			},
 		},
 	}
-}
-
-type providerMeta struct {
-	ModuleName string `cty:"module_name"`
 }
 
 func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
