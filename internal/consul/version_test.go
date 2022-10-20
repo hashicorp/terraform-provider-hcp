@@ -187,3 +187,44 @@ func Test_VersionsToString(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetLatestPatch(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected string
+		found    bool
+	}{
+		"Invalid": {
+			input:    "invalid",
+			expected: "",
+			found:    false,
+		},
+		"NotFound": {
+			input:    "1.1.0",
+			expected: "",
+			found:    false,
+		},
+		"Found": {
+			input:    "1.13.1",
+			expected: "1.13.3",
+			found:    true,
+		},
+		"FoundAlreadyLatest": {
+			input:    "1.13.3",
+			expected: "1.13.3",
+			found:    true,
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+
+			versions := []string{"1.13.2", "1.12.5", "1.11.10", "1.10.12", "1.10.11", "1.10.10", "1.10.9", "1.10.8", "1.9.17", "1.9.16", "1.9.15", "1.14.0", "1.13.3", "invalid"}
+
+			patch, found := GetLatestPatch(tc.input, versions)
+			r.Equal(tc.expected, patch)
+			r.Equal(tc.found, found)
+		})
+	}
+}
