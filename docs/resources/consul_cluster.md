@@ -42,7 +42,7 @@ resource "hcp_consul_cluster" "example" {
 - `auto_hvn_to_hvn_peering` (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation. The alternative to using the auto-accept feature is to create an [`hcp_hvn_peering_connection`](hvn_peering_connection.md) resource that explicitly defines the HVN resources that are allowed to communicate with each other.
 - `connect_enabled` (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - `datacenter` (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
-- `min_consul_version` (String) The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
+- `min_consul_version` (String) The minimum Consul patch (rightmost, e.g: 1.13.x) version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - `size` (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul. Upgrading the size of a cluster after creation is allowed.

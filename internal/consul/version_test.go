@@ -220,7 +220,26 @@ func Test_GetLatestPatch(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
 
-			versions := []string{"1.13.2", "1.12.5", "1.11.10", "1.10.12", "1.10.11", "1.10.10", "1.10.9", "1.10.8", "1.9.17", "1.9.16", "1.9.15", "1.14.0", "1.13.3", "invalid"}
+			versions := []*consulmodels.HashicorpCloudConsul20210204Version{
+				{
+					Version: "v1.13.2",
+				},
+				{
+					Version: "v1.12.5",
+				},
+				{
+					Version: "v1.11.10",
+				},
+				{
+					Version: "v1.14.0",
+				},
+				{
+					Version: "v1.13.3",
+				},
+				{
+					Version: "invalid",
+				},
+			}
 
 			patch, found := GetLatestPatch(tc.input, versions)
 			r.Equal(tc.expected, patch)

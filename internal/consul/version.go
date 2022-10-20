@@ -70,12 +70,12 @@ func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20210204Versi
 // E.g. Given the following slice of versions: ["1.11.1", "1.12.2", "1.13.3", "1.14.0"]
 // GetLatestPatch("1.13.1", versions) would return ("1.13.3", true)
 // GetLatestPatch("1.10.1", versions) would return ("", false)
-func GetLatestPatch(version string, versions []string) (patch string, found bool) {
+func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsul20210204Version) (patch string, found bool) {
 	// Convert versions to semver and sort them from oldest -> newest.
 	// E.g. [1.11.x, 1.12.x, 1.13.x, ...]
 	var semvers []*semver.Version
 	for _, v := range versions {
-		sv, err := semver.NewSemver(v)
+		sv, err := semver.NewSemver(v.Version)
 		if err != nil {
 			// Ignore invalid versions.
 			continue
