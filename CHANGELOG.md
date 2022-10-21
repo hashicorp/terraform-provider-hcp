@@ -1,4 +1,12 @@
-## 0.46.0 (September 26, 2022)
+## 0.47.0 (October 21, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.23.0 to 2.24.0 ([GH-403](https://github.com/hashicorp/terraform-provider-hcp/pull/403))
+* provider: Bump `github.com/go-openapi/runtime` from 0.24.1 to 0.24.2 ([GH-404](https://github.com/hashicorp/terraform-provider-hcp/pull/404))
+* provider: Bump `google.golang.org/grpc` from 1.50.0 to 1.50.1 ([GH-405](https://github.com/hashicorp/terraform-provider-hcp/pull/405))
+
+## 0.46.0 (October 13, 2022)
 
 IMPROVEMENTS:
 
