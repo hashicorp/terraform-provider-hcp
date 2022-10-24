@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/hcp-sdk-go v0.23.0
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.50.1
 )
 
