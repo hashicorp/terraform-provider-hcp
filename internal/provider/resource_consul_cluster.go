@@ -285,7 +285,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		consulVersion = input.NormalizeVersion(v.(string))
 
 		// Attempt to get the latest patch version of the given min_consul_version.
-		if patch, found := consul.GetLatestPatch(consulVersion, availableConsulVersions); found {
+		if patch := consul.GetLatestPatch(consulVersion, availableConsulVersions); patch != "" {
 			consulVersion = input.NormalizeVersion(patch)
 		}
 	}
@@ -656,7 +656,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		newConsulVersion := input.NormalizeVersion(version.(string))
 
 		// Attempt to get the latest patch version of the given min_consul_version.
-		if patch, found := consul.GetLatestPatch(newConsulVersion, upgradeVersions); found {
+		if patch := consul.GetLatestPatch(newConsulVersion, upgradeVersions); patch != "" {
 			newConsulVersion = input.NormalizeVersion(patch)
 		}
 

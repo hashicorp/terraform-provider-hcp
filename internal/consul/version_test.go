@@ -192,27 +192,22 @@ func Test_GetLatestPatch(t *testing.T) {
 	tcs := map[string]struct {
 		input    string
 		expected string
-		found    bool
 	}{
 		"Invalid": {
 			input:    "invalid",
 			expected: "",
-			found:    false,
 		},
 		"NotFound": {
 			input:    "1.1.0",
 			expected: "",
-			found:    false,
 		},
 		"Found": {
 			input:    "1.13.0",
 			expected: "1.13.3",
-			found:    true,
 		},
 		"FoundAlreadyLatest": {
 			input:    "1.14.0",
 			expected: "1.14.0",
-			found:    true,
 		},
 	}
 
@@ -244,9 +239,8 @@ func Test_GetLatestPatch(t *testing.T) {
 				},
 			}
 
-			patch, found := GetLatestPatch(tc.input, versions)
+			patch := GetLatestPatch(tc.input, versions)
 			r.Equal(tc.expected, patch)
-			r.Equal(tc.found, found)
 		})
 	}
 }
