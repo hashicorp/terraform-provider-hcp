@@ -239,6 +239,9 @@ func Test_GetLatestPatch(t *testing.T) {
 				{
 					Version: "invalid",
 				},
+				{
+					Version: "v1.13.1",
+				},
 			}
 
 			patch, found := GetLatestPatch(tc.input, versions)

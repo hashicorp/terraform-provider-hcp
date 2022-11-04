@@ -71,40 +71,42 @@ func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20210204Versi
 // GetLatestPatch("1.13.1", versions) would return ("1.13.3", true)
 // GetLatestPatch("1.10.1", versions) would return ("", false)
 func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsul20210204Version) (patch string, found bool) {
-	// Convert versions to semver and sort them from oldest -> newest.
-	// E.g. [1.11.x, 1.12.x, 1.13.x, ...]
-	var semvers []*semver.Version
-	for _, v := range versions {
-		sv, err := semver.NewSemver(v.Version)
+	target, err := semver.NewSemver(version)
+	if err != nil {
+		return "", false
+	}
+
+	// Keep track of the current patch version.
+	var currentPatch int
+
+	for _, current := range versions {
+		sv, err := semver.NewSemver(current.Version)
 		if err != nil {
 			// Ignore invalid versions.
 			continue
 		}
 
-		semvers = append(semvers, sv)
-	}
-
-	v, err := semver.NewSemver(version)
-	if err != nil {
-		return "", false
-	}
-
-	for _, sv := range semvers {
-		// If the requested version is less than the currently
+		// If the target version is greater than the currently
 		// evaluated semver, skip.
-		if v.GreaterThan(sv) {
+		if target.GreaterThan(sv) {
 			continue
 		}
 
 		// If the requested version's minor does not equal the
 		// currently evaluated semver, skip.
-		if v.Segments()[1] != sv.Segments()[1] {
+		if target.Segments()[1] != sv.Segments()[1] {
 			continue
 		}
 
-		// Set the patch version to the currently evaluated semver.
-		patch = sv.String()
-		found = true
+		// Check the current patch is greater than the previous patch version.
+		p := sv.Segments()[2]
+		if p > currentPatch {
+			currentPatch = p
+			// Set the patch version to the currently evaluated semver.
+			patch = sv.String()
+			found = true
+		}
+
 	}
 
 	return patch, found
