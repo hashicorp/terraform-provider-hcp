@@ -100,7 +100,7 @@ func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsu
 
 		// Check the current patch is greater than the previous patch version.
 		p := sv.Segments()[2]
-		if p > currentPatch {
+		if p >= currentPatch {
 			currentPatch = p
 			// Set the patch version to the currently evaluated semver.
 			patch = sv.String()

@@ -205,13 +205,13 @@ func Test_GetLatestPatch(t *testing.T) {
 			found:    false,
 		},
 		"Found": {
-			input:    "1.13.1",
+			input:    "1.13.0",
 			expected: "1.13.3",
 			found:    true,
 		},
 		"FoundAlreadyLatest": {
-			input:    "1.13.3",
-			expected: "1.13.3",
+			input:    "1.14.0",
+			expected: "1.14.0",
 			found:    true,
 		},
 	}
