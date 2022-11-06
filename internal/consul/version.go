@@ -77,11 +77,8 @@ func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsu
 	}
 
 	// The latest patch verison.
-	var latest string
+	var latest *semver.Version
 
-	// Keep track of the current patch version while looping through the given
-	// versions.
-	var currentPatch int
 	for _, v := range versions {
 		current, err := semver.NewSemver(v.Version)
 		if err != nil {
@@ -95,21 +92,21 @@ func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsu
 			continue
 		}
 
-		// If the target version's minor does not equal the minor of
-		// the currently evaluated semver, skip.
+		// If the target and current minor versions are not equal, skip.
 		if target.Segments()[1] != current.Segments()[1] {
 			continue
 		}
 
-		// Check the current patch is greater than the previous patch version.
-		p := current.Segments()[2]
-		if p >= currentPatch {
-			// Set the patch version to the currently evaluated semver.
-			currentPatch = p
-			latest = current.String()
+		// If we have yet to see the current version, or the current version
+		// is greater than the latest version, we can assume this is the latest.
+		if latest == nil || current.GreaterThan(latest) {
+			latest = current
 		}
-
 	}
 
-	return latest
+	if latest != nil {
+		return latest.String()
+	}
+
+	return ""
 }

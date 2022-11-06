@@ -197,8 +197,16 @@ func Test_GetLatestPatch(t *testing.T) {
 			input:    "invalid",
 			expected: "",
 		},
-		"NotFound": {
+		"NotFoundMajor": {
+			input:    "2.0.0",
+			expected: "",
+		},
+		"NotFoundMinor": {
 			input:    "1.1.0",
+			expected: "",
+		},
+		"NotFoundPatch": {
+			input:    "1.14.1",
 			expected: "",
 		},
 		"Found": {
