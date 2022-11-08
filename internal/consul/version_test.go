@@ -187,3 +187,68 @@ func Test_VersionsToString(t *testing.T) {
 		})
 	}
 }
+
+func Test_GetLatestPatch(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected string
+	}{
+		"Invalid": {
+			input:    "invalid",
+			expected: "",
+		},
+		"NotFoundMajor": {
+			input:    "2.0.0",
+			expected: "",
+		},
+		"NotFoundMinor": {
+			input:    "1.1.0",
+			expected: "",
+		},
+		"NotFoundPatch": {
+			input:    "1.14.1",
+			expected: "",
+		},
+		"Found": {
+			input:    "1.13.0",
+			expected: "1.13.3",
+		},
+		"FoundAlreadyLatest": {
+			input:    "1.14.0",
+			expected: "1.14.0",
+		},
+	}
+
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+
+			versions := []*consulmodels.HashicorpCloudConsul20210204Version{
+				{
+					Version: "v1.13.2",
+				},
+				{
+					Version: "v1.12.5",
+				},
+				{
+					Version: "v1.11.10",
+				},
+				{
+					Version: "v1.14.0",
+				},
+				{
+					Version: "v1.13.3",
+				},
+				{
+					Version: "invalid",
+				},
+				{
+					Version: "v1.13.1",
+				},
+			}
+
+			patch := GetLatestPatch(tc.input, versions)
+			r.Equal(tc.expected, patch)
+		})
+	}
+}
