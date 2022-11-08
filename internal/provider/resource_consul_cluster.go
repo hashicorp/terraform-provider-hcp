@@ -82,7 +82,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"min_consul_version": {
-				Description:      "The minimum Consul patch (rightmost, e.g: 1.13.x) version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Description:      "The minimum Consul patch version of the cluster. Allows only the rightmost version component to increment (E.g: `1.13.0` will allow installation of `1.13.2` and `1.13.3` etc., but not `1.14.0`). If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
