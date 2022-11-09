@@ -1,3 +1,10 @@
+## 0.48.0 (November 9, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/stretchr/testify` from 1.8.0 to 1.8.1 ([GH-408](https://github.com/hashicorp/terraform-provider-hcp/pull/408))
+* provider: Auto detect latest Consul patch version ([GH-406](https://github.com/hashicorp/terraform-provider-hcp/pull/406))
+
 ## 0.47.0 (October 21, 2022)
 
 IMPROVEMENTS:
