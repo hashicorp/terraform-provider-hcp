@@ -1,0 +1,43 @@
+name: Test
+
+permissions:
+  contents: write
+
+on: [pull_request]
+
+jobs:
+  test:
+    name: Run Unit Tests and Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      - name: Cache Go Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Dependencies
+        run: |
+          go mod download
+          go mod tidy
+
+      - name: Run Tests
+        run: make test-ci
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Coverage
+          path: coverage.html

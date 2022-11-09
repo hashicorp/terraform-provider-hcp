@@ -1,0 +1,101 @@
+name: Prerelease
+
+on: 
+  # Run Every Wednesday at 12:00 AM UTC
+  schedule:
+    - cron: '0 0 * * 3'
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  prerelease:
+    name: Prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      - name: Configure Git
+        env:
+          TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+            git config --global advice.detachedHead false
+            git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+            git config user.name "hashicorp-cloud"
+            git config user.email "hashicorp-cloud@hashicorp.com"
+
+      - name: Cache Go Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go Binaries
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
+        run: |
+          go install github.com/hashicorp/go-changelog/cmd/changelog-build@6ec9be372335f39c5df27e232c3669db7f5183a5
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+
+      - name: Run Unit Tests and Linter
+        run: make test-ci
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Coverage
+          path: coverage.html
+
+      - name: Release New Version
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
+          GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+            CURRENT_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+            SHOULD_RELEASE=$(git diff $CURRENT_VERSION main)
+            if [[ $SHOULD_RELEASE == "" ]]; then
+              echo "There were no changes since the last release. Skipping auto release.";
+            else
+              echo "There were changes since the last release."
+              echo "Current Version: $CURRENT_VERSION"
+              CURRENT_VERSION_PARTS=(${CURRENT_VERSION//./ })
+              MAJOR=${CURRENT_VERSION_PARTS[0]}
+              MINOR=${CURRENT_VERSION_PARTS[1]}
+              PATCH=${CURRENT_VERSION_PARTS[2]}
+              HEAD_BRANCH="main"
+              MINOR=$((MINOR+1))
+              NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+              echo "updating ${CURRENT_VERSION} to ${NEW_VERSION}"
+              echo "generating changelog"
+              GIT_COMMIT_SHA=$(git rev-parse HEAD)
+              CHANGELOG=$(changelog-build -changelog-template .changelog/changelog.tmpl -note-template .changelog/note.tmpl -entries-dir .changelog/ -last-release ${CURRENT_VERSION} -this-release ${GIT_COMMIT_SHA})
+              DATE=$(date '+%B %d, %Y')
+              mv CHANGELOG.md OLD-CHANGELOG.md
+              echo -e "## ${NEW_VERSION} (${DATE})\n${CHANGELOG}" > CHANGELOG.md
+              cat OLD-CHANGELOG.md >> CHANGELOG.md
+              rm -f OLD-CHANGELOG.md
+              git add CHANGELOG.md
+              git commit -m 'updated CHANGELOG.md'
+              echo "creating a new git tag"
+              CHANGELOG_URL="https://github.com/hashicorp/terraform-provider-hcp/blob/${NEW_VERSION}/CHANGELOG.md"
+              git tag -a -m "${NEW_VERSION}" -m "See changelog: ${CHANGELOG_URL}" "${NEW_VERSION}"
+              echo "New Version: ${NEW_VERSION}"
+              echo "Pushing new tag to remote"
+              git config -l
+              git push --tags
+              git push
+            fi
