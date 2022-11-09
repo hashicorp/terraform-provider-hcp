@@ -36,6 +36,11 @@ jobs:
           go mod tidy
 
       - name: Run Tests
+        env:
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
+          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
         run: make testacc-ci
 
       - name: Upload Coverage Artifact
