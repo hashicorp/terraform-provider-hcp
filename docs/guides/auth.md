@@ -11,6 +11,12 @@ The HCP provider accepts client credentials, which are obtained on the creation 
 
 Service principals and service principal keys can be created in the HCP portal with an existing user account.
 
+## Authenticate using user session with browser
+
+The HCP provider supports logging in via the browser. To enable automatic browser login, you must leave client credentials unset and pin the provider to version 0.45.0 or above.
+
+Upon running `terraform apply` or `terraform plan`, your web browser will navigate to the HCP portal, where you will be prompted to login. Once logged in, you may create new or manage existing resources fully authenticated. Your session will last 24 hours before prompting you to reauthenticate.
+
 ## Create a service principal
 
 Once you have registered and logged into the HCP portal, navigate to the Access Control (IAM) page. Select the Service Principals tab and create a new service principal. Give it the role Contributor, since it will be writing resources.
@@ -32,16 +38,3 @@ provider "hcp" {
   client_secret = "service-principal-key-client-secret"
 }
 ``` 
-
-## Optional Browser Login if no client credentials configured
-
-The HCP provider supports log in via the browser if the client ID and client secret aren't configured. This feature is supported in provider version 0.45.0 and above. Enable browser login post update by first regenerating the provider in terminal with the following commands. 
-
-```
-cd terraform-provider-hcp
-make dev
-terraform init
-terraform apply
-```
-
-Your web browser then will navigate to the HCP portal, where you will be prompted to login. You may now create new or manage existing resources fully authenticated.
