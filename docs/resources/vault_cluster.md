@@ -49,11 +49,11 @@ resource "hcp_vault_cluster" "example" {
 
 ### Optional
 
-- `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
 - `major_version_upgrade_config` (Block List, Max: 1) The Major Version Upgrade configuration. (see [below for nested schema](#nestedblock--major_version_upgrade_config))
-- `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
+- `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
-- `paths_filter` (List of String) The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in "deny" mode only.
+- `paths_filter` (List of String) The performance replication [paths filter]https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
@@ -140,5 +140,5 @@ terraform import hcp_vault_cluster.example vault-cluster
 
 Refer to the following tutorials for additional usage examples:
 
-- [Deploy HCP Vault with Terraform](https://learn.hashicorp.com/tutorials/cloud/terraform-hcp-provider-vault) 
-- [Deploy HCP Vault Performance Replication with Terraform](https://learn.hashicorp.com/tutorials/cloud/vault-replication-terraform)
+- [Deploy HCP Vault with Terraform](https://developer.hashicorp.com/vault/tutorials/cloud-ops/terraform-hcp-provider-vault) 
+- [Deploy HCP Vault Performance Replication with Terraform](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform)
