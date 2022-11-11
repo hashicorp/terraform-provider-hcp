@@ -14,7 +14,6 @@ The [aws_vpc_peering_connection_accepter](https://registry.terraform.io/provider
 -> **Note:** The CIDR blocks of the HVN and the peer VPC cannot overlap.
 
 For a complete example of deploying Consul on HCP, check out the [Deploy HCP Consul with Terraform](https://developer.hashicorp.com/consul/tutorials/cloud-production/terraform-hcp-consul-provider) guide.
-
 ```terraform
 // Create a HashiCorp Virtual Network (HVN).
 resource "hcp_hvn" "example" {
