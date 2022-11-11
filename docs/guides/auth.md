@@ -35,10 +35,15 @@ provider "hcp" {
   client_id     = "service-principal-key-client-id"
   client_secret = "service-principal-key-client-secret"
 }
-```
+``` 
 
 ## User session with browser login
 
 The HCP provider supports logging in via the browser. To enable automatic browser login, you must leave client credentials unset and pin the provider to version 0.45.0 or above.
 
 Upon running `terraform apply` or `terraform plan`, your web browser will navigate to the HCP portal, where you will be prompted to login. Once logged in, you may create new or manage existing resources fully authenticated. Your session will last 24 hours before prompting you to reauthenticate.
+
+```terraform
+// If no credentials are set, a user session can be obtained through browser login.
+provider "hcp" {}
+``` 
