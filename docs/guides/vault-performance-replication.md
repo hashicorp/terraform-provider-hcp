@@ -7,7 +7,7 @@ description: |-
 
 # Configure Vault performance replication
 
-Admins and Contributors can use the provider to create Plus tier clusters with Vault [performance replication](https://learn.hashicorp.com/tutorials/cloud/vault-replication) enabled via the `primary_link` parameter. In addition to both clusters being in the Plus tier, both must be of the same size (S, M, L).
+Admins and Contributors can use the provider to create Plus tier clusters with Vault [performance replication](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform) enabled via the `primary_link` parameter. In addition to both clusters being in the Plus tier, both must be of the same size (S, M, L).
 
 Although the clusters may reside in the same HVN, it is more likely that you will want to station your performance replication secondary in a different region, and therefore HVN, than your primary. When establishing performance replication links between clusters in different HVNs, an HVN peering connection is required. This can be defined explicitly using an [`hcp_hvn_peering_connection`](../resources/hvn_peering_connection.md), or HCP will create the connection automatically (peering connections can be imported after creation using [terraform import](https://www.terraform.io/cli/import)). Note HVN peering [CIDR block requirements](https://cloud.hashicorp.com/docs/hcp/network/routes#cidr-block-requirements).
 
@@ -45,3 +45,7 @@ resource "hcp_vault_cluster" "secondary" {
   paths_filter = ["path/a", "path/b"]
 }
 ```
+
+## Tutorials
+
+Refer to the [Deploy HCP Vault Performance Replication with Terraform](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform) tutorial for additional usage examples.
