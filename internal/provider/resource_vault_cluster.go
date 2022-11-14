@@ -93,7 +93,7 @@ func resourceVaultCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"paths_filter": {
-				Description: "The performance replication [paths filter](https://learn.hashicorp.com/tutorials/vault/paths-filter). Applies to performance replication secondaries only and operates in \"deny\" mode only.",
+				Description: "The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform). Applies to performance replication secondaries only and operates in \"deny\" mode only.",
 				Type:        schema.TypeList,
 				MinItems:    1,
 				Elem: &schema.Schema{
@@ -128,7 +128,7 @@ func resourceVaultCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"metrics_config": {
-				Description: "The metrics configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Description: "The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration)",
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
@@ -176,7 +176,7 @@ func resourceVaultCluster() *schema.Resource {
 				},
 			},
 			"audit_log_config": {
-				Description: "The audit logs configuration for export. (https://learn.hashicorp.com/tutorials/cloud/vault-metrics-guide#metrics-streaming-configuration)",
+				Description: "The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration)",
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
