@@ -24,6 +24,7 @@ jobs:
         with:
           cache: true
           go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
 
       - name: Configure Git
         env:
@@ -33,16 +34,6 @@ jobs:
             git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
             git config user.name "hashicorp-cloud"
             git config user.email "hashicorp-cloud@hashicorp.com"
-
-      - name: Cache Go Dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
 
       - name: Install Go Binaries
         env:
