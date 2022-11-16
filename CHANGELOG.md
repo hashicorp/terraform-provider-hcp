@@ -1,3 +1,12 @@
+## 0.49.0 (November 16, 2022)
+
+IMPROVEMENTS:
+
+* provider: Bump `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.24.0 to 2.24.1 ([GH-415](https://github.com/hashicorp/terraform-provider-hcp/pull/415))
+* provider: Bump `github.com/hashicorp/hcp-sdk-go` from 0.23.0 to 0.24.0 ([GH-413](https://github.com/hashicorp/terraform-provider-hcp/pull/413))
+* docs: Update the tutorial links ([GH-414](https://github.com/hashicorp/terraform-provider-hcp/pull/414))
+* docs: Updates browser login documentation ([GH-412](https://github.com/hashicorp/terraform-provider-hcp/pull/412))
+
 ## 0.48.0 (November 9, 2022)
 
 IMPROVEMENTS:
@@ -58,7 +67,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * provider: Bump version of Go to 1.18.5 in `.go-version` ([GH-374](https://github.com/hashicorp/terraform-provider-hcp/pull/374))
-*provider: Bump `google.golang.org/grpc` from 1.48.0 to 1.49.0 ([GH-379](https://github.com/hashicorp/terraform-provider-hcp/pull/379))
+* provider: Bump `google.golang.org/grpc` from 1.48.0 to 1.49.0 ([GH-379](https://github.com/hashicorp/terraform-provider-hcp/pull/379))
 
 FIXES:
 
