@@ -14,8 +14,8 @@ import (
 
 var (
 	uniqueAzurePeeringTestID  = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
-	subscriptionID            = os.Getenv("AZURE_SUBSCRIPTION_ID")
-	tenantID                  = os.Getenv("AZURE_TENANT_ID")
+	subscriptionID            = os.Getenv("ARM_SUBSCRIPTION_ID")
+	tenantID                  = os.Getenv("ARM_TENANT_ID")
 	testAccAzurePeeringConfig = fmt.Sprintf(`
 provider "azurerm" {
   features {}
