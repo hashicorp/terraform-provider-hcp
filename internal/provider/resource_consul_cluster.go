@@ -30,14 +30,6 @@ var createUpdateConsulClusterTimeout = time.Minute * 35
 // before a cluster delete operation should timeout.
 var deleteConsulClusterTimeout = time.Minute * 25
 
-// consulCusterResourceCloudProviders is the list of cloud providers
-// where a HCP Consul cluster can be provisioned.
-var consulCusterResourceCloudProviders = []string{
-	"aws",
-	// Available to internal users only
-	"azure",
-}
-
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
@@ -78,7 +70,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateConsulClusterTier,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			// optional fields
@@ -90,7 +82,7 @@ func resourceConsulCluster() *schema.Resource {
 				ForceNew:    true,
 			},
 			"min_consul_version": {
-				Description:      "The minimum Consul version of the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Description:      "The minimum Consul patch version of the cluster. Allows only the rightmost version component to increment (E.g: `1.13.0` will allow installation of `1.13.2` and `1.13.3` etc., but not `1.14.0`). If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,
@@ -139,7 +131,7 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: validateConsulClusterSize,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"auto_hvn_to_hvn_peering": {
@@ -240,10 +232,6 @@ func resourceConsulCluster() *schema.Resource {
 	}
 }
 
-type providerMeta struct {
-	ModuleName string `cty:"module_name"`
-}
-
 func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -295,6 +283,11 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	v, ok := d.GetOk("min_consul_version")
 	if ok {
 		consulVersion = input.NormalizeVersion(v.(string))
+
+		// Attempt to get the latest patch version of the given min_consul_version.
+		if patch := consul.GetLatestPatch(consulVersion, availableConsulVersions); patch != "" {
+			consulVersion = input.NormalizeVersion(patch)
+		}
 	}
 
 	// check if version is valid and available
@@ -661,6 +654,11 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 		version := d.Get("min_consul_version")
 		newConsulVersion := input.NormalizeVersion(version.(string))
+
+		// Attempt to get the latest patch version of the given min_consul_version.
+		if patch := consul.GetLatestPatch(newConsulVersion, upgradeVersions); patch != "" {
+			newConsulVersion = input.NormalizeVersion(patch)
+		}
 
 		// Check that there are any valid upgrade versions
 		if upgradeVersions == nil {
