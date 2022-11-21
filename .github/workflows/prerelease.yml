@@ -1,9 +1,10 @@
 name: Prerelease
 
 on: 
+  ## Uncomment when ready to actually release this thing with automated tests.
   # Run Every Wednesday at 12:00 AM UTC
-  schedule:
-    - cron: '0 0 * * 3'
+  # schedule:
+  #   - cron: '0 0 * * 3'
   workflow_dispatch:
 
 permissions: write-all
