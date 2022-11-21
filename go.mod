@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
 	github.com/stretchr/testify v1.8.1
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 )
 
 require (
@@ -84,10 +84,10 @@ require (
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	go.mongodb.org/mongo-driver v1.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58 // indirect
-	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
