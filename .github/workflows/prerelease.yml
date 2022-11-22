@@ -82,6 +82,13 @@ jobs:
               rm -f OLD-CHANGELOG.md
               git add CHANGELOG.md
               git commit -m 'updated CHANGELOG.md'
+              echo "updating documentation"
+              CURRENT_VERSION_NUM="${CURRENT_VERSION:1}"
+              NEW_VERSION_NUM="${NEW_VERSION:1}"
+              sed -i "s/~> $CURRENT_VERSION_NUM/~> $NEW_VERSION_NUM/g" examples/provider/provider.tf
+              go generate
+              git add examples/provider/provider.tf docs/*
+              git commit -m 'updated documentation'
               echo "creating a new git tag"
               CHANGELOG_URL="https://github.com/hashicorp/terraform-provider-hcp/blob/${NEW_VERSION}/CHANGELOG.md"
               git tag -a -m "${NEW_VERSION}" -m "See changelog: ${CHANGELOG_URL}" "${NEW_VERSION}"
