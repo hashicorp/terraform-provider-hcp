@@ -1,4 +1,4 @@
-## 0.49.0 (November 16, 2022)
+## v0.49.0 (November 16, 2022)
 
 IMPROVEMENTS:
 

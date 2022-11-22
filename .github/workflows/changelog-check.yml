@@ -1,0 +1,50 @@
+# This workflow checks that there is either a 'pr/no-changelog' label
+# applied to a PR or there is a .changelog/<pr number>.txt file associated
+# with a PR for a changelog entry.
+---
+name: Changelog Check
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - labeled
+    branches:
+      - main
+
+jobs:
+  changelog-check:
+    name: Changelog Check
+    # Ignore this check if there is a `pr/no-changelog` label
+    if: |
+        !contains(github.event.pull_request.labels.*.name, 'pr/no-changelog')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # by default the checkout action doesn't checkout all branches
+
+      - name: Check for changelog entry in diff
+        run: |
+          # check if there is a diff in the changelog directory
+          changelog_files=$(git --no-pager diff --name-only HEAD "$(git merge-base HEAD "origin/${{ github.event.pull_request.base.ref }}")" -- .changelog/${{ github.event.pull_request.number }}.txt)
+          # If we do not find a file matching the PR # in .changelog/, we fail the check
+          if [ -z "$changelog_files" ]; then
+            echo "::error::Did not find a changelog entry named ${{ github.event.pull_request.number }}.txt in .changelog/"
+            echo "::debug::For reference, refer to the README."
+            exit 1
+          elif grep -q ':enhancement$' $changelog_files; then
+            # "Enhancement is not a valid type of changelog entry, but it's a common mistake.
+            echo "::error::Found invalid type (enhancement) in changelog - did you mean improvement?"
+            exit 1
+          elif grep -q ':bugs$' $changelog_files; then
+            echo "::error::Found invalid type (bugs) in changelog - did you mean bug?"
+            exit 1
+          elif ! grep -q '```release-note:' $changelog_files; then
+            # People often make changelog files like ```changelog:, which is incorrect.
+            echo "::error::Changelog file did not contain 'release-note' heading - check formatting."
+            exit 1
+          else
+            echo "::debug::Found changelog entry in PR!"
+          fi

@@ -33,6 +33,10 @@ fmtcheck:
 test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
 
+test-ci: fmtcheck
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
@@ -46,6 +50,20 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 210m
 
+testacc-ci: fmtcheck
+	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
+		echo ""; \
+		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo ""; \
+		echo "For example if updating resource_hvn.go, use the test names in resource_hvn_test.go starting with TestAcc:"; \
+		echo "make testacc TESTARGS='-run=TestAccHvn'"; \
+		echo ""; \
+		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
+		exit 1; \
+	fi
+	TF_ACC=1 go test -coverprofile=coverage.out $(TEST) -v $(TESTARGS) -timeout 210m
+	go tool cover -html=coverage.out -o coverage.html
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@go mod tidy
@@ -58,4 +76,4 @@ gencheck:
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'go generate' command and commit."; exit 1)
 
-.PHONY: dev all fmt fmtcheck test testacc depscheck gencheck
+.PHONY: dev all fmt fmtcheck test test-ci testacc depscheck gencheck
