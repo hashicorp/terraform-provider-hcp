@@ -1,0 +1,3 @@
+```release-note:bug
+Add check for "v" when compiling changelog
+```
