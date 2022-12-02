@@ -50,11 +50,10 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
-          jp --help
           AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
-          AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
-          AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
-          AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
+          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
           make testacc-ci TESTARGS='-run=TestAccTGWAttachment'
 
       - name: Upload Coverage Artifact
