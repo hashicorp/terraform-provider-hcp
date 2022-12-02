@@ -54,7 +54,7 @@ jobs:
           export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
-          make testacc-ci TESTARGS='-run=TestAccTGWAttachment'
+          make testacc-ci TESTARGS='-run=TestAccAwsPeering'
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v3
