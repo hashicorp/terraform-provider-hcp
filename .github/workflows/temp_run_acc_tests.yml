@@ -22,9 +22,13 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Install Dependencies
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
         run: |
           go mod download
           go mod tidy
+          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
+          sudo chmod +x /usr/local/bin/jp
 
       - name: Run Tests
         env:
@@ -35,7 +39,7 @@ jobs:
 
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
           AZURE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           AZURE_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -44,7 +48,12 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: make testacc-ci TESTARGS='-run=TestAccAzurePeeringConnection'
+        run: |
+          AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
+          AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
+          AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
+          AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
+          make testacc-ci TESTARGS='-run=TestAccTGWAttachment'
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v3
