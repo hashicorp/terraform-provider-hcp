@@ -29,7 +29,7 @@ resource "hcp_azure_peering_connection" "peer" {
   peer_subscription_id     = azurerm_subscription.sub.subscription_id
   peer_tenant_id           = "<tenant UUID>"
   peer_resource_group_name = azurerm_resource_group.rg.name
-  peer_vnet_region         = azurerm_virtual_network.location
+  peer_vnet_region         = azurerm_virtual_network.vnet.location
 }
 
 // This data source is the same as the resource above, but waits for the connection to be Active before returning.
