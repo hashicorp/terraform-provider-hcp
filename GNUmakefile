@@ -61,7 +61,7 @@ testacc-ci: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test -coverprofile=coverage.out $(TEST) -v $(TESTARGS) -timeout 720m
+	TF_ACC=1 go test -short -coverprofile=coverage.out $(TEST) -v $(TESTARGS) -timeout 720m
 	go tool cover -html=coverage.out -o coverage.html
 
 depscheck:
