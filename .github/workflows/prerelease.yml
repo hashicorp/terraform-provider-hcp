@@ -1,10 +1,9 @@
 name: Prerelease
 
 on: 
-  ## Uncomment when ready to actually release this thing with automated tests.
   # Run Every Wednesday at 12:00 AM UTC
-  # schedule:
-  #   - cron: '0 0 * * 3'
+  schedule:
+    - cron: '0 0 * * 3'
   workflow_dispatch:
 
 permissions: write-all
@@ -36,21 +35,57 @@ jobs:
             git config user.name "hashicorp-cloud"
             git config user.email "hashicorp-cloud@hashicorp.com"
 
-      - name: Install Go Binaries
+      - name: Install Dependencies
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
         run: |
           go install github.com/hashicorp/go-changelog/cmd/changelog-build@6ec9be372335f39c5df27e232c3669db7f5183a5
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+          go mod download
+          go mod tidy
+          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
+          sudo chmod +x /usr/local/bin/jp
 
       - name: Run Unit Tests and Linter
         run: make test-ci
 
-      - name: Upload Coverage Artifact
+      - name: Upload Unit Test Coverage Artifact
         uses: actions/upload-artifact@v3
         with:
           name: Test Coverage
           path: coverage.html
+
+      - name: Run E2E Tests
+        env:
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
+          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
+
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+          AWS_REGION: us-west-1
+
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: |
+          AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
+          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
+          make testacc-ci
+
+      - name: Upload E2E Coverage Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Coverage
+          path: coverage-e2e.html
 
       - name: Release New Version
         env:
