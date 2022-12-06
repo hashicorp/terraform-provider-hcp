@@ -1,0 +1,4 @@
+```release-note:bug
+The example usage for `hcp_azure_peering_connection` was missing the `vnet`
+resource reference.
+```
