@@ -1,0 +1,3 @@
+```release-note:improvement
+Bump google.golang.org/grpc from 1.50.1 to 1.51.0
+```

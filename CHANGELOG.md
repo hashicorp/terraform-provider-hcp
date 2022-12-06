@@ -1,3 +1,11 @@
+## v0.50.0 (November 30, 2022)
+
+IMPROVEMENTS:
+
+* Automatically update docs on auto release [[GH-419](https://github.com/hashicorp/terraform-provider-hcp/pull/419)]
+* Bump google.golang.org/grpc from 1.50.1 to 1.51.0 [[GH-418](https://github.com/hashicorp/terraform-provider-hcp/pull/418)]
+* Bumps github.com/go-openapi/runtime from 0.24.2 to 0.25.0 [[GH-422](https://github.com/hashicorp/terraform-provider-hcp/pull/422)]
+* Set up auto release capability [[GH-411](https://github.com/hashicorp/terraform-provider-hcp/pull/411)]
 ## v0.49.0 (November 16, 2022)
 
 IMPROVEMENTS:
