@@ -51,11 +51,11 @@ func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.H
 // handleGetChannelError returns a formatted error for the GetChannel error.
 // The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
 func handleGetChannelError(err *packer_service.PackerServiceGetChannelDefault) error {
-	return errors.New(err.Payload.Error)
+	return errors.New(err.Payload.Message)
 }
 
 // handleGetIterationError returns a formatted error for the GetIteration error.
 // The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
 func handleGetIterationError(err *packer_service.PackerServiceGetIterationDefault) error {
-	return errors.New(err.Payload.Error)
+	return errors.New(err.Payload.Message)
 }
