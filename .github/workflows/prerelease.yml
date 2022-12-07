@@ -41,7 +41,6 @@ jobs:
         run: |
           go install github.com/hashicorp/go-changelog/cmd/changelog-build@6ec9be372335f39c5df27e232c3669db7f5183a5
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-          go mod download
           go mod tidy
           sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
           sudo chmod +x /usr/local/bin/jp
