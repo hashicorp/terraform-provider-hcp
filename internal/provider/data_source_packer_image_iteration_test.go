@@ -51,7 +51,7 @@ func upsertRegistry(t *testing.T) {
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
-	params.Body = &models.HashicorpCloudPackerCreateRegistryRequest{
+	params.Body = packer_service.PackerServiceCreateRegistryBody{
 		FeatureTier: &featureTier,
 	}
 
@@ -73,7 +73,7 @@ func upsertRegistry(t *testing.T) {
 				params.LocationOrganizationID = loc.OrganizationID
 				params.LocationProjectID = loc.ProjectID
 				featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
-				params.Body = &models.HashicorpCloudPackerUpdateRegistryRequest{
+				params.Body = packer_service.PackerServiceUpdateRegistryBody{
 					FeatureTier: &featureTier,
 				}
 				resp, err := client.Packer.PackerServiceUpdateRegistry(params, nil)
@@ -156,9 +156,8 @@ func upsertBucket(t *testing.T, bucketSlug string) {
 	createBktParams := packer_service.NewPackerServiceCreateBucketParams()
 	createBktParams.LocationOrganizationID = loc.OrganizationID
 	createBktParams.LocationProjectID = loc.ProjectID
-	createBktParams.Body = &models.HashicorpCloudPackerCreateBucketRequest{
+	createBktParams.Body = packer_service.PackerServiceCreateBucketBody{
 		BucketSlug: bucketSlug,
-		Location:   loc,
 	}
 	_, err := client.Packer.PackerServiceCreateBucket(createBktParams, nil)
 	if err == nil {
@@ -189,8 +188,7 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	createItParams.LocationProjectID = loc.ProjectID
 	createItParams.BucketSlug = bucketSlug
 
-	createItParams.Body = &models.HashicorpCloudPackerCreateIterationRequest{
-		BucketSlug:  bucketSlug,
+	createItParams.Body = packer_service.PackerServiceCreateIterationBody{
 		Fingerprint: fingerprint,
 	}
 	_, err := client.Packer.PackerServiceCreateIteration(createItParams, nil)
@@ -220,7 +218,7 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strf
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.IterationID = iterationID
-	params.Body = &models.HashicorpCloudPackerUpdateIterationRequest{
+	params.Body = packer_service.PackerServiceUpdateIterationBody{
 		BucketSlug: bucketSlug,
 		RevokeAt:   revokeAt,
 	}
@@ -267,8 +265,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	createBuildParams.IterationID = iterationID
 
 	status := models.HashicorpCloudPackerBuildStatusRUNNING
-	createBuildParams.Body = &models.HashicorpCloudPackerCreateBuildRequest{
-		BucketSlug: bucketSlug,
+	createBuildParams.Body = packer_service.PackerServiceCreateBuildBody{
 		Build: &models.HashicorpCloudPackerBuildCreateBody{
 			CloudProvider: "aws",
 			ComponentType: "amazon-ebs.example",
@@ -276,8 +273,6 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 			Status:        &status,
 		},
 		Fingerprint: fingerprint,
-		IterationID: iterationID,
-		Location:    loc,
 	}
 
 	build, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil)
@@ -301,7 +296,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams.LocationProjectID = loc.ProjectID
 	updateBuildParams.BuildID = build.Payload.Build.ID
 	updatesStatus := models.HashicorpCloudPackerBuildStatusDONE
-	updateBuildParams.Body = &models.HashicorpCloudPackerUpdateBuildRequest{
+	updateBuildParams.Body = packer_service.PackerServiceUpdateBuildBody{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
 			Status: &updatesStatus,
 			Images: []*models.HashicorpCloudPackerImageCreateBody{
@@ -336,7 +331,7 @@ func createChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	createChParams.LocationOrganizationID = loc.OrganizationID
 	createChParams.LocationProjectID = loc.ProjectID
 	createChParams.BucketSlug = bucketSlug
-	createChParams.Body = &models.HashicorpCloudPackerCreateChannelRequest{
+	createChParams.Body = packer_service.PackerServiceCreateChannelBody{
 		Slug:        channelSlug,
 		IterationID: iterationID,
 	}
@@ -370,7 +365,7 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	updateChParams.LocationProjectID = loc.ProjectID
 	updateChParams.BucketSlug = bucketSlug
 	updateChParams.Slug = channelSlug
-	updateChParams.Body = &models.HashicorpCloudPackerUpdateChannelRequest{
+	updateChParams.Body = packer_service.PackerServiceUpdateChannelBody{
 		IterationID: iterationID,
 	}
 
