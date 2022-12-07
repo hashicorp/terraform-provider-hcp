@@ -1,0 +1,3 @@
+```release-note:improvement
+Add E2E tests to auto release pipeline
+```

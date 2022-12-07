@@ -308,6 +308,10 @@ resource "hcp_hvn" "hvn2" {
 }
 
 func TestAccPerformanceReplication_Validations(t *testing.T) {
+	// These tests seem to be flaky in GitHub Actions so for now we will skip them in CI until we can solve the issue
+	if testing.Short() {
+		t.Skip("skipping test in short mode (CI).")
+	}
 	hvn1ResourceName := "hcp_hvn.hvn1"
 	hvn2ResourceName := "hcp_hvn.hvn2"
 	primaryVaultResourceName := "hcp_vault_cluster.c1"
