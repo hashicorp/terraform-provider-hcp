@@ -1,3 +1,16 @@
+## v0.51.0 (December 08, 2022)
+
+IMPROVEMENTS:
+
+* Add E2E tests to auto release pipeline [[GH-421](https://github.com/hashicorp/terraform-provider-hcp/pull/421)]
+* Bump github.com/hashicorp/hcp-sdk-go from 0.24.0 to 0.27.0 [[GH-424](https://github.com/hashicorp/terraform-provider-hcp/pull/424)]
+
+BUG FIXES:
+
+* Add check for "v" when compiling changelog [[GH-423](https://github.com/hashicorp/terraform-provider-hcp/pull/423)]
+* Increase `hcp_consul_cluster` create timeout to 35 minutes [[GH-427](https://github.com/hashicorp/terraform-provider-hcp/pull/427)]
+* The example usage for `hcp_azure_peering_connection` was missing the `vnet`
+resource reference. [[GH-425](https://github.com/hashicorp/terraform-provider-hcp/pull/425)]
 ## v0.50.0 (November 30, 2022)
 
 IMPROVEMENTS:
