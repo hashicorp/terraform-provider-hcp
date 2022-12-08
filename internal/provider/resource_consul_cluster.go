@@ -28,7 +28,7 @@ var createUpdateConsulClusterTimeout = time.Minute * 35
 
 // deleteTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
-var deleteConsulClusterTimeout = time.Minute * 25
+var deleteConsulClusterTimeout = time.Minute * 35
 
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
