@@ -1,0 +1,3 @@
+```release-note:bug
+Increase `hcp_consul_cluster` create timeout to 35 minutes
+```
