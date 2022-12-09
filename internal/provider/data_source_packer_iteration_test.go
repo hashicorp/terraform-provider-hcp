@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const (
-	acctestIterationBucket       = "alpine-acctest-itertest"
-	acctestIterationUbuntuBucket = "ubuntu-acctest-itertest"
+var (
+	acctestIterationBucket       = fmt.Sprintf("alpine-acctest-itertest-%s", time.Now().Format("200601021504"))
+	acctestIterationUbuntuBucket = fmt.Sprintf("ubuntu-acctest-itertest-%s", time.Now().Format("200601021504"))
 	acctestIterationChannel      = "production-iter-test"
 )
 

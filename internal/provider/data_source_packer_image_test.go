@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const (
-	acctestImageBucket       = "alpine-acctest-imagetest"
-	acctestUbuntuImageBucket = "ubuntu-acctest-imagetest"
-	acctestArchImageBucket   = "arch-acctest-imagetest"
+var (
+	acctestImageBucket       = fmt.Sprintf("alpine-acctest-imagetest-%s", time.Now().Format("200601021504"))
+	acctestUbuntuImageBucket = fmt.Sprintf("ubuntu-acctest-imagetest-%s", time.Now().Format("200601021504"))
+	acctestArchImageBucket   = fmt.Sprintf("arch-acctest-imagetest-%s", time.Now().Format("200601021504"))
 	acctestImageChannel      = "production-image-test"
 	componentType            = "amazon-ebs.example"
 )
