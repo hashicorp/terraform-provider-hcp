@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,14 +14,14 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
+	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
 	testAccAwsPeeringConfig = fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
 }
 
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
+	hvn_id         = "%[1]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 }
@@ -35,7 +35,7 @@ resource "aws_vpc" "vpc" {
 
 // This resource initially returns in a Pending state, because its provider_peering_id is required to complete acceptance of the connection.
 resource "hcp_aws_network_peering" "peering" {	
-  peering_id                = "test-peering"
+  peering_id                = "%[1]s"
   hvn_id                    = hcp_hvn.test.hvn_id
   peer_account_id           = aws_vpc.vpc.owner_id
   peer_vpc_id               = aws_vpc.vpc.id
@@ -74,7 +74,7 @@ resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
 	 peering_id      = hcp_aws_network_peering.peering.peering_id
   }
 }
-`, hvnRouteUniqueAWSName)
+`, hvnPeeringUniqueAWSName)
 )
 
 func TestAccAwsPeering(t *testing.T) {
@@ -94,8 +94,8 @@ func TestAccAwsPeering(t *testing.T) {
 				Config: testConfig(testAccAwsPeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnPeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", "test-peering"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", hvnPeeringUniqueAWSName),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnPeeringUniqueAWSName),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vpc_region"),
@@ -105,7 +105,7 @@ func TestAccAwsPeering(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-peering", PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnPeeringUniqueAWSName, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 			// Testing that we can import HVN route created in the previous step and that the
@@ -121,8 +121,8 @@ func TestAccAwsPeering(t *testing.T) {
 				Config: testConfig(testAccAwsPeeringConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnPeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", "test-peering"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", hvnPeeringUniqueAWSName),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnPeeringUniqueAWSName),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vpc_region"),
@@ -132,7 +132,7 @@ func TestAccAwsPeering(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-peering", PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnPeeringUniqueAWSName, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 		},
