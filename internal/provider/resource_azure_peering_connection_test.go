@@ -133,9 +133,18 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 			},
 			// Tests import
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     uniqueAzurePeeringTestID + ":" + uniqueAzurePeeringTestID,
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
 				ImportStateVerify: true,
 			},
 			// Tests read

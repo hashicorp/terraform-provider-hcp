@@ -103,9 +103,18 @@ func TestAccHvnRoute(t *testing.T) {
 			// Testing that we can import HVN route created in the previous step and that the
 			// resource terraform state will be exactly the same
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     "test-hvn:peering-route",
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					routeID := rs.Primary.Attributes["hvn_route_id"]
+					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
+				},
 				ImportStateVerify: true,
 			},
 			// Testing running Terraform Apply for already known resource
