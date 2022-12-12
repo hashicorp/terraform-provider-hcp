@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	acctestIterationBucket       = fmt.Sprintf("alpine-acctest-itertest-%s", time.Now().Format("200601021504"))
-	acctestIterationUbuntuBucket = fmt.Sprintf("ubuntu-acctest-itertest-%s", time.Now().Format("200601021504"))
+	acctestIterationBucket       = fmt.Sprintf("alpine-acc-itertest-%s", time.Now().Format("200601021504"))
+	acctestIterationUbuntuBucket = fmt.Sprintf("ubuntu-acc-itertest-%s", time.Now().Format("200601021504"))
 	acctestIterationChannel      = "production-iter-test"
 )
 

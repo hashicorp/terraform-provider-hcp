@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	acctestImageBucket       = fmt.Sprintf("alpine-acctest-imagetest-%s", time.Now().Format("200601021504"))
-	acctestUbuntuImageBucket = fmt.Sprintf("ubuntu-acctest-imagetest-%s", time.Now().Format("200601021504"))
-	acctestArchImageBucket   = fmt.Sprintf("arch-acctest-imagetest-%s", time.Now().Format("200601021504"))
+	acctestImageBucket       = fmt.Sprintf("alpine-acc-imagetest-%s", time.Now().Format("200601021504"))
+	acctestUbuntuImageBucket = fmt.Sprintf("ubuntu-acc-imagetest-%s", time.Now().Format("200601021504"))
+	acctestArchImageBucket   = fmt.Sprintf("arch-acc-imagetest-%s", time.Now().Format("200601021504"))
 	acctestImageChannel      = "production-image-test"
 	componentType            = "amazon-ebs.example"
 )
