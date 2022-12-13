@@ -8,6 +8,8 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"
+    labels:
+      - "pr/no-changelog"
 
   # Maintain dependencies for Go modules
   - package-ecosystem: "gomod"
@@ -15,3 +17,5 @@ updates:
     schedule:
       # Check for updates to Go modules every weekday
       interval: "daily"
+    labels:
+      - "pr/no-changelog"
