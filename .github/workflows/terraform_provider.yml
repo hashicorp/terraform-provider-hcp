@@ -56,8 +56,8 @@ jobs:
       run: |
         go build -v .
 
-  # run unit tests
-  test:
+  # run unit tests and linter
+  test_and_lint:
     name: Unit Test and Lint
     needs: build
     runs-on: ubuntu-latest
