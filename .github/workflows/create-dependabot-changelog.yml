@@ -1,0 +1,37 @@
+# Auto generate a changelog entry if the PR was opened by dependabot.
+---
+name: Create Changelog for Dependabot
+
+on:
+  pull_request:
+    types: 
+      - opened
+
+jobs:
+  create_changelog:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.user.login == 'dependabot'}}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+
+      - name: Configure git
+        env:
+          TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+            git config --global advice.detachedHead false
+            git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+            git config user.name "github-actions"
+            git config user.email "hashicorp-cloud@hashicorp.com"
+      - name: Create Changelog
+        run: |
+          echo "This is a Dependabot PR. Creating changelog entry on its behalf."
+          touch .changelog/${{ github.event.pull_request.number }}.txt
+          printf '```release-note:improvement%s\n' >> .changelog/${{ github.event.pull_request.number }}.txt
+          printf '${{ github.event.pull_request.title }}%s\n' >> .changelog/${{ github.event.pull_request.number }}.txt
+          printf '```%s\n' >> .changelog/${{ github.event.pull_request.number }}.txt
+          git add .
+          git commit -m "Added changelog entry"
+          git push

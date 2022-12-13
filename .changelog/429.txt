@@ -1,0 +1,3 @@
+```release-note:improvement
+Enable automatic changelog creation for dependabot PRs.
+```
