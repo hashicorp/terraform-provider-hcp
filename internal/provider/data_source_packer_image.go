@@ -127,7 +127,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	var err error
 
 	if iterationID != "" {
-		iteration, err = clients.GetIterationFromId(
+		iteration, err = clients.GetIterationFromID(
 			ctx,
 			client,
 			loc,

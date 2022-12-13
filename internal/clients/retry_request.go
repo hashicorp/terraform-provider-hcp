@@ -14,7 +14,7 @@ const (
 	retryCount          = 10
 	retryDelay          = 10
 	counterStart        = 1
-	unknownErrorMessage = "Could not complete request. Please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct."
+	unknownErrorMessage = "could not complete request: please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct"
 )
 
 var errorCodesToRetry = [...]int{502, 503, 504}

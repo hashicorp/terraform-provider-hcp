@@ -231,10 +231,10 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 
 // generateKubernetesSecret will generate a Kubernetes secret with
 // a base64 encoded root token secret as it's token.
-func generateKubernetesSecret(rootTokenSecretId, clusterID string) string {
+func generateKubernetesSecret(rootTokenSecretID, clusterID string) string {
 	return fmt.Sprintf(rootTokenKubernetesSecretTemplate,
 		// lowercase the name
 		strings.ToLower(clusterID),
 		// base64 encode the secret value
-		base64.StdEncoding.EncodeToString([]byte(rootTokenSecretId)))
+		base64.StdEncoding.EncodeToString([]byte(rootTokenSecretID)))
 }
