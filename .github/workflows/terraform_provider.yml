@@ -20,7 +20,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18'
+        cache: true
+        go-version-file: 'go.mod'
       id: go
 
     - name: Check out code into the Go module directory
@@ -40,7 +41,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18'
+        cache: true
+        go-version-file: 'go.mod'
       id: go
 
     - name: Check out code into the Go module directory
@@ -56,7 +58,7 @@ jobs:
 
   # run unit tests
   test:
-    name: Test
+    name: Unit Test and Lint
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +66,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18'
+        cache: true
+        go-version-file: 'go.mod'
       id: go
 
     - name: Check out code into the Go module directory
@@ -72,31 +75,18 @@ jobs:
 
     - name: Get dependencies
       run: |
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
         go mod download
         
-    - name: Run unit tests
+    - name: Run unit tests and linter
       run: |
-        make test
-
-  # ensure code is formatted
-  fmtcheck:
-    name: Check Code Formatting
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: '1.18'
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
-
-    - name: Generate docs and check for differences
-      run: |
-        make fmtcheck
+        make test-ci
+    
+    - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Coverage
+          path: coverage.html
 
   # ensure docs are generated
   gencheck:
@@ -108,7 +98,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18'
+        cache: true
+        go-version-file: 'go.mod'
       id: go
 
     - name: Check out code into the Go module directory
