@@ -83,7 +83,7 @@ jobs:
         make test-ci
     
     - name: Upload Coverage Artifacts
-        uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3
         with:
           name: Test Coverage
           path: coverage.html
