@@ -115,7 +115,7 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 		// Return a new client with the updated source channel
 		cl, err = NewClient(cl.Config)
 		if err != nil {
-			return cl, errors.New("failed to create new client with updated source channel")
+			return cl, fmt.Errorf("failed to create new client with updated source channel: %v", err)
 		}
 	}
 
