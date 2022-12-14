@@ -1,0 +1,69 @@
+name: DELETE ME Run E2E Tests Temporarily
+
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Configure Git
+        env:
+          TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+            git config --global advice.detachedHead false
+            git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+            git config user.name "hashicorp-cloud"
+            git config user.email "hashicorp-cloud@hashicorp.com"
+
+      - name: Install Dependencies
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
+        run: |
+          go mod tidy
+          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
+          sudo chmod +x /usr/local/bin/jp
+
+      - name: Run E2E Tests
+        env:
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
+          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
+
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+          AWS_REGION: us-west-1
+
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: |
+          AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
+          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
+          make testacc-ci
