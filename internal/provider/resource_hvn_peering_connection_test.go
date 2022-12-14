@@ -4,22 +4,28 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccHvnPeeringConnectionConfig = `
+var (
+	hvn1UniqueID = fmt.Sprintf("hcp-provider-test-%s-1", time.Now().Format("200601021504"))
+	hvn2UniqueID = fmt.Sprintf("hcp-provider-test-%s-2", time.Now().Format("200601021504"))
+)
+
+var testAccHvnPeeringConnectionConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test_1" {
-	hvn_id         = "test-1"
+	hvn_id         = "%[1]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 	cidr_block     = "172.25.16.0/20"
 }
 
 resource "hcp_hvn" "test_2" {
-	hvn_id         = "test-2"
+	hvn_id         = "%[2]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 	cidr_block     = "172.18.16.0/20"
@@ -35,7 +41,7 @@ data "hcp_hvn_peering_connection" "test" {
 	hvn_1      = hcp_hvn_peering_connection.test.hvn_1
 	hvn_2      = hcp_hvn_peering_connection.test.hvn_2
 }
-`
+`, hvn1UniqueID, hvn2UniqueID)
 
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time
@@ -59,8 +65,8 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "hvn_1", "test-1", HvnResourceType, resourceName),
-					testLink(resourceName, "hvn_2", "test-2", HvnResourceType, resourceName),
+					testLink(resourceName, "hvn_1", hvn1UniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "hvn_2", hvn2UniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests import
@@ -90,8 +96,8 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "hvn_1", "test-1", HvnResourceType, resourceName),
-					testLink(resourceName, "hvn_2", "test-2", HvnResourceType, resourceName),
+					testLink(resourceName, "hvn_1", hvn1UniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "hvn_2", hvn2UniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests datasource
@@ -104,8 +110,8 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "expires_at", dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceName, "state"),
-					testLink(dataSourceName, "hvn_1", "test-1", HvnResourceType, dataSourceName),
-					testLink(dataSourceName, "hvn_2", "test-2", HvnResourceType, dataSourceName),
+					testLink(dataSourceName, "hvn_1", hvn1UniqueID, HvnResourceType, dataSourceName),
+					testLink(dataSourceName, "hvn_2", hvn2UniqueID, HvnResourceType, dataSourceName),
 				),
 			},
 		},

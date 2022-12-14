@@ -4,19 +4,22 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-const boundaryCluster = `
+var boundaryUniqueID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+
+var boundaryCluster = fmt.Sprintf(`
 resource hcp_boundary_cluster "test" {
-	cluster_id = "test-boundary-cluster"
+	cluster_id = "%[1]s"
 	username = "test-user"
 	password = "password123!"
 }
-`
+`, boundaryUniqueID)
 
 func setTestAccBoundaryClusterConfig(boundaryCluster string) string {
 	return fmt.Sprintf(`
@@ -42,7 +45,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 				Config: testConfig(setTestAccBoundaryClusterConfig(boundaryCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBoundaryClusterExists(boundaryClusterResourceName),
-					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", "test-boundary-cluster"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", boundaryUniqueID),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
@@ -69,7 +72,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 				Config: testConfig(setTestAccBoundaryClusterConfig(boundaryCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBoundaryClusterExists(boundaryClusterResourceName),
-					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", "test-boundary-cluster"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", boundaryUniqueID),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),

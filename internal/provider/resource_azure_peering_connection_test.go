@@ -3,9 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID  = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
+	uniqueAzurePeeringTestID  = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
 	subscriptionID            = os.Getenv("AZURE_SUBSCRIPTION_ID")
 	tenantID                  = os.Getenv("AZURE_TENANT_ID")
 	testAccAzurePeeringConfig = fmt.Sprintf(`
@@ -133,9 +133,18 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 			},
 			// Tests import
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     uniqueAzurePeeringTestID + ":" + uniqueAzurePeeringTestID,
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
 				ImportStateVerify: true,
 			},
 			// Tests read

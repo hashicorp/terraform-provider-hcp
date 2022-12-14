@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -13,15 +13,15 @@ import (
 )
 
 var (
-	// using unique names for AWS resource to make debugging easier
-	hvnRouteUniqueAWSName = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
+	// using unique names for resources to make debugging easier
+	hvnRouteUniqueAWSName = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
 	testAccHvnRouteConfig = fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
 }
 
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
+	hvn_id         = "%[1]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 }
@@ -34,7 +34,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "hcp_aws_network_peering" "peering" {	
-  peering_id      = "hcp-tf-provider-test"
+  peering_id      = "%[1]s"
   hvn_id          = hcp_hvn.test.hvn_id
   peer_account_id = aws_vpc.vpc.owner_id
   peer_vpc_id     = aws_vpc.vpc.id
@@ -50,7 +50,7 @@ data "hcp_aws_network_peering" "peering" {
 
 // The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
 resource "hcp_hvn_route" "route" {
-  hvn_route_id = "peering-route"
+  hvn_route_id = "%[1]s"
   hvn_link = hcp_hvn.test.self_link
   destination_cidr = "172.31.0.0/16"
   target_link = data.hcp_aws_network_peering.peering.self_link
@@ -93,19 +93,28 @@ func TestAccHvnRoute(t *testing.T) {
 				Config: testConfig(testAccHvnRouteConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", "peering-route"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueAWSName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", "peering-route", HVNRouteResourceType, "hcp_hvn.test"),
-					testLink(resourceName, "target_link", "hcp-tf-provider-test", PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnRouteUniqueAWSName, HVNRouteResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "target_link", hvnRouteUniqueAWSName, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 			// Testing that we can import HVN route created in the previous step and that the
 			// resource terraform state will be exactly the same
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     "test-hvn:peering-route",
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					routeID := rs.Primary.Attributes["hvn_route_id"]
+					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
+				},
 				ImportStateVerify: true,
 			},
 			// Testing running Terraform Apply for already known resource
@@ -113,11 +122,11 @@ func TestAccHvnRoute(t *testing.T) {
 				Config: testConfig(testAccHvnRouteConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", "peering-route"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueAWSName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", "peering-route", HVNRouteResourceType, "hcp_hvn.test"),
-					testLink(resourceName, "target_link", "hcp-tf-provider-test", PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnRouteUniqueAWSName, HVNRouteResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "target_link", hvnRouteUniqueAWSName, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 		},

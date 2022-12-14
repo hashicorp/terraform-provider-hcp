@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,9 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccAwsHvnConfig = `
+var (
+	hvnUniqueID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+)
+
+var testAccAwsHvnConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
+	hvn_id         = "%[1]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 }
@@ -22,12 +27,12 @@ resource "hcp_hvn" "test" {
 data "hcp_hvn" "test" {
 	hvn_id = hcp_hvn.test.hvn_id
 }
-`
+`, hvnUniqueID)
 
 // Currently in public beta
-var testAccAzureHvnConfig = `
+var testAccAzureHvnConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
+	hvn_id         = "%[1]s"
 	cloud_provider = "azure"
 	region         = "eastus"
 }
@@ -35,7 +40,7 @@ resource "hcp_hvn" "test" {
 data "hcp_hvn" "test" {
 	hvn_id = hcp_hvn.test.hvn_id
 }
-`
+`, hvnUniqueID)
 
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time.
@@ -53,7 +58,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 				Config: testConfig(testAccAwsHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -62,7 +67,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests import
@@ -84,7 +89,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 				Config: testConfig(testAccAwsHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -93,7 +98,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests datasource
@@ -131,7 +136,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 				Config: testConfig(testAccAzureHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
 					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -139,7 +144,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests import
@@ -161,7 +166,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 				Config: testConfig(testAccAzureHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
 					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -169,7 +174,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", "test-hvn", HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
 				),
 			},
 			// Tests datasource
