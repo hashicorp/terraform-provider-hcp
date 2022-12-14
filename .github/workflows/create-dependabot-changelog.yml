@@ -10,7 +10,7 @@ on:
 jobs:
   create_changelog:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.user.login == 'dependabot'}}
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]'}}
     steps:
       - uses: actions/checkout@v3
         with:
