@@ -2,8 +2,6 @@ name: DELETE ME Run E2E Tests Temporarily
 
 on:
   pull_request:
-    types:
-      - opened
     branches:
       - main
 
