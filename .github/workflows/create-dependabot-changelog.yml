@@ -2,6 +2,10 @@
 ---
 name: Create Changelog for Dependabot
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   pull_request:
     types: 
@@ -15,11 +19,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+          token: ${{ github.token }} # we have issues using the pipeline token so we use the default github one with dependabot
 
       - name: Configure git
         env:
-          TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+          TOKEN: ${{ github.token }}
         run: |
             git config --global advice.detachedHead false
             git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
