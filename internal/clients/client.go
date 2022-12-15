@@ -3,6 +3,7 @@ package clients
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/client"
@@ -115,7 +116,7 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 		// Return a new client with the updated source channel
 		cl, err = NewClient(cl.Config)
 		if err != nil {
-			fmt.Printf("failed to create new client with updated source channel: %v", err)
+			log.Printf("failed to create new client with updated source channel: %v", err)
 		}
 	}
 
