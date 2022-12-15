@@ -139,7 +139,10 @@ func resourceConsulSnapshotCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(url)
 
 	// set the consul_version based on the cluster's Consul version
-	d.Set("consul_version", cluster.ConsulVersion)
+	err = d.Set("consul_version", cluster.ConsulVersion)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// wait for the Consul snapshot to be created
 	if err := clients.WaitForOperation(ctx, client, ConsulSnapshotResourceType+".create", cluster.Location, createResp.Operation.ID); err != nil {

@@ -91,7 +91,6 @@ func upsertRegistry(t *testing.T) {
 	}
 
 	waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
-	return
 }
 
 func waitForOperation(

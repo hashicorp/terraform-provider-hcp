@@ -62,7 +62,7 @@ func resourceAzurePeeringConnection() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"peer_tenant_id": {
@@ -386,13 +386,13 @@ func resourceAzurePeeringConnectionImport(ctx context.Context, d *schema.Resourc
 	}
 
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
-	hvnUrl, err := linkURL(hvnLink)
+	hvnURL, err := linkURL(hvnLink)
 	if err != nil {
 		return nil, err
 	}
 
 	d.SetId(url)
-	if err := d.Set("hvn_link", hvnUrl); err != nil {
+	if err := d.Set("hvn_link", hvnURL); err != nil {
 		return nil, err
 	}
 

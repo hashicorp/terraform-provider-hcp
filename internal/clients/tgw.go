@@ -69,7 +69,7 @@ func WaitForTGWAttachmentToBeActive(ctx context.Context, client *Client, tgwAtta
 
 	result, err := stateChangeConf.WaitForStateContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("Error waiting for transit gateway attachment (%s) to become 'ACTIVE': %s", tgwAttachmentID, err)
+		err = fmt.Errorf("error waiting for transit gateway attachment (%s) to become 'ACTIVE': %s", tgwAttachmentID, err)
 		if result != nil {
 			return result.(*networkmodels.HashicorpCloudNetwork20200907TGWAttachment), err
 		}
@@ -104,7 +104,7 @@ func WaitForTGWAttachmentToBePendingAcceptance(ctx context.Context, client *Clie
 
 	result, err := stateChangeConf.WaitForStateContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("Error waiting for transit gateway attachment (%s) to become 'PENDING_ACCEPTANCE': %s", tgwAttachmentID, err)
+		return nil, fmt.Errorf("error waiting for transit gateway attachment (%s) to become 'PENDING_ACCEPTANCE': %s", tgwAttachmentID, err)
 	}
 
 	return result.(*networkmodels.HashicorpCloudNetwork20200907TGWAttachment), nil

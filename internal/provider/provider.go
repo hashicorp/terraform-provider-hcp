@@ -159,7 +159,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 }
 
 // Status endpoint for prod.
-const statuspageUrl = "https://status.hashicorp.com/api/v2/components.json"
+const statuspageURL = "https://status.hashicorp.com/api/v2/components.json"
 
 var hcpComponentIds = map[string]string{
 	"0q55nwmxngkc": "HCP API",
@@ -180,17 +180,8 @@ type component struct {
 
 type status string
 
-// Possible statuses returned by statuspage.io.
-const (
-	operational         status = "operational"
-	degradedPerformance        = "degraded_performance"
-	partialOutage              = "partial_outage"
-	majorOutage                = "major_outage"
-	underMaintenance           = "under_maintenance"
-)
-
 func isHCPOperational() (diags diag.Diagnostics) {
-	req, err := http.NewRequest("GET", statuspageUrl, nil)
+	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
@@ -258,9 +249,7 @@ func isHCPOperational() (diags diag.Diagnostics) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "You may experience issues using HCP.",
-			Detail: fmt.Sprintf("HCP is reporting the following:\n\n") +
-				printStatus(systemStatus) +
-				"\nPlease check https://status.hashicorp.com for more details.",
+			Detail:   fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)),
 		})
 	}
 
@@ -277,7 +266,7 @@ func printStatus(m map[string]status) string {
 
 	pr := ""
 	for k, v := range m {
-		pr = pr + fmt.Sprintf("%s:%*s %s\n", k, 5+(maxLenKey-len(k)), " ", v)
+		pr += fmt.Sprintf("%s:%*s %s\n", k, 5+(maxLenKey-len(k)), " ", v)
 	}
 
 	return pr

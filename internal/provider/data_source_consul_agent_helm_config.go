@@ -188,7 +188,7 @@ func generateHelmConfig(name, datacenter, fqdn string, retryJoin []string, expos
 	rj := fmt.Sprintf("%q", retryJoin)
 
 	// replace any escaped double-quotes with single quotes
-	rj = strings.Replace(rj, "\"", "'", -1)
+	rj = strings.ReplaceAll(rj, "\"", "'")
 
 	// trim off any leading `https://` protocol if present.
 	// this protocol will be prepended as expected when

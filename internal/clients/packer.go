@@ -29,8 +29,8 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 }
 
 // GetIteration queries the HCP Packer registry for an existing bucket iteration.
-func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	bucketslug string, iterationId string) (*packermodels.HashicorpCloudPackerIteration, error) {
+func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	bucketslug string, iterationID string) (*packermodels.HashicorpCloudPackerIteration, error) {
 	params := packer_service.NewPackerServiceGetIterationParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -38,7 +38,7 @@ func GetIterationFromId(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	// The identifier can be either fingerprint, iterationid, or incremental version
 	// for now, we only care about id so we're hardcoding it.
-	params.IterationID = &iterationId
+	params.IterationID = &iterationID
 
 	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {

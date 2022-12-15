@@ -1,0 +1,3 @@
+```release-note:improvement
+Add linting checks to PR and release pipeline.
+```

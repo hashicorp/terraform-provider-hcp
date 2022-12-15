@@ -3,6 +3,8 @@ GOARCH=$(shell go env GOARCH)
 INSTALL_PATH=~/.local/share/terraform/plugins/localhost/providers/hcp/0.0.1/linux_$(GOARCH)
 BUILD_ALL_PATH=${PWD}/bin
 TEST?=./internal/...
+GO_LINT ?= golangci-lint
+GO_LINT_CONFIG_PATH ?= ./golangci-config.yml
 
 ifeq ($(GOOS), darwin)
 	INSTALL_PATH=~/Library/Application\ Support/io.terraform/plugins/localhost/providers/hcp/0.0.1/darwin_$(GOARCH)
@@ -29,6 +31,7 @@ fmt:
 
 fmtcheck:
 	@./scripts/gofmtcheck.sh
+	$(GO_LINT) run --config $(GO_LINT_CONFIG_PATH) $(GO_LINT_ARGS)
 
 test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4

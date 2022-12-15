@@ -273,13 +273,13 @@ func resourceHvnPeeringConnectionImport(ctx context.Context, d *schema.ResourceD
 
 	// Only hvn_1 is required to fetch the peering connection. hvn_2 will be populated during the refresh phase immediately after import.
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
-	hvnUrl, err := linkURL(hvnLink)
+	hvnURL, err := linkURL(hvnLink)
 	if err != nil {
 		return nil, err
 	}
 
 	d.SetId(url)
-	if err := d.Set("hvn_1", hvnUrl); err != nil {
+	if err := d.Set("hvn_1", hvnURL); err != nil {
 		return nil, err
 	}
 

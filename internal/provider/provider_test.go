@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -98,8 +97,7 @@ func testAccPreCheck(t *testing.T, requiredCreds map[string]bool) {
 }
 
 func testConfig(res ...string) string {
-	provider := fmt.Sprintf(`
-provider "hcp" {}`)
+	provider := `provider "hcp" {}`
 
 	c := []string{provider}
 	c = append(c, res...)

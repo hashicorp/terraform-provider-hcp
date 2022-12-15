@@ -306,7 +306,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	//get metrics audit config and mvu config first so we can validate and fail faster
+	// Get metrics audit config and MVU config first so we can validate and fail faster.
 	metricsConfig, diagErr := getObservabilityConfig("metrics_config", d)
 	if diagErr != nil {
 		return diagErr
@@ -675,7 +675,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 			// It is important to keep the tier of all replicated clusters in sync.
 
 			// Because of (a), check that the scaling operation is necessary.
-			//if the cluster has the same tier but the metrics/audit_log changed, we want to update the cluster anyway to change the info
+			// If the cluster has the same tier but the metrics/audit_log changed, we want to update the cluster anyway to change the info.
 			if *cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") {
 				return nil
 			} else {
@@ -705,7 +705,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		}
 	}
 
-	//if is secondary since we're scaling via the primary we don't update the primary metrics/auditLog
+	// If is secondary since we're scaling via the primary we don't update the primary metrics/auditLog.
 	if isSecondary {
 		metricsConfig = nil
 		auditConfig = nil
@@ -724,7 +724,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 }
 
 func getClusterTier(d *schema.ResourceData) *string {
-	//if we don't change the tier, return nil so we don't pass the tier to the update
+	// If we don't change the tier, return nil so we don't pass the tier to the update.
 	if d.HasChange("tier") {
 		tier := strings.ToUpper(d.Get("tier").(string))
 		return &tier
@@ -834,7 +834,10 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 				return err
 			}
 		} else {
-			d.Set("paths_filter", nil)
+			err = d.Set("paths_filter", nil)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -901,7 +904,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{},
 	}
 
-	//if we don't find the property we return the empty object to be updated and delete the configuration
+	// If we don't find the property we return the empty object to be updated and delete the configuration.
 	configParam, ok := d.GetOk(propertyName)
 	if !ok {
 		return &emptyConfig, nil

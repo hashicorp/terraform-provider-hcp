@@ -152,11 +152,11 @@ func testAccCheckHvnRouteExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("unable to build hvnRouteLink for %q: %v", id, err)
 		}
 
-		hvnUrl, ok := rs.Primary.Attributes["hvn_link"]
+		hvnURL, ok := rs.Primary.Attributes["hvn_link"]
 		if !ok {
 			return fmt.Errorf("hcp_hvn_route doesn't have hvn_link")
 		}
-		hvnLink, err := parseLinkURL(hvnUrl, HvnResourceType)
+		hvnLink, err := parseLinkURL(hvnURL, HvnResourceType)
 		if err != nil {
 			return fmt.Errorf("failed to parse hvn_link: %w", err)
 		}
@@ -185,11 +185,11 @@ func testAccCheckHvnRouteDestroy(s *terraform.State) error {
 				return fmt.Errorf("unable to build hvnRouteLink for %q: %v", id, err)
 			}
 
-			hvnUrl, ok := rs.Primary.Attributes["hvn_link"]
+			hvnURL, ok := rs.Primary.Attributes["hvn_link"]
 			if !ok {
 				return fmt.Errorf("hcp_hvn_route doesn't have hvn_link")
 			}
-			hvnLink, err := parseLinkURL(hvnUrl, HvnResourceType)
+			hvnLink, err := parseLinkURL(hvnURL, HvnResourceType)
 			if err != nil {
 				return fmt.Errorf("failed to parse hvn_link: %w", err)
 			}
