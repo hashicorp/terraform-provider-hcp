@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,6 +14,7 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
+	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-tf-provider-test-%d", rand.Intn(99999))
 	testAccAwsPeeringConfig = fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"

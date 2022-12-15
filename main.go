@@ -24,7 +24,6 @@ func main() {
 	flag.Parse()
 
 	if debugMode {
-		// TODO: update this string with the full name of your provider as used in your configs
 		plugin.Serve(&plugin.ServeOpts{
 			Debug:        true,
 			ProviderFunc: provider.New(),
