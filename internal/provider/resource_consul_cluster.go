@@ -296,10 +296,10 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// If specified, validate and parse the primary link provided for federation.
-	primary_link, ok := d.GetOk("primary_link")
+	primaryLink, ok := d.GetOk("primary_link")
 	var primary *sharedmodels.HashicorpCloudLocationLink
 	if ok {
-		primary, err = parseLinkURL(primary_link.(string), ConsulClusterResourceType)
+		primary, err = parseLinkURL(primaryLink.(string), ConsulClusterResourceType)
 		if err != nil {
 			return diag.Errorf(err.Error())
 		}
@@ -515,21 +515,21 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 	}
 
 	link := newLink(cluster.Location, ConsulClusterResourceType, cluster.ID)
-	self_link, err := linkURL(link)
+	selfLink, err := linkURL(link)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("self_link", self_link); err != nil {
+	if err := d.Set("self_link", selfLink); err != nil {
 		return err
 	}
 
 	if cluster.Config.ConsulConfig.Primary != nil {
 		link := newLink(cluster.Config.ConsulConfig.Primary.Location, ConsulClusterResourceType, cluster.Config.ConsulConfig.Primary.ID)
-		primary_link, err := linkURL(link)
+		primaryLink, err := linkURL(link)
 		if err != nil {
 			return err
 		}
-		if err := d.Set("primary_link", primary_link); err != nil {
+		if err := d.Set("primary_link", primaryLink); err != nil {
 			return err
 		}
 	}

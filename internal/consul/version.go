@@ -76,7 +76,7 @@ func GetLatestPatch(version string, versions []*consulmodels.HashicorpCloudConsu
 		return ""
 	}
 
-	// The latest patch verison.
+	// The latest patch version.
 	var latest *semver.Version
 
 	for _, v := range versions {

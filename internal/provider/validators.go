@@ -42,7 +42,7 @@ func validateStringInSlice(valid []string, ignoreCase bool) schema.SchemaValidat
 		value := v.(string)
 
 		for _, validString := range valid {
-			if v == validString || (ignoreCase && strings.ToLower(value) == strings.ToLower(validString)) {
+			if v == validString || (ignoreCase && strings.EqualFold(value, validString)) {
 				return diagnostics
 			}
 		}
