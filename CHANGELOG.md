@@ -1,3 +1,8 @@
+## v0.52.0 (December 14, 2022)
+
+IMPROVEMENTS:
+
+* Enable automatic changelog creation for dependabot PRs. [[GH-429](https://github.com/hashicorp/terraform-provider-hcp/pull/429)]
 ## v0.51.0 (December 08, 2022)
 
 IMPROVEMENTS:

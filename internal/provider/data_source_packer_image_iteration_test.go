@@ -19,9 +19,9 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-const (
-	acctestAlpineBucket      = "alpine-acctest"
-	acctestUbuntuBucket      = "ubuntu-acctest"
+var (
+	acctestAlpineBucket      = fmt.Sprintf("alpine-acc-%s", time.Now().Format("200601021504"))
+	acctestUbuntuBucket      = fmt.Sprintf("ubuntu-acc-%s", time.Now().Format("200601021504"))
 	acctestProductionChannel = "production"
 )
 
