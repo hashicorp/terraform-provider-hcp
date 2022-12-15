@@ -76,11 +76,11 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	routeID := d.Get("hvn_route_id").(string)
 	routeLink := newLink(loc, HVNRouteResourceType, routeID)
-	routeUrl, err := linkURL(routeLink)
+	routeURL, err := linkURL(routeLink)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(routeUrl)
+	d.SetId(routeURL)
 
 	log.Printf("[INFO] Reading HVN route (%s)", routeID)
 	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, routeID, loc)

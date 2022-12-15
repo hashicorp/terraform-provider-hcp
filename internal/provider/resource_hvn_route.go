@@ -300,19 +300,19 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	routeLink := newLink(loc, HVNRouteResourceType, routeID)
-	routeUrl, err := linkURL(routeLink)
+	routeURL, err := linkURL(routeLink)
 	if err != nil {
 		return nil, err
 	}
-	d.SetId(routeUrl)
+	d.SetId(routeURL)
 
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
-	hvnUrl, err := linkURL(hvnLink)
+	hvnURL, err := linkURL(hvnLink)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := d.Set("hvn_link", hvnUrl); err != nil {
+	if err := d.Set("hvn_link", hvnURL); err != nil {
 		return nil, err
 	}
 

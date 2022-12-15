@@ -58,7 +58,7 @@ func resourceHvn() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateStringInSlice(hvnResourceCloudProviders, true),
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			"region": {
@@ -67,7 +67,7 @@ func resourceHvn() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					return strings.ToLower(old) == strings.ToLower(new)
+					return strings.EqualFold(old, new)
 				},
 			},
 			// Optional inputs
