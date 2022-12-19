@@ -3,6 +3,9 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
+	"strings"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -10,22 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
-
-//resource hcp_packer_channel "example" {
-//	 bucket_name = ""
-//description
-//assigned_iteration_id
-
-//}
-// output {
-//id = channel-id
-//description = "channel description"
-//assigned_iteration_id = "iteration id"
-//organization_id
-//project_id
-//created_at
-//
-//}
 
 func resourcePackerBucketChannel() *schema.Resource {
 	return &schema.Resource{
@@ -41,7 +28,7 @@ func resourcePackerBucketChannel() *schema.Resource {
 			Delete:  &defaultPackerTimeout,
 		},
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: resourcePackerBucketChannelImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -110,19 +97,16 @@ func resourcePackerBucketChannelRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	channelName := d.Get("name").(string)
-	if len(resp.Channels) == 0 {
-		return diag.Errorf("Unable to find channel in bucket %s named %s.", bucketName, channelName)
-	}
-
-	// iteration to find channel
 	var channel packermodels.HashicorpCloudPackerChannel
 	for _, c := range resp.Channels {
-		// do we have state?
 		if c.Slug == channelName {
 			channel = *c
+			break
 		}
 	}
-
+	if channel.ID == "" {
+		return diag.Errorf("Unable to find channel in bucket %s named %s.", bucketName, channelName)
+	}
 	return setPackerBucketChannelResourceData(d, &channel)
 }
 
@@ -192,7 +176,6 @@ func resourcePackerBucketChannelDelete(ctx context.Context, d *schema.ResourceDa
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
-
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
@@ -205,10 +188,67 @@ func resourcePackerBucketChannelDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func setPackerBucketChannelResourceData(d *schema.ResourceData, channel *packermodels.HashicorpCloudPackerChannel) diag.Diagnostics {
+func resourcePackerBucketChannelImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*clients.Client)
 
+	var err error
+	// Updates the source channel to include data about the module used.
+	client, err = client.UpdateSourceChannel(d)
+	if err != nil {
+		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
+	}
+
+	idParts := strings.SplitN(d.Id(), ":", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {bucket_name}:{channel_name}", d.Id())
+	}
+
+	bucketName := idParts[0]
+	channelName := idParts[1]
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+	if err := setLocationData(d, loc); err != nil {
+		return nil, err
+
+	}
+	resp, err := clients.ListBucketChannels(ctx, client, loc, bucketName)
+	if err != nil {
+		return nil, err
+	}
+
+	var channel packermodels.HashicorpCloudPackerChannel
+	for _, c := range resp.Channels {
+		if c.Slug == channelName {
+			channel = *c
+			break
+		}
+	}
+
+	if channel.ID == "" {
+		return nil, fmt.Errorf("unable to find channel in bucket %s named %s", bucketName, channelName)
+	}
+
+	if channel.Managed {
+		return nil, fmt.Errorf("the channel %q is managed by HCP Packer and can not be imported", channel.Slug)
+	}
+
+	d.SetId(channel.ID)
+	if err := d.Set("bucket_name", bucketName); err != nil {
+		return nil, err
+	}
+	if err := d.Set("name", channelName); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func setPackerBucketChannelResourceData(d *schema.ResourceData, channel *packermodels.HashicorpCloudPackerChannel) diag.Diagnostics {
 	if channel == nil {
-		err := errors.New("unexpected empty provided when setting state")
+		err := errors.New("unexpected empty channel provided when setting state")
 		return diag.FromErr(err)
 	}
 

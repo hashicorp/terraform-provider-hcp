@@ -122,7 +122,8 @@ func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.H
 
 	req, err := client.Packer.PackerServiceListChannels(params, nil)
 	if err != nil {
-		return nil, handleGetChannelError(err.(*packer_service.PackerServiceGetChannelDefault))
+		err := err.(*packer_service.PackerServiceListChannelsDefault)
+		return nil, errors.New(err.Payload.Message)
 	}
 
 	return req.Payload, nil
