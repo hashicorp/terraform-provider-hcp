@@ -28,7 +28,7 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 	return getResp.Payload.Channel, nil
 }
 
-// GetIteration queries the HCP Packer registry for an existing bucket iteration.
+// GetIterationFromID queries the HCP Packer registry for an existing bucket iteration.
 func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketslug string, iterationID string) (*packermodels.HashicorpCloudPackerIteration, error) {
 	params := packer_service.NewPackerServiceGetIterationParamsWithContext(ctx)
@@ -48,21 +48,32 @@ func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.H
 	return it.Payload.Iteration, nil
 }
 
-type ChannelResourceInput struct {
-	BucketName          string
-	Name                string
-	Description         string
-	AssignedIterationID string
+// ChannelIterationAssignment assigns an iteration by its ID, fingerprint, or version to a channel
+type ChannelIterationAssignment struct {
+	IterationID                 string
+	IterationFingerprint        string
+	IterationIncrementalVersion int
 }
 
-// CreateBucketChannel creates channel on the named bucket
-func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, in ChannelResourceInput) (*packermodels.HashicorpCloudPackerChannel, error) {
+// CreateBucketChannel creates a channel on the named bucket.
+func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	assignment *ChannelIterationAssignment) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceCreateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
-	params.Body.Slug = in.Name
-	params.BucketSlug = in.BucketName
-	params.Body.IterationID = in.AssignedIterationID
+	params.BucketSlug = bucketSlug
+	params.Body.Slug = channelSlug
+
+	if assignment != nil {
+		switch {
+		case assignment.IterationID != "":
+			params.Body.IterationID = assignment.IterationID
+		case assignment.IterationFingerprint != "":
+			params.Body.Fingerprint = assignment.IterationFingerprint
+		case assignment.IterationIncrementalVersion > 0:
+			params.Body.IncrementalVersion = int32(assignment.IterationIncrementalVersion)
+		}
+	}
 
 	channel, err := client.Packer.PackerServiceCreateChannel(params, nil)
 	if err != nil {
@@ -73,8 +84,37 @@ func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return channel.GetPayload().Channel, nil
 }
 
-// DeleteBucketChannel creates channel on the named bucket
-func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
+// UpdateBucketChannel updates the named channel.
+func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	assignment *ChannelIterationAssignment) (*packermodels.HashicorpCloudPackerChannel, error) {
+	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
+	params.Slug = channelSlug
+
+	if assignment != nil {
+		switch {
+		case assignment.IterationID != "":
+			params.Body.IterationID = assignment.IterationID
+		case assignment.IterationFingerprint != "":
+			params.Body.Fingerprint = assignment.IterationFingerprint
+		case assignment.IterationIncrementalVersion > 0:
+			params.Body.IncrementalVersion = int32(assignment.IterationIncrementalVersion)
+		}
+	}
+
+	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
+	if err != nil {
+		err := err.(*packer_service.PackerServiceUpdateChannelDefault)
+		return nil, errors.New(err.Payload.Message)
+	}
+
+	return channel.GetPayload().Channel, nil
+}
+
+// DeleteBucketChannel deletes a channel from the named bucket.
+func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceDeleteChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -94,31 +134,12 @@ func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return nil, nil
 }
 
-// UpdateBucketChannel creates channel on the named bucket
-func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, in ChannelResourceInput) (*packermodels.HashicorpCloudPackerChannel, error) {
-	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
-	params.LocationOrganizationID = loc.OrganizationID
-	params.LocationProjectID = loc.ProjectID
-	params.BucketSlug = in.BucketName
-	params.Slug = in.Name
-	params.Body.IterationID = in.AssignedIterationID
-
-	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
-	if err != nil {
-		err := err.(*packer_service.PackerServiceUpdateChannelDefault)
-		return nil, errors.New(err.Payload.Message)
-	}
-
-	return channel.GetPayload().Channel, nil
-}
-
 // ListBucketChannels queries the HCP Packer registry for channels associated to the specified bucket.
-func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketName string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
-
+func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
 	params := packer_service.NewPackerServiceListChannelsParams()
-	params.BucketSlug = bucketName
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
 
 	req, err := client.Packer.PackerServiceListChannels(params, nil)
 	if err != nil {
