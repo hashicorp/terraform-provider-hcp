@@ -4,61 +4,61 @@ on: pull_request
 
 jobs:
   sync-repos:
-  name: Sync Internal and Public Repos
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout Public Repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
-        path: public
-
-      - name: Checkout Internal Repo
+    name: Sync Internal and Public Repos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Public Repo
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
-          repository: hashicorp/terraform-provider-hcp-internal
-          path: internal
+          path: public
 
-      - name: Sync Changes
-        run: |
-          # Make a temp directory for the internal repo
-          mkdir temp
-          # Remove files from public repo
-          rm -r public/.git public/.changelog public/.github public/README.md
-          ls -al public
-          
-          # Copy important files from internal repo
-          sudo cp -a internal/.git temp/.git
-          cp -a internal/.github temp/.github
-          cp internal/README.md temp/README.md
-          rm -r internal
-          mkdir internal
-          # Sync public with internal
-          cp -a public/. internal
-          sudo cp -a temp/. internal
-          cd internal
-          git status
-      - name: Create Branch
-        run: |
-          cd internal
-          git config user.name "HashiCorp Cloud Services"
-          git config user.email "${{ secrets.HCP_SERVICE_ACCOUNT_EMAIL }}"
-          sync_branch_exists="$(git ls-remote --heads origin sync-public-and-internal-sdk)"
-          [[ -n $sync_branch_exists ]] && git push origin --delete sync-public-and-internal-sdk
-          git checkout -b sync-public-and-internal-sdk
-          git add -A
-          git commit -m "Sync with public SDK"
-          git push --set-upstream origin sync-public-and-internal-sdk
-      
-      - name: Open PR
-        run: |
-          cd internal
-          gh pr create --title "$PR_TITLE" --body "$PR_BODY" -H "$PR_SOURCE" -B "$PR_TARGET"
-        env:
-          PR_TITLE: "[auto] Sync with Public SDK"
-          PR_BODY: "This is an auto-generated PR created as part of the public pipeline to update the internal HCP Terraform Provider."
-          PR_SOURCE: "sync-public-and-internal-sdk"
-          PR_TARGET: "main"
-          GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        - name: Checkout Internal Repo
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+            repository: hashicorp/terraform-provider-hcp-internal
+            path: internal
+
+        - name: Sync Changes
+          run: |
+            # Make a temp directory for the internal repo
+            mkdir temp
+            # Remove files from public repo
+            rm -r public/.git public/.changelog public/.github public/README.md
+            ls -al public
+            
+            # Copy important files from internal repo
+            sudo cp -a internal/.git temp/.git
+            cp -a internal/.github temp/.github
+            cp internal/README.md temp/README.md
+            rm -r internal
+            mkdir internal
+            # Sync public with internal
+            cp -a public/. internal
+            sudo cp -a temp/. internal
+            cd internal
+            git status
+        - name: Create Branch
+          run: |
+            cd internal
+            git config user.name "HashiCorp Cloud Services"
+            git config user.email "${{ secrets.HCP_SERVICE_ACCOUNT_EMAIL }}"
+            sync_branch_exists="$(git ls-remote --heads origin sync-public-and-internal-sdk)"
+            [[ -n $sync_branch_exists ]] && git push origin --delete sync-public-and-internal-sdk
+            git checkout -b sync-public-and-internal-sdk
+            git add -A
+            git commit -m "Sync with public SDK"
+            git push --set-upstream origin sync-public-and-internal-sdk
+        
+        - name: Open PR
+          run: |
+            cd internal
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" -H "$PR_SOURCE" -B "$PR_TARGET"
+          env:
+            PR_TITLE: "[auto] Sync with Public SDK"
+            PR_BODY: "This is an auto-generated PR created as part of the public pipeline to update the internal HCP Terraform Provider."
+            PR_SOURCE: "sync-public-and-internal-sdk"
+            PR_TARGET: "main"
+            GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
