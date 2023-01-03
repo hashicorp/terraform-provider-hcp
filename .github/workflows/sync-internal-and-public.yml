@@ -1,6 +1,11 @@
 name: Sync Internal and Public Repos
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
 
 jobs:
   sync-repos:
