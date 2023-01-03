@@ -54,20 +54,20 @@ jobs:
           cd internal
           git config user.name "HashiCorp Cloud Services"
           git config user.email "${{ secrets.HCP_SERVICE_ACCOUNT_EMAIL }}"
-          sync_branch_exists="$(git ls-remote --heads origin sync-public-and-internal-sdk)"
-          [[ -n $sync_branch_exists ]] && git push origin --delete sync-public-and-internal-sdk
-          git checkout -b sync-public-and-internal-sdk
+          sync_branch_exists="$(git ls-remote --heads origin sync-public-and-internal-provider)"
+          [[ -n $sync_branch_exists ]] && git push origin --delete sync-public-and-internal-provider
+          git checkout -b sync-public-and-internal-provider
           git add -A
-          git commit -m "Sync with public SDK"
-          git push --set-upstream origin sync-public-and-internal-sdk
+          git commit -m "Sync with public Provider"
+          git push --set-upstream origin sync-public-and-internal-provider
       
       - name: Open PR
         run: |
           cd internal
           gh pr create --title "$PR_TITLE" --body "$PR_BODY" -H "$PR_SOURCE" -B "$PR_TARGET"
         env:
-          PR_TITLE: "[auto] Sync with Public SDK"
+          PR_TITLE: "[auto] Sync with Public Provider"
           PR_BODY: "This is an auto-generated PR created as part of the public pipeline to update the internal HCP Terraform Provider."
-          PR_SOURCE: "sync-public-and-internal-sdk"
+          PR_SOURCE: "sync-public-and-internal-provider"
           PR_TARGET: "main"
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
