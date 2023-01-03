@@ -33,8 +33,12 @@ jobs:
           sudo cp -a internal/.git temp/.git
           cp -a internal/.github temp/.github
           cp internal/README.md temp/README.md
+          cp internal/catalog-info.yaml temp/catalog-info.yaml
+          cp internal/mkdocs.yml temp/mkdocs.yml
+
           rm -r internal
           mkdir internal
+
           # Sync public with internal
           cp -a public/. internal
           sudo cp -a temp/. internal
