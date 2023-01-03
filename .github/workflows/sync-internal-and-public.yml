@@ -1,6 +1,6 @@
 name: Sync Internal and Public Repos
 
-on: pull_request
+on: workflow_dispatch
 
 jobs:
   sync-repos:
