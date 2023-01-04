@@ -1,0 +1,3 @@
+```release-note:feature
+Automatically sync the public and internal repos.
+```
