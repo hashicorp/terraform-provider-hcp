@@ -41,7 +41,7 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 
 	data "hcp_consul_versions" "test" {}
 
-	%[1]s
+	%s
 	
 	data "hcp_consul_cluster" "test" {
 		cluster_id = hcp_consul_cluster.test.cluster_id
