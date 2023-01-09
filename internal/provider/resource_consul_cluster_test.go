@@ -15,7 +15,7 @@ var consulClusterUniqueID = fmt.Sprintf("test-%s", time.Now().Format("2006010215
 
 var consulCluster = fmt.Sprintf(`
 resource "hcp_consul_cluster" "test" {
-	cluster_id         = "%[1]s"
+	cluster_id         = "%s"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "development"
 	min_consul_version = data.hcp_consul_versions.test.recommended
@@ -24,7 +24,7 @@ resource "hcp_consul_cluster" "test" {
 
 var updatedConsulCluster = fmt.Sprintf(`
 resource "hcp_consul_cluster" "test" {
-	cluster_id = "%[1]s"
+	cluster_id = "%s"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "standard"
 	size	   = "small"
