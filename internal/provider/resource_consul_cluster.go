@@ -208,12 +208,12 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"consul_root_token_accessor_id": {
-				Description: "The accessor ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.",
+				Description: "The accessor ID of the root ACL token that is generated upon cluster creation.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"consul_root_token_secret_id": {
-				Description: "The secret ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.",
+				Description: "The secret ID of the root ACL token that is generated upon cluster creation.",
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
