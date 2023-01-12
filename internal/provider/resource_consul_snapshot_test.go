@@ -45,7 +45,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterSnapshotUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_name", consulClusterSnapshotUniqueID),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
@@ -60,7 +60,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterSnapshotUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_name", consulClusterSnapshotUniqueID),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
