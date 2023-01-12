@@ -4,29 +4,33 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var testAccConsulSnapshotConfig = `
+var consulClusterSnapshotUniqueID = fmt.Sprintf("test-snapshot-%s", time.Now().Format("200601021504"))
+var consulClusterSnapshotHVNUniqueID = fmt.Sprintf("test-snapshot-hvn-%s", time.Now().Format("200601021504"))
+
+var testAccConsulSnapshotConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id         = "test-hvn"
+	hvn_id         = "%s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 }
 
 resource "hcp_consul_cluster" "test" {
-	cluster_id = "test-consul-cluster"
+	cluster_id = "%s"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "development"
 }
 
 resource "hcp_consul_snapshot" "test" {
 	cluster_id    = hcp_consul_cluster.test.cluster_id
-	snapshot_name = "test"
-}`
+	snapshot_name = "%[1]s"
+}`, consulClusterSnapshotHVNUniqueID, consulClusterSnapshotUniqueID)
 
 func TestAccConsulSnapshot(t *testing.T) {
 	resourceName := "hcp_consul_snapshot.test"
@@ -40,7 +44,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 				Config: testConfig(testAccConsulSnapshotConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulSnapshotExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterSnapshotUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
@@ -55,7 +59,7 @@ func TestAccConsulSnapshot(t *testing.T) {
 				Config: testConfig(testAccConsulSnapshotConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulSnapshotExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterSnapshotUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
