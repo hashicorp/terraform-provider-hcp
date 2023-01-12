@@ -55,8 +55,8 @@ resource "hcp_consul_cluster" "example" {
 - `consul_config_file` (String) The cluster config encoded as a Base64 string.
 - `consul_private_endpoint_url` (String) The private URL for the Consul UI.
 - `consul_public_endpoint_url` (String) The public URL for the Consul UI. This will be empty if `public_endpoint` is `false`.
-- `consul_root_token_accessor_id` (String) The accessor ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.
-- `consul_root_token_secret_id` (String, Sensitive) The secret ID of the root ACL token that is generated upon cluster creation. If a new root token is generated using the `hcp_consul_root_token` resource, this field is no longer valid.
+- `consul_root_token_accessor_id` (String) The accessor ID of the root ACL token that is generated upon cluster creation.
+- `consul_root_token_secret_id` (String, Sensitive) The secret ID of the root ACL token that is generated upon cluster creation.
 - `consul_snapshot_interval` (String) The Consul snapshot interval.
 - `consul_snapshot_retention` (String) The retention policy for Consul snapshots.
 - `consul_version` (String) The Consul version of the cluster.
