@@ -16,20 +16,20 @@ var consulClusterSnapshotHVNUniqueID = fmt.Sprintf("test-snapshot-hvn-%s", time.
 
 var testAccConsulSnapshotConfig = fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id         = "%s"
+	hvn_id         = "%[1]s"
 	cloud_provider = "aws"
 	region         = "us-west-2"
 }
 
 resource "hcp_consul_cluster" "test" {
-	cluster_id = "%s"
+	cluster_id = "%[2]s"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "development"
 }
 
 resource "hcp_consul_snapshot" "test" {
 	cluster_id    = hcp_consul_cluster.test.cluster_id
-	snapshot_name = "%[1]s"
+	snapshot_name = "%[2]s"
 }`, consulClusterSnapshotHVNUniqueID, consulClusterSnapshotUniqueID)
 
 func TestAccConsulSnapshot(t *testing.T) {
