@@ -14,14 +14,15 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	tgwAttUniqueAWSName        = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	tgwAttUniqueAWSName        = fmt.Sprintf("hcp-att-unique-test-%s", time.Now().Format("200601021504"))
+	tgwAttUniqueHvnName        = fmt.Sprintf("att-hvn-name-%s", time.Now().Format("200601021504"))
 	testAccTGWAttachmentConfig = fmt.Sprintf(`
 provider "aws" {
   region = "us-west-2"
 }
 
 resource "hcp_hvn" "test" {
-  hvn_id         = "%[1]s"
+  hvn_id         = "%[2]s"
   cloud_provider = "aws"
   region         = "us-west-2"
   cidr_block     = "172.25.16.0/20"
@@ -99,7 +100,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 	 tgw_attachment_id = hcp_aws_transit_gateway_attachment.example.transit_gateway_attachment_id
   }
 }
-`, tgwAttUniqueAWSName)
+`, tgwAttUniqueAWSName, tgwAttUniqueHvnName)
 )
 
 func TestAccTGWAttachment(t *testing.T) {
@@ -120,7 +121,7 @@ func TestAccTGWAttachment(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTGWAttachmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", tgwAttUniqueAWSName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", tgwAttUniqueAWSName),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", tgwAttUniqueHvnName),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_transit_gateway_attachment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
@@ -142,7 +143,7 @@ func TestAccTGWAttachment(t *testing.T) {
 						return "", fmt.Errorf("not found: aws_ram_resource_share.example")
 					}
 
-					return fmt.Sprintf("test-hvn:example-tgw-attachment:%s", resourceShare.Primary.Attributes["arn"]), nil
+					return fmt.Sprintf("%s:%s:%s", tgwAttUniqueHvnName, tgwAttUniqueAWSName, resourceShare.Primary.Attributes["arn"]), nil
 				},
 				ImportStateVerify: true,
 			},
@@ -152,7 +153,7 @@ func TestAccTGWAttachment(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTGWAttachmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", tgwAttUniqueAWSName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", tgwAttUniqueAWSName),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", tgwAttUniqueHvnName),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_transit_gateway_attachment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
