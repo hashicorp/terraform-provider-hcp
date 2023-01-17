@@ -15,7 +15,7 @@ const (
 	secondaryVaultResourceName = "hcp_vault_cluster.c2"
 )
 
-func setTestAccPerformanceReplication_e2e(tfCode string) string {
+func setTestAccPerformanceReplicationE2E(tfCode string) string {
 	return fmt.Sprintf(`
 resource "hcp_hvn" "hvn1" {
 	hvn_id            = "test-perf-hvn-1"
@@ -42,7 +42,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(setTestAccPerformanceReplication_e2e("")),
+				Config: testConfig(setTestAccPerformanceReplicationE2E("")),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(hvn1ResourceName, "hvn_id", "test-perf-hvn-1"),
 					resource.TestCheckResourceAttr(hvn1ResourceName, "cidr_block", "172.25.16.0/20"),
@@ -52,7 +52,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// invalid primary link supplied
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id   = "test-primary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
@@ -65,7 +65,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// incorrectly specify a paths_filter on a non-secondary
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id   = "test-primary"
 					hvn_id       = hcp_hvn.hvn1.hvn_id
@@ -77,7 +77,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// create a plus tier cluster successfully
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -106,7 +106,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster creation failed as tier doesn't match the tier of primary
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -124,7 +124,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster creation failed as primary link is invalid
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -142,7 +142,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster creation failed as min_vault_version is specified.
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -161,7 +161,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster created successfully (same hvn)
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -199,7 +199,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// update paths filter
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -221,7 +221,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// delete paths filter
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -241,7 +241,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// secondary cluster created successfully (different hvn)
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -277,7 +277,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// successfully scale replication group
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -298,7 +298,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// successfully disable replication
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
@@ -312,7 +312,7 @@ func TestAccPerformanceReplication_Validations(t *testing.T) {
 			},
 			{
 				// successfully scale out of the Plus tier
-				Config: testConfig(setTestAccPerformanceReplication_e2e(`
+				Config: testConfig(setTestAccPerformanceReplicationE2E(`
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id      = "test-primary"
 					hvn_id          = hcp_hvn.hvn1.hvn_id
