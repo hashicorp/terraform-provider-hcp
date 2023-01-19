@@ -67,7 +67,7 @@ resource "hcp_vault_cluster" "test" {
 func setTestAccVaultClusterConfig(t *testing.T, tfCode string, in inputT, tier string) string {
 	tfTemplate := fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id            = ""{{ .HvnID }}""
+	hvn_id            = "{{ .HvnID }}"
 	cloud_provider    = "{{ .CloudProvider }}"
 	region            = "{{ .Region }}"
 }
