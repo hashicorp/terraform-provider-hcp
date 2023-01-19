@@ -135,7 +135,7 @@ func testAccCheckVaultClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-// utlity functions
+// utility functions
 func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 	in := &inp
 	return []resource.TestStep{
