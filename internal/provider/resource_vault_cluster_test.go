@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -29,8 +30,8 @@ type inputT struct {
 // to shorten testing time.
 func TestAccVaultClusterAzure(t *testing.T) {
 	azureTestInput := inputT{
-		vaultClusterName:           "test-vault-cluster-azure",
-		hvnName:                    "test-hvn-azure",
+		vaultClusterName:           addTimestampSuffix("test-vault-cluster-azure-"),
+		hvnName:                    addTimestampSuffix("test-hvn-azure-"),
 		vaultClusterResourceName:   vaultClusterResourceName,
 		vaultClusterDataSourceName: vaultClusterDataSourceName,
 		adminTokenResourceName:     adminTokenResourceName,
@@ -53,8 +54,8 @@ func TestAccVaultClusterAzure(t *testing.T) {
 // to shorten testing time.
 func TestAccVaultClusterAWS(t *testing.T) {
 	awsTestInput := inputT{
-		vaultClusterName:           "test-vault-cluster-aws",
-		hvnName:                    "test-hvn-aws",
+		vaultClusterName:           addTimestampSuffix("test-vault-cluster-aws-"),
+		hvnName:                    addTimestampSuffix("test-hvn-aws-"),
 		vaultClusterResourceName:   vaultClusterResourceName,
 		vaultClusterDataSourceName: vaultClusterDataSourceName,
 		adminTokenResourceName:     adminTokenResourceName,
@@ -314,4 +315,8 @@ func updateTierPublicEndpointAndRemoveObservabilityData(t *testing.T, in *inputT
 			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
 		),
 	}
+}
+
+func addTimestampSuffix(in string) string {
+	return in + time.Now().Format("200601021504")
 }

@@ -21,7 +21,7 @@ const (
 
 const vaultCluster = `
 resource "hcp_vault_cluster" "test" {
-	cluster_id         = "test-vault-cluster-{{ .CloudProvider }}"
+	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
 }
@@ -30,7 +30,7 @@ resource "hcp_vault_cluster" "test" {
 // sets public_endpoint to true and add metrics and audit log
 const updatedVaultClusterPublicAndMetricsAuditLog = `
 resource "hcp_vault_cluster" "test" {
-	cluster_id         = "test-vault-cluster-{{ .CloudProvider }}"
+	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
@@ -52,7 +52,7 @@ resource "hcp_vault_cluster" "test" {
 // endpoint on or off
 const updatedVaultClusterTierAndMVUConfig = `
 resource "hcp_vault_cluster" "test" {
-	cluster_id         = "test-vault-cluster-{{ .CloudProvider }}"
+	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
@@ -67,7 +67,7 @@ resource "hcp_vault_cluster" "test" {
 func setTestAccVaultClusterConfig(t *testing.T, tfCode string, in inputT, tier string) string {
 	tfTemplate := fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-	hvn_id            = "test-hvn-{{ .CloudProvider }}"
+	hvn_id            = ""{{ .HvnID }}""
 	cloud_provider    = "{{ .CloudProvider }}"
 	region            = "{{ .Region }}"
 }
@@ -88,11 +88,15 @@ resource "hcp_vault_cluster_admin_token" "test" {
 
 	tfResources := &bytes.Buffer{}
 	err = tmpl.Execute(tfResources, struct {
+		ClusterID      string
+		HvnID          string
 		CloudProvider  string
 		Region         string
 		Tier           string
 		PublicEndpoint string
 	}{
+		ClusterID:      in.vaultClusterName,
+		HvnID:          in.hvnName,
 		CloudProvider:  in.cloudProvider,
 		Region:         in.region,
 		Tier:           tier,
