@@ -51,7 +51,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 210m
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 210m -parallel=10
 
 testacc-ci: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -64,7 +64,7 @@ testacc-ci: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test -short -coverprofile=coverage-e2e.out $(TEST) -v $(TESTARGS) -timeout 360m
+	TF_ACC=1 go test -short -coverprofile=coverage-e2e.out $(TEST) -v $(TESTARGS) -timeout 360m -parallel=10
 	go tool cover -html=coverage-e2e.out -o coverage-e2e.html
 
 depscheck:
