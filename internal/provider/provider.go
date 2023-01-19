@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -205,7 +205,7 @@ func isHCPOperational() (diags diag.Diagnostics) {
 	}
 	defer resp.Body.Close()
 
-	jsBytes, err := ioutil.ReadAll(resp.Body)
+	jsBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,

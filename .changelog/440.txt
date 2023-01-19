@@ -1,0 +1,3 @@
+```release-note:bug
+Fix issue with E2E tests failing
+```

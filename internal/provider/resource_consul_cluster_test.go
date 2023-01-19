@@ -12,6 +12,7 @@ import (
 )
 
 var consulClusterUniqueID = fmt.Sprintf("test-%s", time.Now().Format("200601021504"))
+var consulClusterHVNUniqueID = fmt.Sprintf("test-hvn-%s", time.Now().Format("200601021504"))
 
 var consulCluster = fmt.Sprintf(`
 resource "hcp_consul_cluster" "test" {
@@ -34,7 +35,7 @@ resource "hcp_consul_cluster" "test" {
 func setTestAccConsulClusterConfig(consulCluster string) string {
 	return fmt.Sprintf(`
 	resource "hcp_hvn" "test" {
-		hvn_id         = "test-hvn"
+		hvn_id         = "%s"
 		cloud_provider = "aws"
 		region         = "us-west-2"
 	}
@@ -50,7 +51,7 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 	resource "hcp_consul_cluster_root_token" "test" {
 		cluster_id = hcp_consul_cluster.test.cluster_id
 	}
-`, consulCluster)
+`, consulClusterHVNUniqueID, consulCluster)
 }
 
 // This includes tests against both the resource, the corresponding datasource,
@@ -73,7 +74,7 @@ func TestAccConsulCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
@@ -121,7 +122,7 @@ func TestAccConsulCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
