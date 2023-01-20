@@ -1,3 +1,19 @@
+## v0.53.0 (January 20, 2023)
+
+FEATURES:
+
+* Automatically sync the public and internal repos. [[GH-436](https://github.com/hashicorp/terraform-provider-hcp/pull/436)]
+
+IMPROVEMENTS:
+
+* Add linting checks to PR and release pipeline. [[GH-430](https://github.com/hashicorp/terraform-provider-hcp/pull/430)]
+* Update auth guide. [[GH-434](https://github.com/hashicorp/terraform-provider-hcp/pull/434)]
+* Update hcp_consul_cluster and hcp_consul_cluster_root_token docs [[GH-439](https://github.com/hashicorp/terraform-provider-hcp/pull/439)]
+* Use unique clusterIDs in acceptance tests [[GH-437](https://github.com/hashicorp/terraform-provider-hcp/pull/437)]
+
+BUG FIXES:
+
+* Fix issue with E2E tests failing [[GH-440](https://github.com/hashicorp/terraform-provider-hcp/pull/440)]
 ## v0.52.0 (December 14, 2022)
 
 IMPROVEMENTS:
