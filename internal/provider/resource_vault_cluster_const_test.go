@@ -90,17 +90,18 @@ resource "hcp_vault_cluster_admin_token" "test" {
 	err = tmpl.Execute(tfResources, struct {
 		ClusterID      string
 		HvnID          string
+		HvnCidr        string
 		CloudProvider  string
 		Region         string
 		Tier           string
 		PublicEndpoint string
 	}{
-		ClusterID:      in.vaultClusterName,
-		HvnID:          in.hvnName,
-		CloudProvider:  in.cloudProvider,
-		Region:         in.region,
+		ClusterID:      in.VaultClusterName,
+		HvnID:          in.HvnName,
+		CloudProvider:  in.CloudProvider,
+		Region:         in.Region,
 		Tier:           tier,
-		PublicEndpoint: in.publicEndpoint,
+		PublicEndpoint: in.PublicEndpoint,
 	})
 	require.NoError(t, err)
 	return tfResources.String()

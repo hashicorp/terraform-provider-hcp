@@ -12,34 +12,44 @@ import (
 )
 
 type inputT struct {
-	vaultClusterName           string
-	hvnName                    string
-	vaultClusterResourceName   string
-	vaultClusterDataSourceName string
-	adminTokenResourceName     string
+	VaultClusterName           string
+	HvnName                    string
+	HvnCidr                    string // optional
+	VaultClusterResourceName   string
+	VaultClusterDataSourceName string
+	AdminTokenResourceName     string
+	CloudProvider              string
+	Region                     string
+	Tier                       string
+	UpdateTier1                string
+	UpdateTier2                string
+	PublicEndpoint             string
+	Secondary                  *inputT // optional
 	tf                         string
-	cloudProvider              string
-	region                     string
-	tier                       string
-	updateTier1                string
-	updateTier2                string
-	publicEndpoint             string
+}
+
+func (in *inputT) GetHvnCidr() string {
+	if in.HvnCidr == "" {
+		return "172.25.16.0/20"
+	}
+
+	return in.HvnCidr
 }
 
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
 func TestAccVaultClusterAzure(t *testing.T) {
 	azureTestInput := inputT{
-		vaultClusterName:           addTimestampSuffix("test-vault-cluster-azure-"),
-		hvnName:                    addTimestampSuffix("test-hvn-azure-"),
-		vaultClusterResourceName:   vaultClusterResourceName,
-		vaultClusterDataSourceName: vaultClusterDataSourceName,
-		adminTokenResourceName:     adminTokenResourceName,
-		cloudProvider:              cloudProviderAzure,
-		region:                     azureRegion,
-		tier:                       "DEV",
+		VaultClusterName:           addTimestampSuffix("test-vault-azure-"),
+		HvnName:                    addTimestampSuffix("test-hvn-azure-"),
+		VaultClusterResourceName:   vaultClusterResourceName,
+		VaultClusterDataSourceName: vaultClusterDataSourceName,
+		AdminTokenResourceName:     adminTokenResourceName,
+		CloudProvider:              cloudProviderAzure,
+		Region:                     azureRegion,
+		Tier:                       "DEV",
 	}
-	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.tier)
+	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
 	// save so e don't have to generate this again and again
 	azureTestInput.tf = tf
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,20 +64,20 @@ func TestAccVaultClusterAzure(t *testing.T) {
 // to shorten testing time.
 func TestAccVaultClusterAWS(t *testing.T) {
 	awsTestInput := inputT{
-		vaultClusterName:           addTimestampSuffix("test-vault-cluster-aws-"),
-		hvnName:                    addTimestampSuffix("test-hvn-aws-"),
-		vaultClusterResourceName:   vaultClusterResourceName,
-		vaultClusterDataSourceName: vaultClusterDataSourceName,
-		adminTokenResourceName:     adminTokenResourceName,
-		cloudProvider:              cloudProviderAWS,
-		region:                     awsRegion,
-		tier:                       "DEV",
-		updateTier1:                "STANDARD_SMALL",
-		updateTier2:                "STANDARD_MEDIUM",
-		publicEndpoint:             "false",
+		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
+		HvnName:                    addTimestampSuffix("test-hvn-aws-"),
+		VaultClusterResourceName:   vaultClusterResourceName,
+		VaultClusterDataSourceName: vaultClusterDataSourceName,
+		AdminTokenResourceName:     adminTokenResourceName,
+		CloudProvider:              cloudProviderAWS,
+		Region:                     awsRegion,
+		Tier:                       "DEV",
+		UpdateTier1:                "STANDARD_SMALL",
+		UpdateTier2:                "STANDARD_MEDIUM",
+		PublicEndpoint:             "false",
 	}
 
-	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.tier)
+	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
 	// save so e don't have to generate this again and again
 	awsTestInput.tf = tf
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,27 +175,27 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 	return resource.TestStep{
 		Config: testConfig(in.tf),
 		Check: resource.ComposeTestCheckFunc(
-			testAccCheckVaultClusterExists(in.vaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "cluster_id", in.vaultClusterName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "hvn_id", in.hvnName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "tier", in.tier),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "cloud_provider", in.cloudProvider),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "region", in.region),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "public_endpoint", "false"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "namespace", "admin"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_version"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "organization_id"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "project_id"),
-			resource.TestCheckNoResourceAttr(in.vaultClusterResourceName, "vault_public_endpoint_url"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_private_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_private_endpoint_url", ""),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "state"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "created_at"),
+			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cluster_id", in.VaultClusterName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "hvn_id", in.HvnName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.Tier),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cloud_provider", in.CloudProvider),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "project_id"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_public_endpoint_url"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", ""),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "state"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "created_at"),
 
 			// Verifies admin token
-			resource.TestCheckResourceAttr(in.adminTokenResourceName, "cluster_id", in.vaultClusterName),
-			resource.TestCheckResourceAttrSet(in.adminTokenResourceName, "token"),
-			resource.TestCheckResourceAttrSet(in.adminTokenResourceName, "created_at"),
+			resource.TestCheckResourceAttr(in.AdminTokenResourceName, "cluster_id", in.VaultClusterName),
+			resource.TestCheckResourceAttrSet(in.AdminTokenResourceName, "token"),
+			resource.TestCheckResourceAttrSet(in.AdminTokenResourceName, "created_at"),
 		),
 	}
 }
@@ -193,12 +203,12 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 // This step simulates an import of the resource
 func importResourcesInTFState(t *testing.T, in *inputT) resource.TestStep {
 	return resource.TestStep{
-		ResourceName: in.vaultClusterResourceName,
+		ResourceName: in.VaultClusterResourceName,
 		ImportState:  true,
 		ImportStateIdFunc: func(s *terraform.State) (string, error) {
-			rs, ok := s.RootModule().Resources[in.vaultClusterResourceName]
+			rs, ok := s.RootModule().Resources[in.VaultClusterResourceName]
 			if !ok {
-				return "", fmt.Errorf("not found: %s", in.vaultClusterResourceName)
+				return "", fmt.Errorf("not found: %s", in.VaultClusterResourceName)
 			}
 
 			return rs.Primary.Attributes["cluster_id"], nil
@@ -212,22 +222,22 @@ func tfApply(t *testing.T, in *inputT) resource.TestStep {
 	return resource.TestStep{
 		Config: testConfig(in.tf),
 		Check: resource.ComposeTestCheckFunc(
-			testAccCheckVaultClusterExists(in.vaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "cluster_id", in.vaultClusterName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "hvn_id", in.hvnName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "tier", in.tier),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "cloud_provider", in.cloudProvider),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "region", in.region),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "public_endpoint", "false"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "namespace", "admin"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "organization_id"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "project_id"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_version"),
-			resource.TestCheckNoResourceAttr(in.vaultClusterResourceName, "vault_public_endpoint_url"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_private_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "created_at"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "state"),
+			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cluster_id", in.VaultClusterName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "hvn_id", in.HvnName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.Tier),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cloud_provider", in.CloudProvider),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "project_id"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_public_endpoint_url"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "created_at"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "state"),
 		),
 	}
 }
@@ -237,22 +247,22 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 	return resource.TestStep{
 		Config: testConfig(in.tf),
 		Check: resource.ComposeTestCheckFunc(
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "cluster_id", in.vaultClusterDataSourceName, "cluster_id"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "hvn_id", in.vaultClusterDataSourceName, "hvn_id"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "public_endpoint", in.vaultClusterDataSourceName, "public_endpoint"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "min_vault_version", in.vaultClusterDataSourceName, "min_vault_version"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "tier", in.vaultClusterDataSourceName, "tier"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "organization_id", in.vaultClusterDataSourceName, "organization_id"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "project_id", in.vaultClusterDataSourceName, "project_id"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "cloud_provider", in.vaultClusterDataSourceName, "cloud_provider"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "region", in.vaultClusterDataSourceName, "region"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "namespace", in.vaultClusterDataSourceName, "namespace"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "vault_version", in.vaultClusterDataSourceName, "vault_version"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "vault_public_endpoint_url", in.vaultClusterDataSourceName, "vault_public_endpoint_url"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "vault_private_endpoint_url", in.vaultClusterDataSourceName, "vault_private_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "created_at", in.vaultClusterDataSourceName, "created_at"),
-			resource.TestCheckResourceAttrPair(in.vaultClusterResourceName, "state", in.vaultClusterDataSourceName, "state"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "cluster_id", in.VaultClusterDataSourceName, "cluster_id"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "hvn_id", in.VaultClusterDataSourceName, "hvn_id"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "public_endpoint", in.VaultClusterDataSourceName, "public_endpoint"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "min_vault_version", in.VaultClusterDataSourceName, "min_vault_version"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "tier", in.VaultClusterDataSourceName, "tier"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "organization_id", in.VaultClusterDataSourceName, "organization_id"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "project_id", in.VaultClusterDataSourceName, "project_id"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "cloud_provider", in.VaultClusterDataSourceName, "cloud_provider"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "region", in.VaultClusterDataSourceName, "region"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "namespace", in.VaultClusterDataSourceName, "namespace"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_version", in.VaultClusterDataSourceName, "vault_version"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_public_endpoint_url", in.VaultClusterDataSourceName, "vault_public_endpoint_url"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_private_endpoint_url", in.VaultClusterDataSourceName, "vault_private_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "created_at", in.VaultClusterDataSourceName, "created_at"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "state", in.VaultClusterDataSourceName, "state"),
 		),
 	}
 }
@@ -261,10 +271,10 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.updateTier1)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
-			testAccCheckVaultClusterExists(in.vaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "tier", in.updateTier1),
+			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier1),
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
@@ -275,21 +285,21 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 // This step verifies the successful update of "public_endpoint", "audit_log", "metrics" and MVU config
 func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
-	newIn.publicEndpoint = "true"
+	newIn.PublicEndpoint = "true"
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicAndMetricsAuditLog, newIn, newIn.updateTier1)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicAndMetricsAuditLog, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
-			testAccCheckVaultClusterExists(in.vaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "public_endpoint", "true"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_public_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_private_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "metrics_config.0.splunk_hecendpoint", "https://http-input-splunkcloud.com"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "metrics_config.0.splunk_token"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "MANUAL"),
+			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "metrics_config.0.splunk_hecendpoint", "https://http-input-splunkcloud.com"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "metrics_config.0.splunk_token"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "MANUAL"),
 		),
 	}
 }
@@ -297,22 +307,22 @@ func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) 
 // This step verifies the successful update of both "tier" and "public_endpoint" and removal of "metrics" and "audit_log"
 func updateTierPublicEndpointAndRemoveObservabilityData(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
-	newIn.publicEndpoint = "false"
+	newIn.PublicEndpoint = "false"
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.updateTier2)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.UpdateTier2)),
 		Check: resource.ComposeTestCheckFunc(
-			testAccCheckVaultClusterExists(in.vaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "tier", in.updateTier2),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "public_endpoint", "false"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_public_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_public_endpoint_url", "8200"),
-			resource.TestCheckResourceAttrSet(in.vaultClusterResourceName, "vault_private_endpoint_url"),
-			testAccCheckFullURL(in.vaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-			resource.TestCheckNoResourceAttr(in.vaultClusterResourceName, "metrics_config.0"),
-			resource.TestCheckNoResourceAttr(in.vaultClusterResourceName, "audit_log_config.0"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
-			resource.TestCheckResourceAttr(in.vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
+			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "metrics_config.0"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "audit_log_config.0"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
 		),
 	}
 }
