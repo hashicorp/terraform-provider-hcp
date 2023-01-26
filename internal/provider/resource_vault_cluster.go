@@ -23,11 +23,11 @@ var defaultVaultClusterTimeout = time.Minute * 5
 
 // createUpdateVaultClusterTimeout is the amount of time that can elapse
 // before a cluster create operation should timeout.
-var createUpdateVaultClusterTimeout = time.Minute * 35
+var createUpdateVaultClusterTimeout = time.Minute * 75
 
 // deleteVaultClusterTimeout is the amount of time that can elapse
 // before a cluster delete operation should timeout.
-var deleteVaultClusterTimeout = time.Minute * 25
+var deleteVaultClusterTimeout = time.Minute * 75
 
 func resourceVaultCluster() *schema.Resource {
 	return &schema.Resource{
