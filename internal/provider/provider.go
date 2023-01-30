@@ -66,6 +66,12 @@ func New() func() *schema.Provider {
 					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_SECRET", nil),
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
+				"project_id": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
+					Description: "The default project in which resources should be created.",
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
