@@ -1,0 +1,3 @@
+```release-note:improvement
+Refactor HCP Vault TF acceptance test harness to include test for Azure
+```

@@ -4,34 +4,38 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var consulCluster = `
+var consulClusterUniqueID = fmt.Sprintf("test-%s", time.Now().Format("200601021504"))
+var consulClusterHVNUniqueID = fmt.Sprintf("test-hvn-%s", time.Now().Format("200601021504"))
+
+var consulCluster = fmt.Sprintf(`
 resource "hcp_consul_cluster" "test" {
-	cluster_id         = "test-consul-cluster"
+	cluster_id         = "%s"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "development"
 	min_consul_version = data.hcp_consul_versions.test.recommended
 }
-`
+`, consulClusterUniqueID)
 
-var updatedConsulCluster = `
+var updatedConsulCluster = fmt.Sprintf(`
 resource "hcp_consul_cluster" "test" {
-	cluster_id = "test-consul-cluster"
+	cluster_id = "%s"
 	hvn_id     = hcp_hvn.test.hvn_id
 	tier       = "standard"
 	size	   = "small"
 }
-`
+`, consulClusterUniqueID)
 
 func setTestAccConsulClusterConfig(consulCluster string) string {
 	return fmt.Sprintf(`
 	resource "hcp_hvn" "test" {
-		hvn_id         = "test-hvn"
+		hvn_id         = "%s"
 		cloud_provider = "aws"
 		region         = "us-west-2"
 	}
@@ -47,7 +51,7 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 	resource "hcp_consul_cluster_root_token" "test" {
 		cluster_id = hcp_consul_cluster.test.cluster_id
 	}
-`, consulCluster)
+`, consulClusterHVNUniqueID, consulCluster)
 }
 
 // This includes tests against both the resource, the corresponding datasource,
@@ -69,13 +73,13 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "datacenter", consulClusterUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
@@ -117,13 +121,13 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_id", "test-consul-cluster"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", "test-hvn"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datacenter", "test-consul-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "datacenter", consulClusterUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
@@ -178,7 +182,7 @@ func TestAccConsulCluster(t *testing.T) {
 			{
 				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(rootTokenResourceName, "cluster_id", "test-consul-cluster"),
+					resource.TestCheckResourceAttr(rootTokenResourceName, "cluster_id", consulClusterUniqueID),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "accessor_id"),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "secret_id"),
 					resource.TestCheckResourceAttrSet(rootTokenResourceName, "kubernetes_secret"),
