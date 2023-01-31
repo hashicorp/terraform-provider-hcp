@@ -1,7 +1,7 @@
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     id = "iteration-id"
   }
 }
@@ -10,7 +10,7 @@ resource "hcp_packer_channel" "staging" {
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     fingerprint = "fingerprint-associated-to-iteration"
   }
 }
@@ -19,7 +19,7 @@ resource "hcp_packer_channel" "staging" {
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     // incremental_version is the version number assigned to a completed iteration.
     incremental_version = 1
   }

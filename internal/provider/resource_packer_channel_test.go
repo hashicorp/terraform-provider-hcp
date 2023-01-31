@@ -83,7 +83,6 @@ func TestAccPackerChannel_AssignedIteration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration_assignment.0.id"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
 					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-assigned-iteration"),
@@ -140,7 +139,8 @@ func TestAccPackerChannel_UpdateAssignedIteration(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
 					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration_assignment.0.id"),
+					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-update-it1"),
 				),
 			},
 			{
@@ -159,7 +159,6 @@ func TestAccPackerChannel_UpdateAssignedIteration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration_assignment.0.id"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
 					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-update-it2"),
@@ -199,10 +198,9 @@ func TestAccPackerChannel_UpdateAssignedIterationWithFingerprint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration_assignment.0.fingerprint"),
+					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
 					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
-					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
@@ -228,7 +226,7 @@ var testAccPackerChannelAssignedLatestIteration = func(bucketName, channelName s
 	resource "hcp_packer_channel" "production" {
 		name = %[1]q
 		bucket_name  = %[2]q
-		iteration_assignment {
+		iteration {
 		  id = data.hcp_packer_image_iteration.test.id
 		}
 	}`, channelName, bucketName)
@@ -239,7 +237,7 @@ var testAccPackerChannelIterationFingerprint = func(bucketName, channelName, fin
 	resource "hcp_packer_channel" "production" {
 		bucket_name  = %q
 		name = %q
-		iteration_assignment {
+		iteration {
 		  fingerprint = %q
 		}
 	}`, bucketName, channelName, fingerprint)
