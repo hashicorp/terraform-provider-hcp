@@ -24,7 +24,7 @@ To create, or update an existing, channel with an assigned iteration.
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     id = "iteration-id"
   }
 }
@@ -33,7 +33,7 @@ resource "hcp_packer_channel" "staging" {
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     fingerprint = "fingerprint-associated-to-iteration"
   }
 }
@@ -42,7 +42,7 @@ resource "hcp_packer_channel" "staging" {
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
-  iteration_assignment {
+  iteration {
     // incremental_version is the version number assigned to a completed iteration.
     incremental_version = 1
   }
@@ -59,7 +59,7 @@ data "hcp_packer_image_iteration" "latest" {
 resource "hcp_packer_channel" "staging" {
   name        = staging
   bucket_name = alpine
-  iteration_assignment {
+  iteration {
     id = data.hcp_packer_image_iteration.latest.id
   }
 }
@@ -76,7 +76,7 @@ resource "hcp_packer_channel" "staging" {
 
 ### Optional
 
-- `iteration_assignment` (Block List, Max: 1) The iteration assignment information that will be used to assign a completed iteration to the channel. (see [below for nested schema](#nestedblock--iteration_assignment))
+- `iteration` (Block List, Max: 1) The iteration assigned to the channel. (see [below for nested schema](#nestedblock--iteration))
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -84,19 +84,18 @@ resource "hcp_packer_channel" "staging" {
 - `author_id` (String) The author of the channel.
 - `created_at` (String) Creation time of this build.
 - `id` (String) The ID of this resource.
-- `iteration` (List of Object) The iteration assigned to the channel. (see [below for nested schema](#nestedatt--iteration))
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `project_id` (String) The ID of the project this HCP Packer registry is located in.
 - `updated_at` (String) The author of the channel.
 
-<a id="nestedblock--iteration_assignment"></a>
-### Nested Schema for `iteration_assignment`
+<a id="nestedblock--iteration"></a>
+### Nested Schema for `iteration`
 
 Optional:
 
-- `fingerprint` (String) The fingerprint of the iteration to assign to the channel.
-- `id` (String) The id of the iteration to assign to the channel.
-- `incremental_version` (Number) The incremental_version of the iteration to assign to the channel.
+- `fingerprint` (String) The fingerprint of the iteration assigned to the channel.
+- `id` (String) The ID of the iteration assigned to the channel.
+- `incremental_version` (Number) The incremental_version of the iteration assigned to the channel.
 
 
 <a id="nestedblock--timeouts"></a>
@@ -108,16 +107,6 @@ Optional:
 - `default` (String)
 - `delete` (String)
 - `update` (String)
-
-
-<a id="nestedatt--iteration"></a>
-### Nested Schema for `iteration`
-
-Read-Only:
-
-- `fingerprint` (String)
-- `id` (String)
-- `incremental_version` (Number)
 
 ## Import
 

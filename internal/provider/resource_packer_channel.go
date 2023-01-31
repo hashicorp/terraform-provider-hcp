@@ -11,7 +11,6 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -49,31 +48,33 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			// Optional inputs
-			"iteration_assignment": {
-				Description: "The iteration assignment information that will be used to assign a completed iteration to the channel.",
+			"iteration": {
+				Description: "The iteration assigned to the channel.",
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fingerprint": {
-							ConflictsWith: []string{"iteration_assignment.0.id", "iteration_assignment.0.incremental_version"},
-							Description:   "The fingerprint of the iteration to assign to the channel.",
-							Type:          schema.TypeString,
-							Optional:      true,
+							Description:  "The fingerprint of the iteration assigned to the channel.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
 						},
 						"id": {
-							ConflictsWith: []string{"iteration_assignment.0.fingerprint", "iteration_assignment.0.incremental_version"},
-							Description:   "The id of the iteration to assign to the channel.",
-							Type:          schema.TypeString,
-							Optional:      true,
+							Description:  "The ID of the iteration assigned to the channel.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
 						},
 						"incremental_version": {
-							ConflictsWith: []string{"iteration_assignment.0.fingerprint", "iteration_assignment.0.id"},
-							Description:   "The incremental_version of the iteration to assign to the channel.",
-							Type:          schema.TypeInt,
-							Optional:      true,
-							ValidateFunc:  validation.IntAtLeast(1),
+							Description:  "The incremental_version of the iteration assigned to the channel.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
 						},
 					},
 				},
@@ -88,30 +89,6 @@ func resourcePackerChannel() *schema.Resource {
 				Description: "Creation time of this build.",
 				Type:        schema.TypeString,
 				Computed:    true,
-			},
-			"iteration": {
-				Description: "The iteration assigned to the channel.",
-				Type:        schema.TypeList,
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fingerprint": {
-							Description: "The fingerprint of the iteration assigned to the channel.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"id": {
-							Description: "The id of the iteration assigned to the channel.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"incremental_version": {
-							Description: "The incremental_version of the iteration assigned to the channel.",
-							Type:        schema.TypeInt,
-							Computed:    true,
-						},
-					},
-				},
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Packer registry is located in.",
@@ -143,7 +120,7 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
-	// TODO (nywilken) may need to look into pagination depending on channel list sizes
+
 	resp, err := clients.ListBucketChannels(ctx, client, loc, bucketName)
 	if err != nil {
 		return diag.FromErr(err)
@@ -176,14 +153,26 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	var assignment *clients.ChannelIterationAssignment
-	assignmentConfig, ok := d.GetOk("iteration_assignment")
-	if ok {
-		if config, ok := assignmentConfig.([]interface{})[0].(map[string]interface{}); ok {
-			assignment = expandIterationAssignmentConfig(config)
+	iterationConfig, ok := d.GetOk("iteration")
+	if !ok {
+		channel, err := clients.CreateBucketChannel(ctx, client, loc, bucketName, channelName, nil)
+		if err != nil {
+			return diag.FromErr(err)
 		}
+
+		if channel == nil {
+			return diag.Errorf("Unable to create channel in bucket %s named %s.", bucketName, channelName)
+		}
+
+		return setPackerChannelResourceData(d, channel)
 	}
-	channel, err := clients.CreateBucketChannel(ctx, client, loc, bucketName, channelName, assignment)
+
+	var iteration *packermodels.HashicorpCloudPackerIteration
+	if config, ok := iterationConfig.([]interface{})[0].(map[string]interface{}); ok {
+		iteration = expandIterationConfig(config)
+	}
+
+	channel, err := clients.CreateBucketChannel(ctx, client, loc, bucketName, channelName, iteration)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -192,7 +181,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("Unable to create channel in bucket %s named %s.", bucketName, channelName)
 	}
 
-	return resourcePackerChannelUpdate(ctx, d, meta)
+	return setPackerChannelResourceData(d, channel)
 }
 
 func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -209,14 +198,36 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	var assignment *clients.ChannelIterationAssignment
-	assignmentConfig, ok := d.GetOk("iteration_assignment")
-	if ok {
-		if config, ok := assignmentConfig.([]interface{})[0].(map[string]interface{}); ok {
-			assignment = expandIterationAssignmentConfig(config)
+	var iteration *packermodels.HashicorpCloudPackerIteration
+	iterationConfig, ok := d.GetOk("iteration")
+	if !ok {
+		channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		return setPackerChannelResourceData(d, channel)
+	}
+
+	config, ok := iterationConfig.([]interface{})[0].(map[string]interface{})
+	if !ok {
+		return diag.Errorf("Failed to read iteration configuration during update.")
+	}
+
+	updatedIterationConfig := make(map[string]interface{})
+	for key, value := range config {
+		fullKey := fmt.Sprintf("iteration.0.%s", key)
+		// Upstream API doesn't know how to handle the case when all params are set;
+		// So we keep the inputs that are not coming from state.
+		if d.HasChange(fullKey) {
+			updatedIterationConfig[key] = value
 		}
 	}
-	channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, assignment)
+
+	if len(updatedIterationConfig) != 0 {
+		iteration = expandIterationConfig(updatedIterationConfig)
+	}
+
+	channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -304,13 +315,6 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 		return []*schema.ResourceData{d}, nil
 	}
 
-	assignment := clients.ChannelIterationAssignment{
-		IterationID: channel.Iteration.ID,
-	}
-	if err := d.Set("iteration_assignment", flattenIterationAssignmentConfig(&assignment)); err != nil {
-		return nil, err
-	}
-
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -340,41 +344,23 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 	return nil
 }
 
-func expandIterationAssignmentConfig(config map[string]interface{}) *clients.ChannelIterationAssignment {
+func expandIterationConfig(config map[string]interface{}) *packermodels.HashicorpCloudPackerIteration {
 	if config == nil {
 		return nil
 	}
 
+	var iteration packermodels.HashicorpCloudPackerIteration
 	if v, ok := config["id"]; ok && v.(string) != "" {
-		return &clients.ChannelIterationAssignment{
-			IterationID: v.(string),
-		}
-	}
-	if v, ok := config["incremental_version"]; ok && v.(int) != 0 {
-		return &clients.ChannelIterationAssignment{
-			IterationIncrementalVersion: v.(int),
-		}
+		iteration.ID = v.(string)
 	}
 	if v, ok := config["fingerprint"]; ok && v.(string) != "" {
-		return &clients.ChannelIterationAssignment{
-			IterationFingerprint: v.(string),
-		}
+		iteration.Fingerprint = v.(string)
+	}
+	if v, ok := config["incremental_version"]; ok && v.(int) != 0 {
+		iteration.IncrementalVersion = int32(v.(int))
 	}
 
-	return nil
-}
-
-func flattenIterationAssignmentConfig(assignment *clients.ChannelIterationAssignment) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if assignment == nil {
-		return result
-	}
-
-	item := make(map[string]interface{})
-	item["id"] = assignment.IterationID
-	item["incremental_version"] = assignment.IterationIncrementalVersion
-	item["fingerprint"] = assignment.IterationFingerprint
-	return append(result, item)
+	return &iteration
 }
 
 func flattenIterationConfig(iteration *packermodels.HashicorpCloudPackerIteration) []map[string]interface{} {

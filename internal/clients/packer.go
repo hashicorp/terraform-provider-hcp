@@ -48,30 +48,23 @@ func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.H
 	return it.Payload.Iteration, nil
 }
 
-// ChannelIterationAssignment assigns an iteration by its ID, fingerprint, or version to a channel
-type ChannelIterationAssignment struct {
-	IterationID                 string
-	IterationFingerprint        string
-	IterationIncrementalVersion int
-}
-
 // CreateBucketChannel creates a channel on the named bucket.
 func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	assignment *ChannelIterationAssignment) (*packermodels.HashicorpCloudPackerChannel, error) {
+	iteration *packermodels.HashicorpCloudPackerIteration) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceCreateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Body.Slug = channelSlug
 
-	if assignment != nil {
+	if iteration != nil {
 		switch {
-		case assignment.IterationID != "":
-			params.Body.IterationID = assignment.IterationID
-		case assignment.IterationFingerprint != "":
-			params.Body.Fingerprint = assignment.IterationFingerprint
-		case assignment.IterationIncrementalVersion > 0:
-			params.Body.IncrementalVersion = int32(assignment.IterationIncrementalVersion)
+		case iteration.ID != "":
+			params.Body.IterationID = iteration.ID
+		case iteration.Fingerprint != "":
+			params.Body.Fingerprint = iteration.Fingerprint
+		case iteration.IncrementalVersion > 0:
+			params.Body.IncrementalVersion = iteration.IncrementalVersion
 		}
 	}
 
@@ -86,21 +79,21 @@ func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 // UpdateBucketChannel updates the named channel.
 func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	assignment *ChannelIterationAssignment) (*packermodels.HashicorpCloudPackerChannel, error) {
+	iteration *packermodels.HashicorpCloudPackerIteration) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Slug = channelSlug
 
-	if assignment != nil {
+	if iteration != nil {
 		switch {
-		case assignment.IterationID != "":
-			params.Body.IterationID = assignment.IterationID
-		case assignment.IterationFingerprint != "":
-			params.Body.Fingerprint = assignment.IterationFingerprint
-		case assignment.IterationIncrementalVersion > 0:
-			params.Body.IncrementalVersion = int32(assignment.IterationIncrementalVersion)
+		case iteration.ID != "":
+			params.Body.IterationID = iteration.ID
+		case iteration.Fingerprint != "":
+			params.Body.Fingerprint = iteration.Fingerprint
+		case iteration.IncrementalVersion > 0:
+			params.Body.IncrementalVersion = iteration.IncrementalVersion
 		}
 	}
 
