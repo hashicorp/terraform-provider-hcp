@@ -79,3 +79,29 @@ func RetryProjectServiceList(client *Client, params *project_service.ProjectServ
 	}
 	return resp, err
 }
+
+// Wraps the ProjectServiceGet function in a loop that supports retrying the GET request
+func RetryProjectServiceGet(client *Client, params *project_service.ProjectServiceGetParams) (*project_service.ProjectServiceGetOK, error) {
+	resp, err := client.Project.ProjectServiceGet(params, nil)
+
+	if err != nil {
+		if reflect.TypeOf(err.Error()).Name() != "project_service.ProjectServiceGetDefault" {
+			return nil, errors.New(unknownErrorMessage)
+		}
+
+		counter := counterStart
+		for shouldRetryErrorCode(err.(*project_service.ProjectServiceGetDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+			resp, err = client.Project.ProjectServiceGet(params, nil)
+			if err == nil {
+				break
+			}
+			// Avoid wasting time if we're not going to retry next loop cycle
+			if (counter + 1) != retryCount {
+				fmt.Printf("Error trying to get configured project. Retrying in %d seconds...", retryDelay*counter)
+				time.Sleep(time.Duration(retryDelay*counter) * time.Second)
+			}
+			counter++
+		}
+	}
+	return resp, err
+}
