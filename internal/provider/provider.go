@@ -118,18 +118,30 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			return nil, diags
 		}
 
-		// For the initial release, since only one project is allowed per organization, the
-		// provider handles fetching the organization's single project, instead of requiring the
-		// user to set it. When multiple projects are supported, this helper will be deprecated
-		// with a warning: when multiple projects exist within the org, a project ID must be set
-		// on the provider or on each resource.
-		project, err := getProjectFromCredentials(ctx, client)
-		if err != nil {
-			diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
-			return nil, diags
+		projectID := d.Get("project_id").(string)
+
+		if projectID != "" {
+			getProjParams := project_service.NewProjectServiceGetParams()
+			getProjParams.ID = projectID
+			project, err := clients.RetryProjectServiceGet(client, getProjParams)
+			if err != nil {
+				diags = append(diags, diag.Errorf("unable to fetch project %q: %v", projectID, err)...)
+				return nil, diags
+			}
+
+			client.Config.ProjectID = project.Payload.Project.ID
+			client.Config.OrganizationID = project.Payload.Project.Parent.ID
+
+		} else {
+			// TODO: drop this helper once optional project ID inputs added to all resources
+			project, err := getProjectFromCredentials(ctx, client)
+			if err != nil {
+				diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
+				return nil, diags
+			}
+			client.Config.OrganizationID = project.Parent.ID
+			client.Config.ProjectID = project.ID
 		}
-		client.Config.OrganizationID = project.Parent.ID
-		client.Config.ProjectID = project.ID
 
 		return client, diags
 	}
