@@ -91,7 +91,12 @@ func testAccPreCheck(t *testing.T, requiredCreds map[string]bool) {
 
 		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 		if err != nil {
-			t.Fatal(err)
+			if err[0].Severity == 1 {
+				// Severity 1 = Warning, which can be ignored during test
+				return
+			}
+
+			t.Fatalf("unexpected error, exiting test: %#v", err)
 		}
 	})
 }
