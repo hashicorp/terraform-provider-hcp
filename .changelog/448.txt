@@ -1,0 +1,3 @@
+```release-note:bug
+Do not exit acceptance test when provider returns a warning
+```
