@@ -133,7 +133,11 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			client.Config.OrganizationID = project.Payload.Project.Parent.ID
 
 		} else {
-			// TODO: drop this helper once optional project ID inputs added to all resources
+			// For the initial release of the HCP TFP, since only one project was allowed per organization at the time,
+			// the provider handled used the single organization's single project by default, instead of requiring the
+			// user to set it. Once multiple projects are available, this helper issues a warning: when multiple projects exist within the org,
+			// a project ID should be set on the provider or on each resource. Otherwise, the oldest project will be used by default.
+			// This helper will eventually be deprecated after a migration period.
 			project, err := getProjectFromCredentials(ctx, client)
 			if err != nil {
 				diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
@@ -150,16 +154,18 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
-func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
+func getProjectFromCredentials(ctx context.Context, client *clients.Client) (project *models.HashicorpCloudResourcemanagerProject, diags diag.Diagnostics) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
 	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch organization list: %v", err)
+		diags = append(diags, diag.Errorf("unable to fetch organization list: %v", err)...)
+		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
 	if orgLen != 1 {
-		return nil, fmt.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)
+		diags = append(diags, diag.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)...)
+		return nil, diags
 	}
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
@@ -170,14 +176,23 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 	listProjParams.ScopeType = &scopeType
 	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
 	if err != nil {
-		return nil, fmt.Errorf("unable to fetch project id: %v", err)
+		diags = append(diags, diag.Errorf("unable to fetch project id: %v", err)...)
+		return nil, diags
 	}
 	if len(listProjResp.Payload.Projects) > 1 {
-		return nil, fmt.Errorf("this version of the provider does not support multiple projects, upgrade to a later provider version and set a project ID on the provider/resources")
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "There is more than one project associated with the organization of the configured credentials.",
+			Detail: `The oldest project has been selected as the default. To configure which project is used as default, 
+			set a project in the HCP provider config block. Resources may also be configured with different projects.`,
+		})
+		// TODO: the index 0 project might be different each time,
+		// so need to iterate over list of projects and select the project with the earliest 'created_at'
+		return listProjResp.Payload.Projects[0], nil
 	}
 
-	project := listProjResp.Payload.Projects[0]
-	return project, nil
+	project = listProjResp.Payload.Projects[0]
+	return project, diags
 }
 
 // Status endpoint for prod.
