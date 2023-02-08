@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
@@ -183,11 +184,8 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 			Detail: `The oldest project has been selected as the default. To configure which project is used as default, 
 			set a project in the HCP provider config block. Resources may also be configured with different projects.`,
 		})
-		// TODO: the index 0 project might be different each time,
-		// so need to iterate over list of projects and select the project with the earliest 'created_at'
-		return listProjResp.Payload.Projects[0], nil
+		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
-
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
 }
@@ -213,6 +211,20 @@ type component struct {
 }
 
 type status string
+
+// getOldestProject retrieves the oldest project from a list based on its created_at time.
+func getOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
+	oldestTime := time.Now()
+
+	for _, proj := range projects {
+		projTime := time.Time(proj.CreatedAt)
+		if projTime.Before(oldestTime) {
+			oldestProj = proj
+			oldestTime = projTime
+		}
+	}
+	return oldestProj
+}
 
 func isHCPOperational() (diags diag.Diagnostics) {
 	req, err := http.NewRequest("GET", statuspageURL, nil)
