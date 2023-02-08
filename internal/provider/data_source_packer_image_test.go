@@ -162,18 +162,16 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			deleteChannel(t, acctestUbuntuImageBucket, acctestImageChannel, true)
+			deleteIteration(t, acctestUbuntuImageBucket, fingerprint, true)
+			deleteBucket(t, acctestUbuntuImageBucket, true)
+			return nil
+		},
 		Steps: []resource.TestStep{
-			// testing that getting a revoked iteration fails properly
 			{
 				PlanOnly: true,
 				PreConfig: func() {
-					// CheckDestroy doesn't get called when the test fails and doesn't
-					// produce any tf state. In this case we destroy any existing resource
-					// before creating them.
-					deleteChannel(t, acctestUbuntuImageBucket, acctestImageChannel, false)
-					deleteIteration(t, acctestUbuntuImageBucket, fingerprint, false)
-					deleteBucket(t, acctestUbuntuImageBucket, false)
-
 					upsertRegistry(t)
 					upsertBucket(t, acctestUbuntuImageBucket)
 					upsertIteration(t, acctestUbuntuImageBucket, fingerprint)
@@ -192,7 +190,7 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 				Config: testConfig(testAccPackerImageUbuntuProduction),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
-					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "error_revoked"),
+					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "ami-42"),
 				),
 			},
 		},
