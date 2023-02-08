@@ -305,7 +305,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 				},
 				{
 					ImageID: "ami-43",
-					Region:  "us-east-1",
+					Region:  "us-east-2",
 				},
 			},
 			Labels: map[string]string{"test-key": "test-value"},
