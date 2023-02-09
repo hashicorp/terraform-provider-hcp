@@ -1,0 +1,3 @@
+```release-note:feature
+New resource `hcp_packer_channel` to create, or update an existing, channel with or without an assigned iteration.
+```
