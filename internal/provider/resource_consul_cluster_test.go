@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -14,26 +15,84 @@ import (
 var consulClusterUniqueID = fmt.Sprintf("test-%s", time.Now().Format("200601021504"))
 var consulClusterHVNUniqueID = fmt.Sprintf("test-hvn-%s", time.Now().Format("200601021504"))
 
-var consulCluster = fmt.Sprintf(`
-resource "hcp_consul_cluster" "test" {
-	cluster_id         = "%s"
-	hvn_id             = hcp_hvn.test.hvn_id
-	tier               = "development"
-	min_consul_version = data.hcp_consul_versions.test.recommended
-}
-`, consulClusterUniqueID)
+var consulCluster = consulClusterConfig(consulClusterUniqueID, `
+	ip_allowlist {
+    	address = "172.25.16.0/24"
+    	description = "this is an IPV4 address"
+  	}
+`)
 
-var updatedConsulCluster = fmt.Sprintf(`
-resource "hcp_consul_cluster" "test" {
-	cluster_id = "%s"
-	hvn_id     = hcp_hvn.test.hvn_id
-	tier       = "standard"
+var updatedConsulCluster = consulClusterConfig(consulClusterUniqueID, `
 	size	   = "small"
+
+	ip_allowlist {
+    	address = "172.25.14.0/24"
+ 		description = "this is an updated IPV4 address"
+    }
+`)
+
+var updateConsulClusterDuplicateCIDR = consulClusterConfig(consulClusterUniqueID, `
+	ip_allowlist {
+    	address = "172.25.14.0/24"
+    	description = "this is an IPV4 address"
+	}
+
+	ip_allowlist {
+    	address = "172.25.14.0/24"
+    	description = "this is a duplicate IPV4 address"
+	}
+`)
+
+var createConsulClusterDuplicateCIDR = consulClusterConfig("test-failure", `
+	ip_allowlist {
+    	address = "172.25.16.0/24"
+    	description = "this is an IPV4 address"
+	}
+
+	ip_allowlist {
+    	address = "172.25.16.0/24"
+    	description = "this is a duplicate IPV4 address"
+	}
+`)
+
+var createConsulClusterCIDRExceeded = consulClusterConfig("test-failure", `
+	ip_allowlist {
+    	address = "172.25.16.0/24"
+    	description = "this is a first IPV4 address"
+	}
+	
+	ip_allowlist {
+    	address = "172.25.10.0/24"
+    	description = "this is a secondIPV4 address"
+	}
+
+	ip_allowlist {
+    	address = "172.25.13.0/24"
+    	description = "this is a third IPV4 address"
+	}
+
+	ip_allowlist {
+    	address = "172.25.12.0/24"
+    	description = "this is a fourth IPV4 address, exceeding allowed limit"
+	}
+`)
+
+func consulClusterConfig(clusterID string, opt string) string {
+	return fmt.Sprintf(`
+	resource "hcp_consul_cluster" "test" {
+		cluster_id         = "%s"
+		hvn_id             = hcp_hvn.test.hvn_id
+		tier               = "development"
+		min_consul_version = data.hcp_consul_versions.test.recommended
+	
+		%s
+	}
+	`, clusterID, opt)
 }
-`, consulClusterUniqueID)
 
 func setTestAccConsulClusterConfig(consulCluster string) string {
 	return fmt.Sprintf(`
+
 	resource "hcp_hvn" "test" {
 		hvn_id         = "%s"
 		cloud_provider = "aws"
@@ -99,6 +158,10 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "consul_root_token_accessor_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_root_token_secret_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_allowlist.*", map[string]string{
+						"address":     "172.25.16.0/24",
+						"description": "this is an IPV4 address",
+					}),
 				),
 			},
 			// Tests import
@@ -146,6 +209,10 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "consul_root_token_accessor_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "consul_root_token_secret_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "size"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_allowlist.*", map[string]string{
+						"address":     "172.25.16.0/24",
+						"description": "this is an IPV4 address",
+					}),
 				),
 			},
 			// Tests datasource
@@ -176,6 +243,7 @@ func TestAccConsulCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
 					resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_link", dataSourceName, "primary_link"),
+					resource.TestCheckResourceAttrPair(resourceName, "ip_allowlist", dataSourceName, "ip_allowlist"),
 				),
 			},
 			// Tests root token
@@ -194,7 +262,26 @@ func TestAccConsulCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "size", "SMALL"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_allowlist.*", map[string]string{
+						"address":     "172.25.14.0/24",
+						"description": "this is an updated IPV4 address",
+					}),
 				),
+			},
+			// Tests update failure for IP Allowlist with too duplicate CIDRs
+			{
+				Config:      testConfig(setTestAccConsulClusterConfig(updateConsulClusterDuplicateCIDR)),
+				ExpectError: regexp.MustCompile(`duplicate address \(172.25.14.0\) found`),
+			},
+			// Tests create failure for IP Allowlist with too many CIDRs
+			{
+				Config:      testConfig(setTestAccConsulClusterConfig(createConsulClusterCIDRExceeded)),
+				ExpectError: regexp.MustCompile(`Too many ip_allowlist blocks`),
+			},
+			// Tests create failure for IP Allowlist with duplicate CIDRs
+			{
+				Config:      testConfig(setTestAccConsulClusterConfig(createConsulClusterDuplicateCIDR)),
+				ExpectError: regexp.MustCompile(`duplicate address \(172.25.16.0\) found`),
 			},
 		},
 	})

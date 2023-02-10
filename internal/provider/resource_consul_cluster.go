@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -207,6 +208,28 @@ func resourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"ip_allowlist": {
+				Description: "Allowed IP address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRs currently supported at this time.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description:      "IP address range in CIDR notation.",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateConsulClusterCIDR,
+						},
+						"description": {
+							Description:      "Description to help identify source (maximum 255 chars).",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateConsulClusterCIDRDescription,
+						},
+					},
+				},
+				MaxItems: 3,
+			},
 			"consul_root_token_accessor_id": {
 				Description: "The accessor ID of the root ACL token that is generated upon cluster creation.",
 				Type:        schema.TypeString,
@@ -329,6 +352,13 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// The peering happens within the secondary cluster create operation.
 	autoHvnToHvnPeering := d.Get("auto_hvn_to_hvn_peering").(bool)
 
+	// Convert ip_allowlist to consul model.
+	cidrs := d.Get("ip_allowlist").([]interface{})
+	ipAllowlist, err := buildIPAllowlist(cidrs)
+	if err != nil {
+		return diag.Errorf("Invalid ip_allowlist for Consul cluster (%s): %v", clusterID, err)
+	}
+
 	log.Printf("[INFO] Creating Consul cluster (%s)", clusterID)
 
 	var tier *consulmodels.HashicorpCloudConsul20210204ClusterConfigTier
@@ -356,8 +386,9 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 			},
 			MaintenanceConfig: nil,
 			NetworkConfig: &consulmodels.HashicorpCloudConsul20210204NetworkConfig{
-				Network: newLink(loc, "hvn", hvnID),
-				Private: !publicEndpoint,
+				Network:     newLink(loc, "hvn", hvnID),
+				Private:     !publicEndpoint,
+				IPAllowlist: ipAllowlist,
 			},
 			AutoHvnToHvnPeering: autoHvnToHvnPeering,
 		},
@@ -534,6 +565,19 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		}
 	}
 
+	var ipAllowlist []interface{}
+	for _, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+		cidr := map[string]interface{}{
+			"description": cidrRange.Description,
+			"address":     cidrRange.Address,
+		}
+		ipAllowlist = append(ipAllowlist, cidr)
+	}
+
+	if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -629,9 +673,10 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	// Confirm update fields have been changed
 	sizeChanged := d.HasChange("size")
 	versionChanged := d.HasChange("min_consul_version")
+	ipAllowlistChanged := d.HasChange("ip_allowlist")
 
-	if !sizeChanged && !versionChanged {
-		return diag.Errorf("at least one of: [min_consul_version, size] is required in order to update the cluster")
+	if !sizeChanged && !versionChanged && !ipAllowlistChanged {
+		return diag.Errorf("at least one of: [min_consul_version, size, ip_allowlist] is required in order to update the cluster")
 	}
 
 	targetCluster := consulmodels.HashicorpCloudConsul20210204Cluster{
@@ -681,6 +726,26 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 				Size: &size,
 			},
 		}
+	}
+
+	if ipAllowlistChanged {
+		cidrs := d.Get("ip_allowlist").([]interface{})
+		ipAllowlist, err := buildIPAllowlist(cidrs)
+		if err != nil {
+			return diag.Errorf("Invalid ip_allowlist for Consul cluster (%s): %v", clusterID, err)
+		}
+
+		// Do not override if previous config objects exist.
+		if targetCluster.Config == nil {
+			targetCluster.Config = &consulmodels.HashicorpCloudConsul20210204ClusterConfig{}
+		}
+
+		if targetCluster.Config.NetworkConfig == nil {
+			targetCluster.Config.NetworkConfig = &consulmodels.HashicorpCloudConsul20210204NetworkConfig{}
+		}
+
+		// Update IP allowlist.
+		targetCluster.Config.NetworkConfig.IPAllowlist = ipAllowlist
 	}
 
 	// Invoke update cluster endpoint
@@ -766,4 +831,38 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(url)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+// buildIPAllowlist validates there are no duplicate CIDRs and returns a consul model.
+func buildIPAllowlist(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul20210204CidrRange, error) {
+	var IPAllowList []*consulmodels.HashicorpCloudConsul20210204CidrRange
+	if len(cidrs) == 0 {
+		return IPAllowList, nil
+	}
+
+	// Seen holds validated CIDRs.
+	seen := make(map[string]struct{}, len(cidrs))
+	for _, cidr := range cidrs {
+		cidrMap := cidr.(map[string]interface{})
+		address := cidrMap["address"].(string)
+		description := cidrMap["description"].(string)
+
+		ip, _, _ := net.ParseCIDR(address)
+
+		// Check for duplicates IP.
+		if _, ok := seen[ip.String()]; ok {
+			return nil, fmt.Errorf("duplicate address (%s) found", ip.String())
+		}
+
+		cidrRange := &consulmodels.HashicorpCloudConsul20210204CidrRange{
+			Address:     address,
+			Description: description,
+		}
+
+		// Add to seen map
+		seen[ip.String()] = struct{}{}
+		IPAllowList = append(IPAllowList, cidrRange)
+	}
+
+	return IPAllowList, nil
 }
