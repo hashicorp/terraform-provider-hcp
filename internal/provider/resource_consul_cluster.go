@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"strings"
 	"time"
 
@@ -833,34 +832,23 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 	return []*schema.ResourceData{d}, nil
 }
 
-// buildIPAllowlist validates there are no duplicate CIDRs and returns a consul model.
+// buildIPAllowlist returns a consul model for the IP allowlist.
 func buildIPAllowlist(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul20210204CidrRange, error) {
 	var IPAllowList []*consulmodels.HashicorpCloudConsul20210204CidrRange
 	if len(cidrs) == 0 {
 		return IPAllowList, nil
 	}
 
-	// Seen holds validated CIDRs.
-	seen := make(map[string]struct{}, len(cidrs))
 	for _, cidr := range cidrs {
 		cidrMap := cidr.(map[string]interface{})
 		address := cidrMap["address"].(string)
 		description := cidrMap["description"].(string)
-
-		ip, _, _ := net.ParseCIDR(address)
-
-		// Check for duplicates IP.
-		if _, ok := seen[ip.String()]; ok {
-			return nil, fmt.Errorf("duplicate address (%s) found", ip.String())
-		}
 
 		cidrRange := &consulmodels.HashicorpCloudConsul20210204CidrRange{
 			Address:     address,
 			Description: description,
 		}
 
-		// Add to seen map
-		seen[ip.String()] = struct{}{}
 		IPAllowList = append(IPAllowList, cidrRange)
 	}
 

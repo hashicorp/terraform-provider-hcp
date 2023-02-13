@@ -23,36 +23,12 @@ var consulCluster = consulClusterConfig(consulClusterUniqueID, `
 `)
 
 var updatedConsulCluster = consulClusterConfig(consulClusterUniqueID, `
-	size	   = "small"
+	size	   = "medium"
 
 	ip_allowlist {
     	address = "172.25.14.0/24"
  		description = "this is an updated IPV4 address"
     }
-`)
-
-var updateConsulClusterDuplicateCIDR = consulClusterConfig(consulClusterUniqueID, `
-	ip_allowlist {
-    	address = "172.25.14.0/24"
-    	description = "this is an IPV4 address"
-	}
-
-	ip_allowlist {
-    	address = "172.25.14.0/24"
-    	description = "this is a duplicate IPV4 address"
-	}
-`)
-
-var createConsulClusterDuplicateCIDR = consulClusterConfig("test-failure", `
-	ip_allowlist {
-    	address = "172.25.16.0/24"
-    	description = "this is an IPV4 address"
-	}
-
-	ip_allowlist {
-    	address = "172.25.16.0/24"
-    	description = "this is a duplicate IPV4 address"
-	}
 `)
 
 var createConsulClusterCIDRExceeded = consulClusterConfig("test-failure", `
@@ -82,7 +58,7 @@ func consulClusterConfig(clusterID string, opt string) string {
 	resource "hcp_consul_cluster" "test" {
 		cluster_id         = "%s"
 		hvn_id             = hcp_hvn.test.hvn_id
-		tier               = "development"
+		tier               = "STANDARD"
 		min_consul_version = data.hcp_consul_versions.test.recommended
 	
 		%s
@@ -127,6 +103,12 @@ func TestAccConsulCluster(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{
+			// Tests create failure for IP Allowlist with too many CIDRs
+			{
+				Config:      testConfig(setTestAccConsulClusterConfig(createConsulClusterCIDRExceeded)),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Too many ip_allowlist blocks`),
+			},
 			// Tests create
 			{
 				Config: testConfig(setTestAccConsulClusterConfig(consulCluster)),
@@ -134,12 +116,12 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", consulClusterUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
@@ -186,12 +168,12 @@ func TestAccConsulCluster(t *testing.T) {
 					testAccCheckConsulClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_id", consulClusterUniqueID),
 					resource.TestCheckResourceAttr(resourceName, "hvn_id", consulClusterHVNUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "tier", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datacenter", consulClusterUniqueID),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", "3"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_interval", "24h"),
 					resource.TestCheckResourceAttr(resourceName, "consul_snapshot_retention", "30d"),
 					resource.TestCheckResourceAttr(resourceName, "connect_enabled", "true"),
@@ -261,27 +243,12 @@ func TestAccConsulCluster(t *testing.T) {
 				Config: testConfig(setTestAccConsulClusterConfig(updatedConsulCluster)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConsulClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "size", "SMALL"),
+					resource.TestCheckResourceAttr(resourceName, "size", "MEDIUM"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_allowlist.*", map[string]string{
 						"address":     "172.25.14.0/24",
 						"description": "this is an updated IPV4 address",
 					}),
 				),
-			},
-			// Tests update failure for IP Allowlist with too duplicate CIDRs
-			{
-				Config:      testConfig(setTestAccConsulClusterConfig(updateConsulClusterDuplicateCIDR)),
-				ExpectError: regexp.MustCompile(`duplicate address \(172.25.14.0\) found`),
-			},
-			// Tests create failure for IP Allowlist with too many CIDRs
-			{
-				Config:      testConfig(setTestAccConsulClusterConfig(createConsulClusterCIDRExceeded)),
-				ExpectError: regexp.MustCompile(`Too many ip_allowlist blocks`),
-			},
-			// Tests create failure for IP Allowlist with duplicate CIDRs
-			{
-				Config:      testConfig(setTestAccConsulClusterConfig(createConsulClusterDuplicateCIDR)),
-				ExpectError: regexp.MustCompile(`duplicate address \(172.25.16.0\) found`),
 			},
 		},
 	})
