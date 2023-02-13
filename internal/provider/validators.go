@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"regexp"
 	"strings"
 
@@ -182,7 +183,7 @@ func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	addr := v.(string)
-	_, _, err := net.ParseCIDR(addr)
+	_, err := netip.ParsePrefix(addr)
 	if err != nil {
 		msg := fmt.Sprintf("invalid address (%v) of ip_allowlist", v)
 		diagnostics = append(diagnostics, diag.Diagnostic{
