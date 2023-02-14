@@ -144,6 +144,25 @@ func dataSourceConsulCluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
+			"ip_allowlist": {
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description: "IP address range in CIDR notation.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"description": {
+							Description: "Description to help identify source (maximum 255 chars).",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -296,6 +315,21 @@ func setConsulClusterDataSourceAttributes(
 			return err
 		}
 		if err := d.Set("primary_link", primaryLink); err != nil {
+			return err
+		}
+	}
+
+	ipAllowlist := make([]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+	for _, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+		cidr := map[string]interface{}{
+			"description": cidrRange.Description,
+			"address":     cidrRange.Address,
+		}
+		ipAllowlist = append(ipAllowlist, cidr)
+	}
+
+	if cluster.Config != nil && cluster.Config.NetworkConfig != nil {
+		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
 			return err
 		}
 	}
