@@ -7,6 +7,8 @@ description: |-
 
 # hcp_packer_channel (Resource)
 
+-> **Note:** This resource is currently in public beta.
+
 The Packer Channel resource allows you to manage image bucket channels within an active HCP Packer Registry.
 
 ## Example Usage
