@@ -41,7 +41,7 @@ resource "hcp_consul_cluster" "example" {
 - `auto_hvn_to_hvn_peering` (Boolean) Enables automatic HVN to HVN peering when creating a secondary cluster in a federation. The alternative to using the auto-accept feature is to create an [`hcp_hvn_peering_connection`](hvn_peering_connection.md) resource that explicitly defines the HVN resources that are allowed to communicate with each other.
 - `connect_enabled` (Boolean) Denotes the Consul connect feature should be enabled for this cluster.  Default to true.
 - `datacenter` (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
-- `ip_allowlist` (Block List, Max: 3) Allowed IP address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRs currently supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
+- `ip_allowlist` (Block List, Max: 3) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `min_consul_version` (String) The minimum Consul patch version of the cluster. Allows only the rightmost version component to increment (E.g: `1.13.0` will allow installation of `1.13.2` and `1.13.3` etc., but not `1.14.0`). If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
