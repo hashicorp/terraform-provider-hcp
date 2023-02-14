@@ -369,7 +369,18 @@ func Test_validateConsulClusterCIDR(t *testing.T) {
 				diag.Diagnostic{
 					Severity:      diag.Error,
 					Summary:       "invalid address (invalid) of ip_allowlist",
-					Detail:        "invalid address (invalid) of ip_allowlist (must be a valid CIDR).",
+					Detail:        "invalid address (invalid) of ip_allowlist (must be a valid IPV4 CIDR).",
+					AttributePath: nil,
+				},
+			},
+		},
+		"IPV6 unsupported": {
+			input: "2002::1234:abcd:ffff:c0a8:101/64",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid address (2002::1234:abcd:ffff:c0a8:101/64) of ip_allowlist",
+					Detail:        "invalid address (2002::1234:abcd:ffff:c0a8:101/64) of ip_allowlist (must be a valid IPV4 CIDR).",
 					AttributePath: nil,
 				},
 			},

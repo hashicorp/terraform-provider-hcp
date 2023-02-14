@@ -183,13 +183,15 @@ func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	addr := v.(string)
-	_, err := netip.ParsePrefix(addr)
-	if err != nil {
+	ip, err := netip.ParsePrefix(addr)
+	isIPV4 := ip.Addr().Is4()
+
+	if err != nil || !isIPV4 {
 		msg := fmt.Sprintf("invalid address (%v) of ip_allowlist", v)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       msg,
-			Detail:        msg + " (must be a valid CIDR).",
+			Detail:        msg + " (must be a valid IPV4 CIDR).",
 			AttributePath: path,
 		})
 	}

@@ -208,7 +208,7 @@ func resourceConsulCluster() *schema.Resource {
 				Computed:    true,
 			},
 			"ip_allowlist": {
-				Description: "Allowed IP address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRs currently supported at this time.",
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time.",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem: &schema.Resource{
