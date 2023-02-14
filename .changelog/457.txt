@@ -1,0 +1,3 @@
+```release-note:improvement
+resource/hcp_packer_channel: Label resource as public beta
+```
