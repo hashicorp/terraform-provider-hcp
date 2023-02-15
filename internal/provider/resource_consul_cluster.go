@@ -564,13 +564,13 @@ func setConsulClusterResourceData(d *schema.ResourceData, cluster *consulmodels.
 		}
 	}
 
-	var ipAllowlist []interface{}
-	for _, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+	ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+	for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
 		cidr := map[string]interface{}{
 			"description": cidrRange.Description,
 			"address":     cidrRange.Address,
 		}
-		ipAllowlist = append(ipAllowlist, cidr)
+		ipAllowlist[i] = cidr
 	}
 
 	if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
@@ -834,12 +834,9 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 
 // buildIPAllowlist returns a consul model for the IP allowlist.
 func buildIPAllowlist(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul20210204CidrRange, error) {
-	var IPAllowList []*consulmodels.HashicorpCloudConsul20210204CidrRange
-	if len(cidrs) == 0 {
-		return IPAllowList, nil
-	}
+	IPAllowList := make([]*consulmodels.HashicorpCloudConsul20210204CidrRange, len(cidrs))
 
-	for _, cidr := range cidrs {
+	for i, cidr := range cidrs {
 		cidrMap := cidr.(map[string]interface{})
 		address := cidrMap["address"].(string)
 		description := cidrMap["description"].(string)
@@ -849,7 +846,7 @@ func buildIPAllowlist(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul
 			Description: description,
 		}
 
-		IPAllowList = append(IPAllowList, cidrRange)
+		IPAllowList[i] = cidrRange
 	}
 
 	return IPAllowList, nil
