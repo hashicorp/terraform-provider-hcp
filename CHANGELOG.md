@@ -1,3 +1,20 @@
+## v0.54.0 (February 15, 2023)
+
+FEATURES:
+
+* New resource `hcp_packer_channel` to create, or update an existing, channel with or without an assigned iteration. [[GH-435](https://github.com/hashicorp/terraform-provider-hcp/pull/435)]
+
+IMPROVEMENTS:
+
+* Bump github.com/hashicorp/hcp-sdk-go from 0.28.0 to 0.29.0 [[GH-431](https://github.com/hashicorp/terraform-provider-hcp/pull/431)]
+* Bump github.com/hashicorp/hcp-sdk-go from 0.29.0 to 0.31.0 [[GH-445](https://github.com/hashicorp/terraform-provider-hcp/pull/445)]
+* Bump google.golang.org/grpc from 1.51.0 to 1.52.3 [[GH-444](https://github.com/hashicorp/terraform-provider-hcp/pull/444)]
+* Refactor HCP Vault TF acceptance test harness to include test for Azure [[GH-441](https://github.com/hashicorp/terraform-provider-hcp/pull/441)]
+* resource/hcp_packer_channel: Label resource as public beta [[GH-457](https://github.com/hashicorp/terraform-provider-hcp/pull/457)]
+
+BUG FIXES:
+
+* Do not exit acceptance test when provider returns a warning [[GH-448](https://github.com/hashicorp/terraform-provider-hcp/pull/448)]
 ## v0.53.0 (January 20, 2023)
 
 FEATURES:
