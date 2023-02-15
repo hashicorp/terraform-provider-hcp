@@ -319,16 +319,15 @@ func setConsulClusterDataSourceAttributes(
 		}
 	}
 
-	ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
-	for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
-		cidr := map[string]interface{}{
-			"description": cidrRange.Description,
-			"address":     cidrRange.Address,
+	if cluster.Config.NetworkConfig != nil {
+		ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+		for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+			cidr := map[string]interface{}{
+				"description": cidrRange.Description,
+				"address":     cidrRange.Address,
+			}
+			ipAllowlist[i] = cidr
 		}
-		ipAllowlist[i] = cidr
-	}
-
-	if cluster.Config != nil && cluster.Config.NetworkConfig != nil {
 		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
 			return err
 		}
