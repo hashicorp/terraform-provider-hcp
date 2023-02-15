@@ -700,3 +700,37 @@ func Test_validateCIDRBlock(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateProjectID(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected diag.Diagnostics
+	}{
+		{
+			name:     "valid uuid",
+			input:    "ea1d7860-07a5-4a04-9c2e-f4b4d7b8d4c2",
+			expected: nil,
+		},
+		{
+			name:  "invalid uuid",
+			input: "123456789",
+			expected: diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Invalid project ID provided for resource: 123456789",
+					Detail:   "Invalid project ID provided for resource: 123456789",
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := require.New(t)
+
+			result := validateProjectID(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
