@@ -93,14 +93,9 @@ func testAccPreCheck(t *testing.T, requiredCreds map[string]bool) {
 			}
 		}
 
-		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
-		if err != nil {
-			if err[0].Severity == 1 {
-				// Severity 1 = Warning, which can be ignored during test
-				return
-			}
-
-			t.Fatalf("unexpected error, exiting test: %#v", err)
+		testDiag := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		if testDiag.HasError() {
+			t.Fatalf("unexpected error, exiting test: %#v", testDiag)
 		}
 	})
 }
@@ -113,7 +108,9 @@ func testConfig(res ...string) string {
 	return strings.Join(c, "\n")
 }
 
-func TestRead(t *testing.T) {
+// If project ID is not defined on the provider config, the provider
+//project ID becomes the organization's oldest existing project
+func TestDetermineOldestProject(t *testing.T) {
 
 	assert := assertpkg.New(t)
 
