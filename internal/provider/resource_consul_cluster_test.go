@@ -33,23 +33,23 @@ var updatedConsulCluster = consulClusterConfig(consulClusterUniqueID, `
 
 var createConsulClusterCIDRExceeded = consulClusterConfig("test-failure", `
 	ip_allowlist {
-    	address = "172.25.16.0/24"
-    	description = "this is a first IPV4 address"
+		address = "172.25.16.0/24"
+		description = "this is a first IPV4 address"
 	}
 	
 	ip_allowlist {
-    	address = "172.25.10.0/24"
-    	description = "this is a secondIPV4 address"
+		address = "172.25.10.0/24"
+		description = "this is a secondIPV4 address"
 	}
 
 	ip_allowlist {
-    	address = "172.25.13.0/24"
-    	description = "this is a third IPV4 address"
+		address = "172.25.13.0/24"
+		description = "this is a third IPV4 address"
 	}
 
 	ip_allowlist {
-    	address = "172.25.12.0/24"
-    	description = "this is a fourth IPV4 address, exceeding allowed limit"
+		address = "172.25.12.0/24"
+		description = "this is a fourth IPV4 address, exceeding allowed limit"
 	}
 `)
 
