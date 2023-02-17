@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"regexp"
 	"strings"
 
@@ -171,6 +172,42 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 			Severity:      diag.Error,
 			Summary:       msg,
 			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	addr := v.(string)
+	ip, err := netip.ParsePrefix(addr)
+	isIPV4 := ip.Addr().Is4()
+
+	if err != nil || !ip.IsValid() || !isIPV4 {
+		msg := fmt.Sprintf("invalid address (%v) of ip_allowlist", v)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (must be a valid IPV4 CIDR).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateConsulClusterCIDRDescription(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+	description := v.(string)
+	if len(description) > 255 {
+		msg := fmt.Sprintf("invalid description (%v) of ip_allowlist", v)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (must be within 255 char).",
 			AttributePath: path,
 		})
 	}
