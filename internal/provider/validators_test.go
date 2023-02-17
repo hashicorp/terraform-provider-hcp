@@ -296,8 +296,8 @@ func Test_validateConsulClusterTier(t *testing.T) {
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "expected dev to be one of [DEVELOPMENT STANDARD PLUS]",
-					Detail:        "expected dev to be one of [DEVELOPMENT STANDARD PLUS] (value is case-insensitive).",
+					Summary:       "expected dev to be one of [DEVELOPMENT STANDARD PLUS PREMIUM]",
+					Detail:        "expected dev to be one of [DEVELOPMENT STANDARD PLUS PREMIUM] (value is case-insensitive).",
 					AttributePath: nil,
 				},
 			},
@@ -349,6 +349,78 @@ func Test_validateConsulClusterSize(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
 			result := validateConsulClusterSize(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
+
+func Test_validateConsulClusterCIDR(t *testing.T) {
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid IP address": {
+			input:    "172.25.16.0/24",
+			expected: nil,
+		},
+		"invalid ip address": {
+			input: "invalid",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid address (invalid) of ip_allowlist",
+					Detail:        "invalid address (invalid) of ip_allowlist (must be a valid IPV4 CIDR).",
+					AttributePath: nil,
+				},
+			},
+		},
+		"IPV6 unsupported": {
+			input: "2002::1234:abcd:ffff:c0a8:101/64",
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid address (2002::1234:abcd:ffff:c0a8:101/64) of ip_allowlist",
+					Detail:        "invalid address (2002::1234:abcd:ffff:c0a8:101/64) of ip_allowlist (must be a valid IPV4 CIDR).",
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateConsulClusterCIDR(tc.input, nil)
+			r.Equal(tc.expected, result)
+		})
+	}
+}
+
+func Test_validateConsulClusterCIDRDescription(t *testing.T) {
+	invalidInput := "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+	tcs := map[string]struct {
+		input    string
+		expected diag.Diagnostics
+	}{
+		"valid description": {
+			input:    "IPV4 address",
+			expected: nil,
+		},
+		"invalid ip address": {
+			input: invalidInput,
+			expected: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       fmt.Sprintf("invalid description (%s) of ip_allowlist", invalidInput),
+					Detail:        fmt.Sprintf("invalid description (%s) of ip_allowlist (must be within 255 char).", invalidInput),
+					AttributePath: nil,
+				},
+			},
+		},
+	}
+	for n, tc := range tcs {
+		t.Run(n, func(t *testing.T) {
+			r := require.New(t)
+			result := validateConsulClusterCIDRDescription(tc.input, nil)
 			r.Equal(tc.expected, result)
 		})
 	}

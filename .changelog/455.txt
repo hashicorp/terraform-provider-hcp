@@ -1,0 +1,3 @@
+```release-note:feature
+New field `ip_allowlist` for `hcp_consul_cluster` to create, or update allowed IP address ranges (CIDRs) for inbound traffic.
+```

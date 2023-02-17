@@ -45,6 +45,7 @@ data "hcp_consul_cluster" "example" {
 - `datacenter` (String) The Consul data center name of the cluster. If not specified, it is defaulted to the value of `cluster_id`.
 - `hvn_id` (String) The ID of the HVN this HCP Consul cluster is associated to.
 - `id` (String) The ID of this resource.
+- `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `organization_id` (String) The ID of the organization the project for this HCP Consul cluster is located.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
 - `project_id` (String) The ID of the project this HCP Consul cluster is located.
@@ -62,5 +63,14 @@ data "hcp_consul_cluster" "example" {
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedatt--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Read-Only:
+
+- `address` (String)
+- `description` (String)
 
 
