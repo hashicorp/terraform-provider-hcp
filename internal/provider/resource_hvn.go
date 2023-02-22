@@ -122,28 +122,23 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
-	projectID := d.Get("project_id").(string)
 	resourceProjectID := d.Get("project_id").(string)
-
-	// TODO: would we want to conditionally set project id if defined in resource with d.get and otherwise grab project id
-	// with client.config.projectid
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: d.Get("cloud_provider").(string),
-			Region:   d.Get("region").(string),
-		},
-	}
 
 	projectID, err := GetProjectID(resourceProjectID, client.Config.ProjectID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	loc.ProjectID = projectID
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+		Region: &sharedmodels.HashicorpCloudLocationRegion{
+			Provider: d.Get("cloud_provider").(string),
+			Region:   d.Get("region").(string),
+		},
+	}
 
 	// Check for an existing HVN
-
 	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {

@@ -353,7 +353,7 @@ func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 func validateProjectID(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	//check for valid uuid format
+	// check for valid uuid format
 	_, err := uuid.Parse(v.(string))
 	if err != nil {
 		msg := fmt.Sprintf("Invalid project ID provided for resource: %+v", v)

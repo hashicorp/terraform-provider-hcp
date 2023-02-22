@@ -11,7 +11,7 @@ func GetProjectID(resourceProjID, clientProjID string) (string, error) {
 		if clientProjID != "" {
 			return clientProjID, nil
 		} else {
-			return "", fmt.Errorf("Project ID not defined. Verify that project ID is set either in the provider or in the resource config")
+			return "", fmt.Errorf("project ID not defined. Verify that project ID is set either in the provider or in the resource config")
 		}
 	}
 }

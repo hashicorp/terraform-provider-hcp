@@ -6,13 +6,9 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
-	"github.com/go-openapi/strfmt"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	assertpkg "github.com/stretchr/testify/assert"
 )
 
 // testAccProvider is the "main" provider instance
@@ -106,70 +102,4 @@ func testConfig(res ...string) string {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
-}
-
-// If project ID is not defined on the provider config, the provider
-//project ID becomes the organization's oldest existing project
-func TestDetermineOldestProject(t *testing.T) {
-
-	assert := assertpkg.New(t)
-
-	testCases := []struct {
-		name           string
-		projArray      []*models.HashicorpCloudResourcemanagerProject
-		expectedProjID string
-	}{
-		{
-			name: "One Project",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
-				{
-					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
-					ID:        "proj1",
-				},
-			},
-			expectedProjID: "proj1",
-		},
-		{
-			name: "Two Projects",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
-				{
-					ID:        "proj1",
-					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
-				},
-				{
-					ID:        "proj2",
-					CreatedAt: strfmt.DateTime(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
-				},
-			},
-			expectedProjID: "proj2",
-		},
-		{
-			name: "Three Projects",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
-				{
-					ID:        "proj1",
-					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
-				},
-				{
-					ID:        "proj2",
-					CreatedAt: strfmt.DateTime(time.Date(2007, time.November, 10, 23, 0, 0, 0, time.UTC)),
-				},
-				{
-					ID:        "proj3",
-					CreatedAt: strfmt.DateTime(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)),
-				},
-			},
-			expectedProjID: "proj2",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-
-			oldestProject := getOldestProject(testCase.projArray)
-			assert.Equal(testCase.expectedProjID, oldestProject.ID)
-
-		})
-
-	}
 }
