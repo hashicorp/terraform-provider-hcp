@@ -12,6 +12,7 @@ import (
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/preview/2020-09-07/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -80,12 +81,12 @@ func resourceHvn() *schema.Resource {
 				Computed:         true,
 			},
 			"project_id": {
-				Description:      "The ID of the HCP project where the HVN is located.",
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validateProjectID,
-				Computed:         true,
+				Description:  "The ID of the HCP project where the HVN is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
 			},
 			// Computed outputs
 			"organization_id": {

@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/google/uuid"
-
 	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-cty/cty"
 	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/models"
@@ -338,25 +336,6 @@ func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 	// range to avoid causing confusion with a misguiding error message.
 	if !ip.Equal(net.IP) {
 		msg := fmt.Sprintf("invalid CIDR range start %s, should have been %s", ip, net.IP)
-		diagnostics = append(diagnostics, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       msg,
-			Detail:        msg,
-			AttributePath: path,
-		})
-	}
-
-	return diagnostics
-}
-
-// Validate the project ID in provider and resource config
-func validateProjectID(v interface{}, path cty.Path) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	// check for valid uuid format
-	_, err := uuid.Parse(v.(string))
-	if err != nil {
-		msg := fmt.Sprintf("Invalid project ID provided for resource: %+v", v)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       msg,
