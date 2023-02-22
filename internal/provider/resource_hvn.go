@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -123,9 +122,8 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
-	resourceProjectID := d.Get("project_id").(string)
 
-	projectID, err := GetProjectID(resourceProjectID, client.Config.ProjectID)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
