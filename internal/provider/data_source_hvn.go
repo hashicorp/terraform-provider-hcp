@@ -5,6 +5,7 @@ import (
 	"log"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -26,6 +27,14 @@ func dataSourceHvn() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HVN is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			// Computed outputs
 			"cloud_provider": {
 				Description: "The provider where the HVN is located.",
@@ -44,11 +53,6 @@ func dataSourceHvn() *schema.Resource {
 			},
 			"organization_id": {
 				Description: "The ID of the HCP organization where the HVN is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the HVN is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -83,9 +87,14 @@ func dataSourceHvnRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Get("hvn_id").(string)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	// Check for an existing HVN
