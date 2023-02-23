@@ -73,7 +73,7 @@ resource "hcp_packer_channel" "staging" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry image bucket where the channel should be managed in.
+- `bucket_name` (String) The slug of the HCP Packer Registry image bucket where the channel should be created in.
 - `name` (String) The name of the channel being managed.
 
 ### Optional
@@ -83,12 +83,12 @@ resource "hcp_packer_channel" "staging" {
 
 ### Read-Only
 
-- `author_id` (String) The author of the channel.
-- `created_at` (String) Creation time of this build.
+- `author_id` (String) The author of this channel.
+- `created_at` (String) The creation time of this channel.
 - `id` (String) The ID of this resource.
-- `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
-- `project_id` (String) The ID of the project this HCP Packer registry is located in.
-- `updated_at` (String) The author of the channel.
+- `organization_id` (String) The ID of the HCP organization where this channel is located in.
+- `project_id` (String) The ID of the HCP project where this channel is located in.
+- `updated_at` (String) The time this channel was last updated.
 
 <a id="nestedblock--iteration"></a>
 ### Nested Schema for `iteration`

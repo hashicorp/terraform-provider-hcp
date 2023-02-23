@@ -44,7 +44,7 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"bucket_name": {
-				Description:      "The slug of the HCP Packer Registry image bucket where the channel should be managed in.",
+				Description:      "The slug of the HCP Packer Registry image bucket where the channel should be created in.",
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Required:         true,
@@ -84,27 +84,27 @@ func resourcePackerChannel() *schema.Resource {
 			},
 			// Computed Values
 			"author_id": {
-				Description: "The author of the channel.",
+				Description: "The author of this channel.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "Creation time of this build.",
+				Description: "The creation time of this channel.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"organization_id": {
-				Description: "The ID of the organization this HCP Packer registry is located in.",
+				Description: "The ID of the HCP organization where this channel is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"project_id": {
-				Description: "The ID of the project this HCP Packer registry is located in.",
+				Description: "The ID of the HCP project where this channel is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"updated_at": {
-				Description: "The author of the channel.",
+				Description: "The time this channel was last updated.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
