@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
@@ -68,10 +69,11 @@ func New() func() *schema.Provider {
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
 				"project_id": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
-					Description: "The default project in which resources should be created.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					DefaultFunc:  schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
+					ValidateFunc: validation.IsUUID,
+					Description:  "The default project in which resources should be created.",
 				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{

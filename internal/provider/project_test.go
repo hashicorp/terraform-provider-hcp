@@ -105,11 +105,7 @@ func TestDetermineOldestProject(t *testing.T) {
 	}
 }
 
-var (
-	hvnIDUnique = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
-)
-
-var providerProjectID = "prov-project-id-invalid"
+var projectID = "prov-project-id-invalid"
 
 func TestAccMultiProject(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -124,15 +120,15 @@ func TestAccMultiProject(t *testing.T) {
 				PlanOnly: true,
 				Config: fmt.Sprintf(`
 				provider "hcp" {
-					project_id = "%[1]s"
+					project_id     = "%s"
 				}
 				resource "hcp_hvn" "test" {
-					hvn_id         = "%[2]s"
+					hvn_id         = hvn-id-ex
 					cloud_provider = "aws"
 					region         = "us-west-2"
 				}
-				`, providerProjectID, hvnIDUnique),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`unable to fetch project "%s": could not complete request: please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct`, providerProjectID)),
+				`, projectID),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected "project_id" to be a valid UUID, got %s`, projectID)),
 			},
 		},
 	})
@@ -153,13 +149,13 @@ func TestAccMultiProjectResource(t *testing.T) {
 				Config: fmt.Sprintf(`
 				provider "hcp" {}
 				resource "hcp_hvn" "test" {
-					hvn_id         = "%[1]s"
-					project_id = "resource-project-id-invalid"
+					hvn_id         = "hvn-id-ex"
+					project_id     = "%s"
 					cloud_provider = "aws"
 					region         = "us-west-2"
 				}
-				`, hvnIDUnique),
-				ExpectError: regexp.MustCompile("Invalid project ID provided for resource"),
+				`, projectID),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected "project_id" to be a valid UUID, got %s`, projectID)),
 			},
 		},
 	})
