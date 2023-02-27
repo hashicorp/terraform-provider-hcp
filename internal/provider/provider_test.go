@@ -84,11 +84,11 @@ func testAccPreCheck(t *testing.T, requiredCreds map[string]bool) {
 
 		if requiredCreds["azure"] {
 			if os.Getenv("ARM_TENANT_ID") == "" {
-				t.Fatal("AZURE_TENANT_ID must be set for acceptance tests")
+				t.Fatal("ARM_TENANT_ID must be set for acceptance tests")
 			}
 
 			if os.Getenv("ARM_SUBSCRIPTION_ID") == "" {
-				t.Fatal("AZURE_SUBSCRIPTION_ID must be set for acceptance tests")
+				t.Fatal("ARM_SUBSCRIPTION_ID must be set for acceptance tests")
 			}
 		}
 
