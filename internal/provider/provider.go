@@ -141,7 +141,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 				if !projDiags.HasError() {
 					diags = append(diags, projDiags...)
 				} else {
-					diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
+					projDiags = append(projDiags, diag.Errorf("unable to get project from credentials")...)
+					diags = append(diags, projDiags...)
 					return nil, diags
 				}
 			}
@@ -186,8 +187,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "There is more than one project associated with the organization of the configured credentials.",
-			Detail: `The oldest project has been selected as the default. To configure which project is used as default, 
-			set a project in the HCP provider config block. Resources may also be configured with different projects.`,
+			Detail:   `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`,
 		})
 		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
