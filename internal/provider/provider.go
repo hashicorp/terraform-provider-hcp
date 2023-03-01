@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
@@ -71,10 +72,11 @@ func New() func() *schema.Provider {
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
 				"project_id": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
-					Description: "The default project in which resources should be created.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					DefaultFunc:  schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
+					ValidateFunc: validation.IsUUID,
+					Description:  "The default project in which resources should be created.",
 				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
@@ -139,11 +141,17 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			// user to set it. Once multiple projects are available, this helper issues a warning: when multiple projects exist within the org,
 			// a project ID should be set on the provider or on each resource. Otherwise, the oldest project will be used by default.
 			// This helper will eventually be deprecated after a migration period.
-			project, err := getProjectFromCredentials(ctx, client)
-			if err != nil {
-				diags = append(diags, diag.Errorf("unable to get project from credentials: %v", err)...)
-				return nil, diags
+			project, projDiags := getProjectFromCredentials(ctx, client)
+			if projDiags != nil {
+				if !projDiags.HasError() {
+					diags = append(diags, projDiags...)
+				} else {
+					projDiags = append(projDiags, diag.Errorf("unable to get project from credentials")...)
+					diags = append(diags, projDiags...)
+					return nil, diags
+				}
 			}
+
 			client.Config.OrganizationID = project.Parent.ID
 			client.Config.ProjectID = project.ID
 		}
@@ -184,8 +192,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "There is more than one project associated with the organization of the configured credentials.",
-			Detail: `The oldest project has been selected as the default. To configure which project is used as default, 
-			set a project in the HCP provider config block. Resources may also be configured with different projects.`,
+			Detail:   `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`,
 		})
 		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
