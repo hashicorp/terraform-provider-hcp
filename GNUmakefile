@@ -5,6 +5,7 @@ BUILD_ALL_PATH=${PWD}/bin
 TEST?=./internal/...
 GO_LINT ?= golangci-lint
 GO_LINT_CONFIG_PATH ?= ./golangci-config.yml
+TIMEOUT?=360m
 
 ifeq ($(GOOS), darwin)
 	INSTALL_PATH=~/Library/Application\ Support/io.terraform/plugins/localhost/providers/hcp/0.0.1/darwin_$(GOARCH)
@@ -51,7 +52,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 210m -parallel=10
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout $(TIMEOUT) -parallel=10
 
 testacc-ci: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -64,7 +65,7 @@ testacc-ci: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-hcp/blob/main/contributing/writing-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test -short -coverprofile=coverage-e2e.out $(TEST) -v $(TESTARGS) -timeout 360m -parallel=10
+	TF_ACC=1 go test -short -coverprofile=coverage-e2e.out $(TEST) -v $(TESTARGS) -timeout $(TIMEOUT) -parallel=10
 	go tool cover -html=coverage-e2e.out -o coverage-e2e.html
 
 depscheck:
