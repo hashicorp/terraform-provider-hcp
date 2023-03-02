@@ -51,6 +51,9 @@ func TestAccVaultClusterAzure(t *testing.T) {
 		CloudProvider:              cloudProviderAzure,
 		Region:                     azureRegion,
 		Tier:                       "DEV",
+		UpdateTier1:                "STANDARD_SMALL",
+		UpdateTier2:                "STANDARD_MEDIUM",
+		PublicEndpoint:             "false",
 	}
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
 	// save so e don't have to generate this again and again
@@ -170,6 +173,7 @@ func azureTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 		importResourcesInTFState(t, in),
 		tfApply(t, in),
 		testTFDataSources(t, in),
+		updateClusterTier(t, in),
 	}
 }
 
