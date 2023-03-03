@@ -79,6 +79,7 @@ resource "hcp_packer_channel" "staging" {
 ### Optional
 
 - `iteration` (Block List, Max: 1) The iteration assigned to the channel. (see [below for nested schema](#nestedblock--iteration))
+- `project_id` (String) The ID of the HCP project where this channel is located in.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -87,7 +88,6 @@ resource "hcp_packer_channel" "staging" {
 - `created_at` (String) The creation time of this channel.
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where this channel is located in.
-- `project_id` (String) The ID of the HCP project where this channel is located in.
 - `updated_at` (String) The time this channel was last updated.
 
 <a id="nestedblock--iteration"></a>
