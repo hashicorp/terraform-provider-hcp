@@ -15,6 +15,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -71,14 +72,18 @@ func resourceAwsTransitGatewayAttachment() *schema.Resource {
 				Sensitive:   true,
 				ForceNew:    true,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the transit gateway attachment is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -119,13 +124,18 @@ func resourceAwsTransitGatewayAttachmentCreate(ctx context.Context, d *schema.Re
 	tgwID := d.Get("transit_gateway_id").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	// Check for an existing HVN
-	_, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	_, err = clients.GetHvnByID(ctx, client, loc, hvnID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to find the HVN (%s) for the transit gateway attachment", hvnID)
