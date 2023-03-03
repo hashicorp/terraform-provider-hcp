@@ -43,6 +43,7 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the HVN peering connection is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -52,7 +53,6 @@ resource "hcp_hvn_peering_connection" "peer_1" {
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.
 - `peering_id` (String) The ID of the peering connection.
-- `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVNs' project.
 - `self_link` (String) A unique URL identifying the peering connection
 - `state` (String) The state of the HVN peering connection.
 
