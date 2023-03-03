@@ -35,6 +35,7 @@ resource "hcp_vault_cluster_admin_token" "example" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the HCP Vault cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
