@@ -29,6 +29,7 @@ data "hcp_hvn_route" "example" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the HVN route is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

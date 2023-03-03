@@ -11,6 +11,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -63,6 +64,15 @@ func resourceHvnRoute() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HVN route is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			// Computed outputs
 			"self_link": {
 				Description: "A unique URL identifying the HVN route.",
@@ -86,9 +96,14 @@ func resourceHvnRoute() *schema.Resource {
 func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	destination := d.Get("destination_cidr").(string)
@@ -96,7 +111,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	hvn := d.Get("hvn_link").(string)
 	var hvnLink *sharedmodels.HashicorpCloudLocationLink
-	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
+	hvnLink, err = buildLinkFromURL(hvn, HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
