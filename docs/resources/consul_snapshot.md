@@ -31,7 +31,7 @@ resource "hcp_consul_snapshot" "example" {
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the HCP Consul Cluster is located.
+- `project_id` (String) The ID of the HCP project where the HCP Consul cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
