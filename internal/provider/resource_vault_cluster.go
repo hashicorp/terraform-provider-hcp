@@ -67,7 +67,7 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			// Optional fields
 			"project_id": {
-				Description:  "The ID of the HCP project where the Vault Cluster is located.",
+				Description:  "The ID of the HCP project where the Vault cluster is located.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
