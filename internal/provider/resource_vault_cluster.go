@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/input"
@@ -65,6 +66,14 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Optional fields
+			"project_id": {
+				Description:  "The ID of the HCP project where the Vault Cluster is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			"tier": {
 				Description:      "Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://cloud.hashicorp.com/pricing/vault). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).",
 				Type:             schema.TypeString,
@@ -107,11 +116,6 @@ func resourceVaultCluster() *schema.Resource {
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -304,9 +308,14 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	clusterID := d.Get("cluster_id").(string)
 	hvnID := d.Get("hvn_id").(string)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	// Get metrics audit config and MVU config first so we can validate and fail faster.

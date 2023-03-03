@@ -10,6 +10,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -28,6 +29,14 @@ func dataSourceVaultCluster() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
+			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the Vault Cluster is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 			// computed outputs
 			"hvn_id": {
@@ -52,11 +61,6 @@ func dataSourceVaultCluster() *schema.Resource {
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Vault cluster is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Vault cluster is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -209,9 +213,14 @@ func dataSourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, met
 	clusterID := d.Get("cluster_id").(string)
 	client := meta.(*clients.Client)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	log.Printf("[INFO] Reading Vault cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
