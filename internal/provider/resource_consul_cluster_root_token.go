@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -53,6 +54,15 @@ func resourceConsulClusterRootToken() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugIDOrID,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HCP Consul Cluster is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			// Computed outputs
 			"accessor_id": {
 				Description: "The accessor ID of the root ACL token.",
@@ -84,9 +94,13 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 		clusterID = filepath.Base(clusterID)
 	}
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	// fetch organizationID by project ID
 	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
 
 	loc := &models.HashicorpCloudLocationLocation{
 		OrganizationID: organizationID,
@@ -95,7 +109,7 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to create root ACL token; Consul cluster (%s) not found",

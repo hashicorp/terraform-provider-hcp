@@ -12,6 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -31,12 +32,15 @@ func dataSourceConsulCluster() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
-			// computed outputs
+			// Optional fields
 			"project_id": {
-				Description: "The ID of the project this HCP Consul cluster is located.",
-				Type:        schema.TypeString,
-				Computed:    true,
+				Description:  "The ID of the HCP project where the HCP Consul Cluster is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
 			},
+			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization the project for this HCP Consul cluster is located.",
 				Type:        schema.TypeString,
@@ -174,9 +178,14 @@ func dataSourceConsulClusterRead(ctx context.Context, d *schema.ResourceData, me
 	clusterID := d.Get("cluster_id").(string)
 	client := meta.(*clients.Client)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	log.Printf("[INFO] Reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)

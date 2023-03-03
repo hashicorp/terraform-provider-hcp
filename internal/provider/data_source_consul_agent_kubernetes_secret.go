@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -47,6 +48,14 @@ func dataSourceConsulAgentKubernetesSecret() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HCP Consul Cluster is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			// Computed outputs
 			"secret": {
 				Description: "The Consul agent configuration in the format of a Kubernetes secret (YAML).",
@@ -62,7 +71,11 @@ func dataSourceConsulAgentKubernetesSecret() *schema.Resource {
 func dataSourceConsulAgentKubernetesSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	projectID := client.Config.ProjectID
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	organizationID := client.Config.OrganizationID
 
 	clusterID := d.Get("cluster_id").(string)
