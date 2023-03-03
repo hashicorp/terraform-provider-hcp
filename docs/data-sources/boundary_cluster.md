@@ -27,7 +27,7 @@ data "hcp_boundary_cluster" "example" {
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the Boundary Cluster is located.
+- `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

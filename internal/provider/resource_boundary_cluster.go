@@ -68,7 +68,7 @@ func resourceBoundaryCluster() *schema.Resource {
 			},
 			// Optional inputs
 			"project_id": {
-				Description:  "The ID of the HCP project where the Boundary Cluster is located.",
+				Description:  "The ID of the HCP project where the Boundary cluster is located.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
