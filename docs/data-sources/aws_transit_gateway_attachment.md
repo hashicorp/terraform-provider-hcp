@@ -29,6 +29,7 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the transit gateway attachment is located
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `wait_for_active_state` (Boolean) If `true`, Terraform will wait for the transit gateway attachment to reach an `ACTIVE` state before continuing. Default `false`.
 
@@ -38,7 +39,6 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 - `expires_at` (String) The time after which the transit gateway attachment will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.
-- `project_id` (String) The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.
 - `provider_transit_gateway_attachment_id` (String) The transit gateway attachment ID used by AWS.
 - `self_link` (String) A unique URL identifying the transit gateway attachment.
 - `state` (String) The state of the transit gateway attachment.

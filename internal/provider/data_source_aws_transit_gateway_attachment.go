@@ -8,6 +8,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -40,14 +41,16 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 			},
+			"project_id": {
+				Description:  "The ID of the HCP project where the transit gateway attachment is located",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the transit gateway attachment is located. Always matches the HVN's organization.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the transit gateway attachment is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -92,9 +95,14 @@ func dataSourceAwsTransitGatewayAttachmentRead(ctx context.Context, d *schema.Re
 	tgwAttID := d.Get("transit_gateway_attachment_id").(string)
 	waitForActive := d.Get("wait_for_active_state").(bool)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	tgwAtt, err := clients.GetTGWAttachmentByID(ctx, client, tgwAttID, hvnID, loc)
