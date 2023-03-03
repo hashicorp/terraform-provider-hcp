@@ -42,7 +42,7 @@ func dataSourceAwsTransitGatewayAttachment() *schema.Resource {
 				Default:     false,
 			},
 			"project_id": {
-				Description:  "The ID of the HCP project where the transit gateway attachment is located",
+				Description:  "The ID of the HCP project where the transit gateway attachment is located.",
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
