@@ -30,7 +30,7 @@ data "hcp_consul_agent_helm_config" "example" {
 ### Optional
 
 - `expose_gossip_ports` (Boolean) Denotes that the gossip ports should be exposed.
-- `project_id` (String) The ID of the HCP project where the HCP Consul Cluster is located.
+- `project_id` (String) The ID of the HCP project where the HCP Consul cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

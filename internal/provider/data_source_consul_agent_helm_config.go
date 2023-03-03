@@ -95,7 +95,7 @@ func dataSourceConsulAgentHelmConfig() *schema.Resource {
 				Default:     false,
 			},
 			"project_id": {
-				Description:  "The ID of the HCP project where the HCP Consul Cluster is located.",
+				Description:  "The ID of the HCP project where the HCP Consul cluster is located.",
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
