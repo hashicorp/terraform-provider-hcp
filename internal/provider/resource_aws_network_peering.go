@@ -10,6 +10,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -67,14 +68,18 @@ func resourceAwsNetworkPeering() *schema.Resource {
 					return strings.EqualFold(old, new)
 				},
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the network peering is located. Always matches the HVN's project.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where the network peering is located. Always matches the HVN's project.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -123,9 +128,14 @@ func resourceAwsNetworkPeeringCreate(ctx context.Context, d *schema.ResourceData
 	peerVpcID := d.Get("peer_vpc_id").(string)
 	peerVpcRegion := d.Get("peer_vpc_region").(string)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	// Check for an existing HVN
