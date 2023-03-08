@@ -66,6 +66,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -74,7 +75,6 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 - `expires_at` (String) The time after which the network peering will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the network peering is located. Always matches the HVN's organization.
-- `project_id` (String) The ID of the HCP project where the network peering is located. Always matches the HVN's project.
 - `provider_peering_id` (String) The peering connection ID used by AWS.
 - `self_link` (String) A unique URL identifying the network peering.
 - `state` (String) The state of the network peering.
