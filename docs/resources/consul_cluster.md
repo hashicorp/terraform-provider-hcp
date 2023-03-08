@@ -44,6 +44,7 @@ resource "hcp_consul_cluster" "example" {
 - `ip_allowlist` (Block List, Max: 3) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `min_consul_version` (String) The minimum Consul patch version of the cluster. Allows only the rightmost version component to increment (E.g: `1.13.0` will allow installation of `1.13.2` and `1.13.3` etc., but not `1.14.0`). If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
+- `project_id` (String) The ID of the HCP project where the HCP Consul cluster is located.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - `size` (String) The t-shirt size representation of each server VM that this Consul cluster is provisioned with. Valid option for development tier - `x_small`. Valid options for other tiers - `small`, `medium`, `large`. For more details - https://cloud.hashicorp.com/pricing/consul. Upgrading the size of a cluster after creation is allowed.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
@@ -63,7 +64,6 @@ resource "hcp_consul_cluster" "example" {
 - `consul_version` (String) The Consul version of the cluster.
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the organization this HCP Consul cluster is located in.
-- `project_id` (String) The ID of the project this HCP Consul cluster is located in.
 - `region` (String) The region where the HCP Consul cluster is located.
 - `scale` (Number) The number of Consul server nodes in the cluster.
 - `self_link` (String) A unique URL identifying the HCP Consul cluster.
