@@ -27,6 +27,7 @@ data "hcp_consul_cluster" "example" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the HCP Consul cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -48,7 +49,6 @@ data "hcp_consul_cluster" "example" {
 - `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 3 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `organization_id` (String) The ID of the organization the project for this HCP Consul cluster is located.
 - `primary_link` (String) The `self_link` of the HCP Consul cluster which is the primary in the federation setup with this HCP Consul cluster. If not specified, it is a standalone cluster.
-- `project_id` (String) The ID of the project this HCP Consul cluster is located.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint for the Consul UI. Defaults to false.
 - `region` (String) The region where the HCP Consul cluster is located.
 - `scale` (Number) The the number of Consul server nodes in the cluster.
