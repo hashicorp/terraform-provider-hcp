@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -86,12 +87,19 @@ func dataSourceConsulAgentHelmConfig() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
-			// Optional
+			// Optional inputs
 			"expose_gossip_ports": {
 				Description: "Denotes that the gossip ports should be exposed.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+			},
+			"project_id": {
+				Description:  "The ID of the HCP project where the HCP Consul cluster is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 			// Computed outputs
 			"config": {
@@ -109,8 +117,12 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 	client := meta.(*clients.Client)
 	clusterID := d.Get("cluster_id").(string)
 
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
 
 	v, ok := d.GetOk("project_id")
 	if ok {
