@@ -1,3 +1,19 @@
+## v0.55.0 (March 08, 2023)
+
+FEATURES:
+
+* New field `ip_allowlist` for `hcp_consul_cluster` to create, or update allowed IP address ranges (CIDRs) for inbound traffic. [[GH-455](https://github.com/hashicorp/terraform-provider-hcp/pull/455)]
+
+IMPROVEMENTS:
+
+* Add cluster scaling acceptance tests for Azure [[GH-465](https://github.com/hashicorp/terraform-provider-hcp/pull/465)]
+* Bump github.com/hashicorp/hcp-sdk-go from 0.31.0 to 0.35.0 [[GH-458](https://github.com/hashicorp/terraform-provider-hcp/pull/458)]
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.24.1 to 2.25.0 [[GH-459](https://github.com/hashicorp/terraform-provider-hcp/pull/459)]
+* Bump google.golang.org/grpc from 1.52.3 to 1.53.0 [[GH-452](https://github.com/hashicorp/terraform-provider-hcp/pull/452)]
+
+BUG FIXES:
+
+* resource/hcp_packer_channel: Fix documentation for incorrectly documented attributes [[GH-462](https://github.com/hashicorp/terraform-provider-hcp/pull/462)]
 ## v0.54.0 (February 15, 2023)
 
 FEATURES:
