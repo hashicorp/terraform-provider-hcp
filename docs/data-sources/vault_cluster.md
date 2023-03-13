@@ -27,6 +27,7 @@ data "hcp_vault_cluster" "example" {
 
 ### Optional
 
+- `project_id` (String) The ID of the HCP project where the Vault cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -43,7 +44,6 @@ data "hcp_vault_cluster" "example" {
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform#review-hcpvault-tf). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
-- `project_id` (String) The ID of the project this HCP Vault cluster is located in.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `region` (String) The region where the HCP Vault cluster is located.
 - `self_link` (String) A unique URL identifying the Vault cluster.
