@@ -55,6 +55,7 @@ resource "hcp_vault_cluster" "example" {
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
+- `project_id` (String) The ID of the HCP project where the Vault cluster is located.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://www.hashicorp.com/products/vault/pricing). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
@@ -66,7 +67,6 @@ resource "hcp_vault_cluster" "example" {
 - `id` (String) The ID of this resource.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
-- `project_id` (String) The ID of the project this HCP Vault cluster is located in.
 - `region` (String) The region where the HCP Vault cluster is located.
 - `self_link` (String) A unique URL identifying the Vault cluster.
 - `state` (String) The state of the Vault cluster.
