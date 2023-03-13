@@ -1,22 +1,22 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-*       @hashicorp/cloud-experiences-tooling
+*       @hashicorp/experiences-platform
 
 # all Consul resources and clients are owned by the cloud-consul team
-*consul* @hashicorp/cloud-consul @hashicorp/cloud-experiences-tooling
-/internal/consul/ @hashicorp/cloud-consul @hashicorp/cloud-experiences-tooling
+*consul* @hashicorp/cloud-consul
+/internal/consul/ @hashicorp/cloud-consul
 
 # all Networking resources and clients are owned by the cloud-control-plane team
-*hvn* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
-*aws* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
-*azure* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
-*peering* @hashicorp/cloud-control-plane @hashicorp/cloud-experiences-tooling
+*hvn* @hashicorp/cloud-control-plane
+*aws* @hashicorp/cloud-control-plane
+*azure* @hashicorp/cloud-control-plane
+*peering* @hashicorp/cloud-control-plane
 
 # all Packer resources and clients are owned by the cloud-packer team
-*packer* @hashicorp/cloud-packer @hashicorp/cloud-experiences-tooling
+*packer* @hashicorp/cloud-packer
 
 # all Vault resources and clients are owned by the vault-cloud team
-*vault* @hashicorp/vault-cloud @hashicorp/cloud-experiences-tooling
+*vault* @hashicorp/vault-cloud
 
 # Statuspage.io configuration is owned by the Core SRE team
-/internal/provider/provider.go @hashicorp/core-sre @hashicorp/cloud-experiences-tooling
+/internal/provider/provider.go @hashicorp/core-sre @hashicorp/experiences-platform
