@@ -34,7 +34,7 @@ resource "hcp_consul_cluster" "example" {
 
 - `cluster_id` (String) The ID of the HCP Consul cluster.
 - `hvn_id` (String) The ID of the HVN this HCP Consul cluster is associated to.
-- `tier` (String) The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time. See [pricing information](https://cloud.hashicorp.com/pricing/consul).
+- `tier` (String) The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time. See [pricing information](https://www.hashicorp.com/products/consul/pricing).
 
 ### Optional
 
