@@ -1,0 +1,3 @@
+```release-note:bug
+Update pricing information for vault and consul.
+```
