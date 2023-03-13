@@ -9,7 +9,7 @@ description: |-
 
 HCP now supports multiple projects. You may migrate your HCP Terraform configuration in the following ways.
 
--> **Note:** Resources cannot be moved to new projects. Changing a resource's project will force its recreation. When updating existing resources, ensure they match their current project ID.
+-> **Note:** Resources cannot be moved to new projects. Changing a resource's project will force its recreation. Before creating additional projects, we recommend configuring the current sole project as the provider's default project to ensure no recreation occurs.
 
 ## 1. Default to oldest project (no change required)
 
@@ -26,8 +26,6 @@ resource "hcp_hvn" "test" {
 ```
 
 ## 2. Configure a default project on provider
-
--> **Note:** Before creating additional projects and adding resources to them, we recommend configuring the current sole project as the provider's default project.
 
 The HVN in this example will be created in the project configured at the provider level.
 
