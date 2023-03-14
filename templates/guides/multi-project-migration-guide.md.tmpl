@@ -25,7 +25,8 @@ The HVN in this example will be created in the project configured at the provide
 
 ## 3. Configure projects on resource
 
-The HVN will be created in its configured project, while the HCP Consul cluster will be created in its different configured project.
+The HVN will be created in its configured project, while the HCP Consul cluster will be created in its different configured project. 
+Since no project is configured on the provider, the default project will be the oldest project.
 
 {{ tffile "examples/guides/multi_project_migration_guide/project-on-resource.tf" }}
 
