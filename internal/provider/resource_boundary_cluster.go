@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/models"
+	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
