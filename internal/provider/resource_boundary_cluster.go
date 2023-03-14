@@ -12,6 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -65,6 +66,15 @@ func resourceBoundaryCluster() *schema.Resource {
 				ValidateDiagFunc: validateBoundaryPassword,
 				Sensitive:        true,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the Boundary cluster is located.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			// computed outputs
 			"created_at": {
 				Description: "The time that the Boundary cluster was created.",
@@ -93,9 +103,14 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	clusterID := d.Get("cluster_id").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 		// This is currently hardcoded, depending on decisions from PM
 		// around regionality this may have to turn into an input
 		Region: &sharedmodels.HashicorpCloudLocationRegion{
@@ -105,7 +120,7 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// check for an existing boundary cluster
-	_, err := clients.GetBoundaryClusterByID(ctx, client, loc, clusterID)
+	_, err = clients.GetBoundaryClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if !clients.IsResponseCodeNotFound(err) {
 			return diag.Errorf("unable to check for presence of an existing Boundary cluster (%s): %v", clusterID, err)
