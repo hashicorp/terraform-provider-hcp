@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/organization_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/client/project_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -132,7 +132,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
-func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.HashicorpCloudResourcemanagerProject, error) {
+func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*models.ResourcemanagerProject, error) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
 	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
@@ -148,7 +148,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (*mo
 	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
 	listProjParams.ScopeID = &orgID
-	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
+	scopeType := string(models.ResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
 	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
 	if err != nil {

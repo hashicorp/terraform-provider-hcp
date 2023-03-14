@@ -124,7 +124,6 @@ func TestAccAwsHvnOnly(t *testing.T) {
 	})
 }
 
-// Currently in public beta
 func TestAccAzureHvnOnly(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"

@@ -6,8 +6,8 @@ package clients
 import (
 	"context"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/client/boundary_service"
-	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client/boundary_service"
+	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
