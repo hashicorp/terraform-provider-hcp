@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -317,9 +318,27 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*clients.Client)
 
-	hvnID := d.Id()
+	// with multi-projects, import arguments must become dynamic: either reading project ID from provider config or from import argument.
+	// if no project on provider: terraform import hcp_hvn.test f709ec73-55d4-46d8-897d-816ebba28778:test-hvn
+	// if project on provider: terraform import hcp_hvn.test test-hvn
+
+	// hvnID := d.Id()
+	if client.Config.ProjectID == "" {
+		idParts := strings.SplitN(d.Id(), ":", 2)
+		if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {project_id}:{hvn_id}", d.Id())
+		}
+		projectID := idParts[0]
+		hvnID := idParts[1]
+	}
+
+	projectID, err := GetProjectID(projectID, client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, HvnResourceType, hvnID)
