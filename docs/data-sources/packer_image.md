@@ -75,6 +75,7 @@ output "packer-registry-ubuntu-west-1" {
 - `channel` (String) The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified. Note: will incur a billable request
 - `component_type` (String) Name of the builder that built this image. Ex: `amazon-ebs.example`.
 - `iteration_id` (String) The iteration from which to get the image. Either this or `channel` must be specified.
+- `project_id` (String) The ID of the HCP project where the HCP Packer Registry image is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -86,7 +87,6 @@ output "packer-registry-ubuntu-west-1" {
 - `labels` (Map of String) Labels associated with this build.
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `packer_run_uuid` (String) UUID of this build.
-- `project_id` (String) The ID of the project this HCP Packer registry is located in.
 - `revoke_at` (String) The revocation time of this build. This field will be null for any build that has not been revoked or scheduled for revocation.
 
 <a id="nestedblock--timeouts"></a>

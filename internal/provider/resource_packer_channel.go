@@ -14,6 +14,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -51,6 +52,14 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where this channel is located in.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
+				Computed:     true,
+			},
 			"iteration": {
 				Description: "The iteration assigned to the channel.",
 				Type:        schema.TypeList,
@@ -95,11 +104,6 @@ func resourcePackerChannel() *schema.Resource {
 			},
 			"organization_id": {
 				Description: "The ID of the HCP organization where this channel is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the HCP project where this channel is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -148,9 +152,14 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	channelName := d.Get("name").(string)
 
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)

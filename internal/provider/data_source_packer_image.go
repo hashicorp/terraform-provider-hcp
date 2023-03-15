@@ -12,6 +12,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -43,6 +44,13 @@ func dataSourcePackerImage() *schema.Resource {
 				Required:    true,
 			},
 			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HCP Packer Registry image is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			"iteration_id": {
 				Description:  "The iteration from which to get the image. Either this or `channel` must be specified.",
 				Type:         schema.TypeString,
@@ -64,11 +72,6 @@ func dataSourcePackerImage() *schema.Resource {
 			// computed outputs
 			"organization_id": {
 				Description: "The ID of the organization this HCP Packer registry is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Packer registry is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -114,10 +117,14 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	componentType := d.Get("component_type").(string)
 	iterationID := d.Get("iteration_id").(string)
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	if err := setLocationData(d, loc); err != nil {
@@ -127,7 +134,6 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, channel=%s/iteration_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID, channelSlug, iterationID)
 
 	var iteration *packermodels.HashicorpCloudPackerIteration
-	var err error
 
 	if iterationID != "" {
 		iteration, err = clients.GetIterationFromID(
