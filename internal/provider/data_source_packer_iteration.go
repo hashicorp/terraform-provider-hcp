@@ -11,6 +11,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -35,6 +36,14 @@ func dataSourcePackerIteration() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Optional inputs
+			"project_id": {
+				Description:  "The ID of the HCP project where the HCP Packer Registry is located.",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IsUUID,
+			},
 			// computed outputs
 			"author_id": {
 				Description: "The name of the person who created this iteration.",
@@ -43,11 +52,6 @@ func dataSourcePackerIteration() *schema.Resource {
 			},
 			"organization_id": {
 				Description: "The ID of the organization this HCP Packer registry is located in.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"project_id": {
-				Description: "The ID of the project this HCP Packer registry is located in.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -90,10 +94,14 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 	bucketName := d.Get("bucket_name").(string)
 	channelSlug := d.Get("channel").(string)
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	if err := setLocationData(d, loc); err != nil {
