@@ -1,3 +1,12 @@
+## v0.56.0 (March 15, 2023)
+
+IMPROVEMENTS:
+
+* Bump github.com/hashicorp/hcp-sdk-go from 0.35.0 to 0.37.0 [[GH-482](https://github.com/hashicorp/terraform-provider-hcp/pull/482)]
+
+BUG FIXES:
+
+* Update pricing information for vault and consul. [[GH-480](https://github.com/hashicorp/terraform-provider-hcp/pull/480)]
 ## v0.55.0 (March 08, 2023)
 
 FEATURES:
