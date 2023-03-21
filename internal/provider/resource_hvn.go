@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -323,11 +324,35 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 // resourceHvnImport implements the logic necessary to import an un-tracked
 // (by Terraform) HVN resource into Terraform state.
 func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_hvn.test f709ec73-55d4-46d8-897d-816ebba28778:test-hvn
+	// use default project ID from provider:
+	//   terraform import hcp_hvn.test test-hvn
 
-	hvnID := d.Id()
+	client := meta.(*clients.Client)
+	projectID := ""
+	hvnID := ""
+	var err error
+
+	if strings.Contains(d.Id(), ":") {
+		idParts := strings.SplitN(d.Id(), ":", 2)
+		// Get the HVN ID from the input
+		hvnID = idParts[1]
+		// Get the Project ID from the input
+		projectID = idParts[0]
+	} else {
+		// Get the HVN ID from the input
+		hvnID = d.Id()
+		// Get the Project ID from the helper function
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, HvnResourceType, hvnID)
