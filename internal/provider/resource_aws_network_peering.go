@@ -357,7 +357,7 @@ func resourceAwsNetworkPeeringImport(ctx context.Context, d *schema.ResourceData
 	//   terraform import hcp_aws_network_peering.test {hvn_id}:{peering_id}
 
 	client := meta.(*clients.Client)
-	projectID, hvnID, peeringID, err := parsePeeringResourceID(d.Id(), client)
+	projectID, hvnID, peeringID, err := parsePeeringResourceID(d.Id(), client.Config.ProjectID)
 	if err != nil {
 		return nil, err
 	}

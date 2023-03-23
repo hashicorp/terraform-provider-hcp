@@ -294,7 +294,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 		projectID = idParts[0]
 		bucketName = idParts[1]
 		channelName = idParts[2]
-	} else if len(idParts) == 2 { //{bucket_name}:{channel_name}
+	} else if len(idParts) == 2 { // {bucket_name}:{channel_name}
 		if idParts[0] == "" || idParts[1] == "" {
 			return nil, fmt.Errorf("unexpected format of ID (%q), expected {bucket_name}:{channel_name}", d.Id())
 		}

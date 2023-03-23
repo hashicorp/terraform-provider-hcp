@@ -353,7 +353,7 @@ func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.Re
 		hvnID = idParts[1]
 		tgwAttID = idParts[2]
 		resourceShareArn = idParts[3]
-	} else if len(idParts) == 3 { //{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
+	} else if len(idParts) == 3 { // {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
 		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 			return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
 		}

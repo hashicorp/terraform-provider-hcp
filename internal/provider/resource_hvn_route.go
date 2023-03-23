@@ -323,7 +323,7 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 		projectID = idParts[0]
 		hvnID = idParts[1]
 		routeID = idParts[2]
-	} else if len(idParts) == 2 { //{hvn_id}:{hvn_route_id}
+	} else if len(idParts) == 2 { // {hvn_id}:{hvn_route_id}
 		if idParts[0] == "" || idParts[1] == "" {
 			return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())
 		}
