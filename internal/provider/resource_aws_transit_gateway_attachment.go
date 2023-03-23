@@ -331,17 +331,45 @@ func setTransitGatewayAttachmentResourceData(d *schema.ResourceData, tgwAtt *net
 // import an un-tracked (by Terraform) transit gateway attachment resource into
 // Terraform state.
 func resourceAwsTransitGatewayAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_aws_transit_gateway_attachment.test {project_id}:{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
+	// use default project ID from provider:
+	//   terraform import hcp_aws_transit_gateway_attachment.test {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
 
-	idParts := strings.SplitN(d.Id(), ":", 3)
-	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
+	client := meta.(*clients.Client)
+	projectID := ""
+	hvnID := ""
+	tgwAttID := ""
+	resourceShareArn := ""
+	var err error
+
+	idParts := strings.SplitN(d.Id(), ":", 4)
+	if len(idParts) == 4 { // {project_id}:{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
+		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {project_id}:{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
+		}
+		projectID = idParts[0]
+		hvnID = idParts[1]
+		tgwAttID = idParts[2]
+		resourceShareArn = idParts[3]
+	} else if len(idParts) == 3 { //{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}
+		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
+		}
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+		hvnID = idParts[0]
+		tgwAttID = idParts[1]
+		resourceShareArn = idParts[2]
+	} else {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn} or {project_id}:{hvn_id}:{transit_gateway_attachment_id}:{resource_share_arn}", d.Id())
 	}
-	hvnID := idParts[0]
-	tgwAttID := idParts[1]
-	resourceShareArn := idParts[2]
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, TgwAttachmentResourceType, tgwAttID)

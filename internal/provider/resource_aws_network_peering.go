@@ -350,15 +350,20 @@ func setAwsPeeringResourceData(d *schema.ResourceData, peering *networkmodels.Ha
 // resourceAwsNetworkPeeringImport implements the logic necessary to import an
 // un-tracked (by Terraform) network peering resource into Terraform state.
 func resourceAwsNetworkPeeringImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_aws_network_peering.test {project_id}:{hvn_id}:{peering_id}
+	// use default project ID from provider:
+	//   terraform import hcp_aws_network_peering.test {hvn_id}:{peering_id}
 
-	hvnID, peeringID, err := parsePeeringResourceID(d.Id())
+	client := meta.(*clients.Client)
+	projectID, hvnID, peeringID, err := parsePeeringResourceID(d.Id(), client)
 	if err != nil {
 		return nil, err
 	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, PeeringResourceType, peeringID)

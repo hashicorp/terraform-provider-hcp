@@ -269,14 +269,20 @@ func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceHvnPeeringConnectionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_hvn_peering_connection.test {project_id}:{hvn_id}:{peering_id}
+	// use default project ID from provider:
+	//   terraform import hcp_hvn_peering_connection.test {hvn_id}:{peering_id}
+
 	client := meta.(*clients.Client)
-	hvnID, peeringID, err := parsePeeringResourceID(d.Id())
+	projectID, hvnID, peeringID, err := parsePeeringResourceID(d.Id(), client)
 	if err != nil {
 		return nil, err
 	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, PeeringResourceType, peeringID)
