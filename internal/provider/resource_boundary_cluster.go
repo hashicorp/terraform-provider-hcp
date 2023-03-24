@@ -257,16 +257,12 @@ func resourceBoundaryClusterImport(ctx context.Context, d *schema.ResourceData, 
 	clusterID := ""
 	var err error
 
-	if strings.Contains(d.Id(), ":") {
+	if strings.Contains(d.Id(), ":") { // {project_id}:{boundary_cluster_id}
 		idParts := strings.SplitN(d.Id(), ":", 2)
-		// Get the Cluster ID from the input
 		clusterID = idParts[1]
-		// Get the Project ID from the input
 		projectID = idParts[0]
-	} else {
-		// Get the Cluster ID from the input
+	} else { // {boundary_cluster_id}
 		clusterID = d.Id()
-		// Get the Project ID from the helper function
 		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)

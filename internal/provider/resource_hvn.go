@@ -335,16 +335,12 @@ func resourceHvnImport(ctx context.Context, d *schema.ResourceData, meta interfa
 	hvnID := ""
 	var err error
 
-	if strings.Contains(d.Id(), ":") {
+	if strings.Contains(d.Id(), ":") { // {project_id}:{hvn_id}
 		idParts := strings.SplitN(d.Id(), ":", 2)
-		// Get the HVN ID from the input
 		hvnID = idParts[1]
-		// Get the Project ID from the input
 		projectID = idParts[0]
-	} else {
-		// Get the HVN ID from the input
+	} else { // {hvn_id}
 		hvnID = d.Id()
-		// Get the Project ID from the helper function
 		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
 		if err != nil {
 			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
