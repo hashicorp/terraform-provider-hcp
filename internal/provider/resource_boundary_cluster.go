@@ -5,7 +5,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/preview/2021-12-21/models"
@@ -244,11 +246,31 @@ func resourceBoundaryClusterDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceBoundaryClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_boundary_cluster.test f709ec73-55d4-46d8-897d-816ebba28778:test-boundary-cluster
+	// use default project ID from provider:
+	//   terraform import hcp_boundary_cluster.test test-boundary-cluster
 
-	clusterID := d.Id()
+	client := meta.(*clients.Client)
+	projectID := ""
+	clusterID := ""
+	var err error
+
+	if strings.Contains(d.Id(), ":") { // {project_id}:{boundary_cluster_id}
+		idParts := strings.SplitN(d.Id(), ":", 2)
+		clusterID = idParts[1]
+		projectID = idParts[0]
+	} else { // {boundary_cluster_id}
+		clusterID = d.Id()
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, BoundaryClusterResourceType, clusterID)

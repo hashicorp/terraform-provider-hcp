@@ -1067,11 +1067,31 @@ func flattenMajorVersionUpgradeConfig(config *vaultmodels.HashicorpCloudVault202
 }
 
 func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_vault_cluster.test f709ec73-55d4-46d8-897d-816ebba28778:test-vault-cluster
+	// use default project ID from provider:
+	//   terraform import hcp_vault_cluster.test test-vault-cluster
 
-	clusterID := d.Id()
+	client := meta.(*clients.Client)
+	projectID := ""
+	clusterID := ""
+	var err error
+
+	if strings.Contains(d.Id(), ":") { // {project_id}:{vault_cluster_id}
+		idParts := strings.SplitN(d.Id(), ":", 2)
+		clusterID = idParts[1]
+		projectID = idParts[0]
+	} else { // {vault_cluster_id}
+		clusterID = d.Id()
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	link := newLink(loc, VaultClusterResourceType, clusterID)
