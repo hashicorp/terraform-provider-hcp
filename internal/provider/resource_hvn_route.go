@@ -298,8 +298,16 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 // resourceHVNRouteImport implements the logic necessary to import an
 // un-tracked (by Terraform) HVN route resource into Terraform state.
 func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_hvn_route.test {project_id}:{hvn_id}:{hvn_route_id}
+	// use default project ID from provider:
+	//   terraform import hcp_hvn_route.test {hvn_id}:{hvn_route_id}
 
+	client := meta.(*clients.Client)
+	projectID := ""
+	hvnID := ""
+	routeID := ""
 	var err error
 	// Updates the source channel to include data about the module used.
 	client, err = client.UpdateSourceChannel(d)
@@ -307,14 +315,30 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
 	}
 
-	idParts := strings.SplitN(d.Id(), ":", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())
+	idParts := strings.SplitN(d.Id(), ":", 3)
+	if len(idParts) == 3 { // {project_id}:{hvn_id}:{hvn_route_id}
+		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {project_id}:{hvn_id}:{hvn_route_id}", d.Id())
+		}
+		projectID = idParts[0]
+		hvnID = idParts[1]
+		routeID = idParts[2]
+	} else if len(idParts) == 2 { // {hvn_id}:{hvn_route_id}
+		if idParts[0] == "" || idParts[1] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id}", d.Id())
+		}
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+		hvnID = idParts[0]
+		routeID = idParts[1]
+	} else {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {hvn_id}:{hvn_route_id} or {project_id}:{hvn_id}:{hvn_route_id}", d.Id())
 	}
-	hvnID := idParts[0]
-	routeID := idParts[1]
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		ProjectID: client.Config.ProjectID,
+		ProjectID: projectID,
 	}
 
 	routeLink := newLink(loc, HVNRouteResourceType, routeID)
