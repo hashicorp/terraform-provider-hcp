@@ -269,8 +269,16 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*clients.Client)
+	// with multi-projects, import arguments must become dynamic:
+	// use explicit project ID with terraform import:
+	//   terraform import hcp_packer_channel.test {project_id}:{bucket_name}:{channel_name}
+	// use default project ID from provider:
+	//   terraform import hcp_packer_channel.test {bucket_name}:{channel_name}
 
+	client := meta.(*clients.Client)
+	bucketName := ""
+	channelName := ""
+	projectID := ""
 	var err error
 	// Updates the source channel to include data about the module used.
 	client, err = client.UpdateSourceChannel(d)
@@ -278,17 +286,31 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
 	}
 
-	idParts := strings.SplitN(d.Id(), ":", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected {bucket_name}:{channel_name}", d.Id())
+	idParts := strings.SplitN(d.Id(), ":", 3)
+	if len(idParts) == 3 { // {project_id}:{bucket_name}:{channel_name}
+		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {project_id}:{bucket_name}:{channel_name}", d.Id())
+		}
+		projectID = idParts[0]
+		bucketName = idParts[1]
+		channelName = idParts[2]
+	} else if len(idParts) == 2 { // {bucket_name}:{channel_name}
+		if idParts[0] == "" || idParts[1] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected {bucket_name}:{channel_name}", d.Id())
+		}
+		projectID, err = GetProjectID(projectID, client.Config.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to retrieve project ID: %v", err)
+		}
+		bucketName = idParts[0]
+		channelName = idParts[1]
+	} else {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected {bucket_name}:{channel_name} or {project_id}:{bucket_name}:{channel_name}", d.Id())
 	}
-
-	bucketName := idParts[0]
-	channelName := idParts[1]
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return nil, err
