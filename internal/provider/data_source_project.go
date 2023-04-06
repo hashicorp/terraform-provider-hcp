@@ -5,13 +5,13 @@ package provider
 
 import (
 	"context"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
-	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"log"
 	"time"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 var projectDefaultTimeout = time.Minute * 1
