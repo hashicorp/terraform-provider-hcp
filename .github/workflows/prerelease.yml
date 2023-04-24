@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
         with:
           fetch-depth: 0
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
         with:
           cache: true
           go-version-file: 'go.mod'
@@ -49,7 +49,7 @@ jobs:
         run: make test-ci
 
       - name: Upload Unit Test Coverage Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: Test Coverage
           path: coverage.html
@@ -83,7 +83,7 @@ jobs:
           make testacc-ci
 
       - name: Upload E2E Coverage Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: Test Coverage
           path: coverage-e2e.html
