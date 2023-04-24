@@ -1,6 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-*       @hashicorp/experiences-platform
+# *
 
 # all Consul resources and clients are owned by the cloud-consul team
 *consul* @hashicorp/cloud-consul
