@@ -18,5 +18,9 @@
 # all Vault resources and clients are owned by the vault-cloud team
 *vault* @hashicorp/vault-cloud
 
+
+# all Boundary resources and clients are owned by the boundary-cloud team
+*boundary* @hashicorp/boundary-cloud
+
 # Statuspage.io configuration is owned by the Core SRE team
 /internal/provider/provider.go @hashicorp/core-sre @hashicorp/experiences-platform
