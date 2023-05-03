@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,10 +31,14 @@ var createBoundaryClusterTimeout = time.Minute * 25
 // before a cluster delete operation should timeout.
 var deleteBoundaryClusterTimeout = time.Minute * 25
 
+const boundaryClusterUpgradeTypePrefix = "UPGRADE_TYPE_"
+const boundaryClusterDayOfWeekPrefix = "DAY_OF_WEEK_"
+
 func resourceBoundaryCluster() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This resource allows you to manage an HCP Boundary cluster",
 		CreateContext: resourceBoundaryClusterCreate,
+		UpdateContext: resourceBoundaryClusterUpdate,
 		ReadContext:   resourceBoundaryClusterRead,
 		DeleteContext: resourceBoundaryClusterDelete,
 		Importer: &schema.ResourceImporter{
@@ -93,6 +98,57 @@ func resourceBoundaryCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"maintenance_window_config": {
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Computed:    true,
+				Description: "The maintenance window configuration for when cluster upgrades can take place.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"upgrade_type": {
+							Description:  "The upgrade type for the cluster. Valid options for upgrade type - `AUTOMATIC`, `SCHEDULED`",
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringInSlice([]string{"SCHEDULED", "AUTOMATIC"}, true),
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							Default:  "AUTOMATIC",
+							Optional: true,
+						},
+						"day": {
+							Description:  "The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}, true),
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							RequiredWith: []string{"maintenance_window_config.0.start"},
+						},
+						"start": {
+							Description:  "The start time which upgrades can be performed. Valid options for start - 0 to 24 (inclusive)",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 23),
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							RequiredWith: []string{"maintenance_window_config.0.day"},
+						},
+						"end": {
+							Description:  "The end time which upgrades can be performed. Valid options for end - 0 to 24 (inclusive)",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 23),
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							RequiredWith: []string{"maintenance_window_config.0.start"},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -119,6 +175,10 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 			Provider: "aws",
 			Region:   "us-east-1",
 		},
+	}
+	upgradeType, maintenanceWindow, diagErr := getBoundaryClusterMaintainanceWindowConfig(d)
+	if diagErr != nil {
+		return diagErr
 	}
 
 	// check for an existing boundary cluster
@@ -165,8 +225,93 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("unable to retrieve Boundary cluster (%s): %v", createResp.ClusterID, err)
 	}
+
+	currentUpgradeType, currentMaintenanceWindow, err := clients.GetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve maintenance window for Boundary cluster (%s): %v", createResp.ClusterID, err)
+	}
+
+	// update the maintenance window configuration if it is passed in
+	if upgradeType != nil && maintenanceWindow != nil {
+		mwReq := boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateRequest{}
+		mwReq.UpgradeType = upgradeType
+		mwReq.MaintenanceWindow = maintenanceWindow
+		mwReq.ClusterID = cluster.ClusterID
+		mwReq.Location = cluster.Location
+
+		_, err := clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq)
+		if err != nil {
+			return diag.Errorf("error setting maintenance window configuration for Boundary cluster (%s): %v", clusterID, err)
+		}
+		currentMaintenanceWindow = maintenanceWindow
+		currentUpgradeType = upgradeType
+	}
+
 	// set Boundary cluster resource data
-	err = setBoundaryClusterResourceData(d, cluster)
+	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	link, err := buildLinkFromURL(d.Id(), BoundaryClusterResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	clusterID := link.ID
+	upgradeType, maintenanceWindow, diagErr := getBoundaryClusterMaintainanceWindowConfig(d)
+	if diagErr != nil {
+		return diagErr
+	}
+
+	log.Printf("[INFO] Reading Boundary cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	cluster, err := clients.GetBoundaryClusterByID(ctx, client, loc, clusterID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] Boundary cluster (%s) not found, removing from state", clusterID)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("unable to fetch Boundary cluster (%s): %v", clusterID, err)
+	}
+
+	log.Printf("[INFO] Updating maintenance window for Boundary cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	currentUpgradeType, currentMaintenanceWindow, err := clients.GetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve maintenance window for Boundary cluster (%s): %v", clusterID, err)
+	}
+
+	// update the maintenance window configuration if it is created
+	if upgradeType != nil && maintenanceWindow != nil {
+		mwReq := boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateRequest{}
+		mwReq.UpgradeType = upgradeType
+		mwReq.MaintenanceWindow = maintenanceWindow
+		mwReq.ClusterID = cluster.ClusterID
+		mwReq.Location = cluster.Location
+
+		_, err := clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq)
+		if err != nil {
+			return diag.Errorf("error setting maintenance window configuration for Boundary cluster (%s): %v", clusterID, err)
+		}
+		currentMaintenanceWindow = maintenanceWindow
+		currentUpgradeType = upgradeType
+	}
+
+	// set Boundary cluster resource data
+	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -205,8 +350,13 @@ func resourceBoundaryClusterRead(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	}
 
+	clusterUpgradeType, clusterMW, err := clients.GetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to fetch maintenenace window Boundary cluster (%s): %v", clusterID, err)
+	}
+
 	// Cluster found, update resource data.
-	if err := setBoundaryClusterResourceData(d, cluster); err != nil {
+	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -284,7 +434,7 @@ func resourceBoundaryClusterImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymodels.HashicorpCloudBoundary20211221Cluster) error {
+func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymodels.HashicorpCloudBoundary20211221Cluster, upgradeType *boundarymodels.HashicorpCloudBoundary20211221UpgradeType, clusterMW *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow) error {
 	if err := d.Set("cluster_id", cluster.ClusterID); err != nil {
 		return err
 	}
@@ -298,5 +448,91 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 	if err := d.Set("state", cluster.State); err != nil {
 		return err
 	}
+
+	mwConfig := map[string]interface{}{}
+
+	if upgradeType != nil {
+		upgradeTypeStr := strings.TrimPrefix(string(*upgradeType), boundaryClusterUpgradeTypePrefix)
+		mwConfig["upgrade_type"] = upgradeTypeStr
+
+		if *upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED && clusterMW != nil {
+			dayOfWeekStr := strings.TrimPrefix(string(*clusterMW.DayOfWeek), boundaryClusterDayOfWeekPrefix)
+			mwConfig["day"] = dayOfWeekStr
+			start := time.Time(clusterMW.Start)
+			mwConfig["start"] = start.Hour()
+			end := time.Time(clusterMW.End)
+			mwConfig["end"] = end.Hour()
+		} else if *upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED && clusterMW == nil {
+			return fmt.Errorf("invalid maintenance window: missing configuration for SCHEDULED upgrade type")
+		}
+	}
+
+	if err := d.Set("maintenance_window_config", []interface{}{mwConfig}); err != nil {
+		return err
+	}
 	return nil
+}
+
+func getBoundaryClusterMaintainanceWindowConfig(d *schema.ResourceData) (*boundarymodels.HashicorpCloudBoundary20211221UpgradeType, *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow, diag.Diagnostics) {
+	if !d.HasChange("maintenance_window_config") {
+		return nil, nil, nil
+	}
+
+	// get the maintenance_window_config resources
+	mwConfigParam, ok := d.GetOk("maintenance_window_config")
+	if !ok {
+		return nil, nil, nil
+	}
+
+	// convert to []interface is required even though we set a MaxItems=1
+	mwConfigs, ok := mwConfigParam.([]interface{})
+	if !ok || len(mwConfigs) == 0 {
+		return nil, nil, nil
+	}
+
+	// get the elements in the config
+	mwConfigElems, ok := mwConfigs[0].(map[string]interface{})
+	if !ok || len(mwConfigElems) == 0 {
+		return nil, nil, nil
+	}
+
+	upgradeTypeElem := mwConfigElems["upgrade_type"].(string)
+	// add enum type prefix for type conversion
+	if !strings.HasPrefix(upgradeTypeElem, boundaryClusterUpgradeTypePrefix) {
+		upgradeTypeElem = boundaryClusterUpgradeTypePrefix + upgradeTypeElem
+	}
+	upgradeType := boundarymodels.HashicorpCloudBoundary20211221UpgradeType(upgradeTypeElem)
+	maintenanceWindow := &boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow{}
+
+	mwDayElem := mwConfigElems["day"].(string)
+	// add enum type prefix for type conversion
+	if !strings.HasPrefix(mwDayElem, boundaryClusterDayOfWeekPrefix) {
+		mwDayElem = boundaryClusterDayOfWeekPrefix + mwDayElem
+	}
+	mwDay := boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowDayOfWeek(mwDayElem)
+	mwStart := mwConfigElems["start"].(int)
+	now := time.Now()
+	start := time.Date(now.Year(), now.Month(), now.Day(), mwStart, 0, 0, 0, time.UTC)
+	mwEnd := mwConfigElems["end"].(int)
+	end := time.Date(now.Year(), now.Month(), now.Day(), mwEnd, 0, 0, 0, time.UTC)
+
+	maintenanceWindow.DayOfWeek = &mwDay
+	maintenanceWindow.Start = strfmt.DateTime(start)
+	maintenanceWindow.End = strfmt.DateTime(end)
+
+	if upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED {
+		if mwDay == "" {
+			return nil, nil, diag.Errorf("maintenance window configuration is invalid: `day` is required for SCHEDULED upgrade type")
+		}
+		if mwStart < 0 || mwStart > 23 || mwEnd < 0 || mwEnd > 23 {
+			return nil, nil, diag.Errorf("maintenance window configuration is invalid: `start` and `end` must be between 0 - 24 (inclusive) for SCHEDULED upgrade type")
+		}
+		if mwStart >= mwEnd {
+			return nil, nil, diag.Errorf("maintenance window configuration is invalid: `start` should be less than `end` for SCHEDULED upgrade type")
+		}
+	} else if mwDay != "" || mwStart != 0 || mwEnd != 0 {
+		return nil, nil, diag.Errorf("maintenance window configuration is invalid: `day` is only allowed on SCHEDULED upgrade type")
+	}
+
+	return &upgradeType, maintenanceWindow, nil
 }
