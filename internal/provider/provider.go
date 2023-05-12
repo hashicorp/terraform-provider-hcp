@@ -223,7 +223,7 @@ type component struct {
 type status string
 
 // getOldestProject retrieves the oldest project from a list based on its created_at time.
-func getOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
+func getOldestProject(projects []*models.ResourcemanagerProject) (oldestProj *models.ResourcemanagerProject) {
 	oldestTime := time.Now()
 
 	for _, proj := range projects {

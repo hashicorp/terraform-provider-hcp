@@ -34,13 +34,13 @@ func GetParentOrganizationIDByProjectID(ctx context.Context, client *Client, pro
 	return project.Parent.ID, nil
 }
 
-func CreateProject(ctx context.Context, client *Client, name, organizationID string) (*resourcemodels.HashicorpCloudResourcemanagerProject, error) {
-	projectOrg := &resourcemodels.HashicorpCloudResourcemanagerResourceID{
+func CreateProject(ctx context.Context, client *Client, name, organizationID string) (*resourcemodels.ResourcemanagerProject, error) {
+	projectOrg := &resourcemodels.ResourcemanagerResourceID{
 		ID:   organizationID,
-		Type: resourcemodels.NewHashicorpCloudResourcemanagerResourceIDResourceType("ORGANIZATION"),
+		Type: resourcemodels.NewResourceIDResourceType("ORGANIZATION"),
 	}
 	projectParams := project_service.NewProjectServiceCreateParamsWithContext(ctx)
-	projectParams.Body = &resourcemodels.HashicorpCloudResourcemanagerProjectCreateRequest{
+	projectParams.Body = &resourcemodels.ResourcemanagerProjectCreateRequest{
 		Name:   name,
 		Parent: projectOrg,
 	}
