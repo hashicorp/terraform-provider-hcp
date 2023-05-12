@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/preview/2019-12-10/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
@@ -47,12 +47,12 @@ func TestDetermineOldestProject(t *testing.T) {
 
 	testCases := []struct {
 		name           string
-		projArray      []*models.HashicorpCloudResourcemanagerProject
+		projArray      []*models.ResourcemanagerProject
 		expectedProjID string
 	}{
 		{
 			name: "One Project",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
+			projArray: []*models.ResourcemanagerProject{
 				{
 					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
 					ID:        "proj1",
@@ -62,7 +62,7 @@ func TestDetermineOldestProject(t *testing.T) {
 		},
 		{
 			name: "Two Projects",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
+			projArray: []*models.ResourcemanagerProject{
 				{
 					ID:        "proj1",
 					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
@@ -76,7 +76,7 @@ func TestDetermineOldestProject(t *testing.T) {
 		},
 		{
 			name: "Three Projects",
-			projArray: []*models.HashicorpCloudResourcemanagerProject{
+			projArray: []*models.ResourcemanagerProject{
 				{
 					ID:        "proj1",
 					CreatedAt: strfmt.DateTime(time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC)),
