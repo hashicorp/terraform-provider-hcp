@@ -3,7 +3,7 @@ terraform {
   required_providers {
     hcp = {
       source  = "hashicorp/hcp"
-      version = "~> 0.56.0"
+      version = "~> 1.0.0"
     }
   }
 }

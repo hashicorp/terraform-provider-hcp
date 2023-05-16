@@ -1,3 +1,9 @@
+## v1.0.0 (May 16, 2023)
+
+FEATURES:
+
+* Support multiple projects. [[GH-454](https://github.com/hashicorp/terraform-provider-hcp/pull/454)]
+
 ## v0.56.0 (March 15, 2023)
 
 IMPROVEMENTS:
