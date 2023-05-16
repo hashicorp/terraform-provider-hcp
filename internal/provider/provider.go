@@ -42,6 +42,7 @@ func New() func() *schema.Provider {
 				"hcp_packer_image_iteration":         dataSourcePackerImageIteration(),
 				"hcp_packer_image":                   dataSourcePackerImage(),
 				"hcp_packer_iteration":               dataSourcePackerIteration(),
+				"hcp_project":                        dataSourceProject(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
