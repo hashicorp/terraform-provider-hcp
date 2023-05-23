@@ -126,12 +126,16 @@ func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *share
 func UpdateVaultMajorVersionUpgradeConfig(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
 	config *vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig) (vaultmodels.HashicorpCloudVault20201125UpdateMajorVersionUpgradeConfigResponse, error) {
 
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
 	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
 		OrganizationID: loc.OrganizationID,
 		ProjectID:      loc.ProjectID,
 		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
-			Provider: loc.Region.Provider,
-			Region:   loc.Region.Region,
+			Provider: region.Provider,
+			Region:   region.Region,
 		},
 	}
 	request := &vaultmodels.HashicorpCloudVault20201125UpdateMajorVersionUpgradeConfigRequest{
