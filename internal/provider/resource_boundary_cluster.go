@@ -126,7 +126,7 @@ func resourceBoundaryCluster() *schema.Resource {
 							RequiredWith: []string{"maintenance_window_config.0.start"},
 						},
 						"start": {
-							Description:  "The start time which upgrades can be performed. Valid options for start - 0 to 24 (inclusive)",
+							Description:  "The start time which upgrades can be performed. Uses 24H clock. Valid options include - 0 to 23 (inclusive)",
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 23),
@@ -136,10 +136,10 @@ func resourceBoundaryCluster() *schema.Resource {
 							RequiredWith: []string{"maintenance_window_config.0.day"},
 						},
 						"end": {
-							Description:  "The end time which upgrades can be performed. Valid options for end - 0 to 24 (inclusive)",
+							Description:  "The end time which upgrades can be performed. Uses 24H clock. Valid options include - 1 to 24 (inclusive)",
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 23),
+							ValidateFunc: validation.IntBetween(1, 24),
 							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
