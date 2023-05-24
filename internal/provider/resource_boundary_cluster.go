@@ -507,11 +507,11 @@ func getBoundaryClusterMaintainanceWindowConfig(d *schema.ResourceData) (*bounda
 		mwDayElem = boundaryClusterDayOfWeekPrefix + mwDayElem
 	}
 	mwDay := boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowDayOfWeek(mwDayElem)
-	mwStart := mwConfigElems["start"].(int32)
-	mwEnd := mwConfigElems["end"].(int32)
+	mwStart := mwConfigElems["start"].(int)
+	mwEnd := mwConfigElems["end"].(int)
 	maintenanceWindow.DayOfWeek = &mwDay
-	maintenanceWindow.Start = mwStart
-	maintenanceWindow.End = mwEnd
+	maintenanceWindow.Start = int32(mwStart)
+	maintenanceWindow.End = int32(mwEnd)
 
 	if upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED {
 		if mwDay == "" {
