@@ -93,6 +93,14 @@ func CreateVaultClusterAdminToken(ctx context.Context, client *Client, loc *shar
 func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string, enablePublicIps bool) (*vaultmodels.HashicorpCloudVault20201125UpdatePublicIpsResponse, error) {
 
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: loc.Region.Provider,
+			Region:   loc.Region.Region,
+		},
+	}
 	updateParams := vault_service.NewUpdatePublicIpsParams()
 	updateParams.Context = ctx
 	updateParams.ClusterID = clusterID
@@ -102,7 +110,7 @@ func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *share
 		// ClusterID and Location are repeated because the values above are required to populate the URL,
 		// and the values below are required in the API request body
 		ClusterID:       clusterID,
-		Location:        loc,
+		Location:        locInternal,
 		EnablePublicIps: enablePublicIps,
 	}
 
@@ -118,11 +126,23 @@ func UpdateVaultClusterPublicIps(ctx context.Context, client *Client, loc *share
 func UpdateVaultMajorVersionUpgradeConfig(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
 	config *vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig) (vaultmodels.HashicorpCloudVault20201125UpdateMajorVersionUpgradeConfigResponse, error) {
 
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: region.Provider,
+			Region:   region.Region,
+		},
+	}
 	request := &vaultmodels.HashicorpCloudVault20201125UpdateMajorVersionUpgradeConfigRequest{
 		// ClusterID and Location are repeated because the values above are required to populate the URL,
 		// and the values below are required in the API request body
 		ClusterID:   clusterID,
-		Location:    loc,
+		Location:    locInternal,
 		UpgradeType: config.UpgradeType,
 	}
 	if config.MaintenanceWindow != nil {
@@ -167,6 +187,14 @@ func UpdateVaultClusterConfig(ctx context.Context, client *Client, loc *sharedmo
 		config.AuditLogExportConfig = auditLog
 		updateMaskPaths = append(updateMaskPaths, "config.audit_log_export_config")
 	}
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: loc.Region.Provider,
+			Region:   loc.Region.Region,
+		},
+	}
 	updateParams := vault_service.NewUpdateParams()
 	updateParams.Context = ctx
 	updateParams.ClusterID = clusterID
@@ -177,7 +205,7 @@ func UpdateVaultClusterConfig(ctx context.Context, client *Client, loc *sharedmo
 		// ClusterID and Location are repeated because the values above are required to populate the URL,
 		// and the values below are required in the API request body
 		ID:       clusterID,
-		Location: loc,
+		Location: locInternal,
 		// NOTE: if this function is ever modified to update more than just the tier,
 		// the tier must ALWAYS be specified, since the 0-value is valid and will not
 		// be ignored.
@@ -196,6 +224,14 @@ func UpdateVaultClusterConfig(ctx context.Context, client *Client, loc *sharedmo
 func UpdateVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	clusterID string, params vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter) (*vaultmodels.HashicorpCloudVault20201125UpdatePathsFilterResponse, error) {
 
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: loc.Region.Provider,
+			Region:   loc.Region.Region,
+		},
+	}
 	updateParams := vault_service.NewUpdatePathsFilterParams()
 	updateParams.Context = ctx
 	updateParams.ClusterID = clusterID
@@ -205,7 +241,7 @@ func UpdateVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmode
 		// ClusterID and Location are repeated because the values above are required to populate the URL,
 		// and the values below are required in the API request body
 		ClusterID: clusterID,
-		Location:  loc,
+		Location:  locInternal,
 		Mode:      params.Mode,
 		Paths:     params.Paths,
 	}
