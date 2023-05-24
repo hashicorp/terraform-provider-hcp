@@ -489,11 +489,22 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return diag.Errorf("unable to retrieve Vault cluster (%s): %v", payload.ClusterID, err)
 	}
+	clusterRegionShared := &sharedmodels.HashicorpCloudLocationRegion{}
+	if cluster.Location.Region != nil {
+		clusterRegionShared.Provider = cluster.Location.Region.Provider
+		clusterRegionShared.Region = cluster.Location.Region.Region
+	}
+	clusterLocationShared := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: cluster.Location.OrganizationID,
+		ProjectID:      cluster.Location.ProjectID,
+		Region:         clusterRegionShared,
+	}
 
 	// If we pass the major version upgrade configuration we need to update it after the creation of the cluster,
 	// since the cluster is created by default to automatic upgrade
 	if mvuConfig != nil {
-		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, loc, payload.ClusterID, mvuConfig)
+
+		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, clusterLocationShared, payload.ClusterID, mvuConfig)
 		if err != nil {
 			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", payload.ClusterID, err)
 		}
@@ -574,6 +585,16 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		return diag.Errorf("unable to fetch Vault cluster (%s): %v", clusterID, err)
 	}
+	clusterRegionShared := &sharedmodels.HashicorpCloudLocationRegion{}
+	if cluster.Location.Region != nil {
+		clusterRegionShared.Provider = cluster.Location.Region.Provider
+		clusterRegionShared.Region = cluster.Location.Region.Region
+	}
+	clusterLocationShared := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: cluster.Location.OrganizationID,
+		ProjectID:      cluster.Location.ProjectID,
+		Region:         clusterRegionShared,
+	}
 
 	// Confirm at least one modifiable field has changed
 	if !d.HasChanges("tier", "public_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
@@ -595,13 +616,13 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("public_endpoint") {
 		// Invoke update public IPs endpoint.
-		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, loc, clusterID, d.Get("public_endpoint").(bool))
+		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, clusterLocationShared, clusterID, d.Get("public_endpoint").(bool))
 		if err != nil {
 			return diag.Errorf("error updating Vault cluster public endpoint (%s): %v", clusterID, err)
 		}
 
 		// Wait for the update cluster operation.
-		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", loc, updateResp.Operation.ID); err != nil {
+		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", clusterLocationShared, updateResp.Operation.ID); err != nil {
 			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
 		}
 	}
@@ -616,7 +637,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Invoke update paths filter endpoint.
 			pathStrings := getPathStrings(paths)
 			mode := vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilterModeDENY
-			updateResp, err := clients.UpdateVaultPathsFilter(ctx, client, loc, clusterID, vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
+			updateResp, err := clients.UpdateVaultPathsFilter(ctx, client, clusterLocationShared, clusterID, vaultmodels.HashicorpCloudVault20201125ClusterPerformanceReplicationPathsFilter{
 				Mode:  &mode,
 				Paths: pathStrings,
 			})
@@ -625,25 +646,25 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			// Wait for the update paths filter operation.
-			if err := clients.WaitForOperation(ctx, client, "update Vault cluster paths filter", loc, updateResp.Operation.ID); err != nil {
+			if err := clients.WaitForOperation(ctx, client, "update Vault cluster paths filter", clusterLocationShared, updateResp.Operation.ID); err != nil {
 				return diag.Errorf("unable to update Vault cluster paths filter (%s): %v", clusterID, err)
 			}
 		} else {
 			// paths_filter is not present. Delete the paths_filter.
-			deleteResp, err := clients.DeleteVaultPathsFilter(ctx, client, loc, clusterID)
+			deleteResp, err := clients.DeleteVaultPathsFilter(ctx, client, clusterLocationShared, clusterID)
 			if err != nil {
 				return diag.Errorf("error deleting Vault cluster paths filter (%s): %v", clusterID, err)
 			}
 
 			// Wait for the delete paths filter operation.
-			if err := clients.WaitForOperation(ctx, client, "delete Vault cluster paths filter", loc, deleteResp.Operation.ID); err != nil {
+			if err := clients.WaitForOperation(ctx, client, "delete Vault cluster paths filter", clusterLocationShared, deleteResp.Operation.ID); err != nil {
 				return diag.Errorf("unable to delete Vault cluster paths filter (%s): %v", clusterID, err)
 			}
 		}
 	}
 
 	if mvuConfig != nil {
-		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, loc, clusterID, mvuConfig)
+		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, clusterLocationShared, clusterID, mvuConfig)
 		if err != nil {
 			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", clusterID, err)
 		}
