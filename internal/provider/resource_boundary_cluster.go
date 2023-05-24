@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-openapi/strfmt"
 	boundarymodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -458,10 +457,8 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 		if *upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED && clusterMW != nil {
 			dayOfWeekStr := strings.TrimPrefix(string(*clusterMW.DayOfWeek), boundaryClusterDayOfWeekPrefix)
 			mwConfig["day"] = dayOfWeekStr
-			start := time.Time(clusterMW.Start)
-			mwConfig["start"] = start.Hour()
-			end := time.Time(clusterMW.End)
-			mwConfig["end"] = end.Hour()
+			mwConfig["start"] = clusterMW.Start
+			mwConfig["end"] = clusterMW.End
 		} else if *upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED && clusterMW == nil {
 			return fmt.Errorf("invalid maintenance window: missing configuration for SCHEDULED upgrade type")
 		}
@@ -510,15 +507,11 @@ func getBoundaryClusterMaintainanceWindowConfig(d *schema.ResourceData) (*bounda
 		mwDayElem = boundaryClusterDayOfWeekPrefix + mwDayElem
 	}
 	mwDay := boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowDayOfWeek(mwDayElem)
-	mwStart := mwConfigElems["start"].(int)
-	now := time.Now()
-	start := time.Date(now.Year(), now.Month(), now.Day(), mwStart, 0, 0, 0, time.UTC)
-	mwEnd := mwConfigElems["end"].(int)
-	end := time.Date(now.Year(), now.Month(), now.Day(), mwEnd, 0, 0, 0, time.UTC)
-
+	mwStart := mwConfigElems["start"].(int32)
+	mwEnd := mwConfigElems["end"].(int32)
 	maintenanceWindow.DayOfWeek = &mwDay
-	maintenanceWindow.Start = strfmt.DateTime(start)
-	maintenanceWindow.End = strfmt.DateTime(end)
+	maintenanceWindow.Start = mwStart
+	maintenanceWindow.End = mwEnd
 
 	if upgradeType == boundarymodels.HashicorpCloudBoundary20211221UpgradeTypeUPGRADETYPESCHEDULED {
 		if mwDay == "" {
