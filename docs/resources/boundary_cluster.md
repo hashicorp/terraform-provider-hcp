@@ -18,10 +18,10 @@ resource "hcp_boundary_cluster" "example" {
   username   = "test-user"
   password   = "Password123!"
   maintenance_window_config {
-    maintenance_window_day   = "TUESDAY"
-    maintenance_window_start = 2
-    maintenance_window_end   = 12
-    upgrade_type             = "SCHEDULED"
+    day          = "TUESDAY"
+    start        = 2
+    end          = 12
+    upgrade_type = "SCHEDULED"
   }
 }
 ```
@@ -37,8 +37,8 @@ resource "hcp_boundary_cluster" "example" {
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 - `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config))
+- `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -53,9 +53,9 @@ resource "hcp_boundary_cluster" "example" {
 
 Optional:
 
-- `maintenance_window_day` (String) The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`
-- `maintenance_window_end` (Number) The end time which upgrades can be performed. Valid options for maintenance_window_end - 0 to 23 (inclusive)
-- `maintenance_window_start` (Number) The start time which upgrades can be performed. Valid options for maintenance_window_start - 0 to 23 (inclusive)
+- `day` (String) The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`
+- `end` (Number) The end time which upgrades can be performed. Valid options for end - 0 to 24 (inclusive)
+- `start` (Number) The start time which upgrades can be performed. Valid options for start - 0 to 24 (inclusive)
 - `upgrade_type` (String) The upgrade type for the cluster. Valid options for upgrade type - `AUTOMATIC`, `SCHEDULED`
 
 

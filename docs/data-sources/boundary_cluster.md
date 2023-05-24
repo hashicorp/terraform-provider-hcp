@@ -51,9 +51,9 @@ Optional:
 
 Read-Only:
 
-- `maintenance_window_day` (String)
-- `maintenance_window_end` (Number)
-- `maintenance_window_start` (Number)
+- `day` (String)
+- `end` (Number)
+- `start` (Number)
 - `upgrade_type` (String)
 
 
