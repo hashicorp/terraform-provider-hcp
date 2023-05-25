@@ -67,3 +67,50 @@ func DeleteBoundaryCluster(ctx context.Context, client *Client, loc *sharedmodel
 
 	return deleteResp.Payload, nil
 }
+
+// SetBoundaryClusterMaintenanceWindow updates the maintenance window configuration for a Boundary cluster.
+func SetBoundaryClusterMaintenanceWindow(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	boundaryClusterID string,
+	mwUpdateRequest *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateRequest,
+) (*boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateResponse, error) {
+
+	params := boundary_service.NewMaintenanceWindowUpdateParams()
+	params.Context = ctx
+	params.Body = mwUpdateRequest
+
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.ClusterID = boundaryClusterID
+
+	resp, err := client.Boundary.MaintenanceWindowUpdate(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
+
+// GetBoundaryClusterMaintenanceWindow gets the maintenance window configuration for a Boundary cluster.
+func GetBoundaryClusterMaintenanceWindow(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	boundaryClusterID string,
+) (*boundarymodels.HashicorpCloudBoundary20211221UpgradeType, *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow, error) {
+
+	params := boundary_service.NewMaintenanceWindowGetParams()
+	params.Context = ctx
+	params.ClusterID = boundaryClusterID
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+
+	resp, err := client.Boundary.MaintenanceWindowGet(params, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return resp.Payload.UpgradeType, resp.Payload.MaintenanceWindow, nil
+}
