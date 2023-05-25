@@ -327,9 +327,9 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if diagErr != nil {
 		return diagErr
 	}
-	mvuConfig, error := getMajorVersionUpgradeConfig(d)
+	mvuConfig, diagErr := getMajorVersionUpgradeConfig(d)
 	if diagErr != nil {
-		return error
+		return diagErr
 	}
 
 	// Use the hvn to get provider and region.

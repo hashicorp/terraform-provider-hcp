@@ -16,13 +16,26 @@ import (
 
 var boundaryUniqueID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
 
-var boundaryCluster = fmt.Sprintf(`
+var boundaryClusterResourceTemplate = fmt.Sprintf(`
 resource hcp_boundary_cluster "test" {
 	cluster_id = "%[1]s"
 	username = "test-user"
 	password = "password123!"
+	%%s
 }
 `, boundaryUniqueID)
+
+var maintenanceWindowConfig = `
+	maintenance_window_config {
+		day   = "TUESDAY"
+		start = 2
+		end   = 12
+		upgrade_type             = "SCHEDULED"
+	}
+`
+
+var boundaryCluster = fmt.Sprintf(boundaryClusterResourceTemplate, "")
+var boundaryClusterWithMaintenanceWindow = fmt.Sprintf(boundaryClusterResourceTemplate, maintenanceWindowConfig)
 
 func setTestAccBoundaryClusterConfig(boundaryCluster string) string {
 	return fmt.Sprintf(`
@@ -91,6 +104,22 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "cluster_url", boundaryClusterDataSourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterDataSourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "state", boundaryClusterDataSourceName, "state"),
+				),
+			},
+			{
+				// this test step tests creating a boundary cluster maintenance window.
+				Config: testConfig(setTestAccBoundaryClusterConfig(boundaryClusterWithMaintenanceWindow)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBoundaryClusterExists(boundaryClusterResourceName),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", boundaryUniqueID),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
+					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.upgrade_type", "SCHEDULED"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.day", "TUESDAY"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.start", "2"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.end", "12"),
 				),
 			},
 		},

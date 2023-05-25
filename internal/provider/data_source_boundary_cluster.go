@@ -53,6 +53,34 @@ func dataSourceBoundaryCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"maintenance_window_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"upgrade_type": {
+							Description: "The upgrade type for the cluster",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"day": {
+							Description: "The day of the week for scheduled updates",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"start": {
+							Description: "The start time for the maintenance window",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+						"end": {
+							Description: "The end time for the maintenance window",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -89,8 +117,13 @@ func dataSourceBoundaryClusterRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(url)
 
+	clusterUpgradeType, clusterMW, err := clients.GetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to fetch maintenenace window Boundary cluster (%s): %v", clusterID, err)
+	}
+
 	// cluster found, update resource data
-	if err := setBoundaryClusterResourceData(d, cluster); err != nil {
+	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW); err != nil {
 		return diag.FromErr(err)
 	}
 

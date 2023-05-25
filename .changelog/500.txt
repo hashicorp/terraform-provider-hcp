@@ -1,0 +1,3 @@
+```release-note:feature
+Adds `maintenenace_window_config` to the `hcp_boundary_cluster` resource to manage the timeframe for cluster upgrades.
+```

@@ -35,6 +35,7 @@ data "hcp_boundary_cluster" "example" {
 - `cluster_url` (String) A unique URL identifying the Boundary cluster.
 - `created_at` (String) The time that the Boundary cluster was created.
 - `id` (String) The ID of this resource.
+- `maintenance_window_config` (List of Object) (see [below for nested schema](#nestedatt--maintenance_window_config))
 - `state` (String) The state of the Boundary cluster.
 
 <a id="nestedblock--timeouts"></a>
@@ -43,5 +44,16 @@ data "hcp_boundary_cluster" "example" {
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedatt--maintenance_window_config"></a>
+### Nested Schema for `maintenance_window_config`
+
+Read-Only:
+
+- `day` (String)
+- `end` (Number)
+- `start` (Number)
+- `upgrade_type` (String)
 
 

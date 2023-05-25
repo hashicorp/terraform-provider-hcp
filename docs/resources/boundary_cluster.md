@@ -17,6 +17,12 @@ resource "hcp_boundary_cluster" "example" {
   cluster_id = "boundary-cluster"
   username   = "test-user"
   password   = "Password123!"
+  maintenance_window_config {
+    day          = "TUESDAY"
+    start        = 2
+    end          = 12
+    upgrade_type = "SCHEDULED"
+  }
 }
 ```
 
@@ -31,6 +37,7 @@ resource "hcp_boundary_cluster" "example" {
 
 ### Optional
 
+- `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config))
 - `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
@@ -40,6 +47,17 @@ resource "hcp_boundary_cluster" "example" {
 - `created_at` (String) The time that the Boundary cluster was created.
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the Boundary cluster.
+
+<a id="nestedblock--maintenance_window_config"></a>
+### Nested Schema for `maintenance_window_config`
+
+Optional:
+
+- `day` (String) The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`
+- `end` (Number) The end time which upgrades can be performed. Uses 24H clock. Valid options include - 1 to 24 (inclusive)
+- `start` (Number) The start time which upgrades can be performed. Uses 24H clock. Valid options include - 0 to 23 (inclusive)
+- `upgrade_type` (String) The upgrade type for the cluster. Valid options for upgrade type - `AUTOMATIC`, `SCHEDULED`
+
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
