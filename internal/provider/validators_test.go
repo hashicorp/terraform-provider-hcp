@@ -5,6 +5,7 @@ package provider
 
 import (
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -537,6 +538,7 @@ func Test_validateVaultPathsFilter(t *testing.T) {
 func Test_validateCIDRBlock(t *testing.T) {
 	tcs := map[string]struct {
 		input    string
+		networks []net.IPNet
 		expected diag.Diagnostics
 	}{
 		"blank input string": {
@@ -574,10 +576,12 @@ func Test_validateCIDRBlock(t *testing.T) {
 		},
 		"valid cidr block": {
 			input:    "10.0.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 2": {
 			input:    "10.255.255.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"invalid cidr notation 2": {
@@ -615,10 +619,12 @@ func Test_validateCIDRBlock(t *testing.T) {
 		},
 		"valid cidr block 3": {
 			input:    "192.168.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 4": {
 			input:    "192.168.255.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"invalid cidr notation 4": {
@@ -645,26 +651,32 @@ func Test_validateCIDRBlock(t *testing.T) {
 		},
 		"valid cidr block 5": {
 			input:    "172.16.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 6": {
 			input:    "172.17.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 7": {
 			input:    "172.18.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 8": {
 			input:    "172.30.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 9": {
 			input:    "172.20.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"valid cidr block 10": {
 			input:    "172.31.0.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 		"invalid pattern 2": {
@@ -734,7 +746,8 @@ func Test_validateCIDRBlock(t *testing.T) {
 			},
 		},
 		"invalid pattern and invalid range": {
-			input: "87.70.141.1/22",
+			input:    "87.70.141.1/22",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
@@ -751,7 +764,8 @@ func Test_validateCIDRBlock(t *testing.T) {
 			},
 		},
 		"invalid range": {
-			input: "192.168.255.255/24",
+			input:    "192.168.255.255/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
@@ -763,6 +777,7 @@ func Test_validateCIDRBlock(t *testing.T) {
 		},
 		"valid cidr block 11": {
 			input:    "172.25.16.0/24",
+			networks: RFC1918Networks,
 			expected: diag.Diagnostics(nil),
 		},
 	}
@@ -770,7 +785,7 @@ func Test_validateCIDRBlock(t *testing.T) {
 	for n, tc := range tcs {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
-			result := validateCIDRBlock(tc.input, nil)
+			result := validateCIDRBlock(tc.input, nil, tc.networks)
 			r.Equal(tc.expected, result)
 		})
 	}
