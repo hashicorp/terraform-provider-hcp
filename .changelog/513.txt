@@ -1,0 +1,3 @@
+```release-note:improvement
+HCP Packer Channel Resource is no longer in beta
+```
