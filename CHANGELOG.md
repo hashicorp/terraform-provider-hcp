@@ -1,3 +1,13 @@
+## v0.57.0 (May 25, 2023)
+
+FEATURES:
+
+* Enable multi-project at provider level. [[GH-454](https://github.com/hashicorp/terraform-provider-hcp/pull/454)]
+
+IMPROVEMENTS:
+
+* Update CODEOWNERS [[GH-502](https://github.com/hashicorp/terraform-provider-hcp/pull/502)]
+* Update `hcp-sdk-go` [[GH-510](https://github.com/hashicorp/terraform-provider-hcp/pull/510)]
 ## v0.56.0 (March 15, 2023)
 
 IMPROVEMENTS:
