@@ -1,3 +1,12 @@
+## v0.58.0 (May 26, 2023)
+
+FEATURES:
+
+* Adds `maintenenace_window_config` to the `hcp_boundary_cluster` resource to manage the timeframe for cluster upgrades. [[GH-500](https://github.com/hashicorp/terraform-provider-hcp/pull/500)]
+
+IMPROVEMENTS:
+
+* Documentation: HCP Packer Channel Resource is no longer in beta [[GH-513](https://github.com/hashicorp/terraform-provider-hcp/pull/513)]
 ## v0.57.0 (May 25, 2023)
 
 FEATURES:
