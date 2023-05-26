@@ -12,6 +12,9 @@ Please pin to the previous version to avoid disruption until you are ready to mi
 
 The HVN route resource allows you to manage an HVN route.
 
+-> **Note:** The `destination_cidr` value must be an IPv4 CIDR block within the [RFC1918](https://datatracker.ietf.org/doc/html/rfc1918) private address space (10.*.*.*, 192.168.*.*, 172.[16-31].*.*) **or**
+the [RFC6598](https://datatracker.ietf.org/doc/html/rfc6598) shared address space (100.64.*.*).
+
 ## Example Usage
 
 ```terraform
