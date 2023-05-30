@@ -5,6 +5,7 @@ package provider
 
 import (
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -535,243 +536,537 @@ func Test_validateVaultPathsFilter(t *testing.T) {
 }
 
 func Test_validateCIDRBlock(t *testing.T) {
-	tcs := map[string]struct {
+	type testCase struct {
 		input    string
+		networks []net.IPNet
 		expected diag.Diagnostics
-	}{
-		"blank input string": {
-			input: "",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid cidr notation": {
-			input: "192.168.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid characters": {
-			input: "someString",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"valid cidr block": {
-			input:    "10.0.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 2": {
-			input:    "10.255.255.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"invalid cidr notation 2": {
-			input: "10.256.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid cidr notation 3": {
-			input: "10.0.256.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid characters 2": {
-			input: "10.255.255asdfasdfaqsd.250",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"valid cidr block 3": {
-			input:    "192.168.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 4": {
-			input:    "192.168.255.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"invalid cidr notation 4": {
-			input: "192.168.256.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "unable to parse string as CIDR notation IP address",
-					Detail:        "unable to parse string as CIDR notation IP address",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern": {
-			input: "192.0.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"valid cidr block 5": {
-			input:    "172.16.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 6": {
-			input:    "172.17.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 7": {
-			input:    "172.18.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 8": {
-			input:    "172.30.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 9": {
-			input:    "172.20.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"valid cidr block 10": {
-			input:    "172.31.0.0/24",
-			expected: diag.Diagnostics(nil),
-		},
-		"invalid pattern 2": {
-			input: "172.15.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern 3": {
-			input: "172.32.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern 4": {
-			input: "172.192.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern 5": {
-			input: "172.255.0.0/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern 6": {
-			input: "10.0.0.0/7",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern 7": {
-			input: "192.168.0.0/15",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid pattern and invalid range": {
-			input: "87.70.141.1/22",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
-					AttributePath: nil,
-				},
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "invalid CIDR range start 87.70.141.1, should have been 87.70.140.0",
-					Detail:        "invalid CIDR range start 87.70.141.1, should have been 87.70.140.0",
-					AttributePath: nil,
-				},
-			},
-		},
-		"invalid range": {
-			input: "192.168.255.255/24",
-			expected: diag.Diagnostics{
-				diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0",
-					Detail:        "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0",
-					AttributePath: nil,
-				},
-			},
-		},
-		"valid cidr block 11": {
-			input:    "172.25.16.0/24",
-			expected: diag.Diagnostics(nil),
-		},
 	}
 
-	for n, tc := range tcs {
-		t.Run(n, func(t *testing.T) {
-			r := require.New(t)
-			result := validateCIDRBlock(tc.input, nil)
-			r.Equal(tc.expected, result)
-		})
+	t.Run("Formatting", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"blank input string": {
+				input: "",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid cidr notation": {
+				input: "192.168.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid characters": {
+				input: "someString",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid cidr notation 2": {
+				input: "10.256.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid cidr notation 3": {
+				input: "10.0.256.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid characters 2": {
+				input: "10.255.255asdfasdfaqsd.250",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid cidr notation 4": {
+				input: "192.168.256.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "unable to parse string as CIDR notation IP address",
+						Detail:        "unable to parse string as CIDR notation IP address",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern": {
+				input: "192.0.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 2": {
+				input: "172.15.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 3": {
+				input: "172.32.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 4": {
+				input: "172.192.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 5": {
+				input: "172.255.0.0/24",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 6": {
+				input: "10.0.0.0/7",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern 7": {
+				input: "192.168.0.0/15",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid pattern and invalid range": {
+				input:    "87.70.141.1/22",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "invalid CIDR range start 87.70.141.1, should have been 87.70.140.0",
+						Detail:        "invalid CIDR range start 87.70.141.1, should have been 87.70.140.0",
+						AttributePath: nil,
+					},
+				},
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlock(tc.input, nil, tc.networks)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("By Range", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid cidr block": {
+				input:    "10.0.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 2": {
+				input:    "10.255.255.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 3": {
+				input:    "192.168.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 4": {
+				input:    "192.168.255.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 5": {
+				input:    "172.16.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 6": {
+				input:    "172.17.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 7": {
+				input:    "172.18.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 8": {
+				input:    "172.30.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 9": {
+				input:    "172.20.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 10": {
+				input:    "172.31.0.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"valid cidr block 11": {
+				input:    "172.25.16.0/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics(nil),
+			},
+			"invalid range": {
+				input:    "192.168.255.255/24",
+				networks: RFC1918Networks,
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0",
+						Detail:        "invalid CIDR range start 192.168.255.255, should have been 192.168.255.0",
+						AttributePath: nil,
+					},
+				},
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlock(tc.input, nil, tc.networks)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+}
+
+func Test_validateCIDRBlockHVN(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected diag.Diagnostics
 	}
+
+	t.Run("Range 10.0.0.0/8", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid 1": {
+				input:    "10.255.255.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 2": {
+				input:    "10.100.80.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 3": {
+				input:    "10.40.80.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 4": {
+				input:    "10.40.0.0/16",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 5": {
+				input:    "10.70.4.2/32",
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Range 172.16.0.0/12", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid 1": {
+				input:    "172.31.255.250/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 2": {
+				input:    "172.16.0.2/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 3": {
+				input:    "172.30.0.0/16",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 4": {
+				input:    "172.30.255.255/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 5": {
+				input:    "172.16.255.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Range 192.168.0.0/16", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid 1": {
+				input:    "192.168.10.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 2": {
+				input:    "192.168.255.255/32",
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Invalid", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"invalid range 1": {
+				input: "170.16.0.0/16",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid range 2": {
+				input: "170.16.10.8/16",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "invalid CIDR range start 170.16.10.8, should have been 170.16.0.0",
+						Detail:        "invalid CIDR range start 170.16.10.8, should have been 170.16.0.0",
+						AttributePath: nil,
+					},
+				},
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+}
+
+func Test_validateCIDRBlockHVNRoute(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected diag.Diagnostics
+	}
+
+	t.Run("Range RFC1918", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid 1": {
+				input:    "10.255.255.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 2": {
+				input:    "10.100.80.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 3": {
+				input:    "10.40.80.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 4": {
+				input:    "10.40.0.0/16",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 5": {
+				input:    "10.70.4.2/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 6": {
+				input:    "172.31.255.250/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 7": {
+				input:    "172.16.0.2/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 8": {
+				input:    "172.30.0.0/16",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 9": {
+				input:    "172.30.255.255/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 10": {
+				input:    "172.16.255.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 11": {
+				input:    "192.168.10.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 12": {
+				input:    "192.168.255.255/32",
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVNRoute(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Range RFC6598", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"valid 1": {
+				input:    "100.64.0.1/32",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 2": {
+				input:    "100.64.10.0/24",
+				expected: diag.Diagnostics(nil),
+			},
+			"valid 3": {
+				input:    "100.64.255.254/32",
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVNRoute(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Invalid", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"invalid range 1": {
+				input: "100.64.0.0/16",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+			"invalid range 2": {
+				input: "100.65.0.0/16",
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						Detail:        "must match pattern of 10.*.*.* with prefix greater than /8,or 172.[16-31].*.* with prefix greater than /12, or 192.168.*.* with prefix greater than /16; where * is any number from [0-255]",
+						AttributePath: nil,
+					},
+				},
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
 }
