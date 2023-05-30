@@ -1,0 +1,3 @@
+```release-note:feature
+Update HVN Route validation for `destination_cidr` attribute to allow RFC6598 CIDR range.
+```

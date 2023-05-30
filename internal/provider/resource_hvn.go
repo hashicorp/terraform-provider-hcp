@@ -80,7 +80,7 @@ func resourceHvn() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validateCIDRBlock,
+				ValidateDiagFunc: validateCIDRBlockHVN,
 				Computed:         true,
 			},
 			"project_id": {
