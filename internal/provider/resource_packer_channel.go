@@ -142,7 +142,12 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 	if channel.ID == "" {
-		return diag.Errorf("Unable to find channel in bucket %s named %s.", bucketName, channelName)
+		log.Printf(
+			"[WARN] no HCP Packer chanel found with (name %q) (bucket_name %q) (project_id %q)",
+			channelName, bucketName, loc.ProjectID,
+		)
+		d.SetId("")
+		return nil
 	}
 	return setPackerChannelResourceData(d, &channel)
 }
