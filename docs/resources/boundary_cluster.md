@@ -54,8 +54,8 @@ resource "hcp_boundary_cluster" "example" {
 Optional:
 
 - `day` (String) The maintenance day of the week for scheduled upgrades. Valid options for maintenance window day - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`
-- `end` (Number) The end time which upgrades can be performed. Uses 24H clock. Valid options include - 1 to 24 (inclusive)
-- `start` (Number) The start time which upgrades can be performed. Uses 24H clock. Valid options include - 0 to 23 (inclusive)
+- `end` (Number) The end time which upgrades can be performed. Uses 24H clock and must be in UTC time zone. Valid options include - 1 to 24 (inclusive)
+- `start` (Number) The start time which upgrades can be performed. Uses 24H clock and must be in UTC time zone. Valid options include - 0 to 23 (inclusive)
 - `upgrade_type` (String) The upgrade type for the cluster. Valid options for upgrade type - `AUTOMATIC`, `SCHEDULED`
 
 
