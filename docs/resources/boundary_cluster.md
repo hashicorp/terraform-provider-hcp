@@ -37,7 +37,7 @@ resource "hcp_boundary_cluster" "example" {
 
 ### Optional
 
-- `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config))
+- `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config)). Must be in UTC time zone.
 - `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
@@ -60,7 +60,7 @@ Optional:
 
 
 <a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
+### Nested Schema for `timeouts` (all times should be in UTC timezone)
 
 Optional:
 
