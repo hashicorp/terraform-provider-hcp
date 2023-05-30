@@ -18,6 +18,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var (
+	// RFC1918Networks are networks defined as per RFC 1918 (Private Address Space)
+	RFC1918Networks = []net.IPNet{
+		{
+			// 10.*.*.*
+			IP:   net.IPv4(10, 0, 0, 0),
+			Mask: net.IPv4Mask(255, 0, 0, 0),
+		},
+		{
+			// 192.168.*.*
+			IP:   net.IPv4(192, 168, 0, 0),
+			Mask: net.IPv4Mask(255, 255, 0, 0),
+		},
+		{
+			// 172.[16-31].*.*
+			IP:   net.IPv4(172, 16, 0, 0),
+			Mask: net.IPv4Mask(255, 240, 0, 0),
+		},
+	}
+
+	// RFC6598Networks are networks defined as per RFC 6598 (Shared Address Space)
+	RFC6598Networks = []net.IPNet{
+		{
+			// 100.[64-127].*.* /10
+			IP:   net.IPv4(100, 64, 0, 0),
+			Mask: net.IPv4Mask(255, 192, 0, 0),
+		},
+	}
+)
+
 // validateStringNotEmpty ensures a given string is non-empty.
 func validateStringNotEmpty(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
@@ -310,27 +340,18 @@ func validateVaultPathsFilter(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
+func validateCIDRBlockHVN(v interface{}, path cty.Path) diag.Diagnostics {
+	// HVNs allow RFC 1918 Network CIDRs
+	return validateCIDRBlock(v, path, RFC1918Networks)
+}
 
-	// validRanges contains the set of IP ranges considered valid.
-	var validRanges = []net.IPNet{
-		{
-			// 10.*.*.*
-			IP:   net.IPv4(10, 0, 0, 0),
-			Mask: net.IPv4Mask(255, 0, 0, 0),
-		},
-		{
-			// 192.168.*.*
-			IP:   net.IPv4(192, 168, 0, 0),
-			Mask: net.IPv4Mask(255, 255, 0, 0),
-		},
-		{
-			// 172.[16-31].*.*
-			IP:   net.IPv4(172, 16, 0, 0),
-			Mask: net.IPv4Mask(255, 240, 0, 0),
-		},
-	}
+func validateCIDRBlockHVNRoute(v interface{}, path cty.Path) diag.Diagnostics {
+	// HVN Routes allow RFC 1918 and RFC 6598 Network CIDRs
+	return validateCIDRBlock(v, path, append(RFC1918Networks, RFC6598Networks...))
+}
+
+func validateCIDRBlock(v interface{}, path cty.Path, networks []net.IPNet) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
 
 	// parse the string as CIDR notation IP address and prefix length.
 	ip, net, err := net.ParseCIDR(v.(string))
@@ -348,7 +369,7 @@ func validateCIDRBlock(v interface{}, path cty.Path) diag.Diagnostics {
 
 	// validate if the IP address is contained in one of the expected ranges.
 	valid := false
-	for _, validRange := range validRanges {
+	for _, validRange := range networks {
 		valueSize, _ := net.Mask.Size()
 		validRangeSize, _ := validRange.Mask.Size()
 		if validRange.Contains(ip) && valueSize >= validRangeSize {
