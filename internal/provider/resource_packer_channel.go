@@ -128,12 +128,15 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
+	channelName := d.Get("name").(string)
+
+	log.Printf("[INFO] Reading HCP Packer channel (%s) [bucket_name=%s, project_id=%s, organization_id=%s]", channelName, bucketName, loc.ProjectID, loc.OrganizationID)
+
 	resp, err := clients.ListBucketChannels(ctx, client, loc, bucketName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	channelName := d.Get("name").(string)
 	var channel packermodels.HashicorpCloudPackerChannel
 	for _, c := range resp.Channels {
 		if c.Slug == channelName {
@@ -142,7 +145,12 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 	if channel.ID == "" {
-		return diag.Errorf("Unable to find channel in bucket %s named %s.", bucketName, channelName)
+		log.Printf(
+			"[WARN] HCP Packer chanel with (name %q) (bucket_name %q) (project_id %q) not found, removing from state.",
+			channelName, bucketName, loc.ProjectID,
+		)
+		d.SetId("")
+		return nil
 	}
 	return setPackerChannelResourceData(d, &channel)
 }

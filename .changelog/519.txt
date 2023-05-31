@@ -1,0 +1,3 @@
+```release-note:bug
+Resolve failure to generate apply/destroy plans that include hcp_packer_channel resources that were deleted outside of Terraform [GH-519]
+```
