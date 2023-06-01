@@ -1,10 +1,14 @@
 name: Prerelease
 
-on: 
+on:
   # Run Every Wednesday at 12:00 AM UTC
   schedule:
     - cron: '0 0 * * 3'
   workflow_dispatch:
+    inputs:
+      skip-e2e:
+        type: boolean
+        default: false
 
 permissions: write-all
 
@@ -55,6 +59,7 @@ jobs:
           path: coverage.html
 
       - name: Run E2E Tests
+        if: ${{ !inputs.skip-e2e }}
         env:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
@@ -77,12 +82,13 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
           AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
-          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId) 
-          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey) 
-          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken) 
+          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId)
+          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
+          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
           make testacc-ci
 
       - name: Upload E2E Coverage Artifact
+        if: ${{ !inputs.skip-e2e }}
         uses: actions/upload-artifact@v3
         with:
           name: Test Coverage
