@@ -20,7 +20,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          ref: main
           fetch-depth: 0
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
