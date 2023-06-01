@@ -60,7 +60,7 @@ jobs:
           path: coverage.html
 
       - name: Run E2E Tests
-        if ${{ !inputs.skip-e2e }}
+        if: ${{ !inputs.skip-e2e }}
         env:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
