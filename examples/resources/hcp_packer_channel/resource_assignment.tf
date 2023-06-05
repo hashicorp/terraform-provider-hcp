@@ -2,10 +2,10 @@ resource "hcp_packer_channel" "staging" {
   name        = "staging"
   bucket_name = "alpine"
   iteration {
-    // Exactly one of `id`, `fingerprint` or `incremental_version` must be passed
+    # Exactly one of `id`, `fingerprint` or `incremental_version` must be passed
     id = "01H1SF9NWAK8AP25PAWDBGZ1YD"
-    // fingerprint = "01H1ZMW0Q2W6FT4FK27FQJCFG7"
-    // incremental_version = 1
+    # fingerprint = "01H1ZMW0Q2W6FT4FK27FQJCFG7"
+    # incremental_version = 1
   }
 }
 
