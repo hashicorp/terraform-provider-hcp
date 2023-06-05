@@ -116,15 +116,17 @@ func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.Resourc
 	orgID := client.Config.OrganizationID
 
 	peeringID := d.Get("peering_id").(string)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
+
 	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, orgID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	waitForActive := d.Get("wait_for_active_state").(bool)
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      hvnLink.Location.ProjectID,
+	}
 
 	// Query for the peering.
 	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
