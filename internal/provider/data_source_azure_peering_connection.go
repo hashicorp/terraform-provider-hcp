@@ -113,18 +113,16 @@ func dataSourceAzurePeeringConnection() *schema.Resource {
 
 func dataSourceAzurePeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
-
 	peeringID := d.Get("peering_id").(string)
 
-	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, orgID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	waitForActive := d.Get("wait_for_active_state").(bool)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
+		OrganizationID: hvnLink.Location.OrganizationID,
 		ProjectID:      hvnLink.Location.ProjectID,
 	}
 

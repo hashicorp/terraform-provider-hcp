@@ -185,15 +185,12 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	idLink, err := parseLinkURL(d.Id(), HVNRouteResourceType)
+	idLink, err := buildLinkFromURL(d.Id(), HVNRouteResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      idLink.Location.ProjectID,
-	}
+	loc := idLink.Location
 
 	log.Printf("[INFO] Reading HVN route (%s)", idLink.ID)
 	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, idLink.ID, loc)

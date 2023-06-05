@@ -99,24 +99,22 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
 	}
 
-	orgID := client.Config.OrganizationID
-
 	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
-	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	hvn2Link, err := buildLinkFromURL(d.Get("hvn_2").(string), HvnResourceType, orgID)
+	hvn2Link, err := buildLinkFromURL(d.Get("hvn_2").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -182,16 +180,15 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	peeringID := link.ID
 	loc := link.Location
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -225,16 +222,15 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
+	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	peeringID := link.ID
 	loc := link.Location
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}

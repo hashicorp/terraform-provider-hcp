@@ -143,9 +143,7 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 	peerTenantID := d.Get("peer_tenant_id").(string)
 	peerResourceGroupName := d.Get("peer_resource_group_name").(string)
 
-	orgID := client.Config.OrganizationID
-
-	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, orgID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -162,7 +160,7 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 	log.Printf("[INFO] HVN (%s) found, proceeding with peering connection create", hvnLink.ID)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
+		OrganizationID: hvnLink.Location.OrganizationID,
 		ProjectID:      hvnLink.Location.ProjectID,
 	}
 

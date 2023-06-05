@@ -78,7 +78,6 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 
 func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
 
 	peeringID := d.Get("peering_id").(string)
 
@@ -91,7 +90,7 @@ func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, loc.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
