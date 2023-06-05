@@ -192,7 +192,7 @@ func resourceHvnRouteRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      idLink.Location.ProjectID,
 	}
 
 	log.Printf("[INFO] Reading HVN route (%s)", idLink.ID)
