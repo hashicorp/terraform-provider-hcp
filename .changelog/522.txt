@@ -1,3 +1,9 @@
 ```release-note:bug
-Fixed several missing/incorrect resource-level `project_id` implementations. NOTE: See associated PR for caveats on temporary regressions.
+Fixed several missing/incorrect implementations for the resource-level 
+`project_id` attribute that could lead to undefined or undesirable behavior on 
+some resources and data sources when the `project_id` attribute had been used 
+and its most recent value was different from the provider-level `project_id`,
+whether or not the attribute was still present in the configuration file.
+
+NOTE: See associated PR for caveats on temporary regressions.
 ```
