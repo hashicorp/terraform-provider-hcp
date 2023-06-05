@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed several missing/incorrect resource-level `project_id` implementations. NOTE: See associated PR for caveats on temporary regressions.
+```
