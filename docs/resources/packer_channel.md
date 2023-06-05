@@ -46,7 +46,7 @@ resource "hcp_packer_channel" "staging" {
 }
 ```
 
-Using the latest channel to create a new channel the latest complete iteration assigned.
+Using the latest channel to create a new channel with the latest complete iteration assigned.
 ```terraform
 data "hcp_packer_image_iteration" "latest" {
   bucket_name = "alpine"
