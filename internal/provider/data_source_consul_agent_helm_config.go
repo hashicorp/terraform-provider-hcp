@@ -122,15 +122,8 @@ func dataSourceConsulAgentHelmConfigRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	organizationID := client.Config.OrganizationID
-
-	v, ok := d.GetOk("project_id")
-	if ok {
-		projectID = v.(string)
-	}
-
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
