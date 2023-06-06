@@ -11,13 +11,13 @@ description: |-
 
 ## Example Usage
 
-To create a channel with no assigned iteration.
+To create a channel.
 {{ tffile "examples/resources/hcp_packer_channel/resource.tf" }}
 
-To create, or update an existing, channel with an assigned iteration.
+To create a channel with iteration assignment managed by Terraform.
 {{ tffile "examples/resources/hcp_packer_channel/resource_assignment.tf" }}
 
-Using the latest channel to create a new channel with an assigned iteration.
+Using the latest channel to create a new channel with the latest complete iteration assigned.
 {{ tffile "examples/resources/hcp_packer_channel/resource_using_latest_channel.tf" }}
 
 

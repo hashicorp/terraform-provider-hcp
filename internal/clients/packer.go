@@ -31,18 +31,40 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 	return getResp.Payload.Channel, nil
 }
 
-// GetIterationFromID queries the HCP Packer registry for an existing bucket iteration.
+// GetIterationFromID queries the HCP Packer registry for an existing bucket iteration using its ULID.
 func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
-	bucketslug string, iterationID string) (*packermodels.HashicorpCloudPackerIteration, error) {
+	bucketSlug string, iterationID string) (*packermodels.HashicorpCloudPackerIteration, error) {
+	params := newGetIterationParams(ctx, loc, bucketSlug)
+	params.IterationID = &iterationID
+	return getIteration(client, params)
+}
+
+// GetIterationFromVersion queries the HCP Packer registry for an existing bucket iteration using its incremental version.
+func GetIterationFromVersion(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	bucketSlug string, iterationIncrementalVersion int32) (*packermodels.HashicorpCloudPackerIteration, error) {
+	params := newGetIterationParams(ctx, loc, bucketSlug)
+	params.IncrementalVersion = &iterationIncrementalVersion
+	return getIteration(client, params)
+}
+
+// GetIterationFromFingerprint queries the HCP Packer registry for an existing bucket iteration using its fingerprint.
+func GetIterationFromFingerprint(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+	bucketSlug string, iterationFingerprint string) (*packermodels.HashicorpCloudPackerIteration, error) {
+	params := newGetIterationParams(ctx, loc, bucketSlug)
+	params.Fingerprint = &iterationFingerprint
+	return getIteration(client, params)
+}
+
+func newGetIterationParams(ctx context.Context, loc *sharedmodels.HashicorpCloudLocationLocation,
+	bucketslug string) *packer_service.PackerServiceGetIterationParams {
 	params := packer_service.NewPackerServiceGetIterationParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketslug
+	return params
+}
 
-	// The identifier can be either fingerprint, iterationid, or incremental version
-	// for now, we only care about id so we're hardcoding it.
-	params.IterationID = &iterationID
-
+func getIteration(client *Client, params *packer_service.PackerServiceGetIterationParams) (*packermodels.HashicorpCloudPackerIteration, error) {
 	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {
 		return nil, handleGetIterationError(err.(*packer_service.PackerServiceGetIterationDefault))
