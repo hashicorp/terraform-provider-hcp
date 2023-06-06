@@ -19,7 +19,7 @@ resource "hcp_packer_channel" "staging" {
 }
 ```
 
-To create a channel with a Terraform-managed iteration.
+To create a channel with iteration assignment managed by Terraform.
 ```terraform
 resource "hcp_packer_channel" "staging" {
   name        = "staging"
