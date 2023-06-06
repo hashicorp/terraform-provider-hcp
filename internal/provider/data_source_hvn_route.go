@@ -82,10 +82,6 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("project_id", hvnLink.Location.ProjectID); err != nil {
-		return diag.FromErr(err)
-	}
-
 	routeID := d.Get("hvn_route_id").(string)
 	routeLink := newLink(hvnLink.Location, HVNRouteResourceType, routeID)
 	routeURL, err := linkURL(routeLink)
