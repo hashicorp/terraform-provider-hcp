@@ -23,3 +23,10 @@ never validated against the real value for `hvn_2`. The value will now be
 populated automatically. Remove the `hvn_2` attribute from the configuration for 
 affected data sources.
 ```
+
+```release-note:deprecation
+Setting the `project_id` attribute on `data.hvn_route` is now deprecated. The 
+value of the field was required to match the project ID in `hvn_link` and will 
+now be determined automatically. Remove the `project_id` field from the 
+configuration for affected data sources.
+```

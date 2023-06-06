@@ -7,10 +7,8 @@ import (
 	"context"
 	"log"
 
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -34,15 +32,18 @@ func dataSourceHVNRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			// Optional inputs
-			"project_id": {
-				Description:  "The ID of the HCP project where the HVN route is located.",
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.IsUUID,
-			},
 			// Computed outputs
+			"project_id": {
+				Description: "The ID of the HCP project where the HVN route is located. Always matches the project ID in `hvn_link`. Setting this attribute is deprecated, but it will remain usable in read-only form.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
+				Deprecated: `
+Setting the 'project_id' attribute is deprecated, but it will remain usable in read-only form.
+Previously, the value for this attribute was required to match the project ID contained in 'hvn_link'. Now, the value will be calculated automatically.
+Remove this attribute from the configuration for any affected resources.
+`,
+			},
 			"self_link": {
 				Description: "A unique URL identifying the HVN route.",
 				Type:        schema.TypeString,
@@ -76,23 +77,17 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	client := meta.(*clients.Client)
 
 	hvn := d.Get("hvn_link").(string)
-	hvnLink, err := parseLinkURL(hvn, HvnResourceType)
+	hvnLink, err := buildLinkFromURL(hvn, HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
+	if err := d.Set("project_id", hvnLink.Location.ProjectID); err != nil {
+		return diag.FromErr(err)
 	}
 
 	routeID := d.Get("hvn_route_id").(string)
-	routeLink := newLink(loc, HVNRouteResourceType, routeID)
+	routeLink := newLink(hvnLink.Location, HVNRouteResourceType, routeID)
 	routeURL, err := linkURL(routeLink)
 	if err != nil {
 		return diag.FromErr(err)
@@ -100,13 +95,13 @@ func dataSourceHVNRouteRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(routeURL)
 
 	log.Printf("[INFO] Reading HVN route (%s)", routeID)
-	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, routeID, loc)
+	route, err := clients.GetHVNRoute(ctx, client, hvnLink.ID, routeID, hvnLink.Location)
 	if err != nil {
 		return diag.Errorf("unable to retrieve HVN route (%s): %v", routeID, err)
 	}
 
 	// HVN route found, update resource data.
-	if err := setHVNRouteResourceData(d, route, loc); err != nil {
+	if err := setHVNRouteResourceData(d, route, hvnLink.Location); err != nil {
 		return diag.FromErr(err)
 	}
 
