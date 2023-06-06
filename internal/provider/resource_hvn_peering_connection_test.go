@@ -42,7 +42,6 @@ resource "hcp_hvn_peering_connection" "test" {
 data "hcp_hvn_peering_connection" "test" {
 	peering_id = hcp_hvn_peering_connection.test.peering_id
 	hvn_1      = hcp_hvn_peering_connection.test.hvn_1
-	hvn_2      = hcp_hvn_peering_connection.test.hvn_2
 }
 `, hvn1UniqueID, hvn2UniqueID)
 
