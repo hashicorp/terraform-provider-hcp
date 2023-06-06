@@ -98,7 +98,7 @@ Remove this attribute from the configuration for any affected resources.
 
 func resourceHvnRouteCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	// Force project_id to match the project_id from hvn_link if it has been manually overridden in configuration
-	// When then project_id attribute's "Optional" property is removed after the deprecation period
+	// When the project_id attribute's "Optional" property is removed after the deprecation period
 	// ends, CustomizeDiff can be removed.
 	if d.HasChange("project_id") {
 		hvnLink, err := parseLinkURL(d.Get("hvn_link").(string), HvnResourceType)
