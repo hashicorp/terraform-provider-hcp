@@ -26,12 +26,12 @@ data "hcp_hvn_peering_connection" "test" {
 ### Required
 
 - `hvn_1` (String) The unique URL of one of the HVNs being peered.
-- `hvn_2` (String) The unique URL of one of the HVNs being peered.
 - `peering_id` (String) The ID of the peering connection.
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the HVN peering connection is located.
+- `hvn_2` (String, Deprecated) The unique URL of one of the HVNs being peered. Setting this attribute is deprecated, but it will remain usable in read-only form.
+- `project_id` (String, Deprecated) The ID of the HCP project where the HVN peering connection is located. Always matches hvn_1's project ID. Setting this attribute is deprecated, but it will remain usable in read-only form.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -39,7 +39,7 @@ data "hcp_hvn_peering_connection" "test" {
 - `created_at` (String) The time that the peering connection was created.
 - `expires_at` (String) The time after which the peering connection will be considered expired if it hasn't transitioned into `ACCEPTED` or `ACTIVE` state.
 - `id` (String) The ID of this resource.
-- `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.
+- `organization_id` (String) The ID of the HCP organization where the peering connection is located. Always matches both HVNs' organization ID
 - `self_link` (String) A unique URL identifying the peering connection
 - `state` (String) The state of the HVN peering connection.
 

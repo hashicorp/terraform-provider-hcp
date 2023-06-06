@@ -7,3 +7,19 @@ whether or not the attribute was still present in the configuration file.
 
 NOTE: See associated PR for caveats on temporary regressions.
 ```
+
+```release-note:deprecation
+Setting the `project_id` attribute on `hcp_hvn_peering_connection` and 
+`data.hcp_hvn_peering_connection` is now deprecated. The value of the field was 
+required to match the project ID for `hvn_1` and will now be determined 
+automatically. Remove the `project_id` field from the configuration for affected 
+resources and data sources.
+```
+
+```release-note:deprecation
+Setting the `hvn_2` attribute of `data.hcp_hvn_peering_connection` is now 
+deprecated. The value of the attribute is not needed to fetch data, and it was 
+never validated against the real value for `hvn_2`. The value will now be 
+populated automatically. Remove the `hvn_2` attribute from the configuration for 
+affected data sources.
+```

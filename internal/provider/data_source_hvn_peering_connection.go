@@ -7,10 +7,8 @@ import (
 	"context"
 	"log"
 
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -33,22 +31,31 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"hvn_2": {
-				Description: "The unique URL of one of the HVNs being peered.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
-			// Optional inputs
-			"project_id": {
-				Description:  "The ID of the HCP project where the HVN peering connection is located.",
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.IsUUID,
-			},
 			// Computed outputs
+			"hvn_2": {
+				Description: "The unique URL of one of the HVNs being peered. Setting this attribute is deprecated, but it will remain usable in read-only form.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
+				Deprecated: `
+Setting the 'hvn_2' attribute is deprecated, but it will remain usable in read-only form.
+Previously, the value for this attribute was not used to fetch data, and it was not validated against the actual value of 'hvn_2'. Now, the value will be populated automatically.
+Remove this attribute from the configuration for any affected resources.
+`,
+			},
+			"project_id": {
+				Description: "The ID of the HCP project where the HVN peering connection is located. Always matches hvn_1's project ID. Setting this attribute is deprecated, but it will remain usable in read-only form.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
+				Deprecated: `
+Setting the 'project_id' attribute is deprecated, but it will remain usable in read-only form.
+Previously, the value for this attribute was required to match the project ID contained in 'hvn_1'. Now, the value will be calculated automatically.
+Remove this attribute from the configuration for any affected resources.
+`,
+			},
 			"organization_id": {
-				Description: "The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.",
+				Description: "The ID of the HCP organization where the peering connection is located. Always matches both HVNs' organization ID",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -79,29 +86,28 @@ func dataSourceHvnPeeringConnection() *schema.Resource {
 func dataSourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
-	peeringID := d.Get("peering_id").(string)
-
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, loc.OrganizationID)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	peeringID := d.Get("peering_id").(string)
 	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
-	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink1.ID, loc)
+	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvn1Link.ID, hvn1Link.Location)
 	if err != nil {
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
 	// Peering connection found, update resource data.
+	hvn2Link := newLink(peering.Target.HvnTarget.Hvn.Location, HvnResourceType, peering.Target.HvnTarget.Hvn.ID)
+	hvn2URL, err := linkURL(hvn2Link)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("hvn_2", hvn2URL); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := setHvnPeeringResourceData(d, peering); err != nil {
 		return diag.FromErr(err)
 	}
