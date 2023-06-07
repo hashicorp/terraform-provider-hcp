@@ -279,9 +279,9 @@ func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceD
 func resourceHvnPeeringConnectionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// with multi-projects, import arguments must become dynamic:
 	// use explicit project ID with terraform import:
-	//   terraform import hcp_hvn_peering_connection.test {project_id}:{hvn_id}:{peering_id}
+	//   terraform import hcp_hvn_peering_connection.test {project_id}:{hvn_1_id}:{peering_id}
 	// use default project ID from provider:
-	//   terraform import hcp_hvn_peering_connection.test {hvn_id}:{peering_id}
+	//   terraform import hcp_hvn_peering_connection.test {hvn_1_id}:{peering_id}
 
 	client := meta.(*clients.Client)
 	projectID, hvnID, peeringID, err := parsePeeringResourceID(d.Id(), client.Config.ProjectID)

@@ -62,7 +62,7 @@ $ go generate
 
 ## Changelogs
 
-This repo requires that a chagnelog file be added in all pull requests. The name of the file must follow `[PR #].txt` and must reside in the `.changelog` directory. The contents must have the following formatting:
+This repo requires that a changelog file be added in all pull requests. The name of the file must follow `[PR #].txt` and must reside in the `.changelog` directory. The contents must have the following formatting:
 
 ~~~
 ```release-note:TYPE
