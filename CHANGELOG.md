@@ -1,3 +1,36 @@
+## v0.60.0 (June 07, 2023)
+
+IMPROVEMENTS:
+
+* Documentation: Update contributor documentation and resource-specific import examples to reflect multi-project support. [[GH-517](https://github.com/hashicorp/terraform-provider-hcp/pull/517)]
+
+DEPRECATIONS:
+
+* Setting the `hvn_2` attribute of `data.hcp_hvn_peering_connection` is now 
+deprecated. The value of the attribute is not needed to fetch data, and it was 
+never validated against the real value for `hvn_2`. The value will now be 
+populated automatically. Remove the `hvn_2` attribute from the configuration 
+for affected data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
+* Setting the `project_id` attribute on `hcp_hvn_peering_connection` and 
+`data.hcp_hvn_peering_connection` is now deprecated. The value of the field was 
+required to match the project ID for `hvn_1` and will now be determined 
+automatically. Remove the `project_id` field from the configuration for 
+affected resources and data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
+* Setting the `project_id` attribute on `hcp_hvn_route` and `data.hcp_hvn_route`
+is now deprecated. The value of the field was required to match the project ID 
+in `hvn_link` and will now be determined automatically. Remove the `project_id` 
+field from the configuration for affected resources and data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
+
+BUG FIXES:
+
+* Fixed several missing/incorrect implementations for the resource-level 
+`project_id` attribute that could lead to undefined or undesirable behavior on 
+some resources and data sources when the `project_id` attribute had been used 
+and its most recent value was different from the provider-level `project_id`,
+whether or not the attribute was still present in the configuration file.
+
+NOTE: See associated PR for caveats on temporary regressions. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
+* Resolve unintended removal of assigned iteration when `iteration` block is not present on `hcp_packer_channel` [[GH-521](https://github.com/hashicorp/terraform-provider-hcp/pull/521)]
 ## v0.59.0 (June 01, 2023)
 
 FEATURES:
