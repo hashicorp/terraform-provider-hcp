@@ -1,0 +1,3 @@
+```release-note:improvement
+Update prerelease github action workflow to allow bypassing end-to-end tests via input variable.
+```

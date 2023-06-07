@@ -76,12 +76,10 @@ func dataSourceConsulAgentKubernetesSecretRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	organizationID := client.Config.OrganizationID
-
 	clusterID := d.Get("cluster_id").(string)
 
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 

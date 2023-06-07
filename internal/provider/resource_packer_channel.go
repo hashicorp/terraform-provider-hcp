@@ -34,6 +34,7 @@ func resourcePackerChannel() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePackerChannelImport,
 		},
+		CustomizeDiff: resourcePackerChannelCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			// Required inputs
@@ -65,6 +66,7 @@ func resourcePackerChannel() *schema.Resource {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fingerprint": {
@@ -118,22 +120,30 @@ func resourcePackerChannel() *schema.Resource {
 
 func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	bucketName := d.Get("bucket_name").(string)
+
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
+
+	channelName := d.Get("name").(string)
+
+	log.Printf("[INFO] Reading HCP Packer channel (%s) [bucket_name=%s, project_id=%s, organization_id=%s]", channelName, bucketName, loc.ProjectID, loc.OrganizationID)
 
 	resp, err := clients.ListBucketChannels(ctx, client, loc, bucketName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	channelName := d.Get("name").(string)
 	var channel packermodels.HashicorpCloudPackerChannel
 	for _, c := range resp.Channels {
 		if c.Slug == channelName {
@@ -142,7 +152,12 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 	if channel.ID == "" {
-		return diag.Errorf("Unable to find channel in bucket %s named %s.", bucketName, channelName)
+		log.Printf(
+			"[WARN] HCP Packer chanel with (name %q) (bucket_name %q) (project_id %q) not found, removing from state.",
+			channelName, bucketName, loc.ProjectID,
+		)
+		d.SetId("")
+		return nil
 	}
 	return setPackerChannelResourceData(d, &channel)
 }
@@ -201,18 +216,22 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	channelName := d.Get("name").(string)
 
 	client := meta.(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
 	var iteration *packermodels.HashicorpCloudPackerIteration
 	iterationConfig, ok := d.GetOk("iteration")
-	if !ok {
+	if !ok || iterationConfig.([]interface{})[0] == nil {
 		channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration)
 		if err != nil {
 			return diag.FromErr(err)
@@ -252,15 +271,20 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 	channelName := d.Get("name").(string)
 
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err := clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
+	_, err = clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -350,6 +374,56 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func resourcePackerChannelCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	client := meta.(*clients.Client)
+
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return fmt.Errorf("unable to retrieve project ID: %v", err)
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
+
+	bucketNameRaw, ok := d.GetOk("bucket_name")
+	if !ok {
+		return fmt.Errorf("unable to retrieve bucket_name")
+	}
+	bucketName := bucketNameRaw.(string)
+
+	if d.HasChange("iteration.0") {
+		var iterationResponse *packermodels.HashicorpCloudPackerIteration
+		var err error
+		if id, ok := d.GetOk("iteration.0.id"); d.HasChange("iteration.0.id") && ok && id.(string) != "" {
+			iterationResponse, err = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
+		} else if fingerprint, ok := d.GetOk("iteration.0.fingerprint"); d.HasChange("iteration.0.fingerprint") && ok && fingerprint.(string) != "" {
+			iterationResponse, err = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
+		} else if version, ok := d.GetOk("iteration.0.incremental_version"); d.HasChange("iteration.0.incremental_version") && ok && version.(int) > 0 {
+			iterationResponse, err = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
+		}
+		if err != nil {
+			return err
+		}
+
+		iteration := []map[string]interface{}{}
+		if iterationResponse != nil {
+			iteration = append(iteration, map[string]interface{}{
+				"id":                  iterationResponse.ID,
+				"fingerprint":         iterationResponse.Fingerprint,
+				"incremental_version": iterationResponse.IncrementalVersion,
+			})
+		}
+		err = d.SetNew("iteration", iteration)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.HashicorpCloudPackerChannel) diag.Diagnostics {

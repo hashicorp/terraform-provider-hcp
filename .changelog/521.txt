@@ -1,0 +1,3 @@
+```release-note:bug
+Resolve unintended removal of assigned iteration when `iteration` block is not present on `hcp_packer_channel`
+```

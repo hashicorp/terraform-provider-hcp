@@ -126,7 +126,7 @@ func resourceBoundaryCluster() *schema.Resource {
 							RequiredWith: []string{"maintenance_window_config.0.start"},
 						},
 						"start": {
-							Description:  "The start time which upgrades can be performed. Uses 24H clock. Valid options include - 0 to 23 (inclusive)",
+							Description:  "The start time which upgrades can be performed. Uses 24H clock and must be in UTC time zone. Valid options include - 0 to 23 (inclusive)",
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 23),
@@ -136,7 +136,7 @@ func resourceBoundaryCluster() *schema.Resource {
 							RequiredWith: []string{"maintenance_window_config.0.day"},
 						},
 						"end": {
-							Description:  "The end time which upgrades can be performed. Uses 24H clock. Valid options include - 1 to 24 (inclusive)",
+							Description:  "The end time which upgrades can be performed. Uses 24H clock and must be in UTC time zone. Valid options include - 1 to 24 (inclusive)",
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(1, 24),
@@ -257,10 +257,6 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
 
 	link, err := buildLinkFromURL(d.Id(), BoundaryClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
@@ -268,6 +264,8 @@ func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	clusterID := link.ID
+	loc := link.Location
+
 	upgradeType, maintenanceWindow, diagErr := getBoundaryClusterMaintainanceWindowConfig(d)
 	if diagErr != nil {
 		return diagErr

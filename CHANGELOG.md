@@ -1,3 +1,17 @@
+## v0.59.0 (June 01, 2023)
+
+FEATURES:
+
+* Update HVN Route validation for `destination_cidr` attribute to allow RFC6598 CIDR range. [[GH-515](https://github.com/hashicorp/terraform-provider-hcp/pull/515)]
+
+IMPROVEMENTS:
+
+* Documentation: Update HCP Boundary maintenance window documentation to specify that UTC timezone is expected. [[GH-518](https://github.com/hashicorp/terraform-provider-hcp/pull/518)]
+* Update prerelease github action workflow to allow bypassing end-to-end tests via input variable. [[GH-520](https://github.com/hashicorp/terraform-provider-hcp/pull/520)]
+
+BUG FIXES:
+
+* Resolve failure to generate apply/destroy plans that include hcp_packer_channel resources that were deleted outside of Terraform [GH-519] [[GH-519](https://github.com/hashicorp/terraform-provider-hcp/pull/519)]
 ## v0.58.0 (May 26, 2023)
 
 FEATURES:
