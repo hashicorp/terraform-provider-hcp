@@ -107,7 +107,7 @@ func resourceVaultClusterAdminTokenCreate(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.Errorf("error creating HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
 			clusterID,
-			client.Config.ProjectID,
+			loc.ProjectID,
 			err,
 		)
 	}
@@ -137,11 +137,13 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
-	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
@@ -187,7 +189,7 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.Errorf("error verifying HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
 				clusterID,
-				client.Config.ProjectID,
+				loc.ProjectID,
 				err,
 			)
 		}
@@ -204,7 +206,7 @@ func resourceVaultClusterAdminTokenRead(ctx context.Context, d *schema.ResourceD
 			if err != nil {
 				return diag.Errorf("error creating HCP Vault cluster admin token (cluster_id %q) (project_id %q): %+v",
 					clusterID,
-					client.Config.ProjectID,
+					loc.ProjectID,
 					err,
 				)
 			}

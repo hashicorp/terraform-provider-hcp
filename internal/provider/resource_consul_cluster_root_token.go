@@ -99,11 +99,8 @@ func resourceConsulClusterRootTokenCreate(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	// fetch organizationID by project ID
-	organizationID := client.Config.OrganizationID
-
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
@@ -164,17 +161,20 @@ func resourceConsulClusterRootTokenRead(ctx context.Context, d *schema.ResourceD
 	if matchesID(clusterID) {
 		clusterID = filepath.Base(clusterID)
 	}
-	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
+
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state
@@ -205,17 +205,20 @@ func resourceConsulClusterRootTokenDelete(ctx context.Context, d *schema.Resourc
 	if matchesID(clusterID) {
 		clusterID = filepath.Base(clusterID)
 	}
-	organizationID := client.Config.OrganizationID
-	projectID := client.Config.ProjectID
+
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &models.HashicorpCloudLocationLocation{
-		OrganizationID: organizationID,
+		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
 
 	log.Printf("[INFO] reading Consul cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
 
-	_, err := clients.GetConsulClusterByID(ctx, client, loc, clusterID)
+	_, err = clients.GetConsulClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// No cluster exists, so this root token should be removed from state

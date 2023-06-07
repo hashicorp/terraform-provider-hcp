@@ -143,13 +143,7 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 	peerTenantID := d.Get("peer_tenant_id").(string)
 	peerResourceGroupName := d.Get("peer_resource_group_name").(string)
 
-	orgID := client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, orgID)
+	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -164,6 +158,11 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("unable to check for presence of an existing HVN (%s): %v", hvnLink.ID, err)
 	}
 	log.Printf("[INFO] HVN (%s) found, proceeding with peering connection create", hvnLink.ID)
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: hvnLink.Location.OrganizationID,
+		ProjectID:      hvnLink.Location.ProjectID,
+	}
 
 	// Check if peering already exists
 	if peeringID != "" {

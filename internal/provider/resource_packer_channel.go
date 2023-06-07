@@ -120,11 +120,16 @@ func resourcePackerChannel() *schema.Resource {
 
 func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	bucketName := d.Get("bucket_name").(string)
+
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
@@ -211,11 +216,15 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	channelName := d.Get("name").(string)
 
 	client := meta.(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
@@ -262,15 +271,20 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 	channelName := d.Get("name").(string)
 
 	client := meta.(*clients.Client)
+	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve project ID: %v", err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err := clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
+	_, err = clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}

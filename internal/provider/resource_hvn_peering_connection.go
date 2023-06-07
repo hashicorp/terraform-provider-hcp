@@ -13,7 +13,6 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -23,6 +22,7 @@ func resourceHvnPeeringConnection() *schema.Resource {
 		CreateContext: resourceHvnPeeringConnectionCreate,
 		ReadContext:   resourceHvnPeeringConnectionRead,
 		DeleteContext: resourceHvnPeeringConnectionDelete,
+		CustomizeDiff: resourceHvnPeeringConnectionCustomizeDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &peeringDefaultTimeout,
 			Create:  &peeringCreateTimeout,
@@ -45,23 +45,25 @@ func resourceHvnPeeringConnection() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			// Optional inputs
-			"project_id": {
-				Description:  "The ID of the HCP project where the HVN peering connection is located.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
-				Computed:     true,
-			},
 			// Computed outputs
 			"peering_id": {
 				Description: "The ID of the peering connection.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"project_id": {
+				Description: "The ID of the HCP project where HVN peering connection is located. Always matches hvn_1's project ID. Setting this attribute is deprecated, but it will remain usable in read-only form.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
+				Deprecated: `
+Setting the 'project_id' attribute is deprecated, but it will remain usable in read-only form.
+Previously, the value for this attribute was required to match the project ID contained in 'hvn_1'. Now, the value will be calculated automatically.
+Remove this attribute from the configuration for any affected resources.
+`,
+			},
 			"organization_id": {
-				Description: "The ID of the HCP organization where the peering connection is located. Always matches the HVNs' organization.",
+				Description: "The ID of the HCP organization where the peering connection is located. Always matches both HVNs' organization ID.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -89,6 +91,23 @@ func resourceHvnPeeringConnection() *schema.Resource {
 	}
 }
 
+func resourceHvnPeeringConnectionCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// Force project_id to match the project_id from hvn_1 if it has been manually overridden in configuration
+	// When the project_id attribute's "Optional" property is removed after the deprecation period
+	// ends, CustomizeDiff can be removed.
+	if d.HasChange("project_id") {
+		hvn1Link, err := parseLinkURL(d.Get("hvn_1").(string), HvnResourceType)
+		if err != nil {
+			return err
+		}
+		if err := d.SetNew("project_id", hvn1Link.Location.ProjectID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
 
@@ -99,24 +118,16 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[DEBUG] Failed to update analytics with module name (%s)", err)
 	}
 
-	orgID := client.Config.OrganizationID
-
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
-
-	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	hvn2Link, err := buildLinkFromURL(d.Get("hvn_2").(string), HvnResourceType, orgID)
+	hvn2Link, err := buildLinkFromURL(d.Get("hvn_2").(string), HvnResourceType, hvn1Link.Location.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -162,12 +173,12 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(url)
 
 	// Wait for peering connection to be created
-	if err := clients.WaitForOperation(ctx, client, "create peering connection", loc, peeringResponse.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "create peering connection", hvn1Link.Location, peeringResponse.Payload.Operation.ID); err != nil {
 		return diag.Errorf("unable to create peering connection (%s) between HVNs (%s) and (%s): %v", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID, err)
 	}
 	log.Printf("[INFO] Created peering connection (%s) between HVNs (%s) and (%s)", peering.ID, peering.Hvn.ID, peering.Target.HvnTarget.Hvn.ID)
 
-	peering, err = clients.WaitForPeeringToBeAccepted(ctx, client, peering.ID, hvn1Link.ID, loc, d.Timeout(schema.TimeoutCreate))
+	peering, err = clients.WaitForPeeringToBeAccepted(ctx, client, peering.ID, hvn1Link.ID, hvn1Link.Location, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -182,22 +193,20 @@ func resourceHvnPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	peeringID := link.ID
-	loc := link.Location
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	peeringLink, err := buildLinkFromURL(d.Id(), PeeringResourceType, hvn1Link.Location.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	peeringID := peeringLink.ID
 	log.Printf("[INFO] Reading peering connection (%s)", peeringID)
-	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvnLink1.ID, loc)
+	peering, err := clients.GetPeeringByID(ctx, client, peeringID, hvn1Link.ID, peeringLink.Location)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] Peering connection (%s) not found, removing from state", peeringID)
@@ -207,12 +216,12 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("unable to retrieve peering connection (%s): %v", peeringID, err)
 	}
 
-	hvnLink2 := newLink(peering.Target.HvnTarget.Hvn.Location, HvnResourceType, peering.Target.HvnTarget.Hvn.ID)
-	hvnURL2, err := linkURL(hvnLink2)
+	hvn2Link := newLink(peering.Target.HvnTarget.Hvn.Location, HvnResourceType, peering.Target.HvnTarget.Hvn.ID)
+	hvn2URL, err := linkURL(hvn2Link)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("hvn_2", hvnURL2); err != nil {
+	if err := d.Set("hvn_2", hvn2URL); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -225,26 +234,25 @@ func resourceHvnPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	orgID := client.Config.OrganizationID
 
-	link, err := buildLinkFromURL(d.Id(), PeeringResourceType, orgID)
+	hvn1Link, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	peeringID := link.ID
-	loc := link.Location
-	hvnLink1, err := buildLinkFromURL(d.Get("hvn_1").(string), HvnResourceType, orgID)
+	peeringLink, err := buildLinkFromURL(d.Id(), PeeringResourceType, hvn1Link.Location.OrganizationID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	peeringID := peeringLink.ID
 
 	deletePeeringParams := network_service.NewDeletePeeringParams()
 	deletePeeringParams.Context = ctx
 	deletePeeringParams.ID = peeringID
-	deletePeeringParams.HvnID = hvnLink1.ID
-	deletePeeringParams.LocationOrganizationID = loc.OrganizationID
-	deletePeeringParams.LocationProjectID = loc.ProjectID
+	deletePeeringParams.HvnID = hvn1Link.ID
+	deletePeeringParams.LocationOrganizationID = peeringLink.Location.OrganizationID
+	deletePeeringParams.LocationProjectID = peeringLink.Location.ProjectID
 
 	log.Printf("[INFO] Deleting peering connection (%s)", peeringID)
 	deletePeeringResponse, err := client.Network.DeletePeering(deletePeeringParams, nil)
@@ -257,7 +265,7 @@ func resourceHvnPeeringConnectionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Wait for peering to be deleted
-	if err := clients.WaitForOperation(ctx, client, "delete peering connection", loc, deletePeeringResponse.Payload.Operation.ID); err != nil {
+	if err := clients.WaitForOperation(ctx, client, "delete peering connection", peeringLink.Location, deletePeeringResponse.Payload.Operation.ID); err != nil {
 		if strings.Contains(err.Error(), "execution already started") {
 			return nil
 		}
@@ -292,14 +300,14 @@ func resourceHvnPeeringConnectionImport(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Only hvn_1 is required to fetch the peering connection. hvn_2 will be populated during the refresh phase immediately after import.
-	hvnLink := newLink(loc, HvnResourceType, hvnID)
-	hvnURL, err := linkURL(hvnLink)
+	hvn1Link := newLink(loc, HvnResourceType, hvnID)
+	hvn1URL, err := linkURL(hvn1Link)
 	if err != nil {
 		return nil, err
 	}
 
 	d.SetId(url)
-	if err := d.Set("hvn_1", hvnURL); err != nil {
+	if err := d.Set("hvn_1", hvn1URL); err != nil {
 		return nil, err
 	}
 
