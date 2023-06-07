@@ -257,10 +257,6 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
 
 	link, err := buildLinkFromURL(d.Id(), BoundaryClusterResourceType, client.Config.OrganizationID)
 	if err != nil {
@@ -268,6 +264,8 @@ func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	clusterID := link.ID
+	loc := link.Location
+
 	upgradeType, maintenanceWindow, diagErr := getBoundaryClusterMaintainanceWindowConfig(d)
 	if diagErr != nil {
 		return diagErr
