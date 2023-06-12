@@ -64,11 +64,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:     true,
 			},
 			"iteration": {
-				Description: "The iteration assigned to the channel.",
+				Description: "The iteration assigned to the channel. This block is deprecated. Please use `hcp_packer_channel_assignment` instead.",
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
 				Computed:    true,
+				Deprecated:  "The `iteration` block is deprecated. Please remove the `iteration` block and create a new `hcp_packer_channel_assignment` resource to manage this channel's assigned iteration with Terraform.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fingerprint": {

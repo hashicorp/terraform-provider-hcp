@@ -73,7 +73,7 @@ resource "hcp_packer_channel" "staging" {
 
 ### Optional
 
-- `iteration` (Block List, Max: 1) The iteration assigned to the channel. (see [below for nested schema](#nestedblock--iteration))
+- `iteration` (Block List, Max: 1, Deprecated) The iteration assigned to the channel. This block is deprecated. Please use `hcp_packer_channel_assignment` instead. (see [below for nested schema](#nestedblock--iteration))
 - `project_id` (String) The ID of the HCP project where this channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
