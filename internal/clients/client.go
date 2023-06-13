@@ -24,6 +24,9 @@ import (
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
+	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client/secret_service"
+
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 
@@ -43,6 +46,7 @@ type Client struct {
 	Organization organization_service.ClientService
 	Consul       consul_service.ClientService
 	Vault        vault_service.ClientService
+	VaultSecrets secret_service.ClientService
 	Packer       packer_service.ClientService
 	Boundary     boundary_service.ClientService
 }
@@ -89,6 +93,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 		Vault:        cloud_vault.New(httpClient, nil).VaultService,
+		VaultSecrets: cloud_vault_secrets.New(httpClient, nil).SecretService,
 		Packer:       cloud_packer.New(httpClient, nil).PackerService,
 		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
 	}
