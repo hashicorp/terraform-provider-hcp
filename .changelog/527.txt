@@ -1,0 +1,3 @@
+```release-note:improvement
+Update the description of the optional `project_id` field in data sources and resources to include details of how project_id is targeted when none is passed in.
+```
