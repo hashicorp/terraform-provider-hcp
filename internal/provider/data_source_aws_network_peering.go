@@ -45,9 +45,10 @@ func dataSourceAwsNetworkPeering() *schema.Resource {
 				Default:     false,
 			},
 			"project_id": {
-				Description: `The ID of the HCP project where the network peering is located. Always matches the HVN's project.
-					If not specified, the project specified in the HCP Provider config block will be used, if configured.
-					If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
+				Description: `
+The ID of the HCP project where the network peering is located. Always matches the HVN's project.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsUUID,

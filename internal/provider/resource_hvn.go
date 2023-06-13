@@ -84,9 +84,10 @@ func resourceHvn() *schema.Resource {
 				Computed:         true,
 			},
 			"project_id": {
-				Description: `The ID of the HCP project where the HVN is located.
-					If not specified, the project specified in the HCP Provider config block will be used, if configured.
-					If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
+				Description: `
+The ID of the HCP project where the HVN is located.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,

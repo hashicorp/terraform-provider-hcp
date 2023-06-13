@@ -28,8 +28,8 @@ data "hcp_consul_cluster" "example" {
 ### Optional
 
 - `project_id` (String) The ID of the HCP project where the HCP Consul cluster is located.
-					If not specified, the project specified in the HCP Provider config block will be used, if configured.
-					If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

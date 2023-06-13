@@ -30,8 +30,8 @@ data "hcp_aws_transit_gateway_attachment" "test" {
 ### Optional
 
 - `project_id` (String) The ID of the HCP project where the transit gateway attachment is located.
-					If not specified, the project specified in the HCP Provider config block will be used, if configured.
-					If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `wait_for_active_state` (Boolean) If `true`, Terraform will wait for the transit gateway attachment to reach an `ACTIVE` state before continuing. Default `false`.
 
