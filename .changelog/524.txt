@@ -1,0 +1,3 @@
+```release-note:feature
+hcp_vault_secrets_app: New data source that allows bulk retrieval of all secret values in a secrets app
+```
