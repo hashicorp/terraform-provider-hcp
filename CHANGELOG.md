@@ -1,3 +1,7 @@
+## v0.61.0 (June 13, 2023)
+FEATURES:
+
+* hcp_vault_secrets_app: New data source that allows bulk retrieval of all secret values in a secrets app [[GH-524](https://github.com/hashicorp/terraform-provider-hcp/pull/524)]
 ## v0.60.0 (June 07, 2023)
 
 IMPROVEMENTS:
@@ -28,7 +32,6 @@ BUG FIXES:
 some resources and data sources when the `project_id` attribute had been used 
 and its most recent value was different from the provider-level `project_id`,
 whether or not the attribute was still present in the configuration file.
-
 NOTE: See associated PR for caveats on temporary regressions. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
 * Resolve unintended removal of assigned iteration when `iteration` block is not present on `hcp_packer_channel` [[GH-521](https://github.com/hashicorp/terraform-provider-hcp/pull/521)]
 ## v0.59.0 (June 01, 2023)
