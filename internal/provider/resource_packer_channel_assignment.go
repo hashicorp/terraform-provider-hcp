@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
@@ -79,6 +80,7 @@ func resourcePackerChannelAssignment() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
+				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 			},
 			// Computed Values
 			"organization_id": {
