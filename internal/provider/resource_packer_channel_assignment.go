@@ -345,15 +345,21 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 	if (d.HasChange("iteration_id") && !d.NewValueKnown("iteration_id")) ||
 		(d.HasChange("iteration_fingerprint") && !d.NewValueKnown("iteration_fingerprint")) ||
 		(d.HasChanges("iteration_version") && !d.NewValueKnown("iteration_id")) {
-		d.SetNewComputed("iteration_id")
-		d.SetNewComputed("iteration_fingerprint")
-		d.SetNewComputed("iteration_version")
+		if err := d.SetNewComputed("iteration_id"); err != nil {
+			return err
+		}
+		if err := d.SetNewComputed("iteration_fingerprint"); err != nil {
+			return err
+		}
+		if err := d.SetNewComputed("iteration_version"); err != nil {
+			return err
+		}
 	} else if d.NewValueKnown("iteration_id") || d.NewValueKnown("iteration_fingerprint") || d.NewValueKnown("iteration_id") {
 		var iteration *packermodels.HashicorpCloudPackerIteration
 		var itErr error
 
-		if rawId, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && d.NewValueKnown("iteration_id") {
-			if id := rawId.(string); id != "" {
+		if rawID, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && d.NewValueKnown("iteration_id") {
+			if id := rawID.(string); id != "" {
 				iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id)
 			} else {
 				iteration = &packermodels.HashicorpCloudPackerIteration{}
