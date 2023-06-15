@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+// TODO: Add test for integration with iteration data source
+
 func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentSimpleSetUnset")
 	channelSlug := bucketSlug // No need for a different slug

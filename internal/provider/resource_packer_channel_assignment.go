@@ -340,37 +340,51 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 
 	bucketName := d.Get("bucket_name").(string)
 
-	var iteration *packermodels.HashicorpCloudPackerIteration
-	var itErr error
-	if id, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && id.(string) != "" {
-		iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
-	} else if fingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("fingerprint_id") && fingerprint.(string) != "" {
-		iteration, itErr = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
-	} else if version, ok := d.GetOk("iteration_version"); ok && d.HasChange("iteration_version") && version.(int) > 0 {
-		iteration, itErr = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
-	}
-	if itErr != nil {
-		return itErr
-	}
+	if (d.HasChange("iteration_id") && !d.NewValueKnown("iteration_id")) ||
+		(d.HasChange("iteration_fingerprint") && !d.NewValueKnown("iteration_fingerprint")) ||
+		(d.HasChanges("iteration_version") && !d.NewValueKnown("iteration_id")) {
+		d.SetNewComputed("iteration_id")
+		d.SetNewComputed("iteration_fingerprint")
+		d.SetNewComputed("iteration_version")
+	} else if d.NewValueKnown("iteration_id") || d.NewValueKnown("iteration_fingerprint") || d.NewValueKnown("iteration_id") {
+		var iteration *packermodels.HashicorpCloudPackerIteration
+		var itErr error
 
-	if iteration == nil {
-		iteration = &packermodels.HashicorpCloudPackerIteration{
-			ID:                 "",
-			Fingerprint:        "",
-			IncrementalVersion: 0,
+		if rawId, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && d.NewValueKnown("iteration_id") {
+			if id := rawId.(string); id != "" {
+				iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id)
+			} else {
+				iteration = &packermodels.HashicorpCloudPackerIteration{}
+			}
+		} else if rawFingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("iteration_fingerprint") && d.NewValueKnown("iteration_fingerprint") {
+			if fingerprint := rawFingerprint.(string); fingerprint != "" {
+				iteration, itErr = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint)
+			} else {
+				iteration = &packermodels.HashicorpCloudPackerIteration{}
+			}
+		} else if rawVersion, ok := d.GetOk("iteration_version"); ok && d.HasChange("iteration_version") && d.NewValueKnown("iteration_version") {
+			if version := int32(rawVersion.(int)); version != 0 {
+				iteration, itErr = clients.GetIterationFromVersion(ctx, client, loc, bucketName, version)
+			} else {
+				iteration = &packermodels.HashicorpCloudPackerIteration{}
+			}
 		}
-	}
 
-	if err := d.SetNew("iteration_id", iteration.ID); err != nil {
-		return err
-	}
+		if itErr != nil {
+			return itErr
+		} else if iteration != nil {
+			if err := d.SetNew("iteration_id", iteration.ID); err != nil {
+				return err
+			}
 
-	if err := d.SetNew("iteration_fingerprint", iteration.Fingerprint); err != nil {
-		return err
-	}
+			if err := d.SetNew("iteration_fingerprint", iteration.Fingerprint); err != nil {
+				return err
+			}
 
-	if err := d.SetNew("iteration_version", iteration.IncrementalVersion); err != nil {
-		return err
+			if err := d.SetNew("iteration_version", iteration.IncrementalVersion); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
