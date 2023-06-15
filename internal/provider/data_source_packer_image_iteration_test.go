@@ -59,7 +59,7 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 						t.Fatal(err.Error())
 					}
 					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
-					createChannel(t, acctestAlpineBucket, acctestProductionChannel, itID)
+					upsertChannel(t, acctestAlpineBucket, acctestProductionChannel, itID)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
 				Check: resource.ComposeTestCheckFunc(
@@ -97,7 +97,7 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 						t.Fatal(err.Error())
 					}
 					upsertBuild(t, acctestUbuntuBucket, fingerprint, itID)
-					createChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
+					upsertChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
 					revokeIteration(t, itID, acctestUbuntuBucket, revokeAt)

@@ -152,7 +152,7 @@ func upsertBucket(t *testing.T, bucketSlug string) {
 	t.Errorf("unexpected CreateBucket error, expected nil or 409. Got %v", err)
 }
 
-func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
+func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.HashicorpCloudPackerIteration {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -165,23 +165,45 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) {
 	createItParams.LocationOrganizationID = loc.OrganizationID
 	createItParams.LocationProjectID = loc.ProjectID
 	createItParams.BucketSlug = bucketSlug
-
 	createItParams.Body = packer_service.PackerServiceCreateIterationBody{
 		Fingerprint: fingerprint,
 	}
-	_, err := client.Packer.PackerServiceCreateIteration(createItParams, nil)
+
+	iterationResp, err := client.Packer.PackerServiceCreateIteration(createItParams, nil)
 	if err == nil {
-		return
-	}
-	if err, ok := err.(*packer_service.PackerServiceCreateIterationDefault); ok {
+		return iterationResp.Payload.Iteration
+	} else if err, ok := err.(*packer_service.PackerServiceCreateIterationDefault); ok {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
-			return
+			getItParams := packer_service.NewPackerServiceGetIterationParams()
+			getItParams.LocationOrganizationID = createItParams.LocationOrganizationID
+			getItParams.LocationProjectID = createItParams.LocationProjectID
+			getItParams.BucketSlug = createItParams.BucketSlug
+			getItParams.Fingerprint = &createItParams.Body.Fingerprint
+			iterationResp, err := client.Packer.PackerServiceGetIteration(getItParams, nil)
+			if err != nil {
+				t.Errorf("unexpected GetIteration error, expected nil. Got %v", err)
+				return nil
+			}
+			return iterationResp.Payload.Iteration
 		}
 	}
 
 	t.Errorf("unexpected CreateIteration error, expected nil or 409. Got %v", err)
+	return nil
+}
+
+func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string) *models.HashicorpCloudPackerIteration {
+	iteration := upsertIteration(t, bucketSlug, fingerprint)
+	if t.Failed() || iteration == nil {
+		return nil
+	}
+	upsertBuild(t, bucketSlug, iteration.Fingerprint, iteration.ID)
+	if t.Failed() {
+		return nil
+	}
+	return iteration
 }
 
 func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strfmt.DateTime) {
@@ -296,7 +318,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	}
 }
 
-func createChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
+func upsertChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -322,14 +344,14 @@ func createChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
-			updateChannel(t, bucketSlug, channelSlug, iterationID)
+			updateChannelAssignment(t, bucketSlug, channelSlug, &models.HashicorpCloudPackerIteration{ID: iterationID})
 			return
 		}
 	}
 	t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
 }
 
-func updateChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
+func updateChannelAssignment(t *testing.T, bucketSlug string, channelSlug string, iteration *models.HashicorpCloudPackerIteration) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -338,16 +360,24 @@ func updateChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	updateChParams := packer_service.NewPackerServiceUpdateChannelParams()
-	updateChParams.LocationOrganizationID = loc.OrganizationID
-	updateChParams.LocationProjectID = loc.ProjectID
-	updateChParams.BucketSlug = bucketSlug
-	updateChParams.Slug = channelSlug
-	updateChParams.Body = packer_service.PackerServiceUpdateChannelBody{
-		IterationID: iterationID,
+	params := packer_service.NewPackerServiceUpdateChannelParams()
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
+	params.Slug = channelSlug
+
+	if iteration != nil {
+		switch {
+		case iteration.ID != "":
+			params.Body.IterationID = iteration.ID
+		case iteration.Fingerprint != "":
+			params.Body.Fingerprint = iteration.Fingerprint
+		case iteration.IncrementalVersion > 0:
+			params.Body.IncrementalVersion = iteration.IncrementalVersion
+		}
 	}
 
-	_, err := client.Packer.PackerServiceUpdateChannel(updateChParams, nil)
+	_, err := client.Packer.PackerServiceUpdateChannel(params, nil)
 	if err == nil {
 		return
 	}

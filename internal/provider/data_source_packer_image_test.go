@@ -139,7 +139,7 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 						t.Fatal(err.Error())
 					}
 					upsertBuild(t, acctestImageBucket, fingerprint, itID)
-					createChannel(t, acctestImageBucket, acctestImageChannel, itID)
+					upsertChannel(t, acctestImageBucket, acctestImageChannel, itID)
 				},
 				Config: testAccPackerImageAlpineProduction,
 				Check: resource.ComposeTestCheckFunc(
@@ -183,7 +183,7 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 						t.Fatal(err.Error())
 					}
 					upsertBuild(t, acctestUbuntuImageBucket, fingerprint, itID)
-					createChannel(t, acctestUbuntuImageBucket, acctestImageChannel, itID)
+					upsertChannel(t, acctestUbuntuImageBucket, acctestImageChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
 					revokeIteration(t, itID, acctestUbuntuImageBucket, revokeAt)
@@ -228,7 +228,7 @@ func TestAcc_dataSourcePackerImage_channelAndIterationIDReject(t *testing.T) {
 							t.Fatal(err.Error())
 						}
 						upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
-						createChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
+						upsertChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
 					},
 					Config:      testConfig(cfg),
 					ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
@@ -261,7 +261,7 @@ func TestAcc_dataSourcePackerImage_channelAccept(t *testing.T) {
 						t.Fatal(err.Error())
 					}
 					upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
-					createChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
+					upsertChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
 				},
 				Config: testConfig(testAccPackerImageArchProduction),
 				Check: resource.ComposeTestCheckFunc(

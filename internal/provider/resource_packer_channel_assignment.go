@@ -157,7 +157,7 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	} else if channel.Managed {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP packer and cannot have an iteration assigned by Terraform.", channelName, bucketName, loc.ProjectID),
+			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have an iteration assigned by Terraform.", channelName, bucketName, loc.ProjectID),
 		}}
 	} else if iteration := channel.Iteration; iteration != nil && (iteration.IncrementalVersion > 0 || iteration.ID != "" || iteration.Fingerprint != "") {
 		return diag.Diagnostics{diag.Diagnostic{
@@ -205,13 +205,19 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	updatedChannel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName,
-		&packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: int32(d.Get("iteration_version").(int)),
-			ID:                 d.Get("iteration_id").(string),
-			Fingerprint:        d.Get("iteration_fingerprint").(string),
-		}, nil,
-	)
+	iteration := &packermodels.HashicorpCloudPackerIteration{}
+	assignmentHasChanges := d.HasChanges("iteration_version", "iteration_id", "iteration_fingerprint")
+	if !assignmentHasChanges || d.HasChange("iteration_version") {
+		iteration.IncrementalVersion = int32(d.Get("iteration_version").(int))
+	}
+	if !assignmentHasChanges || d.HasChange("iteration_id") {
+		iteration.ID = d.Get("iteration_id").(string)
+	}
+	if !assignmentHasChanges || d.HasChange("iteration_fingerprint") {
+		iteration.Fingerprint = d.Get("iteration_fingerprint").(string)
+	}
+
+	updatedChannel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -238,13 +244,7 @@ func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName,
-		&packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: 0,
-			ID:                 "",
-			Fingerprint:        "",
-		}, nil,
-	)
+	_, err = clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, nil, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -300,6 +300,13 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 		return nil, err
 	}
 
+	if err := d.Set("bucket_name", bucketName); err != nil {
+		return nil, err
+	}
+	if err := d.Set("channel_name", channelName); err != nil {
+		return nil, err
+	}
+
 	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return nil, err
@@ -334,15 +341,16 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 	bucketName := d.Get("bucket_name").(string)
 
 	var iteration *packermodels.HashicorpCloudPackerIteration
+	var itErr error
 	if id, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && id.(string) != "" {
-		iteration, err = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
+		iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
 	} else if fingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("fingerprint_id") && fingerprint.(string) != "" {
-		iteration, err = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
+		iteration, itErr = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
 	} else if version, ok := d.GetOk("iteration_version"); ok && d.HasChange("iteration_version") && version.(int) > 0 {
-		iteration, err = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
+		iteration, itErr = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
 	}
-	if err != nil {
-		return err
+	if itErr != nil {
+		return itErr
 	}
 
 	if iteration == nil {

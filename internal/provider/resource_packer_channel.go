@@ -398,8 +398,12 @@ func resourcePackerChannelCustomizeDiff(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChanges("iteration") {
-		d.SetNewComputed("updated_at")
-		d.SetNewComputed("author_id")
+		if err := d.SetNewComputed("updated_at"); err != nil {
+			return err
+		}
+		if err := d.SetNewComputed("author_id"); err != nil {
+			return err
+		}
 	}
 
 	return nil
