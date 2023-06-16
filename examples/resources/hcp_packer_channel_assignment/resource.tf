@@ -16,14 +16,14 @@ resource "hcp_packer_channel_assignment" "staging" {
 # More advanced management is possible, including
 # - Creating the channel within Terraform
 # - Assigning the channel to the latest complete iteration automatically
-resource "hcp_packer_channel" "advanced" {
-  name        = "advanced"
+data "hcp_packer_iteration" "latest" {
   bucket_name = "alpine"
+  channel     = "latest"
 }
 
-data "hcp_packer_iteration" "latest" {
-  bucket_name = hcp_packer_channel.advanced.bucket_name
-  channel     = "latest"
+resource "hcp_packer_channel" "advanced" {
+  name        = "advanced"
+  bucket_name = data.hcp_packer_iteration.latest.bucket_name
 }
 
 resource "hcp_packer_channel_assignment" "advanced" {
