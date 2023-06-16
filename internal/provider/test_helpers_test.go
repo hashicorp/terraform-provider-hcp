@@ -142,6 +142,10 @@ func (b testAccConfigBuilder) UniqueName() string {
 }
 
 func (b testAccConfigBuilder) ResourceName() string {
+	if b.isData {
+		return fmt.Sprintf("data.%s.%s", b.ResourceType(), b.UniqueName())
+	}
+
 	return fmt.Sprintf("%s.%s", b.ResourceType(), b.UniqueName())
 }
 

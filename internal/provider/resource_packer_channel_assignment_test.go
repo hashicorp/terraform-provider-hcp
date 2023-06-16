@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// TODO: Add test for integration with iteration data source
-
 func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentSimpleSetUnset")
 	channelSlug := bucketSlug // No need for a different slug
@@ -81,8 +79,84 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 	})
 }
 
+func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
+	bucketSlug := testAccCreateSlug("AssignmentAssignLatest")
+	channelSlug := bucketSlug // No need for a different slug
+	uniqueName := "AssignLatest"
+
+	// This config creates a data source that is read before apply time
+	beforeIteration := testAccPackerDataIterationBuilder(
+		uniqueName,
+		fmt.Sprintf("%q", bucketSlug),
+		`"latest"`,
+	)
+	beforeChannel := testAccPackerChannelBuilder(
+		uniqueName,
+		fmt.Sprintf("%q", channelSlug),
+		beforeIteration.AttributeRef("bucket_name"),
+	)
+	beforeAssignment := testAccPackerAssignmentBuilderWithChannelReference(
+		uniqueName,
+		beforeChannel,
+		beforeIteration.AttributeRef("id"), ``, ``,
+	)
+
+	// This config creates a data source that is read after apply time,
+	// which is important for testing that CustomizeDiff doesn't cause errors
+	afterChannel := testAccPackerChannelBuilder(
+		uniqueName,
+		fmt.Sprintf("%q", channelSlug),
+		fmt.Sprintf("%q", bucketSlug),
+	)
+	afterIteration := testAccPackerDataIterationBuilder(
+		uniqueName,
+		afterChannel.AttributeRef("bucket_name"),
+		`"latest"`,
+	)
+	afterAssignment := testAccPackerAssignmentBuilderWithChannelReference(
+		uniqueName,
+		afterChannel,
+		afterIteration.AttributeRef("id"), ``, ``,
+	)
+
+	var iteration *models.HashicorpCloudPackerIteration
+
+	generateStep := func(iterationData, channelResource, assignmentResource testAccConfigBuilderInterface) resource.TestStep {
+		return resource.TestStep{
+			Config: testConfig(testAccConfigBuildersToString(iterationData, channelResource, assignmentResource)),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckAssignmentStateBucketAndChannelName(assignmentResource.ResourceName(), bucketSlug, channelSlug),
+				testAccCheckAssignmentStateMatchesIteration(assignmentResource.ResourceName(), &iteration),
+				testAccCheckAssignmentStateMatchesChannelState(assignmentResource.ResourceName(), channelResource.ResourceName()),
+				testAccCheckAssignmentStateMatchesAPI(assignmentResource.ResourceName()),
+			),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			iteration = upsertCompleteIteration(t, bucketSlug, "abc")
+		},
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			generateStep(beforeIteration, beforeChannel, beforeAssignment),
+			{ // Remove any resources and data sources completely
+				Config: testConfig(""),
+			},
+			generateStep(afterIteration, afterChannel, afterAssignment),
+		},
+	})
+}
+
 func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
-	bucketSlug := testAccCreateSlug("AssignmentHCPManaged")
+	bucketSlug := testAccCreateSlug("AssignmentInvalidInputs")
 	channelSlug := bucketSlug // No need for a different slug
 
 	generateStep := func(iterID string, iterFingerprint string, iterVersion string, errorRegex string) resource.TestStep {
@@ -306,6 +380,18 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 		},
 		Steps: generatedSteps,
 	})
+}
+
+func testAccPackerDataIterationBuilder(uniqueName string, bucketName string, channelName string) testAccConfigBuilderInterface {
+	return &testAccConfigBuilder{
+		isData:       true,
+		resourceType: "hcp_packer_iteration",
+		uniqueName:   uniqueName,
+		attributes: map[string]string{
+			"bucket_name": bucketName,
+			"channel":     channelName,
+		},
+	}
 }
 
 func testAccPackerChannelBuilder(uniqueName string, channelName string, bucketName string) testAccConfigBuilderInterface {
