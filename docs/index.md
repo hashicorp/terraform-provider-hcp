@@ -13,7 +13,7 @@ description: |-
 
 The HCP provider provides resources to manage [HashiCorp Cloud Platform](https://cloud.hashicorp.com/) (HCP) resources.
 
-![HCP Architecture Diagram](https://cloud.hashicorp.com/img/docs/hcp-arch-diagram.png)
+![HCP Architecture Diagram](https://content.hashicorp.com/api/assets?product=hcp-docs&version=refs/heads/main&asset=public/img/docs/hcp-arch-diagram.png)
 
 ## Authenticating with HCP
 
