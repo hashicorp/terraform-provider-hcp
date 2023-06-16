@@ -79,7 +79,71 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			},
 		},
 	})
+}
 
+func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
+	bucketSlug := testAccCreateSlug("AssignmentHCPManaged")
+	channelSlug := bucketSlug // No need for a different slug
+
+	generateStep := func(iterID string, iterFingerprint string, iterVersion string, errorRegex string) resource.TestStep {
+		return resource.TestStep{
+			Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilder(
+				"InvalidInputs",
+				fmt.Sprintf("%q", bucketSlug),
+				fmt.Sprintf("%q", channelSlug),
+				iterID, iterFingerprint, iterVersion,
+			))),
+			ExpectError: regexp.MustCompile(errorRegex),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			upsertChannel(t, bucketSlug, channelSlug, "")
+		},
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			generateStep(
+				`""`, ``, ``,
+				`.*expected "iteration_id" to not be an empty string.*`,
+			),
+			generateStep(
+				``, `""`, ``,
+				`.*expected "iteration_fingerprint" to not be an empty string.*`,
+			),
+			generateStep(
+				`"abcd"`, `"efgh"`, ``,
+				`.*only one of.*\n.*can be specified.*`,
+			),
+			generateStep(
+				`"1234"`, ``, `5678`,
+				`.*only one of.*\n.*can be specified.*`,
+			),
+			generateStep(
+				``, `"jamesBond"`, `007`,
+				`.*only one of.*\n.*can be specified.*`,
+			),
+			generateStep(
+				`"doesNotExist"`, ``, ``,
+				`The iteration with identifier.*does not exist`,
+			),
+			generateStep(
+				``, `"alsoDoesNotExist"`, ``,
+				`The iteration with identifier.*does not exist`,
+			),
+			generateStep(
+				``, ``, `99`,
+				`The iteration with identifier.*does not exist`,
+			),
+		},
+	})
 }
 
 func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
