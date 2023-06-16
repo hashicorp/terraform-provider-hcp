@@ -9,8 +9,8 @@ resource "hcp_packer_channel_assignment" "staging" {
 
   # To set the channel to have no assignment, use one of the attributes with their zero value:
   # iteration_version = 0
-  # iteration_id = ""
-  # iteration_fingerprint = ""
+  # iteration_id = "none"
+  # iteration_fingerprint = "none"
 }
 
 # More advanced management is possible, including

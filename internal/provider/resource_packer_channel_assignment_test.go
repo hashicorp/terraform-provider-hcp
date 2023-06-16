@@ -50,7 +50,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.ResourceName(), bucketSlug, channelSlug),
-					testAccCheckAssignmentStateMatchesIteration(baseAssignment.ResourceName(), iteration),
+					testAccCheckAssignmentStateMatchesIteration(baseAssignment.ResourceName(), &iteration),
 					testAccCheckAssignmentStateMatchesAPI(baseAssignment.ResourceName()),
 				),
 			},
@@ -63,7 +63,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			{ // Set channel assignment to null
 				Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilderFromAssignment(
 					baseAssignment,
-					``, `""`, ``,
+					``, `"none"`, ``,
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.ResourceName(), bucketSlug, channelSlug),
@@ -219,9 +219,9 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 
 	var generatedSteps []resource.TestStep
 	// Add null ID steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(`""`, ``, ``, true)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(`"none"`, ``, ``, true)...)
 	// Add null Fingerprint steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, `""`, ``, false)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, `"none"`, ``, false)...)
 	// Add null Version steps
 	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`, false)...)
 
@@ -324,15 +324,30 @@ func testAccCheckAssignmentStateMatchesChannelState(assignmentResourceName strin
 	)
 }
 
-func testAccCheckAssignmentStateMatchesIteration(resourceName string, iteration *models.HashicorpCloudPackerIteration) resource.TestCheckFunc {
+func testAccCheckAssignmentStateMatchesIteration(resourceName string, iterationPtr **models.HashicorpCloudPackerIteration) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
+		var iteration *models.HashicorpCloudPackerIteration
+		if iterationPtr != nil {
+			iteration = *iterationPtr
+		}
+
 		if iteration == nil {
 			iteration = &models.HashicorpCloudPackerIteration{}
 		}
 
+		iterID := iteration.ID
+		if iterID == "" {
+			iterID = "none"
+		}
+
+		iterFingerprint := iteration.Fingerprint
+		if iterFingerprint == "" {
+			iterFingerprint = "none"
+		}
+
 		return resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr(resourceName, "iteration_id", iteration.ID),
-			resource.TestCheckResourceAttr(resourceName, "iteration_fingerprint", iteration.Fingerprint),
+			resource.TestCheckResourceAttr(resourceName, "iteration_id", iterID),
+			resource.TestCheckResourceAttr(resourceName, "iteration_fingerprint", iterFingerprint),
 			resource.TestCheckResourceAttr(resourceName, "iteration_version", fmt.Sprintf("%d", iteration.IncrementalVersion)),
 		)(state)
 	}
@@ -366,7 +381,7 @@ func testAccCheckAssignmentStateMatchesAPI(resourceName string) resource.TestChe
 		if err != nil {
 			return err
 		}
-		return testAccCheckAssignmentStateMatchesIteration(resourceName, iteration)(state)
+		return testAccCheckAssignmentStateMatchesIteration(resourceName, &iteration)(state)
 	}
 }
 
