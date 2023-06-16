@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -203,6 +204,18 @@ func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string) *mode
 	if t.Failed() {
 		return nil
 	}
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+	iteration, err := clients.GetIterationFromFingerprint(context.Background(), client, loc, bucketSlug, iteration.Fingerprint)
+	if err != nil {
+		t.Errorf("Complete iteration not found after upserting, received unexpected error. Got %v", err)
+		return nil
+	}
+
 	return iteration
 }
 
