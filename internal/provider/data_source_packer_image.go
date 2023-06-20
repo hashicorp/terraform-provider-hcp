@@ -59,12 +59,13 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"channel"},
+				ExactlyOneOf: []string{"iteration_id", "channel"},
 			},
 			"channel": {
-				Description: "The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified. Note: will incur a billable request",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description:  "The channel that points to the version of the image being retrieved. Either this or `iteration_id` must be specified. Note: will incur a billable request",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"iteration_id", "channel"},
 			},
 			"component_type": {
 				Description: "Name of the builder that built this image. Ex: `amazon-ebs.example`.",
@@ -150,10 +151,8 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	var channel *packermodels.HashicorpCloudPackerChannel
-
 	if channelSlug != "" {
-		channel, err = clients.GetPackerChannelBySlug(
+		channel, err := clients.GetPackerChannelBySlug(
 			ctx,
 			client,
 			loc,
@@ -161,12 +160,9 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 			channelSlug)
 		if err != nil {
 			return diag.FromErr(err)
+		} else if channel.Iteration == nil {
+			return diag.Errorf("Channel does not have an assigned iteration (channel: %s)", channelSlug)
 		}
-	}
-
-	// Assuming we passed the above check, the rest of the channel is not
-	// used after that,
-	if channel != nil {
 		iteration = channel.Iteration
 	}
 
