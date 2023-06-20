@@ -160,7 +160,8 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 			channelSlug)
 		if err != nil {
 			return diag.FromErr(err)
-		} else if channel.Iteration == nil {
+		} 
+		if channel.Iteration == nil {
 			return diag.Errorf("Channel does not have an assigned iteration (channel: %s)", channelSlug)
 		}
 		iteration = channel.Iteration
