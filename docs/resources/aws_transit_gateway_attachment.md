@@ -86,7 +86,9 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the transit gateway attachment is located.
+- `project_id` (String) The ID of the HCP project where the transit gateway attachment is located." 
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
