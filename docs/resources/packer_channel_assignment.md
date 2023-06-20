@@ -48,7 +48,9 @@ resource "hcp_packer_channel_assignment" "staging" {
 - `iteration_fingerprint` (String) The fingerprint of the iteration assigned to the channel.
 - `iteration_id` (String) The ID of the iteration assigned to the channel.
 - `iteration_version` (Number) The incremental version of the iteration assigned to the channel.
-- `project_id` (String) The ID of the HCP project where this channel is located. Must be the same as the associated channel.
+- `project_id` (String) The ID of the HCP project where the channel is located. 
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
