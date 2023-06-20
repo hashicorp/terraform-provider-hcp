@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed panic when `hcp_packer_image` points to a channel without an assigned iteration.
+```
