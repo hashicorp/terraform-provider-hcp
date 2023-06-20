@@ -76,6 +76,8 @@ output "packer-registry-ubuntu-west-1" {
 - `component_type` (String) Name of the builder that built this image. Ex: `amazon-ebs.example`.
 - `iteration_id` (String) The iteration from which to get the image. Either this or `channel` must be specified.
 - `project_id` (String) The ID of the HCP project where the HCP Packer Registry image is located.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

@@ -48,6 +48,8 @@ data "hcp_azure_peering_connection" "test" {
 - `peer_vnet_name` (String) The name of the peer VNet in Azure.
 - `peer_vnet_region` (String) The region of the peer VNet in Azure.
 - `project_id` (String) The ID of the HCP project where the peering connection is located. Always matches the HVN's project.
+If not specified, the project specified in the HCP Provider config block will be used, if configured.
+If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `self_link` (String) A unique URL identifying the peering connection
 - `state` (String) The state of the Azure peering connection.
 
