@@ -188,6 +188,37 @@ func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.H
 	return req.Payload, nil
 }
 
+// ListBuckets queries the HCP Packer registry for all associated buckets.
+func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*packermodels.HashicorpCloudPackerBucket, error) {
+	nextPage := ""
+	var buckets []*packermodels.HashicorpCloudPackerBucket
+
+	for {
+		params := packer_service.NewPackerServiceListBucketsParams()
+		params.LocationOrganizationID = loc.OrganizationID
+		params.LocationProjectID = loc.ProjectID
+		// Sort order is needed for acceptance tests.
+		params.SortingOrderBy = []string{"slug"}
+		if nextPage != "" {
+			params.PaginationNextPageToken = &nextPage
+		}
+
+		req, err := client.Packer.PackerServiceListBuckets(params, nil)
+		if err != nil {
+			err := err.(*packer_service.PackerServiceListBucketsDefault)
+			return nil, errors.New(err.Payload.Message)
+		}
+
+		buckets = append(buckets, req.Payload.Buckets...)
+		pagination := req.Payload.Pagination
+		if pagination == nil || pagination.NextPageToken == "" {
+			return buckets, nil
+		}
+
+		nextPage = pagination.NextPageToken
+	}
+}
+
 // handleGetChannelError returns a formatted error for the GetChannel error.
 // The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
 func handleGetChannelError(err *packer_service.PackerServiceGetChannelDefault) error {
