@@ -187,14 +187,36 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
 					revokeIteration(t, itID, acctestUbuntuImageBucket, revokeAt)
-					// Sleep to make sure the iteration is revoked when we test
-					time.Sleep(5 * time.Second)
 				},
 				Config: testConfig(testAccPackerImageUbuntuProduction),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
 					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "ami-42"),
 				),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePackerImage_emptyChannel(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(*terraform.State) error {
+			deleteChannel(t, acctestArchImageBucket, acctestImageChannel, true)
+			deleteBucket(t, acctestArchImageBucket, true)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				PlanOnly: true,
+				PreConfig: func() {
+					upsertRegistry(t)
+					upsertBucket(t, acctestArchImageBucket)
+					upsertChannel(t, acctestArchImageBucket, acctestImageChannel, "")
+				},
+				Config:      testConfig(testAccPackerImageArchProduction),
+				ExpectError: regexp.MustCompile(`.*Channel does not have an assigned iteration.*`),
 			},
 		},
 	})
