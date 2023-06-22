@@ -321,7 +321,7 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 
 	baseAssignment := testAccPackerAssignmentBuilderBaseWithChannelReference("EnforceNull", channel)
 
-	generateEnforceNullCheckSteps := func(iterID string, iterFingerprint string, iterVersion string, isFirst bool) []resource.TestStep {
+	generateEnforceNullCheckSteps := func(iterID string, iterFingerprint string, iterVersion string) []resource.TestStep {
 		assignment := testAccPackerAssignmentBuilderFromAssignment(
 			baseAssignment,
 			iterID, iterFingerprint, iterVersion,
@@ -357,11 +357,11 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 
 	var generatedSteps []resource.TestStep
 	// Add null ID steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(`"none"`, ``, ``, true)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(`"none"`, ``, ``)...)
 	// Add null Fingerprint steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, `"none"`, ``, false)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, `"none"`, ``)...)
 	// Add null Version steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`, false)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`)...)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
