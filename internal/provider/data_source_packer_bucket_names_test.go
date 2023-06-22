@@ -11,7 +11,7 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 	bucket1 := testAccCreateSlug("2-BucketNames")
 	bucket2 := testAccCreateSlug("3-BucketNames")
 
-	bucketNames := testAccPackerBucketNamesBuilder("all")
+	bucketNames := testAccPackerDataBucketNamesBuilder("all")
 	config := testConfig(testAccConfigBuildersToString(bucketNames))
 
 	resource.Test(t, resource.TestCase{
@@ -63,7 +63,7 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 	})
 }
 
-func testAccPackerBucketNamesBuilder(uniqueName string) testAccConfigBuilderInterface {
+func testAccPackerDataBucketNamesBuilder(uniqueName string) testAccConfigBuilderInterface {
 	return testAccConfigBuilder{
 		isData:       true,
 		resourceType: "hcp_packer_bucket_names",
