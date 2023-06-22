@@ -55,13 +55,14 @@ resource "hcp_packer_channel_assignment" "alpine_advanced" {
 data "hcp_packer_bucket_names" "all" {}
 
 resource "hcp_packer_channel" "prod" {
-  # Optionally, filter the list of bucket names before passing them to for_each
   for_each = data.hcp_packer_bucket_names.all.names
 
   name        = "prod"
   bucket_name = each.key
 }
 ```
+
+Optionally, you can use Terraform functions/expressions to filter the list of bucket names before providing it to `for_each` if channels should only be created for a subset of buckets.
 
 ### Managing channel assignment for automatically created channels
 
@@ -80,7 +81,7 @@ This approach makes it easy to delegate management of each bucket's channel to a
 This option allows the use of different iteration identifier attributes for each channel's assignment. However, it has a lot more boilerplate than Option 2.
 
 ```terraform
-resource "hcp_packer_channel_assignment" "bucket1" {
+resource "hcp_packer_channel_assignment" "bucket1prod" {
   bucket_name = "bucket1"
   # `channel_name` uses a reference to create an implicit dependency so
   # Terraform evaluates the resources in the correct order. This also
@@ -91,7 +92,7 @@ resource "hcp_packer_channel_assignment" "bucket1" {
   iteration_id = "01H1SF9NWAK8AP25PAWDBGZ1YD"
 }
 
-resource "hcp_packer_channel_assignment" "bucket2" {
+resource "hcp_packer_channel_assignment" "bucket2prod" {
   bucket_name  = "bucket2"
   channel_name = hcp_packer_channel.prod["bucket2"].name
 
@@ -217,10 +218,7 @@ resource "hcp_packer_channel_assignment" "prod" {
   for_each = merge(
     { for c in hcp_packer_channel.prod : c.bucket_name => "none" },
     # If a default value is not desired, omit the line above, and buckets that 
-    # aren't added to the map won't have a channel assignment set.
-    # If a default value is not desired, but all channels should have an 
-    # assignment set, replace `"none"` with `null` to ensure that every channel
-    # is covered by at least one of the filters.
+    # aren't added to the map via a filter won't have a channel assignment set.
     {
       for c in hcp_packer_channel.prod : c.bucket_name => "01H1SF9NWAK8AP25PAWDBGZ1YD"
       if startswith(v.bucket_name, "prefix1")

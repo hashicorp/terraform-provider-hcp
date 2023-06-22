@@ -21,6 +21,8 @@ You can integrate multiple HCP Packer resources and data sources to perform adva
 
 {{ tffile "examples/guides/packer_channel_management/bucket_names/main.tf" }}
 
+Optionally, you can use Terraform functions/expressions to filter the list of bucket names before providing it to `for_each` if channels should only be created for a subset of buckets.
+
 ### Managing channel assignment for automatically created channels
 
 Channel assignment for automatically created channels can be managed in many ways. Some nonexhaustive example configurations are provided below.

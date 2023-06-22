@@ -1,4 +1,4 @@
-resource "hcp_packer_channel_assignment" "bucket1" {
+resource "hcp_packer_channel_assignment" "bucket1prod" {
   bucket_name = "bucket1"
   # `channel_name` uses a reference to create an implicit dependency so
   # Terraform evaluates the resources in the correct order. This also
@@ -9,7 +9,7 @@ resource "hcp_packer_channel_assignment" "bucket1" {
   iteration_id = "01H1SF9NWAK8AP25PAWDBGZ1YD"
 }
 
-resource "hcp_packer_channel_assignment" "bucket2" {
+resource "hcp_packer_channel_assignment" "bucket2prod" {
   bucket_name  = "bucket2"
   channel_name = hcp_packer_channel.prod["bucket2"].name
 

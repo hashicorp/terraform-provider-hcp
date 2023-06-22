@@ -2,10 +2,7 @@ resource "hcp_packer_channel_assignment" "prod" {
   for_each = merge(
     { for c in hcp_packer_channel.prod : c.bucket_name => "none" },
     # If a default value is not desired, omit the line above, and buckets that 
-    # aren't added to the map won't have a channel assignment set.
-    # If a default value is not desired, but all channels should have an 
-    # assignment set, replace `"none"` with `null` to ensure that every channel
-    # is covered by at least one of the filters.
+    # aren't added to the map via a filter won't have a channel assignment set.
     {
       for c in hcp_packer_channel.prod : c.bucket_name => "01H1SF9NWAK8AP25PAWDBGZ1YD"
       if startswith(v.bucket_name, "prefix1")
