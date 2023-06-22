@@ -45,7 +45,7 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"bucket_name": {
-				Description:      "The slug of the HCP Packer Registry image bucket where the channel should be created.",
+				Description:      "The slug of the HCP Packer Registry bucket where the channel should be created.",
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Required:         true,

@@ -66,7 +66,7 @@ output "packer-registry-ubuntu-west-1" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry image bucket to pull from.
+- `bucket_name` (String) The slug of the HCP Packer Registry bucket to pull from.
 - `cloud_provider` (String) Name of the cloud provider this image is stored-in.
 - `region` (String) Region this image is stored in, if any.
 

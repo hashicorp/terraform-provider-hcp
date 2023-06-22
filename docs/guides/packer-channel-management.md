@@ -7,7 +7,7 @@ description: |-
 
 # Advanced Packer Channel Management
 
-By integrating multiple HCP Packer resources and data sources, you can perform more advanced channel management tasks.
+You can integrate multiple HCP Packer resources and data sources to perform advanced channel management tasks.
 
 ## Setting the channel assignment on a Terraform-managed channel
 

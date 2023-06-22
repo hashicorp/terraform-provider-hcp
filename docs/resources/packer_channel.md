@@ -24,7 +24,7 @@ resource "hcp_packer_channel" "staging" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry image bucket where the channel should be created.
+- `bucket_name` (String) The slug of the HCP Packer Registry bucket where the channel should be created.
 - `name` (String) The name of the channel being managed.
 
 ### Optional
