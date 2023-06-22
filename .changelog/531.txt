@@ -2,7 +2,7 @@
 Adds read-only `restricted` field to `hcp_packer_channel` resource.
 ```
 
-```release-note:improvement
+```release-note:feature
 Adds `hcp_packer_channel_assignment` resource.
 ```
 
