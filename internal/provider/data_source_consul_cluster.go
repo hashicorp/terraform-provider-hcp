@@ -130,7 +130,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:    true,
 			},
 			"tier": {
-				Description: "The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard` and `plus` are available at this time.",
+				Description: "The tier that the HCP Consul cluster will be provisioned as.  Only `development`, `standard`, `plus`, and `premium` are available at this time.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
