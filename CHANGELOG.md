@@ -1,3 +1,13 @@
+## v0.62.0 (June 23, 2023)
+
+IMPROVEMENTS:
+
+* Add "premium" to descriptions about Consul Cluster tier [[GH-537](https://github.com/hashicorp/terraform-provider-hcp/pull/537)]
+* Update the description of the optional `project_id` field in data sources and resources to include details of how project_id is targeted when none is passed in. [[GH-527](https://github.com/hashicorp/terraform-provider-hcp/pull/527)]
+
+BUG FIXES:
+
+* Fixed panic when `hcp_packer_image` points to a channel without an assigned iteration. [[GH-533](https://github.com/hashicorp/terraform-provider-hcp/pull/533)]
 ## v0.61.0 (June 13, 2023)
 FEATURES:
 
