@@ -61,7 +61,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			{ // Set channel assignment to null
 				Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilderFromAssignment(
 					baseAssignment,
-					``, `"none"`, ``,
+					``, fmt.Sprintf("%q", unassignString), ``,
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.ResourceName(), bucketSlug, channelSlug),
@@ -357,9 +357,9 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 
 	var generatedSteps []resource.TestStep
 	// Add null ID steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(`"none"`, ``, ``)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(fmt.Sprintf("%q", unassignString), ``, ``)...)
 	// Add null Fingerprint steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, `"none"`, ``)...)
+	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, fmt.Sprintf("%q", unassignString), ``)...)
 	// Add null Version steps
 	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`)...)
 
@@ -487,12 +487,12 @@ func testAccCheckAssignmentStateMatchesIteration(resourceName string, iterationP
 
 		iterID := iteration.ID
 		if iterID == "" {
-			iterID = "none"
+			iterID = unassignString
 		}
 
 		iterFingerprint := iteration.Fingerprint
 		if iterFingerprint == "" {
-			iterFingerprint = "none"
+			iterFingerprint = unassignString
 		}
 
 		return resource.ComposeAggregateTestCheckFunc(

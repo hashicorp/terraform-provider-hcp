@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+// This string is used to represent an unassigned (or "null") channel
+// assignment for iteration identifiers of the String type
+const unassignString string = "none"
+
 func resourcePackerChannelAssignment() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.",
@@ -175,12 +179,12 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	}
 
 	iterID := d.Get("iteration_id").(string)
-	if iterID == "none" {
+	if iterID == unassignString {
 		iterID = ""
 	}
 
 	iterFingerprint := d.Get("iteration_fingerprint").(string)
-	if iterFingerprint == "none" {
+	if iterFingerprint == unassignString {
 		iterFingerprint = ""
 	}
 
@@ -227,10 +231,10 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 	if !assignmentHasChanges || d.HasChange("iteration_version") {
 		iteration.IncrementalVersion = int32(d.Get("iteration_version").(int))
 	}
-	if iterID := d.Get("iteration_id").(string); (!assignmentHasChanges || d.HasChange("iteration_id")) && iterID != "none" {
+	if iterID := d.Get("iteration_id").(string); (!assignmentHasChanges || d.HasChange("iteration_id")) && iterID != unassignString {
 		iteration.ID = iterID
 	}
-	if iterFingerpint := d.Get("iteration_fingerprint").(string); (!assignmentHasChanges || d.HasChange("iteration_fingerprint")) && iterFingerpint != "none" {
+	if iterFingerpint := d.Get("iteration_fingerprint").(string); (!assignmentHasChanges || d.HasChange("iteration_fingerprint")) && iterFingerpint != unassignString {
 		iteration.Fingerprint = iterFingerpint
 	}
 
@@ -374,13 +378,13 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 		var itErr error
 
 		if rawID, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && d.NewValueKnown("iteration_id") {
-			if id := rawID.(string); id != "none" {
+			if id := rawID.(string); id != unassignString {
 				iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id)
 			} else {
 				iteration = &packermodels.HashicorpCloudPackerIteration{}
 			}
 		} else if rawFingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("iteration_fingerprint") && d.NewValueKnown("iteration_fingerprint") {
-			if fingerprint := rawFingerprint.(string); fingerprint != "none" {
+			if fingerprint := rawFingerprint.(string); fingerprint != unassignString {
 				iteration, itErr = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint)
 			} else {
 				iteration = &packermodels.HashicorpCloudPackerIteration{}
@@ -402,7 +406,7 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 
 			id := iteration.ID
 			if id == "" {
-				id = "none"
+				id = unassignString
 			}
 			if err := d.SetNew("iteration_id", id); err != nil {
 				return err
@@ -410,7 +414,7 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 
 			fingerprint := iteration.Fingerprint
 			if fingerprint == "" {
-				fingerprint = "none"
+				fingerprint = unassignString
 			}
 			if err := d.SetNew("iteration_fingerprint", fingerprint); err != nil {
 				return err
@@ -440,7 +444,7 @@ func setPackerChannelAssignmentIterationData(d *schema.ResourceData, i *packermo
 
 	id := iteration.ID
 	if id == "" {
-		id = "none"
+		id = unassignString
 	}
 	if err := d.Set("iteration_id", id); err != nil {
 		return err
@@ -448,7 +452,7 @@ func setPackerChannelAssignmentIterationData(d *schema.ResourceData, i *packermo
 
 	fingerprint := iteration.Fingerprint
 	if fingerprint == "" {
-		fingerprint = "none"
+		fingerprint = unassignString
 	}
 	if err := d.Set("iteration_fingerprint", fingerprint); err != nil {
 		return err
