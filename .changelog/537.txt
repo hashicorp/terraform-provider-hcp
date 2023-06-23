@@ -1,0 +1,3 @@
+```release-note:improvement
+Add "premium" to descriptions about Consul Cluster tier
+```
