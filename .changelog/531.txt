@@ -1,0 +1,12 @@
+```release-note:improvement
+Adds read-only `restricted` field to `hcp_packer_channel` resource.
+```
+
+```release-note:feature
+Adds `hcp_packer_channel_assignment` resource.
+```
+
+```release-note:deprecation
+Setting the `iteration` block on `hcp_packer_channel` is now deprecated in
+favor of `hcp_packer_channel_assignment`. 
+```
