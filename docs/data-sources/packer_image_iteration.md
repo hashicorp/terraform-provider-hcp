@@ -22,7 +22,7 @@ data "hcp_packer_image_iteration" "alpine" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry image bucket to pull from.
+- `bucket_name` (String) The slug of the HCP Packer Registry bucket to pull from.
 - `channel` (String) The channel that points to the version of the image you want.
 
 ### Optional

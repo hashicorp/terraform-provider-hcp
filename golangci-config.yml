@@ -23,11 +23,12 @@ linters:
 
 linters-settings:
   depguard:
-    list-type: blacklist
-    packages:
-      - github.com/gogo/status
-      - github.com/gogo/codes
-      - github.com/gogo/protobuf
+    rules:
+      main:
+        deny:
+          - pkg: "github.com/gogo/status"
+          - pkg: "github.com/gogo/codes"
+          - pkg: "github.com/gogo/protobuf"
   misspell:
     locale: US
 
