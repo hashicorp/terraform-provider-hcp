@@ -18,7 +18,7 @@ import (
 
 func dataSourcePackerBucketNames() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Buckets data source gets all of the buckets in a single HCP Packer registry.",
+		Description: "The Packer Bucket Names data source gets the names of all of the buckets in a single HCP Packer registry.",
 		ReadContext: dataSourcePackerBucketsRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,

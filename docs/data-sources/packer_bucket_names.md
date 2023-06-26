@@ -3,12 +3,12 @@
 page_title: "hcp_packer_bucket_names Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The Packer Buckets data source gets all of the buckets in a single HCP Packer registry.
+  The Packer Bucket Names data source gets the names of all of the buckets in a single HCP Packer registry.
 ---
 
 # hcp_packer_bucket_names (Data Source)
 
-The Packer Buckets data source gets all of the buckets in a single HCP Packer registry.
+The Packer Bucket Names data source gets the names of all of the buckets in a single HCP Packer registry.
 
 ## Example Usage
 
