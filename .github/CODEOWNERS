@@ -23,4 +23,4 @@
 *boundary* @hashicorp/boundary-cloud
 
 # Statuspage.io configuration is owned by the Core SRE team
-/internal/provider/provider.go @hashicorp/core-sre @hashicorp/experiences-platform
+/internal/provider/statuspage.go @hashicorp/core-sre 
