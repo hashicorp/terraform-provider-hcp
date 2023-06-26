@@ -25,84 +25,16 @@ Optionally, you can use Terraform functions/expressions to filter the list of bu
 
 ### Managing channel assignment for automatically created channels
 
-Channel assignment for automatically created channels can be managed in many ways. Some nonexhaustive example configurations are provided below.
+Channel assignment for automatically created channels can be managed in many ways. A nonexhaustive example configuration is provided below. 
 
-For examples where only one iteration identifier attribute is supported, the `iteration_id` attribute is used for example purposes. Any of the three iteration identifier attributes can be used.
+The `iteration_id` attribute is used for example purposes, but any of the three iteration identifier attributes can be used.
 
-You are not required to configure an assignment for every channel at the same time as automatic channel creation. Using Terraform builtin functions/expressions, it is possible to modify the examples below to select which buckets will also have channel assignments configured, even if _all_ buckets will have automatic channel creation enabled.
+{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment.tf" }}
 
-#### Example 1: Explicit assignments for each channel
+You are not required to configure an assignment for every channel at the same time as automatic channel creation. Using Terraform builtin functions/expressions, it is possible to limit which channels should have assignments configured by default.
 
-This approach makes it easy to delegate management of each bucket's channel to a different file (or even an entirely different Terraform workspace).
+The default value used in the example is `"none"`, which causes Terraform to set the channel to have no assigned iteration and continue to ensure that an iteration is not assigned elsewhere. Each of the three iteration identifier attributes has a "zero value" for this purpose: `iteration_id` and `iteration_fingerprint` both use `"none"`, and `iteration_version` uses `0`. The default value can also be set to `null` if you want to ensure that every channel has an assignment defined explicitly rather than using a default.
 
-##### Option 1: Individual resources
+If an invalid bucket name is provided in the `for_each` map, an error will be thrown. This helps to ensure that the configuration doesn't contain orphaned values. If this behavior is undesirable, filter out invalid buckets from the result of the `merge` function.
 
-This option allows the use of different iteration identifier attributes for each channel's assignment. However, it has a lot more boilerplate than Option 2.
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-individual.tf" }}
-
-##### Option 2: One resource
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-multiple.tf" }}
-
-#### Example 2: Assign all channels to the same value
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-default.tf" }}
-
-#### Example 3: Ensuring all channels have an assignment configuration
-
-These approaches will ensure that all channels have an assignment configured, either with a default value or an override.
-
-The default value used in the examples is `"none"`, which causes Terraform to set the channel to have no assigned iteration and continue to ensure that an iteration is not assigned elsewhere. Each of the three iteration identifier attributes has a "zero value" for this purpose: `iteration_id` and `iteration_fingerprint` both use `"none"`, and `iteration_version` uses `0`. 
-The default value can also be set to a string literal (or integer literal, for iteration_version), a reference to an iteration identifier attribute from an `hcp_packer_iteration` data source, or any other valid iteration identifier.
-If a default value is not desired, but you still want to ensure that every channel has its assignment managed by Terraform, you can replace `"none"` in the examples with `null`. This will result in a planning error if any buckets don't have an explicitly defined override.
-
-##### Option 1a: Default with explicit overrides. Only allows overrides for valid buckets.
-
-Overrides are provided as a map from bucket names to iteration identifiers.
-
-This option will error if an override is set for a bucket that doesn't have a channel managed by `hcp_packer_channel.prod`. This helps to ensure that the configuration doesn't contain orphaned values.
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-default-override-individual-with-errors.tf" }}
-
-If some buckets will have their channel's assignment managed outside of Terraform (or in another Terraform workspace), you can wrap the merge function above with a filter, like this (it may be cleaner to use a local variable to store the contents of the merge function): 
-
-```
-for_each = { 
-  for k, v in merge(....contents from above....) : k => v
-  if !contains(["list","of","buckets","to","exclude"], k)
-}
-```
-
-##### Option 1b: Default with explicit overrides. Allows overrides for invalid buckets.
-
-Overrides are provided as a map from bucket names to iteration identifiers.
-
-This option will not error if overrides are set for buckets that don't have a channel managed by `hcp_packer_channel.prod`. This also means it will not error if an override is configured for a bucket that does not exist in the HCP Packer registry.
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-default-override-individual.tf" }}
-
-If some buckets will have their channel's assignment managed outside of Terraform (or in another Terraform workspace), you can wrap the for_each input above with a filter, like this:
-
-```
-for_each = { 
-  for k, v in hcp_packer_channel.prod : k => v
-  if !contains(["list","of","buckets","to","exclude"], k)
-}
-```
-
-##### Option 2: Default with filter-based overrides
-
-Overrides are provided as a map from bucket names to iteration identifiers, generated using map comprehensions with filter functions. 
-It is possible to add one or more maps containing overrides for specific buckets to the merge function in this example. Without individual overrides, this example shouldn't cause invalid bucket errors, but with individual overrides it may throw errors similar to the behavior in Option 1a.
-
-{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment-default-override-filters.tf" }}
-
-If some buckets will have their channel's assignment managed outside of Terraform (or in another Terraform workspace), you can wrap the merge function above with a filter, like this (it may be cleaner to use a local variable to store the contents of the merge function): 
-
-```
-for_each = { 
-  for k, v in merge(....contents from above....) : k => v
-  if !contains(["list","of","buckets","to","exclude"], k)
-}
-```
+An [example module](https://github.com/hashicorp/terraform-provider-hcp/tree/main/examples/guides/packer_channel_management/bucket_names/example_module) is available that includes options to leave select channels unmanaged, require explicit configurations for select channels, ignore invalid bucket names in the configuration, and automatically assign an iteration fetched from another channel.
