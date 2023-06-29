@@ -1,0 +1,3 @@
+```release-note:improvement
+Capture unknown error from SDK when getting project or organization.
+```
