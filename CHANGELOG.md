@@ -1,3 +1,17 @@
+## v0.63.0 (June 29, 2023)
+
+FEATURES:
+
+* Adds `hcp_packer_channel_assignment` resource. [[GH-531](https://github.com/hashicorp/terraform-provider-hcp/pull/531)]
+
+IMPROVEMENTS:
+
+* Adds read-only `restricted` field to `hcp_packer_channel` resource. [[GH-531](https://github.com/hashicorp/terraform-provider-hcp/pull/531)]
+
+DEPRECATIONS:
+
+* Setting the `iteration` block on `hcp_packer_channel` is now deprecated in
+favor of `hcp_packer_channel_assignment`. [[GH-531](https://github.com/hashicorp/terraform-provider-hcp/pull/531)]
 ## v0.62.0 (June 23, 2023)
 
 IMPROVEMENTS:
