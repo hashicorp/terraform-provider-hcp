@@ -40,7 +40,7 @@ Save the client ID and secret as the environment variables HCP_CLIENT_ID and HCP
 
 Or, configure the provider with the client ID and secret by copy-pasting the values directly into provider config.
 
--> **Warning:** Hard-coded credentials are not recommended in Terraform configuration outside of local testing and can risks secret exposure if committed to a code repository.
+-> **Warning:** Hard-coded credentials are not recommended in Terraform configuration outside of local testing and can risk secret exposure if committed to a code repository.
 
 ```terraform
 // Credentials can be set explicitly or via the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET
