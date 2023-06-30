@@ -17,10 +17,6 @@ const (
 	counterStart = 1
 )
 
-func unknownError(err error) error {
-	return fmt.Errorf("unknown err: %w, please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct", err)
-}
-
 var errorCodesToRetry = [...]int{502, 503, 504}
 
 // Helper to check what requests to retry based on the response HTTP code
@@ -40,7 +36,7 @@ func RetryOrganizationServiceList(client *Client, params *organization_service.O
 	if err != nil {
 		serviceErr, ok := err.(*organization_service.OrganizationServiceListDefault)
 		if !ok {
-			return nil, unknownError(err)
+			return nil, err
 		}
 		counter := counterStart
 		for shouldRetryErrorCode(serviceErr.Code(), errorCodesToRetry[:]) && counter < retryCount {
@@ -66,7 +62,7 @@ func RetryProjectServiceList(client *Client, params *project_service.ProjectServ
 	if err != nil {
 		serviceErr, ok := err.(*project_service.ProjectServiceListDefault)
 		if !ok {
-			return nil, unknownError(err)
+			return nil, err
 		}
 
 		counter := counterStart
@@ -93,7 +89,7 @@ func RetryProjectServiceGet(client *Client, params *project_service.ProjectServi
 	if err != nil {
 		serviceErr, ok := err.(*project_service.ProjectServiceGetDefault)
 		if !ok {
-			return nil, unknownError(err)
+			return nil, err
 		}
 
 		counter := counterStart
