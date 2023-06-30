@@ -1,0 +1,3 @@
+```release-note:bug
+Capture unknown errors from the HCP Go SDK when getting project or organization, where errors were previously replaced with a static message.
+```

@@ -4,9 +4,7 @@
 package clients
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
@@ -14,10 +12,9 @@ import (
 )
 
 const (
-	retryCount          = 10
-	retryDelay          = 10
-	counterStart        = 1
-	unknownErrorMessage = "could not complete request: please ensure your HCP_API_HOST, HCP_CLIENT_ID, and HCP_CLIENT_SECRET are correct"
+	retryCount   = 10
+	retryDelay   = 10
+	counterStart = 1
 )
 
 var errorCodesToRetry = [...]int{502, 503, 504}
@@ -37,11 +34,12 @@ func RetryOrganizationServiceList(client *Client, params *organization_service.O
 	resp, err := client.Organization.OrganizationServiceList(params, nil)
 
 	if err != nil {
-		if reflect.TypeOf(err.Error()).Name() != "organization_service.OrganizationServiceListDefault" {
-			return nil, errors.New(unknownErrorMessage)
+		serviceErr, ok := err.(*organization_service.OrganizationServiceListDefault)
+		if !ok {
+			return nil, err
 		}
 		counter := counterStart
-		for shouldRetryErrorCode(err.(*organization_service.OrganizationServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+		for shouldRetryErrorCode(serviceErr.Code(), errorCodesToRetry[:]) && counter < retryCount {
 			resp, err = client.Organization.OrganizationServiceList(params, nil)
 			if err == nil {
 				break
@@ -62,12 +60,13 @@ func RetryProjectServiceList(client *Client, params *project_service.ProjectServ
 	resp, err := client.Project.ProjectServiceList(params, nil)
 
 	if err != nil {
-		if reflect.TypeOf(err.Error()).Name() != "project_service.ProjectServiceListDefault" {
-			return nil, errors.New(unknownErrorMessage)
+		serviceErr, ok := err.(*project_service.ProjectServiceListDefault)
+		if !ok {
+			return nil, err
 		}
 
 		counter := counterStart
-		for shouldRetryErrorCode(err.(*project_service.ProjectServiceListDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+		for shouldRetryErrorCode(serviceErr.Code(), errorCodesToRetry[:]) && counter < retryCount {
 			resp, err = client.Project.ProjectServiceList(params, nil)
 			if err == nil {
 				break
@@ -88,12 +87,13 @@ func RetryProjectServiceGet(client *Client, params *project_service.ProjectServi
 	resp, err := client.Project.ProjectServiceGet(params, nil)
 
 	if err != nil {
-		if reflect.TypeOf(err.Error()).Name() != "project_service.ProjectServiceGetDefault" {
-			return nil, errors.New(unknownErrorMessage)
+		serviceErr, ok := err.(*project_service.ProjectServiceGetDefault)
+		if !ok {
+			return nil, err
 		}
 
 		counter := counterStart
-		for shouldRetryErrorCode(err.(*project_service.ProjectServiceGetDefault).Code(), errorCodesToRetry[:]) && counter < retryCount {
+		for shouldRetryErrorCode(serviceErr.Code(), errorCodesToRetry[:]) && counter < retryCount {
 			resp, err = client.Project.ProjectServiceGet(params, nil)
 			if err == nil {
 				break
