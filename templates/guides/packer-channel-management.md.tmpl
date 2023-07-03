@@ -17,3 +17,24 @@ You can integrate multiple HCP Packer resources and data sources to perform adva
 
 {{ tffile "examples/guides/packer_channel_management/assign_latest.tf" }}
 
+## Automatically creating channels for new and existing buckets
+
+{{ tffile "examples/guides/packer_channel_management/bucket_names/main.tf" }}
+
+Optionally, you can use Terraform functions/expressions to filter the list of bucket names before providing it to `for_each` if channels should only be created for a subset of buckets.
+
+### Managing channel assignment for automatically created channels
+
+Channel assignment for automatically created channels can be managed in many ways. A nonexhaustive example configuration is provided below. 
+
+The `iteration_id` attribute is used for example purposes, but any of the three iteration identifier attributes can be used.
+
+{{ tffile "examples/guides/packer_channel_management/bucket_names/assignment.tf" }}
+
+You are not required to configure an assignment for every channel at the same time as automatic channel creation. Using Terraform builtin functions/expressions, it is possible to limit which channels should have assignments configured by default.
+
+The default value used in the example is `"none"`, which causes Terraform to set the channel to have no assigned iteration and continue to ensure that an iteration is not assigned elsewhere. Each of the three iteration identifier attributes has a "zero value" for this purpose: `iteration_id` and `iteration_fingerprint` both use `"none"`, and `iteration_version` uses `0`. The default value can also be set to `null` if you want to ensure that every channel has an assignment defined explicitly rather than using a default.
+
+If an invalid bucket name is provided in the `for_each` map, an error will be thrown. This helps to ensure that the configuration doesn't contain orphaned values, but can cause plan failures when buckets are deleted. If this behavior is undesirable, filter out invalid buckets from the result of the `merge` function.
+
+An [example module](https://github.com/hashicorp/terraform-provider-hcp/tree/main/examples/guides/packer_channel_management/bucket_names/example_module) is available that includes options to leave select channels unmanaged, require explicit configurations for select channels, ignore invalid bucket names in the configuration, and automatically assign an iteration fetched from another channel.
