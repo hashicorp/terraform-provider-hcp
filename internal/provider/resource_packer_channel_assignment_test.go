@@ -301,6 +301,9 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 				ImportStateId: fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ExpectError:   regexp.MustCompile(".*channel with.*is managed by HCP Packer.*"),
 			},
+			{ // Create a dummy non-empty state so that `CheckDestroy` will run.
+				Config: testAccConfigDummyNonemptyState,
+			},
 		},
 	})
 }
