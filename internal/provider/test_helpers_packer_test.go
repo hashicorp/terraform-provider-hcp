@@ -39,6 +39,11 @@ func upsertRegistry(t *testing.T) {
 	}
 
 	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
+
+	if err == nil {
+		waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
+	}
+
 	if err, ok := err.(*packer_service.PackerServiceCreateRegistryDefault); ok {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
@@ -68,12 +73,12 @@ func upsertRegistry(t *testing.T) {
 			}
 			return
 		default:
-			t.Errorf("unexpected CreateRegistry error, expected nil or 409. Got code: %d err: %v", err.Code(), err)
+			t.Errorf("unexpected CreateRegistry error code, expected nil or 409. Got code: %d err: %v", err.Code(), err)
 			return
 		}
 	}
 
-	waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
+	t.Errorf("unexpected CreateRegistry error, expected nil. Got: %v", err)
 }
 
 func waitForOperation(
@@ -292,16 +297,20 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	}
 
 	build, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil)
-	if err, ok := err.(*packer_service.PackerServiceCreateBuildDefault); ok {
-		switch err.Code() {
-		case int(codes.Aborted), http.StatusConflict:
-			// all good here !
-			return
+	if err != nil {
+		if err, ok := err.(*packer_service.PackerServiceCreateBuildDefault); ok {
+			switch err.Code() {
+			case int(codes.Aborted), http.StatusConflict:
+				// all good here !
+				return
+			}
 		}
+
+		t.Errorf("unexpected CreateBuild error, expected nil. Got %v", err)
 	}
 
 	if build == nil {
-		t.Errorf("unexpected CreateBuild error, expected non nil build response. Got %v", err)
+		t.Errorf("unexpected CreateBuild response, expected non nil build. Got nil.")
 		return
 	}
 
@@ -328,8 +337,7 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 			Labels: map[string]string{"test-key": "test-value"},
 		},
 	}
-	_, err = client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil)
-	if err, ok := err.(*packer_service.PackerServiceUpdateBuildDefault); ok {
+	if _, err = client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil); err != nil {
 		t.Errorf("unexpected UpdateBuild error, expected nil. Got %v", err)
 	}
 }
