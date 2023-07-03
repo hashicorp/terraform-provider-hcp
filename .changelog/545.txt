@@ -1,0 +1,3 @@
+```release-note:bug
+Resolve panics when Packer API client helpers receive unexpected error formats
+```

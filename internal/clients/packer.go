@@ -6,6 +6,7 @@ package clients
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
@@ -17,7 +18,7 @@ import (
 func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketName string, channelName string) (*packermodels.HashicorpCloudPackerChannel, error) {
 
-	getParams := packer_service.NewPackerServiceGetChannelParams()
+	getParams := packer_service.NewPackerServiceGetChannelParamsWithContext(ctx)
 	getParams.BucketSlug = bucketName
 	getParams.Slug = channelName
 	getParams.LocationOrganizationID = loc.OrganizationID
@@ -25,7 +26,10 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 
 	getResp, err := client.Packer.PackerServiceGetChannel(getParams, nil)
 	if err != nil {
-		return nil, handleGetChannelError(err.(*packer_service.PackerServiceGetChannelDefault))
+		if err, ok := err.(*packer_service.PackerServiceGetChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by GetPackerChannelBySlug. Got: %v", err)
 	}
 
 	return getResp.Payload.Channel, nil
@@ -85,7 +89,10 @@ func newGetIterationParams(ctx context.Context, loc *sharedmodels.HashicorpCloud
 func getIteration(client *Client, params *packer_service.PackerServiceGetIterationParams) (*packermodels.HashicorpCloudPackerIteration, error) {
 	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {
-		return nil, handleGetIterationError(err.(*packer_service.PackerServiceGetIterationDefault))
+		if err, ok := err.(*packer_service.PackerServiceGetIterationDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by getIteration. Got: %v", err)
 	}
 
 	return it.Payload.Iteration, nil
@@ -114,8 +121,10 @@ func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 	channel, err := client.Packer.PackerServiceCreateChannel(params, nil)
 	if err != nil {
-		err := err.(*packer_service.PackerServiceCreateChannelDefault)
-		return nil, errors.New(err.Payload.Message)
+		if err, ok := err.(*packer_service.PackerServiceCreateChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by CreateBucketChannel. Got: %v", err)
 	}
 
 	return channel.GetPayload().Channel, nil
@@ -144,8 +153,10 @@ func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
 	if err != nil {
-		err := err.(*packer_service.PackerServiceUpdateChannelDefault)
-		return nil, errors.New(err.Payload.Message)
+		if err, ok := err.(*packer_service.PackerServiceUpdateChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by UpdateBucketChannel. Got: %v", err)
 	}
 
 	return channel.GetPayload().Channel, nil
@@ -161,8 +172,10 @@ func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 	req, err := client.Packer.PackerServiceDeleteChannel(params, nil)
 	if err != nil {
-		err := err.(*packer_service.PackerServiceDeleteChannelDefault)
-		return nil, errors.New(err.Payload.Message)
+		if err, ok := err.(*packer_service.PackerServiceDeleteChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by DeleteBucketChannel. Got: %v", err)
 	}
 
 	if !req.IsSuccess() {
@@ -174,15 +187,17 @@ func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 // ListBucketChannels queries the HCP Packer registry for channels associated to the specified bucket.
 func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
-	params := packer_service.NewPackerServiceListChannelsParams()
+	params := packer_service.NewPackerServiceListChannelsParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 
 	req, err := client.Packer.PackerServiceListChannels(params, nil)
 	if err != nil {
-		err := err.(*packer_service.PackerServiceListChannelsDefault)
-		return nil, errors.New(err.Payload.Message)
+		if err, ok := err.(*packer_service.PackerServiceListChannelsDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by ListBucketChannels. Got: %v", err)
 	}
 
 	return req.Payload, nil
@@ -205,8 +220,10 @@ func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.Hashicor
 
 		req, err := client.Packer.PackerServiceListBuckets(params, nil)
 		if err != nil {
-			err := err.(*packer_service.PackerServiceListBucketsDefault)
-			return nil, errors.New(err.Payload.Message)
+			if err, ok := err.(*packer_service.PackerServiceListBucketsDefault); ok {
+				return nil, errors.New(err.Payload.Message)
+			}
+			return nil, fmt.Errorf("unexpected error format received by ListBuckets. Got: %v", err)
 		}
 
 		buckets = append(buckets, req.Payload.Buckets...)
@@ -217,16 +234,4 @@ func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.Hashicor
 
 		nextPage = pagination.NextPageToken
 	}
-}
-
-// handleGetChannelError returns a formatted error for the GetChannel error.
-// The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
-func handleGetChannelError(err *packer_service.PackerServiceGetChannelDefault) error {
-	return errors.New(err.Payload.Message)
-}
-
-// handleGetIterationError returns a formatted error for the GetIteration error.
-// The upstream API does a good job of providing detailed error messages so we just display the error message, with no status code.
-func handleGetIterationError(err *packer_service.PackerServiceGetIterationDefault) error {
-	return errors.New(err.Payload.Message)
 }
