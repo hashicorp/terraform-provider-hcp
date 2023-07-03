@@ -4,12 +4,15 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -155,4 +158,26 @@ func (b testAccConfigBuilder) Attributes() map[string]string {
 
 func (b testAccConfigBuilder) AttributeRef(path string) string {
 	return fmt.Sprintf("%s.%s", b.ResourceName(), path)
+}
+
+// Used to create a dummy non-empty state so that `CheckDestroy` can be used to
+// clean up resources created in `PreCheck` for tests that don't generate a
+// non-empty state on their own.
+const testAccConfigDummyNonemptyState string = `resource "dummy_state" "dummy" {}`
+
+// Contains a dummy resource that is used in `testAccConfigDummyNonemptyState`
+func testAccNewDummyProvider() *schema.Provider {
+	setDummyID := func(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+		d.SetId("dummy_id")
+		return nil
+	}
+	return &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"dummy_state": {
+				CreateContext: setDummyID,
+				ReadContext:   setDummyID,
+				DeleteContext: func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics { return nil },
+			},
+		},
+	}
 }
