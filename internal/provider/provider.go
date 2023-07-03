@@ -38,6 +38,7 @@ func New() func() *schema.Provider {
 				"hcp_packer_image_iteration":         dataSourcePackerImageIteration(),
 				"hcp_packer_image":                   dataSourcePackerImage(),
 				"hcp_packer_iteration":               dataSourcePackerIteration(),
+				"hcp_packer_run_task":                dataSourcePackerRunTask(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 				"hcp_vault_secrets_app":              dataSourceVaultSecretsApp(),
 			},
