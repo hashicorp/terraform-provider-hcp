@@ -58,6 +58,32 @@ func testAccGetAttributeFromResourceInState(resourceName string, attribute strin
 	return &value, nil
 }
 
+// Checks that the atrribute's value is not the same as diffVal
+func testAccCheckResourceAttrDifferent(resourceName string, attribute string, diffVal string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		stateValPtr, err := testAccGetAttributeFromResourceInState(resourceName, attribute, state)
+		if err != nil {
+			return err
+		}
+
+		if *stateValPtr == diffVal {
+			return fmt.Errorf("%s: Attribute '%s' expected to not be %#v, but it was", resourceName, attribute, diffVal)
+		}
+
+		return nil
+	}
+}
+
+// Same as `testAccCheckResourceAttrDifferent`, but diffVal is a pointer that is read at check-time
+func testAccCheckResourceAttrPtrDifferent(resourceName string, attribute string, diffVal *string) resource.TestCheckFunc {
+	if diffVal == nil {
+		panic("diffVal cannot be nil")
+	}
+	return func(state *terraform.State) error {
+		return testAccCheckResourceAttrDifferent(resourceName, attribute, *diffVal)(state)
+	}
+}
+
 // Returns a best-effort location from the state of a given resource.
 // Will return the default location even if the resource isn't found.
 func testAccGetLocationFromState(resourceName string, state *terraform.State) (*sharedmodels.HashicorpCloudLocationLocation, error) {

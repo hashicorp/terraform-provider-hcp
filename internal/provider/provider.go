@@ -54,6 +54,7 @@ func New() func() *schema.Provider {
 				"hcp_hvn_route":                      resourceHvnRoute(),
 				"hcp_packer_channel":                 resourcePackerChannel(),
 				"hcp_packer_channel_assignment":      resourcePackerChannelAssignment(),
+				"hcp_packer_run_task":                resourcePackerRunTask(),
 				"hcp_vault_cluster":                  resourceVaultCluster(),
 				"hcp_vault_cluster_admin_token":      resourceVaultClusterAdminToken(),
 			},
