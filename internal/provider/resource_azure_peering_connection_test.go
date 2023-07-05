@@ -24,6 +24,8 @@ provider "azurerm" {
   features {}
 }
 
+provider "azuread" {}
+
 resource "hcp_hvn" "test" {
   hvn_id         = "%[1]s"
   cloud_provider = "azure"
