@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '0 0 * * 3'
   workflow_dispatch:
+    inputs:
+      acc-test-pattern:
+        type: string
+        default: 'Test.*'
 
 permissions: write-all
 
@@ -15,6 +19,8 @@ jobs:
     secrets: inherit
     permissions:
       contents: read
+    with:
+      acc-test-pattern: ${{ inputs.acc-test-pattern }}
 
   prerelease:
     name: Prerelease
