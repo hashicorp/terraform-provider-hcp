@@ -14,12 +14,11 @@ The Packer Run Task resource allows you to regenerate the HMAC key for an HCP Pa
 ## Example Usage
 
 ```terraform
-resource "hcp_packer_run_task" "registry1" {}
+resource "hcp_packer_run_task" "registry" {}
 
 # Configuring the HMAC Key to regenerate on apply
-# NOTE: `regenerate_hmac` should be set to `false` (or removed from the config
-# entirely) after a successful apply, to avoid constant regeneration.
-resource "hcp_packer_run_task" "registry1" {
+# NOTE: While `regenerate_hmac` is set to `true` the key will be regenerated on every apply.
+resource "hcp_packer_run_task" "registry" {
   regenerate_hmac = true
 }
 ```
@@ -32,7 +31,7 @@ resource "hcp_packer_run_task" "registry1" {
 - `project_id` (String) The ID of the HCP project where the HCP Packer Registry is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
-- `regenerate_hmac` (Boolean) If true, the HMAC Key (`hmac_key`) will be regenerated during `terraform apply` and the resource will always cause a non-empty plan. Changing `regenerate_hmac` to false (or removing it from the config) should not result in a plan.
+- `regenerate_hmac` (Boolean) If true, the HMAC Key (`hmac_key`) will be regenerated during `terraform apply`. While set to true, the key will be regenerated on every `terraform apply` until `regenerate_hmac` is set to false or removed from the config.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

@@ -29,7 +29,7 @@ func resourcePackerRunTask() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Optional inputs
 			"regenerate_hmac": {
-				Description: "If true, the HMAC Key (`hmac_key`) will be regenerated during `terraform apply` and the resource will always cause a non-empty plan. Changing `regenerate_hmac` to false (or removing it from the config) should not result in a plan.",
+				Description: "If true, the HMAC Key (`hmac_key`) will be regenerated during `terraform apply`. While set to true, the key will be regenerated on every `terraform apply` until `regenerate_hmac` is set to false or removed from the config.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
