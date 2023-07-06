@@ -1,0 +1,3 @@
+```release-note:improvement
+Upgrade Go to version 1.19
+```
