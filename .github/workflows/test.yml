@@ -39,6 +39,8 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
           go mod tidy
+          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
+          sudo chmod +x /usr/local/bin/jp
 
       - name: Run Unit Tests and Linter
         run: make test-ci
