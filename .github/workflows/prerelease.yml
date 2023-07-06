@@ -5,16 +5,20 @@ on:
   schedule:
     - cron: '0 0 * * 3'
   workflow_dispatch:
-    inputs:
-      skip-e2e:
-        type: boolean
-        default: false
 
 permissions: write-all
 
 jobs:
+  run-tests:
+    name: Run Tests
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    permissions:
+      contents: read
+
   prerelease:
     name: Prerelease
+    needs: [run-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -43,100 +47,71 @@ jobs:
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
         run: |
-          go install github.com/hashicorp/go-changelog/cmd/changelog-build@6ec9be372335f39c5df27e232c3669db7f5183a5
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+          go install github.com/hashicorp/go-changelog/cmd/changelog-build@522d403eacf1dca87cacec6dbc37fdfcda262d26
           go mod tidy
-          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
-          sudo chmod +x /usr/local/bin/jp
-
-      - name: Run Unit Tests and Linter
-        run: make test-ci
-
-      - name: Upload Unit Test Coverage Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Coverage
-          path: coverage.html
-
-      - name: Run E2E Tests
-        if: ${{ !inputs.skip-e2e }}
-        env:
-          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
-          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
-          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-          HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
-
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-          AWS_REGION: us-west-1
-
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          AZURE_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      
+      - name: Check For Changes
+        id: changes
         run: |
-          AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
-          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId)
-          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
-          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
-          make testacc-ci
+          CURRENT_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          DIFF_CONTENT=$(git diff $CURRENT_VERSION main)
+          if [[ $DIFF_CONTENT == "" ]]; then
+            echo "There were no changes since the last release."
+            echo "There were no changes since the last release." >> $GITHUB_STEP_SUMMARY
+            echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
+          else 
+            echo "There were changes since the last release."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
+          fi
 
-      - name: Upload E2E Coverage Artifact
-        if: ${{ !inputs.skip-e2e }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Coverage
-          path: coverage-e2e.html
-
-      - name: Release New Version
+      - name: Prepare Release
+        if: ${{ steps.changes.outputs.SHOULD_RELEASE == 'true' }}
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
         run: |
-            CURRENT_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
-            SHOULD_RELEASE=$(git diff $CURRENT_VERSION main)
-            if [[ $SHOULD_RELEASE == "" ]]; then
-              echo "There were no changes since the last release. Skipping auto release.";
-            else
-              echo "There were changes since the last release."
-              echo "Current Version: $CURRENT_VERSION"
-              CURRENT_VERSION_PARTS=(${CURRENT_VERSION//./ })
-              MAJOR=${CURRENT_VERSION_PARTS[0]}
-              MINOR=${CURRENT_VERSION_PARTS[1]}
-              PATCH=${CURRENT_VERSION_PARTS[2]}
-              HEAD_BRANCH="main"
-              MINOR=$((MINOR+1))
-              NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-              echo "updating ${CURRENT_VERSION} to ${NEW_VERSION}"
-              echo "generating changelog"
-              GIT_COMMIT_SHA=$(git rev-parse HEAD)
-              CHANGELOG=$(changelog-build -changelog-template .changelog/changelog.tmpl -note-template .changelog/note.tmpl -entries-dir .changelog/ -last-release ${CURRENT_VERSION} -this-release ${GIT_COMMIT_SHA})
-              DATE=$(date '+%B %d, %Y')
-              mv CHANGELOG.md OLD-CHANGELOG.md
-              echo -e "## ${NEW_VERSION} (${DATE})\n${CHANGELOG}" > CHANGELOG.md
-              cat OLD-CHANGELOG.md >> CHANGELOG.md
-              rm -f OLD-CHANGELOG.md
-              git add CHANGELOG.md
-              git commit -m 'updated CHANGELOG.md'
-              echo "updating documentation"
-              CURRENT_VERSION_NUM="${CURRENT_VERSION:1}"
-              NEW_VERSION_NUM="${NEW_VERSION:1}"
-              sed -i "s/~> $CURRENT_VERSION_NUM/~> $NEW_VERSION_NUM/g" examples/provider/provider.tf
-              go generate
-              git add examples/provider/provider.tf docs/index.md
-              git commit -m 'updated documentation'
-              echo "creating a new git tag"
-              CHANGELOG_URL="https://github.com/hashicorp/terraform-provider-hcp/blob/${NEW_VERSION}/CHANGELOG.md"
-              git tag -a -m "${NEW_VERSION}" -m "See changelog: ${CHANGELOG_URL}" "${NEW_VERSION}"
-              echo "New Version: ${NEW_VERSION}"
-              echo "Pushing new tag to remote"
-              git config -l
-              git push --tags
-              git push
-            fi
+          echo "Current Version: $CURRENT_VERSION"
+          CURRENT_VERSION_PARTS=(${CURRENT_VERSION//./ })
+          MAJOR=${CURRENT_VERSION_PARTS[0]}
+          MINOR=${CURRENT_VERSION_PARTS[1]}
+          PATCH=${CURRENT_VERSION_PARTS[2]}
+          MINOR=$((MINOR+1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "New Version: ${NEW_VERSION}"
+          echo "# Prerelease Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Updating ${CURRENT_VERSION} to ${NEW_VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "generating changelog"
+          GIT_COMMIT_SHA=$(git rev-parse HEAD)
+          CHANGELOG=$(changelog-build -changelog-template .changelog/changelog.tmpl -note-template .changelog/note.tmpl -entries-dir .changelog/ -last-release ${CURRENT_VERSION} -this-release ${GIT_COMMIT_SHA})
+          echo "## Changelog" >> $GITHUB_STEP_SUMMARY
+          echo -e "${CHANGELOG}" >> $GITHUB_STEP_SUMMARY
+          DATE=$(date '+%B %d, %Y')
+          mv CHANGELOG.md OLD-CHANGELOG.md
+          echo -e "## ${NEW_VERSION} (${DATE})\n${CHANGELOG}" > CHANGELOG.md
+          cat OLD-CHANGELOG.md >> CHANGELOG.md
+          rm -f OLD-CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m 'updated CHANGELOG.md'
+          echo "updating documentation"
+          CURRENT_VERSION_NUM="${CURRENT_VERSION:1}"
+          NEW_VERSION_NUM="${NEW_VERSION:1}"
+          sed -i "s/~> $CURRENT_VERSION_NUM/~> $NEW_VERSION_NUM/g" examples/provider/provider.tf
+          go generate
+          git add examples/provider/provider.tf docs/index.md
+          git commit -m 'updated documentation'
+          echo "## Diff from Prerelease tasks" >> $GITHUB_STEP_SUMMARY
+          echo "```diff" >> $GITHUB_STEP_SUMMARY
+          echo -e "$(git diff origin/main..)" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          git diff origin/main..
+
+      - name: Release New Version
+        if: ${{ github.ref_name == 'main' && steps.changes.outputs.SHOULD_RELEASE == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+          echo "Pushing new tag to remote"
+          git config -l
+          git push --tags
+          git push
