@@ -9,6 +9,12 @@ description: |-
 
 -> **Note:** This data source is currently in public beta.
 
+-> **Note:** Use of this data source in the same workspace as an 
+`hcp_packer_run_task` resource (pointing to the same HCP Project) is
+discouraged. If this is not possible (ex: using a module containing the data
+source in the same workspace as a copy of the resource), use the `depends_on`
+meta-argument to mark the data source as dependent on the resource.
+
 The Packer Run Task data source gets the configuration information needed to set up an HCP Packer Registry's run task.
 
 ## Example Usage

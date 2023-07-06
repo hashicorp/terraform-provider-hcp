@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,7 +15,10 @@ import (
 
 func resourcePackerRunTask() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The Packer Run Task resource allows you to regenerate the HMAC key for an HCP Packer Registry's run task.",
+		Description: fmt.Sprintf(`
+The Packer Run Task resource allows you to regenerate the HMAC key for an HCP Packer Registry's run task.
+
+If you do not need to regenerate the HMAC key, it is recommended to use the %s data source instead.`, "`hcp_packer_run_task`"),
 		CreateContext: resourcePackerRunTaskCreate,
 		ReadContext:   resourcePackerRunTaskRead,
 		UpdateContext: resourcePackerRunTaskUpdate,
