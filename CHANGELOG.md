@@ -1,3 +1,8 @@
+## v0.65.0 (July 10, 2023)
+
+FEATURES:
+
+* Adds `tier` to the `hcp_boundary_cluster` resource to manage the cluster pricing and feature set. [[GH-544](https://github.com/hashicorp/terraform-provider-hcp/pull/544)]
 ## v0.64.0 (July 07, 2023)
 
 FEATURES:
