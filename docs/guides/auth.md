@@ -21,6 +21,7 @@ Client credentials are recommended for CI and local development with the SDK or 
 The `client_id` and `client_secret` must come from a service principal key. Service principals and service principal keys can be created in the HCP portal with an existing user account. The service principal must be authorized to access the API. Initially, it has no permissions, so the IAM policy must be updated to grant it permissions.
 
 -> **Note:** The `client_secret` can only be obtained on creation of the service principal key; it is not stored anywhere after that.
+-> **Note:** HCP has two types of Service Principals. Organization-Level Service Principals and Project-Level Service Principals. Either can be used with the HCP Terraform Provider. To read more about their differences please see our [documentation page](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals).
 
 Follow these steps to create service principal with the `contributor` role and a service principal key.
 
@@ -37,6 +38,7 @@ Once the service principal is created, navigate to its detail page by selecting 
 Save the client ID and secret as the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET.
 
 Or, configure the provider with the client ID and secret by copy-pasting the values directly into provider config.
+-> **Warning:** Hard-coded credentials are not recommended in Terraform configuration outside of local testing and risks secret exposure if committed to a code repository.
 
 ```terraform
 // Credentials can be set explicitly or via the environment variables HCP_CLIENT_ID and HCP_CLIENT_SECRET
@@ -52,6 +54,7 @@ HCP_CLIENT_SECRET="..."
 ```
 
 When client credentials are set, they are always used by the HCP Provider client, regardless of an existing user session.
+-> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration.
 
 ## User session with browser login
 
