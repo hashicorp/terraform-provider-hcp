@@ -21,6 +21,7 @@ resource hcp_boundary_cluster "test" {
 	cluster_id = "%[1]s"
 	username = "test-user"
 	password = "password123!"
+	tier = "PLUS"
 	%%s
 }
 `, boundaryUniqueID)
@@ -66,6 +67,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 				),
 			},
 			{
@@ -93,6 +95,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 				),
 			},
 			{
@@ -104,6 +107,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "cluster_url", boundaryClusterDataSourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterDataSourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "state", boundaryClusterDataSourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 				),
 			},
 			{
@@ -116,6 +120,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.upgrade_type", "SCHEDULED"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.day", "TUESDAY"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.start", "2"),
