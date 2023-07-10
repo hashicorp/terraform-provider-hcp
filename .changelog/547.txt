@@ -1,0 +1,7 @@
+```release-note:feature
+Adds `hcp_packer_run_task` resource.
+```
+
+```release-note:feature
+Adds `hcp_packer_run_task` data source.
+```

@@ -127,22 +127,13 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 }
 
 func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
+	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
 	log.Printf("[INFO] Reading HCP Packer channel (%s) [bucket_name=%s, project_id=%s, organization_id=%s]", channelName, bucketName, loc.ProjectID, loc.OrganizationID)
@@ -164,22 +155,14 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	channelName := d.Get("name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
+
+	bucketName := d.Get("bucket_name").(string)
+	channelName := d.Get("name").(string)
 
 	var iteration *packermodels.HashicorpCloudPackerIteration
 
@@ -204,22 +187,14 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	channelName := d.Get("name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
+
+	bucketName := d.Get("bucket_name").(string)
+	channelName := d.Get("name").(string)
 
 	var iteration *packermodels.HashicorpCloudPackerIteration
 
@@ -245,22 +220,14 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	channelName := d.Get("name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
+
+	bucketName := d.Get("bucket_name").(string)
+	channelName := d.Get("name").(string)
 
 	_, err = clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
@@ -314,7 +281,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
-	if err := setLocationData(d, loc); err != nil {
+	if err := setLocationResourceData(d, loc); err != nil {
 		return nil, err
 
 	}

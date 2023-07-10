@@ -235,3 +235,38 @@ func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.Hashicor
 		nextPage = pagination.NextPageToken
 	}
 }
+
+// GetRunTask queries the HCP Packer Registry for the API information needed to configure a run task
+func GetRunTask(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse, error) {
+	params := packer_service.NewPackerServiceGetRegistryTFCRunTaskAPIParamsWithContext(ctx)
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.TaskType = "validation"
+
+	req, err := client.Packer.PackerServiceGetRegistryTFCRunTaskAPI(params, nil)
+	if err != nil {
+		if err, ok := err.(*packer_service.PackerServiceGetRegistryTFCRunTaskAPIDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by GetRunTask. Got: %v", err)
+	}
+
+	return req.Payload, nil
+}
+
+// RegenerateHMAC triggers the HCP Packer Registry's run task HMAC Key to be regenerated
+func RegenerateHMAC(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerRegenerateTFCRunTaskHmacKeyResponse, error) {
+	params := packer_service.NewPackerServiceRegenerateTFCRunTaskHmacKeyParamsWithContext(ctx)
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+
+	req, err := client.Packer.PackerServiceRegenerateTFCRunTaskHmacKey(params, nil)
+	if err != nil {
+		if err, ok := err.(*packer_service.PackerServiceRegenerateTFCRunTaskHmacKeyDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by RegenerateHMAC. Got: %v", err)
+	}
+
+	return req.Payload, nil
+}
