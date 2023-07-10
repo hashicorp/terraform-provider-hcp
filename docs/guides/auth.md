@@ -21,11 +21,11 @@ Client credentials are recommended for CI and local development with the SDK or 
 The `client_id` and `client_secret` must come from a service principal key. Service principals and service principal keys can be created in the HCP portal with an existing user account. The service principal must be authorized to access the API. Initially, it has no permissions, so the IAM policy must be updated to grant it permissions.
 
 -> **Note:** The `client_secret` can only be obtained on creation of the service principal key; it is not stored anywhere after that.
--> **Note:** HCP has two types of Service Principals. Organization-Level Service Principals and Project-Level Service Principals. Either can be used with the HCP Terraform Provider. To read more about their differences please see our [documentation page](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals).
 
 Follow these steps to create service principal with the `contributor` role and a service principal key.
 
 ### 1. Create a service principal
+-> **Note:** HCP has two types of Service Principals. Organization-Level Service Principals and Project-Level Service Principals. Either can be used with the HCP Terraform Provider. To read more about their differences please see our [documentation page](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals).
 
 Once you have registered and logged into the HCP portal, navigate to the Access Control (IAM) page. Select the Service Principals tab and create a new service principal. Give it the role Contributor, since it will be writing resources.
 
@@ -47,6 +47,7 @@ provider "hcp" {
   client_secret = "service-principal-key-client-secret"
 }
 ```
+-> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration.
 
 ```bash
 HCP_CLIENT_ID="..."
@@ -54,7 +55,6 @@ HCP_CLIENT_SECRET="..."
 ```
 
 When client credentials are set, they are always used by the HCP Provider client, regardless of an existing user session.
--> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration.
 
 ## User session with browser login
 

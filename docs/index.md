@@ -125,6 +125,6 @@ resource "hcp_vault_cluster" "example" {
 - `client_id` (String) The OAuth2 Client ID for API operations.
 - `client_secret` (String) The OAuth2 Client Secret for API operations.
 - `project_id` (String) The default project in which resources should be created.
-
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
+
 For more information about HCP, please review our [documentation page](https://cloud.hashicorp.com/docs/hcp).
