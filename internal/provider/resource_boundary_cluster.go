@@ -32,6 +32,7 @@ var deleteBoundaryClusterTimeout = time.Minute * 25
 
 const boundaryClusterUpgradeTypePrefix = "UPGRADE_TYPE_"
 const boundaryClusterDayOfWeekPrefix = "DAY_OF_WEEK_"
+const boundaryClusterTierPrefix = "CLUSTER_MARKETING_SKU_"
 
 func resourceBoundaryCluster() *schema.Resource {
 	return &schema.Resource{
@@ -100,6 +101,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"tier": {
+				Description:  "The tier that the HCP Boundary cluster will be provisioned as, 'Standard' or 'Plus'.",
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{"STANDARD", "PLUS"}, true),
+				Required:     true,
+			},
 			"maintenance_window_config": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
@@ -167,6 +174,12 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
+	tier := d.Get("tier").(string)
+	var tierPb boundarymodels.HashicorpCloudBoundary20211221ClusterMarketingSKU
+	if tier != "" {
+		tier = boundaryClusterTierPrefix + tier
+		tierPb = boundarymodels.HashicorpCloudBoundary20211221ClusterMarketingSKU(tier)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -197,10 +210,11 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 
 	// assemble the BoundaryClusterCreateRequest
 	req := &boundarymodels.HashicorpCloudBoundary20211221CreateRequest{
-		ClusterID: clusterID,
-		Username:  username,
-		Password:  password,
-		Location:  loc,
+		ClusterID:    clusterID,
+		Username:     username,
+		Password:     password,
+		Location:     loc,
+		MarketingSku: &tierPb,
 	}
 
 	// execute the Boundary cluster creation
@@ -446,6 +460,11 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 		return err
 	}
 	if err := d.Set("state", cluster.State); err != nil {
+		return err
+	}
+
+	tierStr := strings.TrimPrefix(string(*cluster.MarketingSku), boundaryClusterTierPrefix)
+	if err := d.Set("tier", tierStr); err != nil {
 		return err
 	}
 
