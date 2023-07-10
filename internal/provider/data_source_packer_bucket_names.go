@@ -8,7 +8,6 @@ import (
 	"log"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,18 +51,8 @@ func dataSourcePackerBucketNames() *schema.Resource {
 
 func dataSourcePackerBucketsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
