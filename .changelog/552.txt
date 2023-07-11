@@ -1,0 +1,3 @@
+```release-note:improvement
+Updated Auth Guide to reflect the impact to the provider when using Project-Level Service Principals;  `project_id` within the provider configuration is needed. Fix for previous release in v0.64.0
+```
