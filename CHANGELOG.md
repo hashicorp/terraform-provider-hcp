@@ -1,3 +1,14 @@
+## v0.66.0 (July 13, 2023)
+
+FEATURES:
+
+* Adds `hcp_packer_run_task` data source. [[GH-547](https://github.com/hashicorp/terraform-provider-hcp/pull/547)]
+* Adds `hcp_packer_run_task` resource. [[GH-547](https://github.com/hashicorp/terraform-provider-hcp/pull/547)]
+
+IMPROVEMENTS:
+
+* Updated Auth Guide to reflect the impact to the provider when using Project-Level Service Principals;  `project_id` within the provider configuration is needed. Fix for previous release in v0.64.0 [[GH-552](https://github.com/hashicorp/terraform-provider-hcp/pull/552)]
+* Updated Boundary `Tier` configuration to be case insensitive. [[GH-554](https://github.com/hashicorp/terraform-provider-hcp/pull/554)]
 ## v0.65.0 (July 10, 2023)
 
 FEATURES:
