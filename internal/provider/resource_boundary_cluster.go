@@ -106,6 +106,9 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{"STANDARD", "PLUS"}, true),
 				Required:     true,
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return strings.EqualFold(oldValue, newValue)
+				},
 			},
 			"maintenance_window_config": {
 				Type:        schema.TypeList,
@@ -177,6 +180,7 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	tier := d.Get("tier").(string)
 	var tierPb boundarymodels.HashicorpCloudBoundary20211221ClusterMarketingSKU
 	if tier != "" {
+		tier = strings.ToUpper(tier)
 		tier = boundaryClusterTierPrefix + tier
 		tierPb = boundarymodels.HashicorpCloudBoundary20211221ClusterMarketingSKU(tier)
 	}
@@ -464,6 +468,7 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 	}
 
 	tierStr := strings.TrimPrefix(string(*cluster.MarketingSku), boundaryClusterTierPrefix)
+	tierStr = strings.ToUpper(tierStr)
 	if err := d.Set("tier", tierStr); err != nil {
 		return err
 	}

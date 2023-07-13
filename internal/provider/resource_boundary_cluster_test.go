@@ -21,7 +21,7 @@ resource hcp_boundary_cluster "test" {
 	cluster_id = "%[1]s"
 	username = "test-user"
 	password = "password123!"
-	tier = "PLUS"
+	tier = "PluS"
 	%%s
 }
 `, boundaryUniqueID)
