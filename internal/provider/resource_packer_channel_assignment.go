@@ -172,12 +172,12 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 		iterFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName,
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName,
 		&packermodels.HashicorpCloudPackerIteration{
 			IncrementalVersion: int32(d.Get("iteration_version").(int)),
 			ID:                 iterID,
 			Fingerprint:        iterFingerprint,
-		}, nil,
+		},
 	)
 	if err != nil {
 		return diag.FromErr(err)
@@ -214,7 +214,7 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 		iteration.Fingerprint = iterFingerpint
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iteration)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -236,7 +236,7 @@ func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, nil, nil)
+	_, err = clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}

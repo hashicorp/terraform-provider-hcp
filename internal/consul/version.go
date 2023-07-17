@@ -18,7 +18,7 @@ func RecommendedVersion(versions []*consulmodels.HashicorpCloudConsul20210204Ver
 	for _, v := range versions {
 		defaultVersion = v.Version
 
-		if *v.Status == consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED {
+		if v.Status == consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED {
 			return defaultVersion
 		}
 	}
@@ -48,7 +48,7 @@ func VersionsToString(versions []*consulmodels.HashicorpCloudConsul20210204Versi
 			continue
 		}
 
-		if *v.Status == consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED {
+		if v.Status == consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED {
 			recommendedVersion = v.Version
 		} else {
 			otherVersions = append(otherVersions, v.Version)

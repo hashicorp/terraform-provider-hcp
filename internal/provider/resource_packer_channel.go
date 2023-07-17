@@ -153,7 +153,7 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, nil, nil)
+	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}

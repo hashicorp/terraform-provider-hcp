@@ -121,13 +121,34 @@ func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 // UpdatePackerChannel updates the named channel.
 func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	iteration *packermodels.HashicorpCloudPackerIteration, restriction *packermodels.HashicorpCloudPackerUpdateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
+	restriction *packermodels.HashicorpCloudPackerUpdateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Slug = channelSlug
 	params.Body.Restriction = restriction
+	params.Body.Mask = "restriction"
+
+	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
+	if err != nil {
+		if err, ok := err.(*packer_service.PackerServiceUpdateChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by UpdateBucketChannel. Got: %v", err)
+	}
+
+	return channel.GetPayload().Channel, nil
+}
+
+func UpdatePackerChannelAssignment(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	iteration *packermodels.HashicorpCloudPackerIteration) (*packermodels.HashicorpCloudPackerChannel, error) {
+	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
+	params.Slug = channelSlug
+	params.Body.Mask = "iterationId,fingerprint,incrementalVersion"
 
 	if iteration != nil {
 		switch {
