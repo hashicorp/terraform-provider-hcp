@@ -63,39 +63,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				ValidateFunc: validation.IsUUID,
 				Computed:     true,
 			},
-			"iteration": {
-				Description: "The iteration assigned to the channel. This block is deprecated. Please use `hcp_packer_channel_assignment` instead.",
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Deprecated:  "The `iteration` block is deprecated. Please remove the `iteration` block and create a new `hcp_packer_channel_assignment` resource to manage this channel's assigned iteration with Terraform.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fingerprint": {
-							Description:  "The fingerprint of the iteration assigned to the channel.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-						"id": {
-							Description:  "The ID of the iteration assigned to the channel.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-						"incremental_version": {
-							Description:  "The incremental_version of the iteration assigned to the channel.",
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-					},
-				},
-			},
 			// Computed Values
 			"restricted": {
 				Description: "If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.",
@@ -164,17 +131,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	var iteration *packermodels.HashicorpCloudPackerIteration
-
-	if _, ok := d.GetOk("iteration.0"); ok {
-		iteration = &packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: int32(d.Get("iteration.0.incremental_version").(int)),
-			ID:                 d.Get("iteration.0.id").(string),
-			Fingerprint:        d.Get("iteration.0.fingerprint").(string),
-		}
-	}
-
-	channel, err := clients.CreateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
+	channel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -196,22 +153,7 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	var iteration *packermodels.HashicorpCloudPackerIteration
-
-	if _, ok := d.GetOk("iteration.0"); ok {
-		iteration = &packermodels.HashicorpCloudPackerIteration{}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.incremental_version") {
-			iteration.IncrementalVersion = int32(d.Get("iteration.0.incremental_version").(int))
-		}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.id") {
-			iteration.ID = d.Get("iteration.0.id").(string)
-		}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.fingerprint") {
-			iteration.Fingerprint = d.Get("iteration.0.fingerprint").(string)
-		}
-	}
-
-	channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
+	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, nil, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -229,7 +171,7 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	_, err = clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
+	_, err = clients.DeletePackerChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -311,60 +253,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	client := meta.(*clients.Client)
-
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	bucketNameRaw, ok := d.GetOk("bucket_name")
-	if !ok {
-		return fmt.Errorf("unable to retrieve bucket_name")
-	}
-	bucketName := bucketNameRaw.(string)
-
-	if d.HasChange("iteration.0") {
-		var iterationResponse *packermodels.HashicorpCloudPackerIteration
-		var err error
-		if id, ok := d.GetOk("iteration.0.id"); ok && d.HasChange("iteration.0.id") && id.(string) != "" {
-			iterationResponse, err = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
-		} else if fingerprint, ok := d.GetOk("iteration.0.fingerprint"); ok && d.HasChange("iteration.0.fingerprint") && fingerprint.(string) != "" {
-			iterationResponse, err = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
-		} else if version, ok := d.GetOk("iteration.0.incremental_version"); ok && d.HasChange("iteration.0.incremental_version") && version.(int) > 0 {
-			iterationResponse, err = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
-		}
-		if err != nil {
-			return err
-		}
-
-		iterations := []map[string]interface{}{}
-		if iterationResponse != nil {
-			iterations = append(iterations, map[string]interface{}{
-				"id":                  iterationResponse.ID,
-				"fingerprint":         iterationResponse.Fingerprint,
-				"incremental_version": iterationResponse.IncrementalVersion,
-			})
-		} else {
-			iterations = append(iterations, map[string]interface{}{
-				"id":                  "",
-				"fingerprint":         "",
-				"incremental_version": 0,
-			})
-		}
-
-		err = d.SetNew("iteration", iterations)
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChanges("iteration") {
+	if d.HasChanges("restricted") {
 		if err := d.SetNewComputed("updated_at"); err != nil {
 			return err
 		}
@@ -392,10 +281,6 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("iteration", flattenIterationConfig(channel.Iteration)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("updated_at", channel.UpdatedAt.String()); err != nil {
 		return diag.FromErr(err)
 	}
@@ -405,24 +290,4 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 	}
 
 	return nil
-}
-
-func flattenIterationConfig(iteration *packermodels.HashicorpCloudPackerIteration) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if iteration == nil {
-		result = append(result, map[string]interface{}{
-			"id":                  "",
-			"fingerprint":         "",
-			"incremental_version": 0,
-		})
-		return result
-	} else {
-		result = append(result, map[string]interface{}{
-			"id":                  iteration.ID,
-			"fingerprint":         iteration.Fingerprint,
-			"incremental_version": iteration.IncrementalVersion,
-		})
-	}
-
-	return result
 }
