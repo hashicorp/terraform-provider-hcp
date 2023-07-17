@@ -206,15 +206,15 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 			),
 			generateStep(
 				`"doesNotExist"`, ``, ``,
-				`The iteration with identifier.*does not exist`,
+				`.*iteration with attributes \(id: doesNotExist\) does not exist.*`,
 			),
 			generateStep(
 				``, `"alsoDoesNotExist"`, ``,
-				`The iteration with identifier.*does not exist`,
+				`.*iteration with attributes \(fingerprint: alsoDoesNotExist\) does not exist.*`,
 			),
 			generateStep(
 				``, ``, `99`,
-				`The iteration with identifier.*does not exist`,
+				`.*iteration with attributes \(incremental_version: 99\) does not exist.*`,
 			),
 		},
 	})

@@ -132,7 +132,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	//lint:ignore SA1019 GetOkExists is fine for use withn booleans and has defined behavior
+	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
 	restrictedRaw, ok := d.GetOkExists("restricted")
 	restriction := packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTIONUNSET)
 	if ok {
@@ -165,7 +165,7 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	//lint:ignore SA1019 GetOkExists is fine for use withn booleans and has defined behavior
+	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
 	restrictedRaw, ok := d.GetOkExists("restricted")
 	restriction := packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTIONUNSET)
 	if ok {
