@@ -52,6 +52,12 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			// Optional inputs
+			"restricted": {
+				Description: "If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+			},
 			"project_id": {
 				Description: `
 The ID of the HCP project where this channel is located. 
@@ -64,11 +70,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:     true,
 			},
 			// Computed Values
-			"restricted": {
-				Description: "If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.",
-				Type:        schema.TypeBool,
-				Computed:    true,
-			},
 			"author_id": {
 				Description: "The author of this channel.",
 				Type:        schema.TypeString,
@@ -131,7 +132,18 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	channel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, nil)
+	//lint:ignore SA1019 GetOkExists is fine for use withn booleans and has defined behavior
+	restrictedRaw, ok := d.GetOkExists("restricted")
+	restriction := packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTIONUNSET)
+	if ok {
+		if restrictedRaw.(bool) {
+			restriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTED)
+		} else {
+			restriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionUNRESTRICTED)
+		}
+	}
+
+	channel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, restriction)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -153,7 +165,18 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, nil)
+	//lint:ignore SA1019 GetOkExists is fine for use withn booleans and has defined behavior
+	restrictedRaw, ok := d.GetOkExists("restricted")
+	restriction := packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTIONUNSET)
+	if ok {
+		if restrictedRaw.(bool) {
+			restriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED)
+		} else {
+			restriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED)
+		}
+	}
+
+	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restriction)
 	if err != nil {
 		return diag.FromErr(err)
 	}
