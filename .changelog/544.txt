@@ -1,0 +1,3 @@
+```release-note:feature
+Adds `tier` to the `hcp_boundary_cluster` resource to manage the cluster pricing and feature set.
+```
