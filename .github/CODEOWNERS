@@ -19,7 +19,7 @@
 *vault* @hashicorp/vault-cloud
 
 # all Vault Secrets resources and clients are owned by cloud-vault-secrets team
-*vaultsecrets* @hashicorp/cloud-vault-secrets
+*vaultsecrets* @hashicorp/vault-devex
 
 # all Boundary resources and clients are owned by the boundary-cloud team
 *boundary* @hashicorp/boundary-cloud
