@@ -111,7 +111,7 @@ func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	channel, err := client.Packer.PackerServiceCreateChannel(params, nil)
 	if err != nil {
 		if err, ok := err.(*packer_service.PackerServiceCreateChannelDefault); ok {
-			return nil, errors.New(err.Payload.Message)
+			return nil, err
 		}
 		return nil, fmt.Errorf("unexpected error format received by CreateBucketChannel. Got: %v", err)
 	}

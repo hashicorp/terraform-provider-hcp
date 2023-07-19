@@ -10,12 +10,14 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"google.golang.org/grpc/codes"
 )
 
 func resourcePackerChannel() *schema.Resource {
@@ -90,6 +92,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"managed": {
+				Description: "If true, the channel is an HCP Packer managed channel",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -132,27 +139,77 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
+	createRestriction := packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTIONUNSET)
 	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
-	restrictedRaw, ok := d.GetOkExists("restricted")
-	restriction := packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTIONUNSET)
-	if ok {
+	restrictedRaw, restrictedSet := d.GetOkExists("restricted")
+	if restrictedSet {
 		if restrictedRaw.(bool) {
-			restriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTED)
+			createRestriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTED)
 		} else {
-			restriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionUNRESTRICTED)
+			createRestriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionUNRESTRICTED)
 		}
 	}
 
-	channel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, restriction)
-	if err != nil {
+	newChannel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, createRestriction)
+	if err == nil {
+		if newChannel == nil {
+			return diag.Errorf("expected a non-nil channel from CreateChannel, but got nil")
+		}
+
+		// Handle successfully created channel
+		return setPackerChannelResourceData(d, newChannel)
+	}
+
+	// Check error to see if the channel is a pre-existing managed channel
+	errCreate, ok := err.(*packer_service.PackerServiceCreateChannelDefault)
+	if !ok {
 		return diag.FromErr(err)
 	}
-
-	if channel == nil {
-		return diag.Errorf("Unable to create channel in bucket %s named %s.", bucketName, channelName)
+	if payload := errCreate.Payload; payload == nil || codes.Code(payload.Code) != codes.AlreadyExists {
+		return diag.FromErr(errCreate)
 	}
 
-	return setPackerChannelResourceData(d, channel)
+	// Channel already exists
+	existingChannel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	if err != nil {
+		return diag.Errorf("channel already exists. GetChannel failed unexpectedly: %v", err)
+	}
+	if existingChannel == nil {
+		return diag.Errorf("channel already exists. Expected a non-nil channel from GetChannel, but got nil")
+	}
+	if !existingChannel.Managed {
+		return diag.Errorf("channel already exists, use `terraform import` to add it to the terraform state")
+	}
+
+	// Channel is managed, attempt update
+	diags := diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "This channel already exists and is managed by HCP Packer, so it cannot be manually created.",
+			Detail:   "Attempting to automatically adopt the channel. This action will not create a new channel, as the channel already exists.",
+		},
+	}
+	updateRestriction := packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTIONUNSET)
+	if restrictedSet {
+		if restrictedRaw.(bool) {
+			updateRestriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED)
+		} else {
+			updateRestriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED)
+		}
+	}
+	updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, updateRestriction)
+	if err != nil {
+		diags := append(diags, diag.Errorf("UpdateChannel failed unexpectedly: %v", err)...)
+		return diags
+	}
+	if updatedChannel == nil {
+		diags := append(diags, diag.Errorf("Expected non-nil channel from UpdateChannel, but got nil")...)
+		return diags
+	}
+
+	// Successfully adopted the HCP Packer managed channel
+	diags = append(diags, setPackerChannelResourceData(d, updatedChannel)...)
+	return diags
 }
 
 func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -193,6 +250,14 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
+
+	if d.Get("managed").(bool) {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "This channel is managed by HCP Packer, so it cannot be deleted.",
+			Detail:   "The channel has been removed from the terraform state, but has not been deleted from HCP Packer.",
+		}}
+	}
 
 	_, err = clients.DeletePackerChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
@@ -255,13 +320,8 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return nil, err
 	}
-
 	if channel == nil {
 		return nil, fmt.Errorf("unable to find channel in bucket %s named %s", bucketName, channelName)
-	}
-
-	if channel.Managed {
-		return nil, fmt.Errorf("the channel %q is managed by HCP Packer and can not be imported", channel.Slug)
 	}
 
 	d.SetId(channel.ID)
@@ -309,6 +369,10 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 	}
 
 	if err := d.Set("restricted", channel.Restricted); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("managed", channel.Managed); err != nil {
 		return diag.FromErr(err)
 	}
 
