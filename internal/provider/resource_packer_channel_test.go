@@ -18,7 +18,7 @@ func TestAccPackerChannel(t *testing.T) {
 	unrestrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "false")
 	restrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "true")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -71,7 +71,7 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 	unrestrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "false")
 	restrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "true")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -124,7 +124,7 @@ func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
 	channelUnrestrictedConfig := testAccPackerChannelBuilder("Drift", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug), "false")
 	channelRestrictedConfig := testAccPackerChannelBuilderFromChannel(channelUnrestrictedConfig, "true")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -170,7 +170,7 @@ func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
 	latestUnrestrictedConfig := testAccPackerChannelBuilder("DriftHCPManaged", fmt.Sprintf("%q", latestSlug), fmt.Sprintf("%q", bucketSlug), "false")
 	latestRestrictedConfig := testAccPackerChannelBuilderFromChannel(latestUnrestrictedConfig, "true")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)

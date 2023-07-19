@@ -24,7 +24,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 
 	baseAssignment := testAccPackerAssignmentBuilderBase("SimpleSetUnset", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -133,7 +133,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -171,7 +171,7 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -237,7 +237,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 		``, ``, `0`,
 	)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -279,7 +279,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 		``, ``, `0`,
 	)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
@@ -366,7 +366,7 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 	// Add null Version steps
 	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`)...)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
