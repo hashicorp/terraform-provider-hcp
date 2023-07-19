@@ -22,6 +22,9 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					upsertRegistry(t)
+				},
 				Config: config,
 				// If this check fails, there are probably pre-existing buckets
 				// in the environment that need to be deleted before testing.

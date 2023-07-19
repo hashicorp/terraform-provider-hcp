@@ -24,8 +24,11 @@ func TestAccPackerChannel(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { upsertBucket(t, acctestAlpineBucket) },
-				Config:    testConfig(testAccPackerChannelBasic(acctestAlpineBucket, acctestProductionChannel)),
+				PreConfig: func() {
+					upsertRegistry(t)
+					upsertBucket(t, acctestAlpineBucket)
+				},
+				Config: testConfig(testAccPackerChannelBasic(acctestAlpineBucket, acctestProductionChannel)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
