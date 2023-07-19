@@ -90,7 +90,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 		fmt.Sprintf("%q", bucketSlug),
 		`"latest"`,
 	)
-	beforeChannel := testAccPackerChannelBuilder(
+	beforeChannel := testAccPackerChannelBuilderBase(
 		uniqueName,
 		fmt.Sprintf("%q", channelSlug),
 		beforeIteration.AttributeRef("bucket_name"),
@@ -103,7 +103,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 
 	// This config creates a data source that is read after apply time,
 	// which is important for testing that CustomizeDiff doesn't cause errors
-	afterChannel := testAccPackerChannelBuilder(
+	afterChannel := testAccPackerChannelBuilderBase(
 		uniqueName,
 		fmt.Sprintf("%q", channelSlug),
 		fmt.Sprintf("%q", bucketSlug),
@@ -225,7 +225,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 	channelSlug := bucketSlug // No need for a different slug
 	iterationFingerprint := "1"
 
-	channel := testAccPackerChannelBuilder(
+	channel := testAccPackerChannelBuilderBase(
 		channelSlug,
 		fmt.Sprintf("%q", channelSlug),
 		fmt.Sprintf("%q", bucketSlug),
@@ -314,7 +314,7 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentEnforceNull")
 	channelSlug := bucketSlug // No need for a different slug
 
-	channel := testAccPackerChannelBuilder(channelSlug,
+	channel := testAccPackerChannelBuilderBase(channelSlug,
 		fmt.Sprintf("%q", channelSlug),
 		fmt.Sprintf("%q", bucketSlug),
 	)
@@ -393,17 +393,6 @@ func testAccPackerDataIterationBuilder(uniqueName string, bucketName string, cha
 		attributes: map[string]string{
 			"bucket_name": bucketName,
 			"channel":     channelName,
-		},
-	}
-}
-
-func testAccPackerChannelBuilder(uniqueName string, channelName string, bucketName string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
-		resourceType: "hcp_packer_channel",
-		uniqueName:   uniqueName,
-		attributes: map[string]string{
-			"name":        channelName,
-			"bucket_name": bucketName,
 		},
 	}
 }
