@@ -58,15 +58,15 @@ jobs:
           if [[ $DIFF_CONTENT == "" ]]; then
             echo "There were no changes since the last release."
             echo "There were no changes since the last release." >> $GITHUB_STEP_SUMMARY
-            echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
+            echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
           else 
             echo "There were changes since the last release."
-            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "HAS_CHANGES=true" >> $GITHUB_OUTPUT
             echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
           fi
 
       - name: Prepare Release
-        if: ${{ steps.changes.outputs.SHOULD_RELEASE == 'true' }}
+        if: ${{ steps.changes.outputs.HAS_CHANGES == 'true' }}
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
           git diff @{upstream} @
 
       - name: Release New Version
-        if: ${{ github.ref_name == 'main' && steps.changes.outputs.SHOULD_RELEASE == 'true' }}
+        if: ${{ github.ref_name == 'main' && steps.changes.outputs.HAS_CHANGES == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
         run: |
