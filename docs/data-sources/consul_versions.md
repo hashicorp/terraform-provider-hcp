@@ -36,5 +36,3 @@ data "hcp_consul_versions" "default" {}
 Optional:
 
 - `default` (String)
-
-

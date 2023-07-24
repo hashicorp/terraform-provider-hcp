@@ -93,5 +93,3 @@ Read-Only:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
-
-

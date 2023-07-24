@@ -36,5 +36,3 @@ data "hcp_packer_bucket_names" "all" {}
 Optional:
 
 - `default` (String)
-
-

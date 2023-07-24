@@ -58,5 +58,3 @@ Read-Only:
 - `end` (Number)
 - `start` (Number)
 - `upgrade_type` (String)
-
-
