@@ -48,5 +48,3 @@ data "hcp_hvn_peering_connection" "test" {
 Optional:
 
 - `default` (String)
-
-
