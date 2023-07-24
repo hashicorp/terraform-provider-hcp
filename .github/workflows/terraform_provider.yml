@@ -110,4 +110,3 @@ jobs:
     - name: Generate docs and check for differences
       run: |
         make gencheck
-
