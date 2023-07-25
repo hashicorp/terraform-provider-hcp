@@ -12,6 +12,8 @@ on:
         type: string
         default: 'Test.*'
 
+concurrency: acceptance-testing-environment
+
 permissions:
   contents: read
     
