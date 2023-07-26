@@ -35,7 +35,6 @@ func New() func() *schema.Provider {
 				"hcp_hvn_peering_connection":         dataSourceHvnPeeringConnection(),
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
-				"hcp_vault_secrets_app":              dataSourceVaultSecretsApp(),
 				"hcp_packer_bucket_names":            dataSourcePackerBucketNames(),
 				"hcp_packer_image_iteration":         dataSourcePackerImageIteration(),
 				"hcp_packer_image":                   dataSourcePackerImage(),

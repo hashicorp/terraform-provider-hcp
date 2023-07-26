@@ -4,9 +4,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 )
 
@@ -26,17 +30,41 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	if debugMode {
-		plugin.Serve(&plugin.ServeOpts{
-			Debug:        true,
-			ProviderFunc: provider.New(),
-			ProviderAddr: "registry.terraform.io/hashicorp/hcp",
-		})
+	/*	if debugMode {
+		opts := &plugin.ServeOpts{
+			Debug: true,
+		}
+		tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider, opts)
+		return
+	}*/
 
+	provider, err := New()
+	if err != nil {
 		return
 	}
 
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: provider.New(),
-	})
+	tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider)
+}
+
+// TODO:
+// - Fix versioning
+// - Add debugging ability
+// - Rename the testprovider
+// - Add validators
+
+func New() (func() tfprotov5.ProviderServer, error) {
+	ctx := context.Background()
+	providers := []func() tfprotov5.ProviderServer{
+		provider.New()().GRPCProvider,
+		providerserver.NewProtocol5(
+			provider.NewFrameworkProvider("1")(),
+		),
+	}
+
+	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+
+	if err != nil {
+		return nil, err
+	}
+	return muxServer.ProviderServer, nil
 }
