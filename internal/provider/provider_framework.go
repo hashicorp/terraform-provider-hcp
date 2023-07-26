@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -166,24 +165,10 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	if len(listProjResp.Payload.Projects) > 1 {
 		diags.AddWarning("There is more than one project associated with the organization of the configured credentials.", `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`)
 
-		return getOldestProjectFramework(listProjResp.Payload.Projects), diags
+		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
-}
-
-// getOldestProject retrieves the oldest project from a list based on its created_at time.
-func getOldestProjectFramework(projects []*models.ResourcemanagerProject) (oldestProj *models.ResourcemanagerProject) {
-	oldestTime := time.Now()
-
-	for _, proj := range projects {
-		projTime := time.Time(proj.CreatedAt)
-		if projTime.Before(oldestTime) {
-			oldestProj = proj
-			oldestTime = projTime
-		}
-	}
-	return oldestProj
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
