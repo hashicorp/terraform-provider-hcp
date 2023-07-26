@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -47,9 +48,8 @@ func main() {
 }
 
 // TODO:
-// - Fix versioning
+// - Add user agent back in
 // - Add debugging ability
-// - Rename the testprovider
 // - Add validators
 
 func New() (func() tfprotov5.ProviderServer, error) {
@@ -57,7 +57,7 @@ func New() (func() tfprotov5.ProviderServer, error) {
 	providers := []func() tfprotov5.ProviderServer{
 		provider.New()().GRPCProvider,
 		providerserver.NewProtocol5(
-			provider.NewFrameworkProvider("1")(),
+			provider.NewFrameworkProvider(version.ProviderVersion)(),
 		),
 	}
 

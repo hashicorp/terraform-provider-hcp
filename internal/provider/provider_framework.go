@@ -127,7 +127,6 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		client.Config.ProjectID = project.ID
 	}
 
-	// Set data? not sure if this is right
 	var config ProviderFrameworkConfiguration
 	config.Client = client
 	resp.DataSourceData = client
@@ -166,7 +165,7 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	if len(listProjResp.Payload.Projects) > 1 {
 		diags.AddWarning("There is more than one project associated with the organization of the configured credentials.", `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`)
 
-		return getOldestProject(listProjResp.Payload.Projects), diags
+		return getOldestProjectFramework(listProjResp.Payload.Projects), diags
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
