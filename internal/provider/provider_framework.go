@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+// This is an implementation using the Provider framework
 type ProviderFramework struct {
 	version string
 }

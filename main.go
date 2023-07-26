@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	"github.com/hashicorp/terraform-provider-hcp/version"
+	"github.com/hashicorp/vault/sdk/plugin"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -31,16 +32,16 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	/*	if debugMode {
+	provider, err := New()
+	if err != nil {
+		return
+	}
+
+	if debugMode {
 		opts := &plugin.ServeOpts{
 			Debug: true,
 		}
 		tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider, opts)
-		return
-	}*/
-
-	provider, err := New()
-	if err != nil {
 		return
 	}
 
@@ -49,9 +50,7 @@ func main() {
 
 // TODO:
 // - Add user agent back in
-// - Add debugging ability
 // - Add validators
-
 func New() (func() tfprotov5.ProviderServer, error) {
 	ctx := context.Background()
 	providers := []func() tfprotov5.ProviderServer{
