@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	"github.com/hashicorp/terraform-provider-hcp/version"
-	"github.com/hashicorp/vault/sdk/plugin"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -37,15 +37,16 @@ func main() {
 		return
 	}
 
+	var serveOpts []tf5server.ServeOpt
+
 	if debugMode {
-		opts := &plugin.ServeOpts{
-			Debug: true,
-		}
-		tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider, opts)
-		return
+		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
 	}
 
-	tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider)
+	err = tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider, serveOpts...)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // TODO:
