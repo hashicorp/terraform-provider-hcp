@@ -1,3 +1,8 @@
+## v0.67.0 (July 26, 2023)
+
+IMPROVEMENTS:
+
+* Upgrade Go to version 1.19 [[GH-556](https://github.com/hashicorp/terraform-provider-hcp/pull/556)]
 ## v0.66.0 (July 13, 2023)
 
 FEATURES:
