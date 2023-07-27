@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // CreateHVNRoute creates a new HVN route
@@ -116,7 +116,7 @@ const (
 )
 
 // hvnRouteRefreshState refreshes the state of the HVN route
-func hvnRouteRefreshState(ctx context.Context, client *Client, hvnID, routeID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+func hvnRouteRefreshState(ctx context.Context, client *Client, hvnID, routeID string, loc *sharedmodels.HashicorpCloudLocationLocation) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		route, err := GetHVNRoute(ctx, client, hvnID, routeID, loc)
 		if err != nil {
@@ -135,7 +135,7 @@ func WaitForHVNRouteToBeActive(ctx context.Context, client *Client,
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907HVNRoute, error) {
 
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{
 			HvnRouteStateCreating,
 			HvnRouteStatePending,

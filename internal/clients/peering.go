@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // GetPeeringByID gets a peering by its ID, hvnID, and location
@@ -46,7 +46,7 @@ const (
 
 // peeringRefreshState refreshes the state of the peering connection by calling
 // the GET endpoint
-func peeringRefreshState(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+func peeringRefreshState(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		peering, err := GetPeeringByID(ctx, client, peeringID, hvnID, loc)
 		if err != nil {
@@ -67,7 +67,7 @@ type peeringState struct {
 
 func waitForPeeringToBe(ps peeringState) WaitFor {
 	return func(ctx context.Context, client *Client, peeringID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907Peering, error) {
-		stateChangeConfig := resource.StateChangeConf{
+		stateChangeConfig := retry.StateChangeConf{
 			Pending: ps.Pending,
 			Target: []string{
 				ps.Target,

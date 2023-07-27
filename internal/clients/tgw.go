@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // GetTGWAttachmentByID gets a TGW attachment by its ID, hvnID, and location
@@ -46,7 +46,7 @@ const (
 
 // tgwAttachmentRefreshState refreshes the state of the TGW attachment by
 // calling the GET endpoint
-func tgwAttachmentRefreshState(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) resource.StateRefreshFunc {
+func tgwAttachmentRefreshState(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		tgwAtt, err := GetTGWAttachmentByID(ctx, client, tgwAttachmentID, hvnID, loc)
 		if err != nil {
@@ -60,7 +60,7 @@ func tgwAttachmentRefreshState(ctx context.Context, client *Client, tgwAttachmen
 // WaitForTGWAttachmentToBeActive will poll the GET TGW attachment endpoint
 // until the state is ACTIVE, ctx is canceled, or an error occurs.
 func WaitForTGWAttachmentToBeActive(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: WaitForTGWAttachmentToBeActiveStates,
 		Target: []string{
 			TgwAttachmentStateActive,
@@ -93,7 +93,7 @@ var WaitForTGWAttachmentToBeActiveStates = []string{
 // endpoint until the state is PENDING_ACCEPTANCE, ctx is canceled, or an error
 // occurs.
 func WaitForTGWAttachmentToBePendingAcceptance(ctx context.Context, client *Client, tgwAttachmentID string, hvnID string, loc *sharedmodels.HashicorpCloudLocationLocation, timeout time.Duration) (*networkmodels.HashicorpCloudNetwork20200907TGWAttachment, error) {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{
 			TgwAttachmentStateCreating,
 		},
