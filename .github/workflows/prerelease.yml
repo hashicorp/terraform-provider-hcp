@@ -88,6 +88,11 @@ jobs:
           CHANGELOG=$(changelog-build -changelog-template .changelog/changelog.tmpl -note-template .changelog/note.tmpl -entries-dir .changelog/ -last-release ${CURRENT_VERSION} -this-release ${GIT_COMMIT_SHA})
           
           echo "## ${NEW_VERSION} Changelog" >> $GITHUB_STEP_SUMMARY
+          if [[ $CHANGELOG == "" ]]; then
+            echo "Changelog was empty. Add at least one changelog entry to \`.changelog/\`." >> $GITHUB_STEP_SUMMARY
+            echo "Changelog was empty. Add at least one changelog entry to \`.changelog/\`. Exiting."
+            exit 1
+          fi
           echo -e "${CHANGELOG}" >> $GITHUB_STEP_SUMMARY
 
           DATE=$(date '+%B %d, %Y')
@@ -114,7 +119,7 @@ jobs:
           git diff @{upstream} @
 
       - name: Release New Version
-        if: github.ref_name == 'main' && steps.changes.outputs.HAS_CHANGES == 'true'
+        if: success() && github.ref_name == 'main' && steps.changes.outputs.HAS_CHANGES == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
         run: |
