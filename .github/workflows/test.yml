@@ -54,7 +54,7 @@ jobs:
           path: coverage.html
 
       - name: Warn If Non-default Pattern
-        if: ${{ inputs.acc-test-pattern != 'Test.*' }}
+        if: inputs.acc-test-pattern != 'Test.*'
         run: |
           echo "## WARNING: Some tests may have been skipped!" >> $GITHUB_STEP_SUMMARY
           echo "The default acceptance test pattern is \`Test.*\`, but it was overridden with \`${{ inputs.acc-test-pattern }}\`." >> $GITHUB_STEP_SUMMARY
