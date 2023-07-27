@@ -66,7 +66,7 @@ jobs:
           fi
 
       - name: Prepare Release
-        if: ${{ steps.changes.outputs.HAS_CHANGES == 'true' }}
+        if: steps.changes.outputs.HAS_CHANGES == 'true'
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
