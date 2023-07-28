@@ -189,26 +189,24 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 			Detail:   "Attempting to automatically adopt the channel. This action will not create a new channel, as the channel already exists.",
 		},
 	}
-	updateRestriction := packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTIONUNSET)
-	if restrictedSet {
-		if restrictedRaw.(bool) {
-			updateRestriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED)
-		} else {
-			updateRestriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED)
-		}
-	}
-	updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, updateRestriction)
-	if err != nil {
-		diags := append(diags, diag.Errorf("UpdateChannel failed unexpectedly: %v", err)...)
-		return diags
-	}
-	if updatedChannel == nil {
-		diags := append(diags, diag.Errorf("Expected non-nil channel from UpdateChannel, but got nil")...)
+	diags = append(diags, setPackerChannelResourceData(d, existingChannel)...)
+	if diags.HasError() {
 		return diags
 	}
 
-	// Successfully adopted the HCP Packer managed channel
-	diags = append(diags, setPackerChannelResourceData(d, updatedChannel)...)
+	if restrictedSet {
+		updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
+		if err != nil {
+			diags := append(diags, diag.Errorf("UpdateChannel failed unexpectedly: %v", err)...)
+			return diags
+		}
+		if updatedChannel == nil {
+			diags := append(diags, diag.Errorf("Expected non-nil channel from UpdateChannel, but got nil")...)
+			return diags
+		}
+		diags = append(diags, setPackerChannelResourceData(d, updatedChannel)...)
+	}
+
 	return diags
 }
 
@@ -224,16 +222,14 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
 	restrictedRaw, ok := d.GetOkExists("restricted")
-	restriction := packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTIONUNSET)
-	if ok {
-		if restrictedRaw.(bool) {
-			restriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED)
-		} else {
-			restriction = packermodels.NewHashicorpCloudPackerUpdateChannelRequestRestriction(packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED)
-		}
+	if !ok {
+		// Currently only the restriction can be updated, and it should not be
+		// updated if it isn't set in the config, so we return.
+		// This should never happen because all other fields are ForceNew
+		return nil
 	}
 
-	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restriction)
+	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
 	if err != nil {
 		return diag.FromErr(err)
 	}

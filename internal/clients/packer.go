@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
@@ -121,14 +122,19 @@ func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 
 // UpdatePackerChannel updates the named channel.
 func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	restriction *packermodels.HashicorpCloudPackerUpdateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
+	restricted bool) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Slug = channelSlug
-	params.Body.Restriction = restriction
 	params.Body.Mask = "restriction"
+
+	if restricted {
+		params.Body.Restriction = packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED.Pointer()
+	} else {
+		params.Body.Restriction = packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED.Pointer()
+	}
 
 	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
 	if err != nil {
@@ -148,18 +154,28 @@ func UpdatePackerChannelAssignment(ctx context.Context, client *Client, loc *sha
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Slug = channelSlug
-	params.Body.Mask = "iterationId,fingerprint,incrementalVersion"
+
+	maskPaths := []string{}
 
 	if iteration != nil {
-		switch {
-		case iteration.ID != "":
+		if iteration.ID != "" {
 			params.Body.IterationID = iteration.ID
-		case iteration.Fingerprint != "":
+			maskPaths = append(maskPaths, "iterationId")
+		}
+		if iteration.Fingerprint != "" {
 			params.Body.Fingerprint = iteration.Fingerprint
-		case iteration.IncrementalVersion > 0:
+			maskPaths = append(maskPaths, "fingerprint")
+		}
+		if iteration.IncrementalVersion > 0 {
 			params.Body.IncrementalVersion = iteration.IncrementalVersion
+			maskPaths = append(maskPaths, "incrementalVersion")
 		}
 	}
+
+	if len(maskPaths) == 0 {
+		maskPaths = []string{"iterationId", "fingerprint", "incrementalVersion"}
+	}
+	params.Body.Mask = strings.Join(maskPaths, ",")
 
 	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
 	if err != nil {
