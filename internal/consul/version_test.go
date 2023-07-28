@@ -19,15 +19,15 @@ func Test_RecommendedVersion(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: "v1.9.0",
@@ -36,15 +36,15 @@ func Test_RecommendedVersion(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: "v1.8.4",
@@ -72,15 +72,15 @@ func Test_IsValidVersion(t *testing.T) {
 			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: true,
@@ -90,15 +90,15 @@ func Test_IsValidVersion(t *testing.T) {
 			validVersions: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: false,
@@ -129,15 +129,15 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: "v1.9.0 (recommended), v1.8.6, v1.8.4",
@@ -146,11 +146,11 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.8.6",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 				{
 					Version: "v1.8.4",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusAVAILABLE.Pointer(),
 				},
 			},
 			expected: "v1.8.6, v1.8.4",
@@ -159,7 +159,7 @@ func Test_VersionsToString(t *testing.T) {
 			input: []*consulmodels.HashicorpCloudConsul20210204Version{
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 			},
 			expected: "v1.9.0",
@@ -173,7 +173,7 @@ func Test_VersionsToString(t *testing.T) {
 				nil,
 				{
 					Version: "v1.9.0",
-					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED,
+					Status:  consulmodels.HashicorpCloudConsul20210204VersionStatusRECOMMENDED.Pointer(),
 				},
 				nil,
 			},
