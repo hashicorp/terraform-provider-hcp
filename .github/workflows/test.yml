@@ -29,7 +29,7 @@ jobs:
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           cache: true
           go-version-file: 'go.mod'
