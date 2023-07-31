@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
@@ -39,7 +40,7 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 // channel associated with the given channel name, using ListBucketChannels
 func GetPackerChannelBySlugFromList(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketName string, channelName string) (*packermodels.HashicorpCloudPackerChannel, error) {
-	resp, err := ListBucketChannels(ctx, client, loc, bucketName)
+	resp, err := ListPackerChannels(ctx, client, loc, bucketName)
 	if err != nil {
 		return nil, err
 	}
@@ -98,9 +99,9 @@ func getIteration(client *Client, params *packer_service.PackerServiceGetIterati
 	return it.Payload.Iteration, nil
 }
 
-// CreateBucketChannel creates a channel on the named bucket.
-func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	iteration *packermodels.HashicorpCloudPackerIteration, restriction *packermodels.HashicorpCloudPackerCreateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
+// CreatePackerChannel creates a channel on the named bucket.
+func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	restriction *packermodels.HashicorpCloudPackerCreateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceCreateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -108,21 +109,10 @@ func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	params.Body.Slug = channelSlug
 	params.Body.Restriction = restriction
 
-	if iteration != nil {
-		switch {
-		case iteration.ID != "":
-			params.Body.IterationID = iteration.ID
-		case iteration.Fingerprint != "":
-			params.Body.Fingerprint = iteration.Fingerprint
-		case iteration.IncrementalVersion > 0:
-			params.Body.IncrementalVersion = iteration.IncrementalVersion
-		}
-	}
-
 	channel, err := client.Packer.PackerServiceCreateChannel(params, nil)
 	if err != nil {
 		if err, ok := err.(*packer_service.PackerServiceCreateChannelDefault); ok {
-			return nil, errors.New(err.Payload.Message)
+			return nil, err
 		}
 		return nil, fmt.Errorf("unexpected error format received by CreateBucketChannel. Got: %v", err)
 	}
@@ -130,25 +120,20 @@ func CreateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return channel.GetPayload().Channel, nil
 }
 
-// UpdateBucketChannel updates the named channel.
-func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	iteration *packermodels.HashicorpCloudPackerIteration, restriction *packermodels.HashicorpCloudPackerUpdateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
+// UpdatePackerChannel updates the named channel.
+func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	restricted bool) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
 	params.BucketSlug = bucketSlug
 	params.Slug = channelSlug
-	params.Body.Restriction = restriction
+	params.Body.Mask = "restriction"
 
-	if iteration != nil {
-		switch {
-		case iteration.ID != "":
-			params.Body.IterationID = iteration.ID
-		case iteration.Fingerprint != "":
-			params.Body.Fingerprint = iteration.Fingerprint
-		case iteration.IncrementalVersion > 0:
-			params.Body.IncrementalVersion = iteration.IncrementalVersion
-		}
+	if restricted {
+		params.Body.Restriction = packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED.Pointer()
+	} else {
+		params.Body.Restriction = packermodels.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED.Pointer()
 	}
 
 	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
@@ -162,8 +147,49 @@ func UpdateBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return channel.GetPayload().Channel, nil
 }
 
-// DeleteBucketChannel deletes a channel from the named bucket.
-func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
+func UpdatePackerChannelAssignment(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+	iteration *packermodels.HashicorpCloudPackerIteration) (*packermodels.HashicorpCloudPackerChannel, error) {
+	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
+	params.Slug = channelSlug
+
+	maskPaths := []string{}
+
+	if iteration != nil {
+		if iteration.ID != "" {
+			params.Body.IterationID = iteration.ID
+			maskPaths = append(maskPaths, "iterationId")
+		}
+		if iteration.Fingerprint != "" {
+			params.Body.Fingerprint = iteration.Fingerprint
+			maskPaths = append(maskPaths, "fingerprint")
+		}
+		if iteration.IncrementalVersion > 0 {
+			params.Body.IncrementalVersion = iteration.IncrementalVersion
+			maskPaths = append(maskPaths, "incrementalVersion")
+		}
+	}
+
+	if len(maskPaths) == 0 {
+		maskPaths = []string{"iterationId", "fingerprint", "incrementalVersion"}
+	}
+	params.Body.Mask = strings.Join(maskPaths, ",")
+
+	channel, err := client.Packer.PackerServiceUpdateChannel(params, nil)
+	if err != nil {
+		if err, ok := err.(*packer_service.PackerServiceUpdateChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by UpdateBucketChannel. Got: %v", err)
+	}
+
+	return channel.GetPayload().Channel, nil
+}
+
+// DeletePackerChannel deletes a channel from the named bucket.
+func DeletePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceDeleteChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -185,8 +211,8 @@ func DeleteBucketChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return nil, nil
 }
 
-// ListBucketChannels queries the HCP Packer registry for channels associated to the specified bucket.
-func ListBucketChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
+// ListPackerChannels queries the HCP Packer registry for channels associated to the specified bucket.
+func ListPackerChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
 	params := packer_service.NewPackerServiceListChannelsParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID

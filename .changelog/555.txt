@@ -1,0 +1,11 @@
+```release-note:breaking-change
+Removed the `iteration` block from `hcp_packer_channel`, previously deprecated in v0.63.0
+```
+
+```release-note:feature
+Channel restriction can now be configured with the `restricted` field of `hcp_packer_channel`
+```
+
+```release-note:improvement
+Add support for HCP Packer Managed channels to `hcp_packer_channel`. Also adds a read-only `managed` attribute.
+```

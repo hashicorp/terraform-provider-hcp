@@ -29,10 +29,10 @@ resource "hcp_packer_channel" "staging" {
 
 ### Optional
 
-- `iteration` (Block List, Max: 1, Deprecated) The iteration assigned to the channel. This block is deprecated. Please use `hcp_packer_channel_assignment` instead. (see [below for nested schema](#nestedblock--iteration))
 - `project_id` (String) The ID of the HCP project where this channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
+- `restricted` (Boolean) If true, the channel is only visible to users with permission to create and manage it. If false, the channel is visible to every member of the organization.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
@@ -40,19 +40,9 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `author_id` (String) The author of this channel.
 - `created_at` (String) The creation time of this channel.
 - `id` (String) The ID of this resource.
+- `managed` (Boolean) If true, the channel is an HCP Packer managed channel
 - `organization_id` (String) The ID of the HCP organization where this channel is located.
-- `restricted` (Boolean) If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.
 - `updated_at` (String) The time this channel was last updated.
-
-<a id="nestedblock--iteration"></a>
-### Nested Schema for `iteration`
-
-Optional:
-
-- `fingerprint` (String) The fingerprint of the iteration assigned to the channel.
-- `id` (String) The ID of the iteration assigned to the channel.
-- `incremental_version` (Number) The incremental_version of the iteration assigned to the channel.
-
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
