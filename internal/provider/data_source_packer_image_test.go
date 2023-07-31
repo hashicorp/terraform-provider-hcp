@@ -132,6 +132,7 @@ func TestAcc_dataSourcePackerImage(t *testing.T) {
 			// works.
 			{
 				PreConfig: func() {
+					upsertRegistry(t)
 					upsertBucket(t, acctestImageBucket)
 					upsertIteration(t, acctestImageBucket, fingerprint)
 					itID, err := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)

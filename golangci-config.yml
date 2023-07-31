@@ -39,6 +39,10 @@ issues:
   - path: _test\.go
     linters:
     - bodyclose
-  - linters:
-    - staticcheck
-    text: "SA1019: package github.com/golang/protobuf"
+  - text: "SA1019: package github.com/golang/protobuf"
+    linters:
+      - staticcheck
+  - text: "SA1019: d.GetOkExists"
+    linters:
+      - staticcheck
+    

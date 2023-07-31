@@ -16,6 +16,7 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 	runTask := testAccPackerDataRunTaskBuilder("runTask")
 	config := testConfig(testAccConfigBuildersToString(runTask))
 
+	// Must not be Parallel
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
