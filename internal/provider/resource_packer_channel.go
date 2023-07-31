@@ -55,7 +55,7 @@ func resourcePackerChannel() *schema.Resource {
 			},
 			// Optional inputs
 			"restricted": {
-				Description: "If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.",
+				Description: "If true, the channel is only visible to users with permission to create and manage it. If false, the channel is visible to every member of the organization.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
