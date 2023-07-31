@@ -3,7 +3,7 @@ Removed the `iteration` block from `hcp_packer_channel`, previously deprecated i
 ```
 
 ```release-note:feature
-Channel restriction status can now be configured with the `restricted` field of `hcp_packer_channel`
+Channel restriction can now be configured with the `restricted` field of `hcp_packer_channel`
 ```
 
 ```release-note:improvement
