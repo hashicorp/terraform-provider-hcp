@@ -7,5 +7,5 @@ Channel restriction status can now be configured with the `restricted` field of 
 ```
 
 ```release-note:improvement
-Add support for HCP Managed channels to `hcp_packer_channel`. Also adds a read-only `managed` attribute.
+Add support for HCP Packer Managed channels to `hcp_packer_channel`. Also adds a read-only `managed` attribute.
 ```
