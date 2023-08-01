@@ -48,6 +48,14 @@ resource "hcp_vault_cluster" "test" {
 	major_version_upgrade_config {
 		upgrade_type = "MANUAL"
 	}
+	vault_plugin {
+		plugin_type = "SECRET"
+		plugin_name = "venafi-pki-backend"
+	}
+	vault_plugin {
+		plugin_type = "DATABASE"
+		plugin_name = "vault-plugin-database-oracle"
+	}
 }
 `
 
@@ -63,6 +71,10 @@ resource "hcp_vault_cluster" "test" {
 		upgrade_type = "SCHEDULED"
 		maintenance_window_day = "WEDNESDAY"
 		maintenance_window_time = "WINDOW_12AM_4AM"
+	}
+	vault_plugin {
+		plugin_type = "SECRET"
+		plugin_name = "venafi-pki-backend"
 	}
 }
 `

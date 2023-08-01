@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -156,7 +157,7 @@ func testAccCheckVaultClusterDestroy(s *terraform.State) error {
 func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 	in := &inp
 	return []resource.TestStep{
-		createClusteAndTestAdminTokenGeneration(t, in),
+		createClusterAndTestAdminTokenGeneration(t, in),
 		importResourcesInTFState(t, in),
 		tfApply(t, in),
 		testTFDataSources(t, in),
@@ -169,7 +170,7 @@ func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 func azureTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 	in := &inp
 	return []resource.TestStep{
-		createClusteAndTestAdminTokenGeneration(t, in),
+		createClusterAndTestAdminTokenGeneration(t, in),
 		importResourcesInTFState(t, in),
 		tfApply(t, in),
 		testTFDataSources(t, in),
@@ -178,7 +179,7 @@ func azureTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 }
 
 // This step tests Vault cluster and admin token resource creation.
-func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.TestStep {
+func createClusterAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.TestStep {
 	return resource.TestStep{
 		Config: testConfig(in.tf),
 		Check: resource.ComposeTestCheckFunc(
@@ -289,7 +290,7 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 	}
 }
 
-// This step verifies the successful update of "public_endpoint", "audit_log", "metrics" and MVU config
+// This step verifies the successful update of "public_endpoint", "audit_log", "metrics", MVU config, and plugin config
 func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "true"
@@ -307,6 +308,8 @@ func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) 
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "MANUAL"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_plugin.0.plugin_name", "venafi-pki-backend"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_plugin.0.plugin_type", "SECRET"),
 		),
 	}
 }

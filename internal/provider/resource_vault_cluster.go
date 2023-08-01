@@ -276,6 +276,33 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					},
 				},
 			},
+			"vault_plugin": {
+				Description: "The external plugins that are to be installed on the vault cluster",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"plugin_name": {
+							Description: "The name of the plugin - Valid options for plugin name - 'venafi-pki-backend'",
+							Type:        schema.TypeString,
+							Required:    true,
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+						},
+						"plugin_type": {
+							Description:      "The type of the plugin - Valid options for plugin type - 'SECRET', 'AUTH', 'DATABASE'",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateVaultPluginType,
+							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+						},
+					},
+				},
+			},
 			"vault_public_endpoint_url": {
 				Description: "The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.",
 				Type:        schema.TypeString,
@@ -331,6 +358,10 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 	mvuConfig, diagErr := getMajorVersionUpgradeConfig(d)
+	if diagErr != nil {
+		return diagErr
+	}
+	pluginConfig, diagErr := getPluginConfig(d)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -506,7 +537,6 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	// If we pass the major version upgrade configuration we need to update it after the creation of the cluster,
 	// since the cluster is created by default to automatic upgrade
 	if mvuConfig != nil {
-
 		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, clusterLocationShared, payload.ClusterID, mvuConfig)
 		if err != nil {
 			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", payload.ClusterID, err)
@@ -516,6 +546,14 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		cluster, err = clients.GetVaultClusterByID(ctx, client, loc, payload.ClusterID)
 		if err != nil {
 			return diag.Errorf("unable to retrieve Vault cluster (%s): %v", payload.ClusterID, err)
+		}
+	}
+
+	// add plugins to cluster after cluster creation
+	for _, plugin := range pluginConfig {
+		_, err := clients.AddPlugin(ctx, client, clusterLocationShared, payload.ClusterID, plugin)
+		if err != nil {
+			return diag.Errorf("error adding plugin (%s) to Vault cluster (%s): %v", plugin.PluginName, payload.ClusterID, err)
 		}
 	}
 
@@ -610,6 +648,11 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
+	newPluginConfig, diagErr := getPluginConfig(d)
+	if diagErr != nil {
+		return diagErr
+	}
+
 	if d.HasChange("tier") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
@@ -678,6 +721,48 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		return diag.Errorf("unable to retrieve Vault cluster (%s): %v", clusterID, err)
+	}
+
+	// on update, delete plugins that were removed from plugin config. Add all plugins in new config
+	if d.HasChange("vault_plugin") {
+		old, _ := d.GetChange("vault_plugin")
+
+		oldPlugins := old.([]interface{})
+
+		for _, oldP := range oldPlugins {
+			config, ok := oldP.(map[string]interface{})
+			if !ok {
+				return diag.Errorf("could not parse old plugin config: %v", err)
+			}
+
+			pluginName := config["plugin_name"].(string)
+			pluginType := config["plugin_type"].(string)
+
+			// if plugin in old config is not found in the new config, delete the plugin
+			found := false
+			for _, plugin := range newPluginConfig {
+				if strings.EqualFold(pluginName, plugin.PluginName) && strings.EqualFold(pluginType, plugin.PluginType) {
+					found = true
+				}
+			}
+
+			if !found {
+				req := &vaultmodels.HashicorpCloudVault20201125DeletePluginRequest{PluginName: pluginName, PluginType: pluginType}
+				_, err := clients.DeletePlugin(ctx, client, clusterLocationShared, clusterID, req)
+				if err != nil {
+					return diag.Errorf("error deleting plugin (%s) on Vault cluster (%s): %v", pluginName, clusterID, err)
+				}
+			}
+
+		}
+
+		// add all plugins in new plugin config
+		for _, plugin := range newPluginConfig {
+			_, err := clients.AddPlugin(ctx, client, clusterLocationShared, clusterID, plugin)
+			if err != nil {
+				return diag.Errorf("error adding plugin (%s) to Vault cluster (%s): %v", plugin.PluginName, clusterID, err)
+			}
+		}
 	}
 
 	if err := setVaultClusterResourceData(d, cluster); err != nil {
@@ -1148,6 +1233,42 @@ func flattenMajorVersionUpgradeConfig(config *vaultmodels.HashicorpCloudVault202
 	}
 
 	return []interface{}{configMap}
+}
+
+func getPluginConfig(d *schema.ResourceData) ([]*vaultmodels.HashicorpCloudVault20201125AddPluginRequest, diag.Diagnostics) {
+	if !d.HasChange("vault_plugin") {
+		return nil, nil
+	}
+	configParam, ok := d.GetOk("vault_plugin")
+	if !ok {
+		return nil, nil
+	}
+
+	configIfaceArr, ok := configParam.([]interface{})
+	if !ok || len(configIfaceArr) == 0 {
+		return nil, nil
+	}
+
+	if !ok || len(configIfaceArr) == 0 {
+		return nil, nil
+	}
+
+	var pluginConfigs []*vaultmodels.HashicorpCloudVault20201125AddPluginRequest
+
+	for _, plugin := range configIfaceArr {
+		config, ok := plugin.(map[string]interface{})
+		if !ok {
+			return nil, nil
+		}
+		pluginName := config["plugin_name"].(string)
+		pluginType := config["plugin_type"].(string)
+		pluginConfigs = append(pluginConfigs, &vaultmodels.HashicorpCloudVault20201125AddPluginRequest{
+			PluginName: pluginName,
+			PluginType: pluginType,
+		})
+
+	}
+	return pluginConfigs, nil
 }
 
 func resourceVaultClusterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

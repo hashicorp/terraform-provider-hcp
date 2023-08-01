@@ -273,3 +273,69 @@ func DeleteVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmode
 
 	return deleteResp.Payload, nil
 }
+
+// AddPlugin will make a call to the Vault service to add a plugin to a Vault cluster
+func AddPlugin(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
+	request *vaultmodels.HashicorpCloudVault20201125AddPluginRequest) (vaultmodels.HashicorpCloudVault20201125AddPluginResponse, error) {
+
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: region.Provider,
+			Region:   region.Region,
+		},
+	}
+	request.Location = locInternal
+	request.ClusterID = clusterID
+	addPluginParams := vault_service.NewAddPluginParams()
+	addPluginParams.Context = ctx
+	addPluginParams.ClusterID = clusterID
+	addPluginParams.LocationProjectID = loc.ProjectID
+	addPluginParams.LocationOrganizationID = loc.OrganizationID
+	addPluginParams.Body = request
+
+	addPluginResp, err := client.Vault.AddPlugin(addPluginParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return addPluginResp.Payload, nil
+}
+
+// DeletePlugin will make a call to the Vault service to remove a plugin to a Vault cluster
+func DeletePlugin(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
+	request *vaultmodels.HashicorpCloudVault20201125DeletePluginRequest) (vaultmodels.HashicorpCloudVault20201125DeletePluginResponse, error) {
+
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
+	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
+		OrganizationID: loc.OrganizationID,
+		ProjectID:      loc.ProjectID,
+		Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+			Provider: region.Provider,
+			Region:   region.Region,
+		},
+	}
+	request.Location = locInternal
+	request.ClusterID = clusterID
+	delPluginPluginParams := vault_service.NewDeletePluginParams()
+	delPluginPluginParams.Context = ctx
+	delPluginPluginParams.ClusterID = clusterID
+	delPluginPluginParams.LocationProjectID = loc.ProjectID
+	delPluginPluginParams.LocationOrganizationID = loc.OrganizationID
+	delPluginPluginParams.Body = request
+
+	delPluginResp, err := client.Vault.DeletePlugin(delPluginPluginParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return delPluginResp.Payload, nil
+}
