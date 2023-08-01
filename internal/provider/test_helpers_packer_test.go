@@ -408,6 +408,35 @@ func updateChannelAssignment(t *testing.T, bucketSlug string, channelSlug string
 	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
 }
 
+func updateChannelRestriction(t *testing.T, bucketSlug string, channelSlug string, restricted bool) {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+
+	params := packer_service.NewPackerServiceUpdateChannelParams()
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.BucketSlug = bucketSlug
+	params.Slug = channelSlug
+	params.Body.Mask = "restriction"
+
+	if restricted {
+		params.Body.Restriction = models.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED.Pointer()
+	} else {
+		params.Body.Restriction = models.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED.Pointer()
+	}
+
+	_, err := client.Packer.PackerServiceUpdateChannel(params, nil)
+	if err == nil {
+		return
+	}
+	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
+}
+
 func deleteBucket(t *testing.T, bucketSlug string, logOnError bool) {
 	t.Helper()
 

@@ -103,16 +103,8 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -141,16 +133,8 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 
 func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -188,12 +172,12 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 		iterFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName,
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName,
 		&packermodels.HashicorpCloudPackerIteration{
 			IncrementalVersion: int32(d.Get("iteration_version").(int)),
 			ID:                 iterID,
 			Fingerprint:        iterFingerprint,
-		}, nil,
+		},
 	)
 	if err != nil {
 		return diag.FromErr(err)
@@ -210,16 +194,8 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 
 func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -238,7 +214,7 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 		iteration.Fingerprint = iterFingerpint
 	}
 
-	updatedChannel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iteration)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -252,20 +228,15 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 
 func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
+		return diag.FromErr(err)
 	}
 
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, nil, nil)
+	_, err = clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -317,7 +288,7 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
-	if err := setLocationData(d, loc); err != nil {
+	if err := setLocationResourceData(d, loc); err != nil {
 		return nil, err
 	}
 

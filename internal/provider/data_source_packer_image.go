@@ -9,7 +9,6 @@ import (
 	"time"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -114,26 +113,18 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 }
 
 func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	cloudProvider := d.Get("cloud_provider").(string)
-	region := d.Get("region").(string)
-	channelSlug := d.Get("channel").(string)
-	componentType := d.Get("component_type").(string)
-	iterationID := d.Get("iteration_id").(string)
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
+
+	bucketName := d.Get("bucket_name").(string)
+	channelSlug := d.Get("channel").(string)
+	iterationID := d.Get("iteration_id").(string)
+	componentType := d.Get("component_type").(string)
+	cloudProvider := d.Get("cloud_provider").(string)
+	region := d.Get("region").(string)
 
 	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, channel=%s/iteration_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID, channelSlug, iterationID)
 

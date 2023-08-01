@@ -43,5 +43,3 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 Optional:
 
 - `default` (String)
-
-

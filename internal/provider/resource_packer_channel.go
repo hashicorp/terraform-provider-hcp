@@ -10,12 +10,14 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"google.golang.org/grpc/codes"
 )
 
 func resourcePackerChannel() *schema.Resource {
@@ -52,6 +54,12 @@ func resourcePackerChannel() *schema.Resource {
 				ValidateDiagFunc: validateStringNotEmpty,
 			},
 			// Optional inputs
+			"restricted": {
+				Description: "If true, the channel is only visible to users with permission to create and manage it. If false, the channel is visible to every member of the organization.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+			},
 			"project_id": {
 				Description: `
 The ID of the HCP project where this channel is located. 
@@ -63,45 +71,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				ValidateFunc: validation.IsUUID,
 				Computed:     true,
 			},
-			"iteration": {
-				Description: "The iteration assigned to the channel. This block is deprecated. Please use `hcp_packer_channel_assignment` instead.",
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
-				Computed:    true,
-				Deprecated:  "The `iteration` block is deprecated. Please remove the `iteration` block and create a new `hcp_packer_channel_assignment` resource to manage this channel's assigned iteration with Terraform.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fingerprint": {
-							Description:  "The fingerprint of the iteration assigned to the channel.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-						"id": {
-							Description:  "The ID of the iteration assigned to the channel.",
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-						"incremental_version": {
-							Description:  "The incremental_version of the iteration assigned to the channel.",
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ExactlyOneOf: []string{"iteration.0.id", "iteration.0.fingerprint", "iteration.0.incremental_version"},
-						},
-					},
-				},
-			},
 			// Computed Values
-			"restricted": {
-				Description: "If true, the channel is only visible to users with permission to create and manage it. Otherwise the channel is visible to every member of the organization.",
-				Type:        schema.TypeBool,
-				Computed:    true,
-			},
 			"author_id": {
 				Description: "The author of this channel.",
 				Type:        schema.TypeString,
@@ -122,27 +92,23 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"managed": {
+				Description: "If true, the channel is an HCP Packer managed channel",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 		},
 	}
 }
 
 func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
+	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
 	log.Printf("[INFO] Reading HCP Packer channel (%s) [bucket_name=%s, project_id=%s, organization_id=%s]", channelName, bucketName, loc.ProjectID, loc.OrganizationID)
@@ -164,79 +130,106 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+	loc, err := getAndUpdateLocationResourceData(d, client)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("name").(string)
 
-	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
-		return diag.FromErr(err)
-	}
-
-	var iteration *packermodels.HashicorpCloudPackerIteration
-
-	if _, ok := d.GetOk("iteration.0"); ok {
-		iteration = &packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: int32(d.Get("iteration.0.incremental_version").(int)),
-			ID:                 d.Get("iteration.0.id").(string),
-			Fingerprint:        d.Get("iteration.0.fingerprint").(string),
+	createRestriction := packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTIONUNSET)
+	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
+	restrictedRaw, restrictedSet := d.GetOkExists("restricted")
+	if restrictedSet {
+		if restrictedRaw.(bool) {
+			createRestriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionRESTRICTED)
+		} else {
+			createRestriction = packermodels.NewHashicorpCloudPackerCreateChannelRequestRestriction(packermodels.HashicorpCloudPackerCreateChannelRequestRestrictionUNRESTRICTED)
 		}
 	}
 
-	channel, err := clients.CreateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
-	if err != nil {
+	newChannel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, createRestriction)
+	if err == nil {
+		if newChannel == nil {
+			return diag.Errorf("expected a non-nil channel from CreateChannel, but got nil")
+		}
+
+		// Handle successfully created channel
+		return setPackerChannelResourceData(d, newChannel)
+	}
+
+	// Check error to see if the channel is a pre-existing managed channel
+	errCreate, ok := err.(*packer_service.PackerServiceCreateChannelDefault)
+	if !ok {
 		return diag.FromErr(err)
 	}
-
-	if channel == nil {
-		return diag.Errorf("Unable to create channel in bucket %s named %s.", bucketName, channelName)
+	if payload := errCreate.Payload; payload == nil || codes.Code(payload.Code) != codes.AlreadyExists {
+		return diag.FromErr(errCreate)
 	}
 
-	return setPackerChannelResourceData(d, channel)
+	// Channel already exists
+	existingChannel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	if err != nil {
+		return diag.Errorf("channel already exists. GetChannel failed unexpectedly: %v", err)
+	}
+	if existingChannel == nil {
+		return diag.Errorf("channel already exists. Expected a non-nil channel from GetChannel, but got nil")
+	}
+	if !existingChannel.Managed {
+		return diag.Errorf("channel already exists, use `terraform import` to add it to the terraform state")
+	}
+
+	// Channel is managed, attempt update
+	diags := diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "This channel already exists and is managed by HCP Packer, so it cannot be manually created.",
+			Detail:   "Attempting to automatically adopt the channel. This action will not create a new channel, as the channel already exists.",
+		},
+	}
+	diags = append(diags, setPackerChannelResourceData(d, existingChannel)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if restrictedSet {
+		updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
+		if err != nil {
+			diags := append(diags, diag.Errorf("UpdateChannel failed unexpectedly: %v", err)...)
+			return diags
+		}
+		if updatedChannel == nil {
+			diags := append(diags, diag.Errorf("Expected non-nil channel from UpdateChannel, but got nil")...)
+			return diags
+		}
+		diags = append(diags, setPackerChannelResourceData(d, updatedChannel)...)
+	}
+
+	return diags
 }
 
 func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	channelName := d.Get("name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getAndUpdateLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
-	var iteration *packermodels.HashicorpCloudPackerIteration
+	bucketName := d.Get("bucket_name").(string)
+	channelName := d.Get("name").(string)
 
-	if _, ok := d.GetOk("iteration.0"); ok {
-		iteration = &packermodels.HashicorpCloudPackerIteration{}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.incremental_version") {
-			iteration.IncrementalVersion = int32(d.Get("iteration.0.incremental_version").(int))
-		}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.id") {
-			iteration.ID = d.Get("iteration.0.id").(string)
-		}
-		if !d.HasChange("iteration.0") || d.HasChange("iteration.0.fingerprint") {
-			iteration.Fingerprint = d.Get("iteration.0.fingerprint").(string)
-		}
+	//lint:ignore SA1019 GetOkExists is fine for use with booleans and has defined behavior
+	restrictedRaw, ok := d.GetOkExists("restricted")
+	if !ok {
+		// Currently only the restriction can be updated, and it should not be
+		// updated if it isn't set in the config, so we return.
+		// This should never happen because all other fields are ForceNew
+		return nil
 	}
 
-	channel, err := clients.UpdateBucketChannel(ctx, client, loc, bucketName, channelName, iteration, nil)
+	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -245,24 +238,24 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	bucketName := d.Get("bucket_name").(string)
-	channelName := d.Get("name").(string)
-
 	client := meta.(*clients.Client)
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
+	loc, err := getLocationResourceData(d, client)
 	if err != nil {
-		return diag.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	if err := setLocationData(d, loc); err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err = clients.DeleteBucketChannel(ctx, client, loc, bucketName, channelName)
+	bucketName := d.Get("bucket_name").(string)
+	channelName := d.Get("name").(string)
+
+	if d.Get("managed").(bool) {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "This channel is managed by HCP Packer, so it cannot be deleted.",
+			Detail:   "The channel has been removed from the terraform state, but has not been deleted from HCP Packer.",
+		}}
+	}
+
+	_, err = clients.DeletePackerChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -314,7 +307,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
-	if err := setLocationData(d, loc); err != nil {
+	if err := setLocationResourceData(d, loc); err != nil {
 		return nil, err
 
 	}
@@ -323,13 +316,8 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return nil, err
 	}
-
 	if channel == nil {
 		return nil, fmt.Errorf("unable to find channel in bucket %s named %s", bucketName, channelName)
-	}
-
-	if channel.Managed {
-		return nil, fmt.Errorf("the channel %q is managed by HCP Packer and can not be imported", channel.Slug)
 	}
 
 	d.SetId(channel.ID)
@@ -344,60 +332,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePackerChannelCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	client := meta.(*clients.Client)
-
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	bucketNameRaw, ok := d.GetOk("bucket_name")
-	if !ok {
-		return fmt.Errorf("unable to retrieve bucket_name")
-	}
-	bucketName := bucketNameRaw.(string)
-
-	if d.HasChange("iteration.0") {
-		var iterationResponse *packermodels.HashicorpCloudPackerIteration
-		var err error
-		if id, ok := d.GetOk("iteration.0.id"); ok && d.HasChange("iteration.0.id") && id.(string) != "" {
-			iterationResponse, err = clients.GetIterationFromID(ctx, client, loc, bucketName, id.(string))
-		} else if fingerprint, ok := d.GetOk("iteration.0.fingerprint"); ok && d.HasChange("iteration.0.fingerprint") && fingerprint.(string) != "" {
-			iterationResponse, err = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint.(string))
-		} else if version, ok := d.GetOk("iteration.0.incremental_version"); ok && d.HasChange("iteration.0.incremental_version") && version.(int) > 0 {
-			iterationResponse, err = clients.GetIterationFromVersion(ctx, client, loc, bucketName, int32(version.(int)))
-		}
-		if err != nil {
-			return err
-		}
-
-		iterations := []map[string]interface{}{}
-		if iterationResponse != nil {
-			iterations = append(iterations, map[string]interface{}{
-				"id":                  iterationResponse.ID,
-				"fingerprint":         iterationResponse.Fingerprint,
-				"incremental_version": iterationResponse.IncrementalVersion,
-			})
-		} else {
-			iterations = append(iterations, map[string]interface{}{
-				"id":                  "",
-				"fingerprint":         "",
-				"incremental_version": 0,
-			})
-		}
-
-		err = d.SetNew("iteration", iterations)
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChanges("iteration") {
+	if d.HasChanges("restricted") {
 		if err := d.SetNewComputed("updated_at"); err != nil {
 			return err
 		}
@@ -425,10 +360,6 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("iteration", flattenIterationConfig(channel.Iteration)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("updated_at", channel.UpdatedAt.String()); err != nil {
 		return diag.FromErr(err)
 	}
@@ -437,25 +368,9 @@ func setPackerChannelResourceData(d *schema.ResourceData, channel *packermodels.
 		return diag.FromErr(err)
 	}
 
-	return nil
-}
-
-func flattenIterationConfig(iteration *packermodels.HashicorpCloudPackerIteration) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if iteration == nil {
-		result = append(result, map[string]interface{}{
-			"id":                  "",
-			"fingerprint":         "",
-			"incremental_version": 0,
-		})
-		return result
-	} else {
-		result = append(result, map[string]interface{}{
-			"id":                  iteration.ID,
-			"fingerprint":         iteration.Fingerprint,
-			"incremental_version": iteration.IncrementalVersion,
-		})
+	if err := d.Set("managed", channel.Managed); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return result
+	return nil
 }
