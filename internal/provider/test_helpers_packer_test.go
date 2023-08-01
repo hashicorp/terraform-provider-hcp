@@ -227,7 +227,7 @@ func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string) *mode
 	return iteration
 }
 
-func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strfmt.DateTime) {
+func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strfmt.DateTime) *models.HashicorpCloudPackerIteration {
 	t.Helper()
 	client := testAccProvider.Meta().(*clients.Client)
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -244,10 +244,15 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strf
 		RevokeAt:   revokeAt,
 	}
 
-	_, err := client.Packer.PackerServiceUpdateIteration(params, nil)
+	resp, err := client.Packer.PackerServiceUpdateIteration(params, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	if resp == nil {
+		t.Fatal("expected non-nil response from UpdateIteration, got nil")
+	}
+
+	return resp.Payload.Iteration
 }
 
 func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint string) (string, error) {

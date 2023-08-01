@@ -50,14 +50,14 @@ func TestAccPackerRunTask(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.ResourceName()),
+				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.BlockName()),
 			},
 			{ // Ensure HMAC key is different after apply
 				PreConfig: getHmacBeforeStep(&preStep2HmacKey),
 				Config:    configRegen,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.ResourceName()),
-					testAccCheckResourceAttrPtrDifferent(runTaskRegen.ResourceName(), "hmac_key", &preStep2HmacKey),
+					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.BlockName()),
+					testAccCheckResourceAttrPtrDifferent(runTaskRegen.BlockName(), "hmac_key", &preStep2HmacKey),
 				),
 				ExpectNonEmptyPlan: true, // `regenerate_hmac = true` creates a perpetual diff
 			},
@@ -65,8 +65,8 @@ func TestAccPackerRunTask(t *testing.T) {
 				PreConfig: getHmacBeforeStep(&preStep3HmacKey),
 				Config:    configRegen,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.ResourceName()),
-					testAccCheckResourceAttrPtrDifferent(runTaskRegen.ResourceName(), "hmac_key", &preStep3HmacKey),
+					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.BlockName()),
+					testAccCheckResourceAttrPtrDifferent(runTaskRegen.BlockName(), "hmac_key", &preStep3HmacKey),
 				),
 				ExpectNonEmptyPlan: true, // `regenerate_hmac = true` creates a perpetual diff
 			},
@@ -74,8 +74,8 @@ func TestAccPackerRunTask(t *testing.T) {
 				PreConfig: getHmacBeforeStep(&preStep4HmacKey),
 				Config:    config,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.ResourceName()),
-					resource.TestCheckResourceAttrPtr(runTask.ResourceName(), "hmac_key", &preStep4HmacKey),
+					testAccCheckPackerRunTaskStateMatchesAPI(runTaskRegen.BlockName()),
+					resource.TestCheckResourceAttrPtr(runTask.BlockName(), "hmac_key", &preStep4HmacKey),
 				),
 			},
 		},
@@ -83,7 +83,7 @@ func TestAccPackerRunTask(t *testing.T) {
 }
 
 func testAccPackerRunTaskBuilder(uniqueName string, regenerateHmac string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
+	return &testAccResourceConfigBuilder{
 		resourceType: "hcp_packer_run_task",
 		uniqueName:   uniqueName,
 		attributes: map[string]string{

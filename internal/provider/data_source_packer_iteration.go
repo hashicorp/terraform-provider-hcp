@@ -67,7 +67,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			// Actual iteration:
 			"incremental_version": {
 				Description: "Incremental version of this iteration",
 				Type:        schema.TypeInt,
