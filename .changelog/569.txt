@@ -1,0 +1,4 @@
+```release-note:deprecation
+The `hcp_packer_image_iteration` data source is now deprecated.
+Use the `hcp_packer_image` or `hcp_packer_iteration` data sources instead.
+```

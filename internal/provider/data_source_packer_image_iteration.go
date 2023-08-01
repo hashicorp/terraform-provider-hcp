@@ -17,8 +17,9 @@ import (
 
 func dataSourcePackerImageIteration() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.",
-		ReadContext: dataSourcePackerImageIterationRead,
+		Description:        "The Packer ImageIteration data source iteration gets the most recent iteration (or build) of an image, given a channel.",
+		DeprecationMessage: "The `hcp_packer_image_iteration` data source is deprecated. Use `hcp_packer_image` or `hcp_packer_iteration` instead.",
+		ReadContext:        dataSourcePackerImageIterationRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
 		},
@@ -53,7 +54,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-
 			// Actual iteration:
 			"incremental_version": {
 				Description: "Incremental version of this iteration",
