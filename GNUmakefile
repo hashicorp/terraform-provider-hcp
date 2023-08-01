@@ -34,14 +34,14 @@ fmtcheck:
 	@./scripts/gofmtcheck.sh
 	$(GO_LINT) run --config $(GO_LINT_CONFIG_PATH) $(GO_LINT_ARGS)
 
-test: fmtcheck
+test: #fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
 
 test-ci: fmtcheck
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
-testacc: fmtcheck
+testacc:
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
