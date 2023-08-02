@@ -12,7 +12,7 @@ import (
 )
 
 // GetProjectByID gets a project by its ID
-func GetProjectByID(ctx context.Context, client *Client, projectID string) (*resourcemodels.ResourcemanagerProject, error) {
+func GetProjectByID(ctx context.Context, client *Client, projectID string) (*resourcemodels.HashicorpCloudResourcemanagerProject, error) {
 	getParams := project_service.NewProjectServiceGetParams()
 	getParams.Context = ctx
 	getParams.ID = projectID
@@ -34,13 +34,13 @@ func GetParentOrganizationIDByProjectID(ctx context.Context, client *Client, pro
 	return project.Parent.ID, nil
 }
 
-func CreateProject(ctx context.Context, client *Client, name, organizationID string) (*resourcemodels.ResourcemanagerProject, error) {
-	projectOrg := &resourcemodels.ResourcemanagerResourceID{
+func CreateProject(ctx context.Context, client *Client, name, organizationID string) (*resourcemodels.HashicorpCloudResourcemanagerProject, error) {
+	projectOrg := &resourcemodels.HashicorpCloudResourcemanagerResourceID{
 		ID:   organizationID,
-		Type: resourcemodels.NewResourceIDResourceType("ORGANIZATION"),
+		Type: resourcemodels.NewHashicorpCloudResourcemanagerResourceIDResourceType("ORGANIZATION"),
 	}
 	projectParams := project_service.NewProjectServiceCreateParamsWithContext(ctx)
-	projectParams.Body = &resourcemodels.ResourcemanagerProjectCreateRequest{
+	projectParams.Body = &resourcemodels.HashicorpCloudResourcemanagerProjectCreateRequest{
 		Name:   name,
 		Parent: projectOrg,
 	}
