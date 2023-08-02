@@ -27,7 +27,7 @@ func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration = upsertCompleteIteration(t, bucketSlug, "1234")
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
 		ProviderFactories: providerFactories,
@@ -72,7 +72,7 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			unrevokedIteration := upsertCompleteIteration(t, bucketSlug, "1234")
+			unrevokedIteration, _ := upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, unrevokedIteration.ID)
 			revokedIteration = revokeIteration(t, unrevokedIteration.ID, bucketSlug, revokeAt)
 		},

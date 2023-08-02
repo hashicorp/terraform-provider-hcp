@@ -5,194 +5,182 @@ package provider
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var (
-	acctestImageBucket       = fmt.Sprintf("alpine-acc-imagetest-%s", time.Now().Format("200601021504"))
-	acctestUbuntuImageBucket = fmt.Sprintf("ubuntu-acc-imagetest-%s", time.Now().Format("200601021504"))
-	acctestArchImageBucket   = fmt.Sprintf("arch-acc-imagetest-%s", time.Now().Format("200601021504"))
-	acctestImageChannel      = "production-image-test"
-	componentType            = "amazon-ebs.example"
-)
+func TestAcc_dataSourcePackerImage_Simple(t *testing.T) {
+	bucketSlug := testAccCreateSlug("ImageSimple")
+	channelSlug := bucketSlug // No need for a different slug
 
-var (
-	testAccPackerImageAlpineProduction = fmt.Sprintf(`
-	data "hcp_packer_iteration" "alpine-imagetest" {
-		bucket_name  = %q
-		channel = %q
+	buildOptions := buildOptions{
+		cloudProvider: "aws",
+		componentType: "amazon-ebs.example",
+		images: []*models.HashicorpCloudPackerImageCreateBody{
+			{
+				ImageID: "image1",
+				Region:  "us-east-1",
+			},
+			{
+				ImageID: "image1",
+				Region:  "us-west-1",
+			},
+		},
+		labels: map[string]string{"test123": "test456"},
 	}
+	region := buildOptions.images[0].Region
 
-	data "hcp_packer_image" "foo" {
-		bucket_name    = %q
-		cloud_provider = "aws"
-		iteration_id   = data.hcp_packer_iteration.alpine-imagetest.id
-		region         = "us-east-1"
-		component_type = %q
-	}
+	imageConfig := testAccPackerDataImageBuilder(
+		"simple",
+		fmt.Sprintf("%q", bucketSlug),
+		fmt.Sprintf("%q", channelSlug),
+		``,
+		fmt.Sprintf("%q", buildOptions.cloudProvider),
+		fmt.Sprintf("%q", region),
+		fmt.Sprintf("%q", buildOptions.componentType),
+	)
+	errorImageConfig := testAccPackerDataImageBuilderFromImage(
+		"error", imageConfig,
+		fmt.Sprintf("%q", buildOptions.cloudProvider),
+		fmt.Sprintf("%q", region),
+		fmt.Sprintf("%q", "NotRealComponentType"),
+	)
 
-	# we make sure that this won't fail even when revoke_at is not set
-	output "revoke_at" {
-  		value = data.hcp_packer_iteration.alpine-imagetest.revoke_at
-	}
-`, acctestImageBucket, acctestImageChannel, acctestImageBucket, componentType)
+	var iteration *models.HashicorpCloudPackerIteration
+	var build *models.HashicorpCloudPackerBuild
 
-	testAccPackerImageAlpineProductionError = fmt.Sprintf(`
-	data "hcp_packer_iteration" "alpine-imagetest" {
-		bucket_name  = %q
-		channel = %q
-	}
-
-	data "hcp_packer_image" "foo" {
-		bucket_name    = %q
-		cloud_provider = "aws"
-		iteration_id   = data.hcp_packer_iteration.alpine-imagetest.id
-		region         = "us-east-1"
-		component_type = "amazon-ebs.do-not-exist"
-	}
-
-	# we make sure that this won't fail even when revoke_at is not set
-	output "revoke_at" {
-  		value = data.hcp_packer_iteration.alpine-imagetest.revoke_at
-	}
-`, acctestImageBucket, acctestImageChannel, acctestImageBucket)
-
-	testAccPackerImageUbuntuProduction = fmt.Sprintf(`
-	data "hcp_packer_iteration" "ubuntu-imagetest" {
-		bucket_name  = %q
-		channel = %q
-	}
-
-	data "hcp_packer_image" "ubuntu-foo" {
-		bucket_name    = %q
-		cloud_provider = "aws"
-		iteration_id   = data.hcp_packer_iteration.ubuntu-imagetest.id
-		region         = "us-east-1"
-	}
-`, acctestUbuntuImageBucket, acctestImageChannel, acctestUbuntuImageBucket)
-
-	testAccPackerImageBothChanAndIter = fmt.Sprintf(`
-	data "hcp_packer_image" "arch-btw" {
-		bucket_name = %q
-		cloud_provider = "aws"
-		iteration_id = "234567"
-		channel = "chanSlug"
-		region = "us-east-1"
-	}
-`, acctestArchImageBucket)
-
-	testAccPackerImageBothChanAndIterRef = fmt.Sprintf(`
-	data "hcp_packer_iteration" "arch-imagetest" {
-		bucket_name = %q
-		channel = %q
-	}
-
-	data "hcp_packer_image" "arch-btw" {
-		bucket_name = %q
-		cloud_provider = "aws"
-		iteration_id = data.hcp_packer_iteration.arch-imagetest.id
-		channel = %q
-		region = "us-east-1"
-	}
-`, acctestArchImageBucket, acctestImageChannel, acctestArchImageBucket, acctestImageChannel)
-
-	testAccPackerImageArchProduction = fmt.Sprintf(`
-	data "hcp_packer_image" "arch-btw" {
-		bucket_name = %q
-		cloud_provider = "aws"
-		channel = %q
-		region = "us-east-1"
-	}
-`, acctestArchImageBucket, acctestImageChannel)
-)
-
-func TestAcc_dataSourcePackerImage(t *testing.T) {
-	resourceName := "data.hcp_packer_image.foo"
-	fingerprint := "44"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
+		},
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestImageBucket, acctestImageChannel, false)
-			deleteIteration(t, acctestImageBucket, fingerprint, false)
-			deleteBucket(t, acctestImageBucket, false)
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
-		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			// Testing that getting the production channel of the alpine image
-			// works.
 			{
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestImageBucket)
-					upsertIteration(t, acctestImageBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestImageBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestImageBucket, fingerprint, itID)
-					upsertChannel(t, acctestImageBucket, acctestImageChannel, itID)
-				},
-				Config: testAccPackerImageAlpineProduction,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttr("data.hcp_packer_image.foo", "labels.test-key", "test-value"),
-				),
+				Config: testConfig(testAccConfigBuildersToString(imageConfig)),
+				Check:  testAccCheckPackerImageState(t, imageConfig.BlockName(), bucketSlug, &iteration, &build, region),
 			},
-			// Testing that filtering non-existent image fails properly
 			{
+				// Test that references to `revoked_at` don't error when the
+				// the iteration is not revoked or scheduled for revocation.
+				//
+				// Checked in this manner because you cant check for attributes
+				// set to empty strings with `resource.TestCheckResourceAttr`
+				Config: testConfig(testAccConfigBuildersToString(
+					imageConfig,
+					testAccOutputBuilder("revoke_at", imageConfig.AttributeRef("revoke_at")),
+				)),
+			},
+			{ // Testing that filtering non-existent image fails properly
 				PlanOnly:    true,
-				Config:      testAccPackerImageAlpineProductionError,
-				ExpectError: regexp.MustCompile("Error: Unable to load image"),
+				Config:      testConfig(testAccConfigBuildersToString(errorImageConfig)),
+				ExpectError: regexp.MustCompile("Could not find image"),
+			},
+		},
+	})
+}
+
+func TestAcc_dataSourcePackerImage_IterationID(t *testing.T) {
+	bucketSlug := testAccCreateSlug("ImageFromIterationId")
+	channelSlug := bucketSlug // No need for a different slug
+
+	buildOptions := defaultBuildOptions
+	region := buildOptions.images[0].Region
+
+	iterationConfig := testAccPackerDataIterationBuilder(
+		"iteration",
+		fmt.Sprintf("%q", bucketSlug),
+		fmt.Sprintf("%q", channelSlug),
+	)
+	imageConfig := testAccPackerDataImageBuilderWithIterationReference(
+		"from_iteration_id",
+		iterationConfig,
+		fmt.Sprintf("%q", buildOptions.cloudProvider),
+		fmt.Sprintf("%q", region),
+		fmt.Sprintf("%q", buildOptions.componentType),
+	)
+
+	var iteration *models.HashicorpCloudPackerIteration
+	var build *models.HashicorpCloudPackerBuild
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
+		},
+		ProviderFactories: providerFactories,
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				// Check that everything works when using `iteration_id` since
+				// the simple test uses `channel` to avoid having a data source
+				Config: testConfig(testAccConfigBuildersToString(iterationConfig, imageConfig)),
+				Check:  testAccCheckPackerImageState(t, imageConfig.BlockName(), bucketSlug, &iteration, &build, region),
 			},
 		},
 	})
 }
 
 func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
-	fingerprint := fmt.Sprintf("%d", rand.Int())
+	bucketSlug := testAccCreateSlug("ImageRevoked")
+	channelSlug := bucketSlug // No need for a different slug
+
 	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+	buildOptions := defaultBuildOptions
+	region := buildOptions.images[0].Region
+	config := testAccPackerDataImageBuilder(
+		"revoked",
+		fmt.Sprintf("%q", bucketSlug),
+		fmt.Sprintf("%q", channelSlug),
+		``,
+		fmt.Sprintf("%q", buildOptions.cloudProvider),
+		fmt.Sprintf("%q", region),
+		fmt.Sprintf("%q", buildOptions.componentType),
+	)
+
+	var iteration *models.HashicorpCloudPackerIteration
+	var build *models.HashicorpCloudPackerBuild
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
+			revokeIteration(t, iteration.ID, bucketSlug, revokeAt)
+		},
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestUbuntuImageBucket, acctestImageChannel, true)
-			deleteIteration(t, acctestUbuntuImageBucket, fingerprint, true)
-			deleteBucket(t, acctestUbuntuImageBucket, true)
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
-				PlanOnly: true,
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestUbuntuImageBucket)
-					upsertIteration(t, acctestUbuntuImageBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestUbuntuImageBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestUbuntuImageBucket, fingerprint, itID)
-					upsertChannel(t, acctestUbuntuImageBucket, acctestImageChannel, itID)
-					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
-					// it's assigned to a channel
-					revokeIteration(t, itID, acctestUbuntuImageBucket, revokeAt)
-				},
-				Config: testConfig(testAccPackerImageUbuntuProduction),
+				Config: testConfig(testAccConfigBuildersToString(config)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "revoke_at", revokeAt.String()),
-					resource.TestCheckResourceAttr("data.hcp_packer_image.ubuntu-foo", "cloud_image_id", "ami-42"),
+					testAccCheckPackerImageState(t, config.BlockName(), bucketSlug, &iteration, &build, region),
+					resource.TestCheckResourceAttr(config.BlockName(), "revoke_at", revokeAt.String()),
 				),
 			},
 		},
@@ -200,100 +188,172 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 }
 
 func TestAcc_dataSourcePackerImage_emptyChannel(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+	bucketSlug := testAccCreateSlug("ImageEmptyChannel")
+	channelSlug := bucketSlug // No need for a different slug
+
+	config := testAccPackerDataImageBuilder(
+		"empty_channel",
+		fmt.Sprintf("%q", bucketSlug),
+		fmt.Sprintf("%q", channelSlug),
+		``,
+		fmt.Sprintf("%q", "someProvider"),
+		fmt.Sprintf("%q", "someRegion"),
+		``,
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			upsertChannel(t, bucketSlug, channelSlug, "")
+		},
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestArchImageBucket, acctestImageChannel, true)
-			deleteBucket(t, acctestArchImageBucket, true)
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
-				PlanOnly: true,
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestArchImageBucket)
-					upsertChannel(t, acctestArchImageBucket, acctestImageChannel, "")
-				},
-				Config:      testConfig(testAccPackerImageArchProduction),
+				Config:      testConfig(testAccConfigBuildersToString(config)),
 				ExpectError: regexp.MustCompile(`.*Channel does not have an assigned iteration.*`),
+			},
+			{ // Create a dummy non-empty state so that `CheckDestroy` will run.
+				Config: testAccConfigDummyNonemptyState,
 			},
 		},
 	})
 }
 
 func TestAcc_dataSourcePackerImage_channelAndIterationIDReject(t *testing.T) {
-	fingerprint := "rejectIterationAndChannel"
-	configs := []string{
-		testAccPackerImageBothChanAndIter,
-		testAccPackerImageBothChanAndIterRef,
-	}
+	config := testAccPackerDataImageBuilder(
+		"invalid_args",
+		fmt.Sprintf("%q", "someBucketSlug"),
+		fmt.Sprintf("%q", "someChannelSlug"),
+		fmt.Sprintf("%q", "someIterationID"),
+		fmt.Sprintf("%q", "someProvider"),
+		fmt.Sprintf("%q", "someRegion"),
+		``,
+	)
 
-	for _, cfg := range configs {
-		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-			ProviderFactories: providerFactories,
-			Steps: []resource.TestStep{
-				// basically just testing that we don't pass validation here
-				{
-					PlanOnly: true,
-					PreConfig: func() {
-						deleteChannel(t, acctestArchImageBucket, acctestImageChannel, false)
-						deleteIteration(t, acctestArchImageBucket, fingerprint, false)
-						deleteBucket(t, acctestArchImageBucket, false)
-
-						upsertRegistry(t)
-						upsertBucket(t, acctestArchImageBucket)
-						upsertIteration(t, acctestArchImageBucket, fingerprint)
-						itID, err := getIterationIDFromFingerPrint(t, acctestArchImageBucket, fingerprint)
-						if err != nil {
-							t.Fatal(err.Error())
-						}
-						upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
-						upsertChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
-					},
-					Config:      testConfig(cfg),
-					ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
-				},
-			},
-		})
-	}
-}
-
-func TestAcc_dataSourcePackerImage_channelAccept(t *testing.T) {
-	fingerprint := "acceptChannel"
-	resourceName := "data.hcp_packer_image.arch-btw"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestArchImageBucket, acctestImageChannel, false)
-			deleteIteration(t, acctestArchImageBucket, fingerprint, false)
-			deleteBucket(t, acctestArchImageBucket, false)
-			return nil
-		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestArchImageBucket)
-					upsertIteration(t, acctestArchImageBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestArchImageBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestArchImageBucket, fingerprint, itID)
-					upsertChannel(t, acctestArchImageBucket, acctestImageChannel, itID)
-				},
-				Config: testConfig(testAccPackerImageArchProduction),
-				Check: resource.ComposeTestCheckFunc(
-					// build_id is only known at runtime
-					// and the test works on a reset value,
-					// therefore we can only check it's set
-					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
-				),
+				Config:      testConfig(testAccConfigBuildersToString(config)),
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 		},
 	})
+}
+
+func testAccPackerDataImageBuilder(uniqueName, bucketName,
+	channelName, iterationID,
+	cloudProvider, region, componentType string) testAccConfigBuilderInterface {
+
+	return &testAccResourceConfigBuilder{
+		isData:       true,
+		resourceType: "hcp_packer_image",
+		uniqueName:   uniqueName,
+		attributes: map[string]string{
+			"bucket_name":    bucketName,
+			"channel":        channelName,
+			"iteration_id":   iterationID,
+			"cloud_provider": cloudProvider,
+			"region":         region,
+			"component_type": componentType,
+		},
+	}
+}
+
+func testAccPackerDataImageBuilderWithIterationReference(uniqueName string, iteration testAccConfigBuilderInterface,
+	cloudProvider, region, componentType string) testAccConfigBuilderInterface {
+
+	return testAccPackerDataImageBuilder(
+		uniqueName,
+		iteration.AttributeRef("bucket_name"),
+		``,
+		iteration.AttributeRef("ulid"),
+		cloudProvider,
+		region,
+		componentType,
+	)
+}
+
+func testAccPackerDataImageBuilderFromImage(uniqueName string, image testAccConfigBuilderInterface,
+	cloudProvider, region, componentType string) testAccConfigBuilderInterface {
+
+	return testAccPackerDataImageBuilder(
+		uniqueName,
+		image.Attributes()["bucket_name"],
+		image.Attributes()["channel"],
+		image.Attributes()["iteration_id"],
+		cloudProvider,
+		region,
+		componentType,
+	)
+}
+
+func testAccCheckPackerImageState(t *testing.T, resourceName, bucketName string, iterationPtr **models.HashicorpCloudPackerIteration,
+	buildPtr **models.HashicorpCloudPackerBuild, region string) resource.TestCheckFunc {
+
+	return func(state *terraform.State) error {
+		var iteration *models.HashicorpCloudPackerIteration
+		if iterationPtr != nil {
+			iteration = *iterationPtr
+		}
+		if iteration == nil {
+			iteration = &models.HashicorpCloudPackerIteration{}
+		}
+
+		var build *models.HashicorpCloudPackerBuild
+		if buildPtr != nil {
+			build = *buildPtr
+		}
+		if build == nil {
+			build = &models.HashicorpCloudPackerBuild{}
+		}
+
+		var matchingImages []*models.HashicorpCloudPackerImage
+		for _, image := range build.Images {
+			if image.Region == region {
+				matchingImages = append(matchingImages, image)
+			}
+		}
+		if len(matchingImages) == 0 {
+			return fmt.Errorf("didn't find any images in the provided build in the specified region")
+		}
+		var image = matchingImages[0]
+		if len(matchingImages) > 1 {
+			t.Logf("found %d images in the provided build in the specified region, the first will be used", len(matchingImages))
+		}
+
+		checks := []resource.TestCheckFunc{
+			resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+			resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+			resource.TestCheckResourceAttr(resourceName, "bucket_name", bucketName),
+			resource.TestCheckResourceAttr(resourceName, "iteration_id", iteration.ID),
+			resource.TestCheckResourceAttr(resourceName, "build_id", build.ID),
+			resource.TestCheckResourceAttr(resourceName, "id", image.ID),
+			resource.TestCheckResourceAttr(resourceName, "packer_run_uuid", build.PackerRunUUID),
+			resource.TestCheckResourceAttr(resourceName, "cloud_provider", build.CloudProvider),
+			resource.TestCheckResourceAttr(resourceName, "component_type", build.ComponentType),
+			resource.TestCheckResourceAttr(resourceName, "region", image.Region),
+			resource.TestCheckResourceAttr(resourceName, "cloud_image_id", image.ImageID),
+			resource.TestCheckResourceAttr(resourceName, "created_at", image.CreatedAt.String()),
+		}
+
+		if !iteration.RevokeAt.IsZero() {
+			checks = append(checks, resource.TestCheckResourceAttr(resourceName, "revoke_at", iteration.RevokeAt.String()))
+		}
+
+		for key, value := range build.Labels {
+			checks = append(checks, resource.TestCheckResourceAttr(
+				resourceName, fmt.Sprintf("labels.%s", key), value,
+			))
+		}
+
+		return resource.ComposeAggregateTestCheckFunc(checks...)(state)
+	}
 }

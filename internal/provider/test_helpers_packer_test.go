@@ -203,14 +203,14 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.Hashi
 	return nil
 }
 
-func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string) *models.HashicorpCloudPackerIteration {
+func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string, options *buildOptions) (*models.HashicorpCloudPackerIteration, *models.HashicorpCloudPackerBuild) {
 	iteration := upsertIteration(t, bucketSlug, fingerprint)
 	if t.Failed() || iteration == nil {
-		return nil
+		return nil, nil
 	}
-	upsertBuild(t, bucketSlug, iteration.Fingerprint, iteration.ID)
+	build := upsertCompleteBuild(t, bucketSlug, iteration.Fingerprint, iteration.ID, options)
 	if t.Failed() {
-		return nil
+		return nil, nil
 	}
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -221,10 +221,10 @@ func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string) *mode
 	iteration, err := clients.GetIterationFromFingerprint(context.Background(), client, loc, bucketSlug, iteration.Fingerprint)
 	if err != nil {
 		t.Errorf("Complete iteration not found after upserting, received unexpected error. Got %v", err)
-		return nil
+		return nil, nil
 	}
 
-	return iteration
+	return iteration, build
 }
 
 func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strfmt.DateTime) *models.HashicorpCloudPackerIteration {
@@ -277,7 +277,31 @@ func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint 
 	return ok.Payload.Iteration.ID, nil
 }
 
-func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
+type buildOptions struct {
+	labels        map[string]string
+	cloudProvider string
+	componentType string
+	images        []*models.HashicorpCloudPackerImageCreateBody
+}
+
+// Basic options for a build with a single image
+var defaultBuildOptions = buildOptions{
+	cloudProvider: "aws",
+	componentType: "amazon-ebs.example",
+	images: []*models.HashicorpCloudPackerImageCreateBody{
+		{
+			ImageID: "ami-1234",
+			Region:  "us-east-1",
+		},
+	},
+}
+
+func upsertCompleteBuild(t *testing.T, bucketSlug, fingerprint, iterationID string, optionsPtr *buildOptions) *models.HashicorpCloudPackerBuild {
+	var options = defaultBuildOptions
+	if optionsPtr != nil {
+		options = *optionsPtr
+	}
+
 	client := testAccProvider.Meta().(*clients.Client)
 
 	createBuildParams := packer_service.NewPackerServiceCreateBuildParams()
@@ -293,30 +317,36 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	status := models.HashicorpCloudPackerBuildStatusRUNNING
 	createBuildParams.Body = packer_service.PackerServiceCreateBuildBody{
 		Build: &models.HashicorpCloudPackerBuildCreateBody{
-			CloudProvider: "aws",
-			ComponentType: "amazon-ebs.example",
+			CloudProvider: options.cloudProvider,
+			ComponentType: options.componentType,
 			PackerRunUUID: uuid.New().String(),
 			Status:        &status,
+			Labels:        options.labels,
 		},
 		Fingerprint: fingerprint,
 	}
 
-	build, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil)
-	if err != nil {
-		if err, ok := err.(*packer_service.PackerServiceCreateBuildDefault); ok {
-			switch err.Code() {
-			case int(codes.Aborted), http.StatusConflict:
-				// all good here !
-				return
-			}
+	var build *models.HashicorpCloudPackerBuild
+
+	if createResp, err := client.Packer.PackerServiceCreateBuild(createBuildParams, nil); err != nil {
+		createErr, ok := err.(*packer_service.PackerServiceCreateBuildDefault)
+		if !ok || !(createErr.Code() == int(codes.Aborted) || createErr.Code() == http.StatusConflict) {
+			t.Fatalf("unexpected CreateBuild error, expected nil. Got %v", createErr)
 		}
 
-		t.Errorf("unexpected CreateBuild error, expected nil. Got %v", err)
-	}
-
-	if build == nil {
-		t.Errorf("unexpected CreateBuild response, expected non nil build. Got nil.")
-		return
+		getResp, err := client.Packer.PackerServiceGetBuild(&packer_service.PackerServiceGetBuildParams{}, nil)
+		if err != nil {
+			t.Fatalf("unexpected GetBuild error, expected nil. Got %v", err)
+		}
+		if getResp == nil {
+			t.Fatalf("unexpected GetBuild response, expected non nil. Got nil.")
+		}
+		build = getResp.Payload.Build
+	} else {
+		if createResp == nil {
+			t.Fatalf("unexpected CreateBuild response, expected non nil. Got nil.")
+		}
+		build = createResp.Payload.Build
 	}
 
 	// Iterations are currently only assigned an incremental version when publishing image metadata on update.
@@ -324,27 +354,22 @@ func upsertBuild(t *testing.T, bucketSlug, fingerprint, iterationID string) {
 	updateBuildParams := packer_service.NewPackerServiceUpdateBuildParams()
 	updateBuildParams.LocationOrganizationID = loc.OrganizationID
 	updateBuildParams.LocationProjectID = loc.ProjectID
-	updateBuildParams.BuildID = build.Payload.Build.ID
+	updateBuildParams.BuildID = build.ID
 	updatesStatus := models.HashicorpCloudPackerBuildStatusDONE
 	updateBuildParams.Body = packer_service.PackerServiceUpdateBuildBody{
 		Updates: &models.HashicorpCloudPackerBuildUpdates{
 			Status: &updatesStatus,
-			Images: []*models.HashicorpCloudPackerImageCreateBody{
-				{
-					ImageID: "ami-42",
-					Region:  "us-east-1",
-				},
-				{
-					ImageID: "ami-43",
-					Region:  "us-east-2",
-				},
-			},
-			Labels: map[string]string{"test-key": "test-value"},
+			Images: options.images,
 		},
 	}
-	if _, err = client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil); err != nil {
+	updateResp, err := client.Packer.PackerServiceUpdateBuild(updateBuildParams, nil)
+	if err != nil {
 		t.Errorf("unexpected UpdateBuild error, expected nil. Got %v", err)
 	}
+	if updateResp == nil {
+		t.Fatalf("unexpected UpdateBuild response, expected non nil. Got nil.")
+	}
+	return updateResp.Payload.Build
 }
 
 func upsertChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {

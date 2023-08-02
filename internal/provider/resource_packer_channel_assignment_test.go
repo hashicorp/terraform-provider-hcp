@@ -30,7 +30,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 			upsertChannel(t, bucketSlug, channelSlug, "")
-			iteration = upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -138,7 +138,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration = upsertCompleteIteration(t, bucketSlug, "abc")
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, "abc", nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -242,7 +242,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
+			upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -373,8 +373,8 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			// Pushing two iterations so that we can also implicitly verify that
 			// nullifying the assignment doesn't actually result in a rollback to iteration1
-			iteration1 = upsertCompleteIteration(t, bucketSlug, "1")
-			iteration2 = upsertCompleteIteration(t, bucketSlug, "2")
+			iteration1, _ = upsertCompleteIteration(t, bucketSlug, "1", nil)
+			iteration2, _ = upsertCompleteIteration(t, bucketSlug, "2", nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
