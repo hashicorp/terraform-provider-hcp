@@ -32,7 +32,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, "")
 			iteration = upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			if err := testAccCheckAssignmentDestroyed(baseAssignment.ResourceName())(state); err != nil {
 				t.Error(err)
@@ -140,7 +140,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			iteration = upsertCompleteIteration(t, bucketSlug, "abc")
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -178,7 +178,7 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			upsertChannel(t, bucketSlug, channelSlug, "")
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -244,7 +244,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -285,7 +285,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -376,7 +376,7 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 			iteration1 = upsertCompleteIteration(t, bucketSlug, "1")
 			iteration2 = upsertCompleteIteration(t, bucketSlug, "2")
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
