@@ -2,12 +2,12 @@
 page_title: "Data Source hcp_packer_image - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id or a channel.
+  The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.
 ---
 
 # hcp_packer_image (Data Source)
 
-The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id or a channel.
+The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.
 
 ## Example Usage
 
@@ -66,9 +66,9 @@ output "packer-registry-ubuntu-west-1" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry bucket to pull from.
-- `cloud_provider` (String) Name of the cloud provider this image is stored-in.
-- `region` (String) Region this image is stored in, if any.
+- `bucket_name` (String) The slug of the HCP Packer Registry bucket where this image is located.
+- `cloud_provider` (String) Name of the cloud provider where this image is stored.
+- `region` (String) The Region where this image is stored, if any.
 
 ### Optional
 
@@ -82,14 +82,14 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 ### Read-Only
 
-- `build_id` (String) HCP ID of this build.
+- `build_id` (String) HCP ID of the build containing this image.
 - `cloud_image_id` (String) Cloud Image ID or URL string identifying this image for the builder that built it.
-- `created_at` (String) Creation time of this build.
+- `created_at` (String) Creation time of this image.
 - `id` (String) The ID of this resource.
-- `labels` (Map of String) Labels associated with this build.
-- `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
-- `packer_run_uuid` (String) UUID of this build.
-- `revoke_at` (String) The revocation time of this build. This field will be null for any build that has not been revoked or scheduled for revocation.
+- `labels` (Map of String) Labels associated with the build containing this image.
+- `organization_id` (String) The ID of the organization where this image is located.
+- `packer_run_uuid` (String) UUID of the build containing this image.
+- `revoke_at` (String) The revocation time of the iteration containing this image. This field will be null for any iteration that has not been revoked or scheduled for revocation.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

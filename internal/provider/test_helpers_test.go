@@ -111,23 +111,38 @@ func testAccCreateSlug(testName string) string {
 	return fmt.Sprintf("%.*s%s", 36-len(suffix), testName, suffix)
 }
 
-// TODO: Add support for blocks
+// TODO: Add support for block-type attributes
 type testAccConfigBuilderInterface interface {
-	IsData() bool
-	ResourceType() string
+	// The fully-qualified name of a block that can be referenced, like
+	// `hcp_packer_channel.prod` (a resource) or
+	// `data.hcp_packer_iteration.latest` (a data source).
+	// Panics if the block cannot be referenced.
+	BlockName() string
+	// Unquoted Block identifier, like `resource`, `data`, or `output`
+	BlockIdentifier() string
+	// Unquoted Block labels, like the resource type (`hcp_packer_channel`), or
+	// data source type. Includes the UniqueName as the last item if
+	// HasUniqueName is true.
+	BlockLabels() []string
+	// Unquoted unique name for resources/data sources/inputs/outputs.
+	// Panics if HasUniqueName is false.
 	UniqueName() string
-	ResourceName() string
-	AttributeRef(string) string
+	HasUniqueName() bool
+
 	Attributes() map[string]string
+	// Should return `BlockName()+"."+attributeName` for blocks that can be
+	// referenced.
+	// Panics if the block cannot be referenced.
+	AttributeRef(string) string
 }
 
 func testAccConfigBuildersToString(builders ...testAccConfigBuilderInterface) string {
 	config := ""
 
 	for _, cb := range builders {
-		rOrD := "resource"
-		if cb.IsData() {
-			rOrD = "data"
+		labelsString := ""
+		for _, label := range cb.BlockLabels() {
+			labelsString += fmt.Sprintf("%q ", label)
 		}
 
 		attributesString := ""
@@ -138,15 +153,80 @@ func testAccConfigBuildersToString(builders ...testAccConfigBuilderInterface) st
 		}
 
 		config += fmt.Sprintf(`
-%s %q %q {
+%s %s{
 %s
 }
-`, rOrD, cb.ResourceType(), cb.UniqueName(), attributesString)
+`,
+			cb.BlockIdentifier(), labelsString,
+			attributesString,
+		)
 	}
 	return config
 }
 
-type testAccConfigBuilder struct {
+func testAccOutputBuilder(uniqueName string, value string) testAccConfigBuilderInterface {
+	return &testAccGenericNamedBlockConfigBuilder{
+		canReference:    false,
+		blockIdentifier: "output",
+		uniqueName:      uniqueName,
+		attributes: map[string]string{
+			"value": value,
+		},
+	}
+}
+
+// Generic ConfigBuilder for Blocks that have a UniqueName and no other labels
+// like `output` and `variable`
+type testAccGenericNamedBlockConfigBuilder struct {
+	// Set to true if the block type can be referenced
+	canReference bool
+	// If canReference is true, set this value to the reference identifier.
+	// Ex: `var` is the reference identifier for the `variable` block type.
+	referenceIdentifier string
+	blockIdentifier     string
+	uniqueName          string
+	attributes          map[string]string
+}
+
+var _ testAccConfigBuilderInterface = testAccGenericNamedBlockConfigBuilder{}
+
+func (b testAccGenericNamedBlockConfigBuilder) BlockName() string {
+	if !b.canReference {
+		panic(fmt.Errorf("`%s` blocks cannot be referenced", b.BlockIdentifier()))
+	}
+
+	return fmt.Sprintf("%s.%s", b.referenceIdentifier, b.uniqueName)
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) BlockIdentifier() string {
+	return b.blockIdentifier
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) BlockLabels() []string {
+	return []string{b.uniqueName}
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) UniqueName() string {
+	return b.uniqueName
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) HasUniqueName() bool {
+	return true
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) Attributes() map[string]string {
+	return b.attributes
+}
+
+func (b testAccGenericNamedBlockConfigBuilder) AttributeRef(attributeName string) string {
+	if !b.canReference {
+		panic(fmt.Errorf("`%s` blocks cannot be referenced", b.BlockIdentifier()))
+	}
+
+	return fmt.Sprintf("%s.%s", b.BlockName(), attributeName)
+}
+
+type testAccResourceConfigBuilder struct {
 	isData       bool
 	resourceType string
 	uniqueName   string
@@ -156,34 +236,42 @@ type testAccConfigBuilder struct {
 	// An empty string is equivalent to the attribute not being present in the map.
 }
 
-var _ testAccConfigBuilderInterface = testAccConfigBuilder{}
+var _ testAccConfigBuilderInterface = testAccResourceConfigBuilder{}
 
-func (b testAccConfigBuilder) IsData() bool {
-	return b.isData
+func (b testAccResourceConfigBuilder) BlockName() string {
+	if b.isData {
+		return fmt.Sprintf("data.%s.%s", b.resourceType, b.UniqueName())
+	}
+
+	return fmt.Sprintf("%s.%s", b.resourceType, b.UniqueName())
 }
 
-func (b testAccConfigBuilder) ResourceType() string {
-	return b.resourceType
+func (b testAccResourceConfigBuilder) BlockIdentifier() string {
+	if b.isData {
+		return "data"
+	}
+
+	return "resource"
 }
 
-func (b testAccConfigBuilder) UniqueName() string {
+func (b testAccResourceConfigBuilder) BlockLabels() []string {
+	return []string{b.resourceType, b.UniqueName()}
+}
+
+func (b testAccResourceConfigBuilder) UniqueName() string {
 	return b.uniqueName
 }
 
-func (b testAccConfigBuilder) ResourceName() string {
-	if b.isData {
-		return fmt.Sprintf("data.%s.%s", b.ResourceType(), b.UniqueName())
-	}
-
-	return fmt.Sprintf("%s.%s", b.ResourceType(), b.UniqueName())
+func (b testAccResourceConfigBuilder) HasUniqueName() bool {
+	return true
 }
 
-func (b testAccConfigBuilder) Attributes() map[string]string {
+func (b testAccResourceConfigBuilder) Attributes() map[string]string {
 	return b.attributes
 }
 
-func (b testAccConfigBuilder) AttributeRef(path string) string {
-	return fmt.Sprintf("%s.%s", b.ResourceName(), path)
+func (b testAccResourceConfigBuilder) AttributeRef(path string) string {
+	return fmt.Sprintf("%s.%s", b.BlockName(), path)
 }
 
 // Used to create a dummy non-empty state so that `CheckDestroy` can be used to

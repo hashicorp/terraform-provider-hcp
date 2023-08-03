@@ -8,18 +8,19 @@ import (
 	"log"
 	"time"
 
-	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"golang.org/x/exp/slices"
 )
 
 var defaultPackerTimeout = time.Minute
 
 func dataSourcePackerImage() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given an iteration id or a channel.",
+		Description: "The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.",
 		ReadContext: dataSourcePackerImageRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
@@ -27,18 +28,18 @@ func dataSourcePackerImage() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"bucket_name": {
-				Description:      "The slug of the HCP Packer Registry bucket to pull from.",
+				Description:      "The slug of the HCP Packer Registry bucket where this image is located.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
 			"cloud_provider": {
-				Description: "Name of the cloud provider this image is stored-in.",
+				Description: "Name of the cloud provider where this image is stored.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			"region": {
-				Description: "Region this image is stored in, if any.",
+				Description: "The Region where this image is stored, if any.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -74,17 +75,17 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 			},
 			// computed outputs
 			"organization_id": {
-				Description: "The ID of the organization this HCP Packer registry is located in.",
+				Description: "The ID of the organization where this image is located.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"created_at": {
-				Description: "Creation time of this build.",
+				Description: "Creation time of this image.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"build_id": {
-				Description: "HCP ID of this build.",
+				Description: "HCP ID of the build containing this image.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -94,17 +95,17 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:    true,
 			},
 			"packer_run_uuid": {
-				Description: "UUID of this build.",
+				Description: "UUID of the build containing this image.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			"labels": {
-				Description: "Labels associated with this build.",
+				Description: "Labels associated with the build containing this image.",
 				Type:        schema.TypeMap,
 				Computed:    true,
 			},
 			"revoke_at": {
-				Description: "The revocation time of this build. This field will be null for any build that has not been revoked or scheduled for revocation.",
+				Description: "The revocation time of the iteration containing this image. This field will be null for any iteration that has not been revoked or scheduled for revocation.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -128,7 +129,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, channel=%s/iteration_id=%s]", bucketName, loc.ProjectID, loc.OrganizationID, channelSlug, iterationID)
 
-	var iteration *packermodels.HashicorpCloudPackerIteration
+	var iteration *models.HashicorpCloudPackerIteration
 
 	if iterationID != "" {
 		iteration, err = clients.GetIterationFromID(
@@ -136,7 +137,8 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 			client,
 			loc,
 			bucketName,
-			iterationID)
+			iterationID,
+		)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -148,7 +150,8 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 			client,
 			loc,
 			bucketName,
-			channelSlug)
+			channelSlug,
+		)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -158,57 +161,58 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 		iteration = channel.Iteration
 	}
 
-	found := false
-	for _, build := range iteration.Builds {
-		if build.CloudProvider != cloudProvider {
+	var build *models.HashicorpCloudPackerBuild
+	var image *models.HashicorpCloudPackerImage
+	for _, b := range iteration.Builds {
+		if b.CloudProvider != cloudProvider {
 			continue
 		}
-		for _, image := range build.Images {
-			if image.Region == region && filterBuildByComponentType(build, componentType) {
-				found = true
-				d.SetId(image.ID)
-				if err := d.Set("component_type", build.ComponentType); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("created_at", build.CreatedAt.String()); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("build_id", build.ID); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("cloud_image_id", image.ImageID); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("iteration_id", iteration.ID); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("packer_run_uuid", build.PackerRunUUID); err != nil {
-					return diag.FromErr(err)
-				}
-				if err := d.Set("labels", build.Labels); err != nil {
-					return diag.FromErr(err)
-				}
-				if !time.Time(iteration.RevokeAt).IsZero() {
-					if err := d.Set("revoke_at", iteration.RevokeAt.String()); err != nil {
-						return diag.FromErr(err)
-					}
-				}
-			}
+		if componentType != "" && b.ComponentType != componentType {
+			continue
+		}
+		index := slices.IndexFunc(
+			b.Images,
+			func(image *models.HashicorpCloudPackerImage) bool {
+				return image.Region == region
+			},
+		)
+		if index >= 0 {
+			build = b
+			image = b.Images[index]
+			break
 		}
 	}
+	if build == nil || image == nil {
+		return diag.Errorf("Could not find image with attributes (region: %q cloud: %q, iteration: %q, component_type: %q).", region, cloudProvider, iterationID, componentType)
+	}
 
-	if !found {
-		return diag.Errorf("Unable to load image (region: %s, cloud: %s, iteration: %s, component_type: %s).", region, cloudProvider, iterationID, componentType)
+	d.SetId(image.ID)
+	if err := d.Set("component_type", build.ComponentType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("created_at", image.CreatedAt.String()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("build_id", build.ID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cloud_image_id", image.ImageID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("iteration_id", iteration.ID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("packer_run_uuid", build.PackerRunUUID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("labels", build.Labels); err != nil {
+		return diag.FromErr(err)
+	}
+	if !iteration.RevokeAt.IsZero() {
+		if err := d.Set("revoke_at", iteration.RevokeAt.String()); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil
-}
-
-func filterBuildByComponentType(build *packermodels.HashicorpCloudPackerBuild, componentType string) bool {
-	// optional field is not specified, passthrough
-	if componentType == "" {
-		return true
-	}
-	// if specified, only the matched image metadata is returned by this effect
-	return build.ComponentType == componentType
 }

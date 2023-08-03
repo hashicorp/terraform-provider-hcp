@@ -16,7 +16,7 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 	runTask := testAccPackerDataRunTaskBuilder("runTask")
 	config := testConfig(testAccConfigBuildersToString(runTask))
 
-	// Must not be Parallel
+	// Must not be Parallel, conflicts with test for the equivalent resource
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
@@ -26,7 +26,7 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.ResourceName()),
+				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.BlockName()),
 			},
 			{ // Change HMAC and check that it updates in state
 				PreConfig: func() {
@@ -42,14 +42,14 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 					}
 				},
 				Config: config,
-				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.ResourceName()),
+				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.BlockName()),
 			},
 		},
 	})
 }
 
 func testAccPackerDataRunTaskBuilder(uniqueName string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
+	return &testAccResourceConfigBuilder{
 		isData:       true,
 		resourceType: "hcp_packer_run_task",
 		uniqueName:   uniqueName,

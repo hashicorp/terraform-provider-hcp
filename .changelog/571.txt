@@ -1,0 +1,3 @@
+```release-note:improvement
+Adjusted wording in the documentation and error messages for `data.hcp_packer_image`.
+```

@@ -30,11 +30,11 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 			upsertChannel(t, bucketSlug, channelSlug, "")
-			iteration = upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
-			if err := testAccCheckAssignmentDestroyed(baseAssignment.ResourceName())(state); err != nil {
+			if err := testAccCheckAssignmentDestroyed(baseAssignment.BlockName())(state); err != nil {
 				t.Error(err)
 			}
 			deleteBucket(t, bucketSlug, true)
@@ -47,13 +47,13 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 					``, fmt.Sprintf("%q", iterationFingerprint), ``,
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.ResourceName(), bucketSlug, channelSlug),
-					testAccCheckAssignmentStateMatchesIteration(baseAssignment.ResourceName(), &iteration),
-					testAccCheckAssignmentStateMatchesAPI(baseAssignment.ResourceName()),
+					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.BlockName(), bucketSlug, channelSlug),
+					testAccCheckAssignmentStateMatchesIteration(baseAssignment.BlockName(), &iteration),
+					testAccCheckAssignmentStateMatchesAPI(baseAssignment.BlockName()),
 				),
 			},
 			{ // Validate importing channel assignments that are already set
-				ResourceName:      baseAssignment.ResourceName(),
+				ResourceName:      baseAssignment.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
@@ -64,13 +64,13 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 					``, fmt.Sprintf("%q", unassignString), ``,
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.ResourceName(), bucketSlug, channelSlug),
-					testAccCheckAssignmentStateMatchesIteration(baseAssignment.ResourceName(), nil),
-					testAccCheckAssignmentStateMatchesAPI(baseAssignment.ResourceName()),
+					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.BlockName(), bucketSlug, channelSlug),
+					testAccCheckAssignmentStateMatchesIteration(baseAssignment.BlockName(), nil),
+					testAccCheckAssignmentStateMatchesAPI(baseAssignment.BlockName()),
 				),
 			},
 			{ // Validate importing channel assignments that are null
-				ResourceName:      baseAssignment.ResourceName(),
+				ResourceName:      baseAssignment.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
@@ -125,10 +125,10 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 		return resource.TestStep{
 			Config: testConfig(testAccConfigBuildersToString(iterationData, channelResource, assignmentResource)),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccCheckAssignmentStateBucketAndChannelName(assignmentResource.ResourceName(), bucketSlug, channelSlug),
-				testAccCheckAssignmentStateMatchesIteration(assignmentResource.ResourceName(), &iteration),
-				testAccCheckAssignmentStateMatchesChannelState(assignmentResource.ResourceName(), channelResource.ResourceName()),
-				testAccCheckAssignmentStateMatchesAPI(assignmentResource.ResourceName()),
+				testAccCheckAssignmentStateBucketAndChannelName(assignmentResource.BlockName(), bucketSlug, channelSlug),
+				testAccCheckAssignmentStateMatchesIteration(assignmentResource.BlockName(), &iteration),
+				testAccCheckAssignmentStateMatchesChannelState(assignmentResource.BlockName(), channelResource.BlockName()),
+				testAccCheckAssignmentStateMatchesAPI(assignmentResource.BlockName()),
 			),
 		}
 	}
@@ -138,7 +138,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration = upsertCompleteIteration(t, bucketSlug, "abc")
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, "abc", nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -242,7 +242,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			upsertCompleteIteration(t, bucketSlug, iterationFingerprint)
+			upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -296,7 +296,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 				ExpectError: regexp.MustCompile(".*channel with.*is managed by HCP Packer.*"),
 			},
 			{
-				ResourceName:  assignment.ResourceName(),
+				ResourceName:  assignment.BlockName(),
 				ImportState:   true,
 				ImportStateId: fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ExpectError:   regexp.MustCompile(".*channel with.*is managed by HCP Packer.*"),
@@ -333,10 +333,10 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 		config := testConfig(testAccConfigBuildersToString(channel, assignment))
 
 		checks := resource.ComposeAggregateTestCheckFunc(
-			testAccCheckAssignmentStateBucketAndChannelName(assignment.ResourceName(), bucketSlug, channelSlug),
-			testAccCheckAssignmentStateMatchesIteration(assignment.ResourceName(), nil),
-			testAccCheckAssignmentStateMatchesChannelState(assignment.ResourceName(), channel.ResourceName()),
-			testAccCheckAssignmentStateMatchesAPI(assignment.ResourceName()),
+			testAccCheckAssignmentStateBucketAndChannelName(assignment.BlockName(), bucketSlug, channelSlug),
+			testAccCheckAssignmentStateMatchesIteration(assignment.BlockName(), nil),
+			testAccCheckAssignmentStateMatchesChannelState(assignment.BlockName(), channel.BlockName()),
+			testAccCheckAssignmentStateMatchesAPI(assignment.BlockName()),
 		)
 
 		return []resource.TestStep{
@@ -373,8 +373,8 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			// Pushing two iterations so that we can also implicitly verify that
 			// nullifying the assignment doesn't actually result in a rollback to iteration1
-			iteration1 = upsertCompleteIteration(t, bucketSlug, "1")
-			iteration2 = upsertCompleteIteration(t, bucketSlug, "2")
+			iteration1, _ = upsertCompleteIteration(t, bucketSlug, "1", nil)
+			iteration2, _ = upsertCompleteIteration(t, bucketSlug, "2", nil)
 		},
 		ProviderFactories: providerFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -383,18 +383,6 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 		},
 		Steps: generatedSteps,
 	})
-}
-
-func testAccPackerDataIterationBuilder(uniqueName string, bucketName string, channelName string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
-		isData:       true,
-		resourceType: "hcp_packer_iteration",
-		uniqueName:   uniqueName,
-		attributes: map[string]string{
-			"bucket_name": bucketName,
-			"channel":     channelName,
-		},
-	}
 }
 
 // An AssignmentBuilder without any iteration fields set.
@@ -417,7 +405,7 @@ func testAccPackerAssignmentBuilderBaseWithChannelReference(uniqueName string, c
 }
 
 func testAccPackerAssignmentBuilder(uniqueName string, bucketName string, channelName string, iterID string, iterFingerprint string, iterVersion string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
+	return &testAccResourceConfigBuilder{
 		resourceType: "hcp_packer_channel_assignment",
 		uniqueName:   uniqueName,
 		attributes: map[string]string{

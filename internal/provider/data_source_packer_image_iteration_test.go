@@ -53,12 +53,11 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 				PreConfig: func() {
 					upsertRegistry(t)
 					upsertBucket(t, acctestAlpineBucket)
-					upsertIteration(t, acctestAlpineBucket, fingerprint)
+					upsertCompleteIteration(t, acctestAlpineBucket, fingerprint, nil)
 					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
 					if err != nil {
 						t.Fatal(err.Error())
 					}
-					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
 					upsertChannel(t, acctestAlpineBucket, acctestProductionChannel, itID)
 				},
 				Config: testConfig(testAccPackerAlpineProductionImage),
@@ -91,12 +90,11 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 				PreConfig: func() {
 					upsertRegistry(t)
 					upsertBucket(t, acctestUbuntuBucket)
-					upsertIteration(t, acctestUbuntuBucket, fingerprint)
+					upsertCompleteIteration(t, acctestUbuntuBucket, fingerprint, nil)
 					itID, err := getIterationIDFromFingerPrint(t, acctestUbuntuBucket, fingerprint)
 					if err != nil {
 						t.Fatal(err.Error())
 					}
-					upsertBuild(t, acctestUbuntuBucket, fingerprint, itID)
 					upsertChannel(t, acctestUbuntuBucket, acctestProductionChannel, itID)
 					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
 					// it's assigned to a channel
