@@ -57,6 +57,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 	}
 }
 
+// TODO add check for HCP env vars
 func (p *ProviderFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
 	// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
