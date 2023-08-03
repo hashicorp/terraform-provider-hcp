@@ -46,7 +46,7 @@ func TestAccPackerRunTask(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,

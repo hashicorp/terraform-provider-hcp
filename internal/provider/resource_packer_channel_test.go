@@ -24,7 +24,7 @@ func TestAccPackerChannel(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -77,7 +77,7 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -130,7 +130,7 @@ func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -176,7 +176,7 @@ func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
