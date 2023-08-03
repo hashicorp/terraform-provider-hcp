@@ -200,3 +200,27 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
 }
+
+func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		func() resource.Resource {
+			return &vaultsecretsAppResource{}
+		},
+	}
+}
+
+func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		func() datasource.DataSource {
+			return &ExampleDataSource{}
+		},
+	}
+}
+
+func NewFrameworkProvider(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &ProviderFramework{
+			version: version,
+		}
+	}
+}
