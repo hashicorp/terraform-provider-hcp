@@ -56,6 +56,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"tier": {
+				Description: "The tier of the Boundary cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"maintenance_window_config": {
 				Type:     schema.TypeList,
 				Computed: true,

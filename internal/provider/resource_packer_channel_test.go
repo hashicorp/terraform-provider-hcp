@@ -12,236 +12,243 @@ import (
 )
 
 func TestAccPackerChannel(t *testing.T) {
-	resourceName := "hcp_packer_channel.production"
+	bucketSlug := testAccCreateSlug("ChannelSimple")
+	channelSlug := bucketSlug // No need for a different slug
+	channelConfig := testAccPackerChannelBuilderBase("SimpleChannel", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug))
+	unrestrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "false")
+	restrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "true")
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+		},
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, acctestAlpineBucket, false)
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
-
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { upsertBucket(t, acctestAlpineBucket) },
-				Config:    testConfig(testAccPackerChannelBasic(acctestAlpineBucket, acctestProductionChannel)),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-				),
+				Config: testConfig(testAccConfigBuildersToString(channelConfig)),
+				Check:  testAccCheckPackerChannel(channelConfig.ResourceName(), channelSlug, bucketSlug, ""),
 			},
-			// Testing that we can import bucket channel created in the previous step and that the
-			// resource terraform state will be exactly the same
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					bucketName := rs.Primary.Attributes["bucket_name"]
-					channelName := rs.Primary.Attributes["name"]
-					return fmt.Sprintf("%s:%s", bucketName, channelName), nil
-				},
+				ResourceName:      channelConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateVerify: true,
+			},
+			{ // Unrestrict channel (likely a no-op)
+				Config: testConfig(testAccConfigBuildersToString(unrestrictedChannelConfig)),
+				Check:  testAccCheckPackerChannel(unrestrictedChannelConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+			},
+			{ // Validate importing explicitly unrestricted channel
+				ResourceName:      unrestrictedChannelConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateVerify: true,
+			},
+			{ // Restrict channel
+				Config: testConfig(testAccConfigBuildersToString(restrictedChannelConfig)),
+				Check:  testAccCheckPackerChannel(restrictedChannelConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+			},
+			{ // Validate importing explicitly restricted channel
+				ResourceName:      restrictedChannelConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccPackerChannel_AssignedIteration(t *testing.T) {
-	resourceName := "hcp_packer_channel.production"
+func TestAccPackerChannel_HCPManaged(t *testing.T) {
+	bucketSlug := testAccCreateSlug("ChannelHCPManaged")
+	channelSlug := "latest"
+	latestConfig := testAccPackerChannelBuilderBase("latest", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug))
+	unrestrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "false")
+	restrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "true")
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+		},
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, acctestAlpineBucket, false)
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					fingerprint := "channel-assigned-iteration"
-					upsertBucket(t, acctestAlpineBucket)
-					upsertIteration(t, acctestAlpineBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
-				},
-				Config: testConfig(testAccPackerChannelAssignedLatestIteration(acctestAlpineBucket, acctestProductionChannel)),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
-					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-assigned-iteration"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-				),
+			{ // Validate "creating" (automatically adopting) a managed channel
+				Config: testConfig(testAccConfigBuildersToString(latestConfig)),
+				Check:  testAccCheckPackerChannel(latestConfig.ResourceName(), channelSlug, bucketSlug, ""),
 			},
-			// Testing that we can import bucket channel created in the previous step and that the
-			// resource terraform state will be exactly the same
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					bucketName := rs.Primary.Attributes["bucket_name"]
-					channelName := rs.Primary.Attributes["name"]
-					return fmt.Sprintf("%s:%s", bucketName, channelName), nil
-				},
+				ResourceName:      latestConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateVerify: true,
+			},
+			{ // Unrestrict managed channel
+				Config: testConfig(testAccConfigBuildersToString(unrestrictedLatestConfig)),
+				Check:  testAccCheckPackerChannel(unrestrictedLatestConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+			},
+			{ // Validate importing explicitly unrestricted managed channel
+				ResourceName:      unrestrictedLatestConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateVerify: true,
+			},
+			{ // Restrict managed channel
+				Config: testConfig(testAccConfigBuildersToString(restrictedLatestConfig)),
+				Check:  testAccCheckPackerChannel(restrictedLatestConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+			},
+			{ // Validate importing explicitly restricted managed channel
+				ResourceName:      restrictedLatestConfig.ResourceName(),
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccPackerChannel_UpdateAssignedIteration(t *testing.T) {
-	resourceName := "hcp_packer_channel.production"
+func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
+	bucketSlug := testAccCreateSlug("RestrictionDrift")
+	channelSlug := bucketSlug // No need for a different slug
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+	channelUnrestrictedConfig := testAccPackerChannelBuilder("Drift", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug), "false")
+	channelRestrictedConfig := testAccPackerChannelBuilderFromChannel(channelUnrestrictedConfig, "true")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+		},
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, acctestAlpineBucket, false)
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
+			// Normal channels
 			{
+				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+			},
+			{ // Check drift mitigation for normal channel from false->true
 				PreConfig: func() {
-					fingerprint := "channel-update-it1"
-					upsertBucket(t, acctestAlpineBucket)
-					upsertIteration(t, acctestAlpineBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
+					updateChannelRestriction(t, bucketSlug, channelSlug, true)
 				},
-				Config: testConfig(testAccPackerChannelAssignedLatestIteration(acctestAlpineBucket, acctestProductionChannel)),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
-					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
-					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-update-it1"),
-				),
+				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.ResourceName(), channelSlug, bucketSlug, "false"),
 			},
 			{
+				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+			},
+			{ // Check drift mitigation for normal channel from true->false
 				PreConfig: func() {
-					fingerprint := "channel-update-it2"
-					upsertIteration(t, acctestAlpineBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
+					updateChannelRestriction(t, bucketSlug, channelSlug, false)
 				},
-				Config: testConfig(testAccPackerChannelAssignedLatestIteration(acctestAlpineBucket, acctestProductionChannel)),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
-					resource.TestCheckResourceAttr(resourceName, "iteration.0.fingerprint", "channel-update-it2"),
-					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-				),
+				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.ResourceName(), channelSlug, bucketSlug, "true"),
 			},
 		},
 	})
 }
 
-func TestAccPackerChannel_UpdateAssignedIterationWithFingerprint(t *testing.T) {
-	resourceName := "hcp_packer_channel.production"
+func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
+	bucketSlug := testAccCreateSlug("RestrictionDriftHCPManaged")
+	latestSlug := "latest"
 
-	fingerprint := "channel-update-it1"
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+	latestUnrestrictedConfig := testAccPackerChannelBuilder("DriftHCPManaged", fmt.Sprintf("%q", latestSlug), fmt.Sprintf("%q", bucketSlug), "false")
+	latestRestrictedConfig := testAccPackerChannelBuilderFromChannel(latestUnrestrictedConfig, "true")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+		},
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, acctestAlpineBucket, false)
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
+				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.ResourceName(), latestSlug, bucketSlug, "false"),
+			},
+			{ // Check drift mitigation for HCP managed channel from false->true
 				PreConfig: func() {
-					upsertBucket(t, acctestAlpineBucket)
-					upsertIteration(t, acctestAlpineBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestAlpineBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestAlpineBucket, fingerprint, itID)
+					updateChannelRestriction(t, bucketSlug, latestSlug, true)
 				},
-				Config: testConfig(testAccPackerChannelIterationFingerprint(acctestAlpineBucket, acctestProductionChannel, fingerprint)),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "author_id"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", acctestAlpineBucket),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.fingerprint"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.id"),
-					resource.TestCheckResourceAttrSet(resourceName, "iteration.0.incremental_version"),
-					resource.TestCheckResourceAttr(resourceName, "name", acctestProductionChannel),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-				),
+				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.ResourceName(), latestSlug, bucketSlug, "false"),
+			},
+			{
+				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.ResourceName(), latestSlug, bucketSlug, "true"),
+			},
+			{ // Check drift mitigation for HCP managed channel from true->false
+				PreConfig: func() {
+					updateChannelRestriction(t, bucketSlug, latestSlug, false)
+				},
+				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.ResourceName(), latestSlug, bucketSlug, "true"),
 			},
 		},
 	})
 }
 
-var testAccPackerChannelBasic = func(bucketName, channelName string) string {
-	return fmt.Sprintf(`
-	resource "hcp_packer_channel" "production" {
-		bucket_name  = %q
-		name = %q
-	}`, bucketName, channelName)
-}
-
-var testAccPackerChannelAssignedLatestIteration = func(bucketName, channelName string) string {
-	return fmt.Sprintf(`
-	data "hcp_packer_image_iteration" "test" {
-		bucket_name = %[2]q
-		channel     = "latest"
+func testAccCheckPackerChannel(resourceName string, channelName string, bucketName string, restriction string) resource.TestCheckFunc {
+	tests := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttrSet(resourceName, "author_id"),
+		resource.TestCheckResourceAttr(resourceName, "bucket_name", bucketName),
+		resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+		resource.TestCheckResourceAttrSet(resourceName, "id"),
+		resource.TestCheckResourceAttr(resourceName, "name", channelName),
+		resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+		resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+		resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+		resource.TestCheckResourceAttrSet(resourceName, "managed"),
 	}
-	resource "hcp_packer_channel" "production" {
-		name = %[1]q
-		bucket_name  = %[2]q
-		iteration {
-		  id = data.hcp_packer_image_iteration.test.id
-		}
-	}`, channelName, bucketName)
+	if restriction != "" {
+		tests = append(tests, resource.TestCheckResourceAttr(resourceName, "restricted", restriction))
+	} else {
+		tests = append(tests, resource.TestCheckResourceAttrSet(resourceName, "restricted"))
+	}
+	return resource.ComposeAggregateTestCheckFunc(tests...)
 }
 
-var testAccPackerChannelIterationFingerprint = func(bucketName, channelName, fingerprint string) string {
-	return fmt.Sprintf(`
-	resource "hcp_packer_channel" "production" {
-		bucket_name  = %q
-		name = %q
-		iteration {
-		  fingerprint = %q
-		}
-	}`, bucketName, channelName, fingerprint)
+func testAccPackerChannelBuilderBase(uniqueName string, channelName string, bucketName string) testAccConfigBuilderInterface {
+	return testAccPackerChannelBuilder(uniqueName, channelName, bucketName, "")
+}
+
+func testAccPackerChannelBuilderFromChannel(oldChannel testAccConfigBuilderInterface, restricted string) testAccConfigBuilderInterface {
+	return testAccPackerChannelBuilder(
+		oldChannel.UniqueName(),
+		oldChannel.Attributes()["name"],
+		oldChannel.Attributes()["bucket_name"],
+		restricted,
+	)
+}
+
+func testAccPackerChannelBuilder(uniqueName string, channelName string, bucketName string, restricted string) testAccConfigBuilderInterface {
+	return &testAccConfigBuilder{
+		resourceType: "hcp_packer_channel",
+		uniqueName:   uniqueName,
+		attributes: map[string]string{
+			"name":        channelName,
+			"bucket_name": bucketName,
+			"restricted":  restricted,
+		},
+	}
 }

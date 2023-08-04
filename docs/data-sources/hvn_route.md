@@ -47,5 +47,3 @@ data "hcp_hvn_route" "example" {
 Optional:
 
 - `default` (String)
-
-

@@ -33,6 +33,7 @@ resource "hcp_boundary_cluster" "example" {
 
 - `cluster_id` (String) The ID of the Boundary cluster
 - `password` (String, Sensitive) The password of the initial admin user. This must be at least 8 characters in length. Note that this may show up in logs, and it will be stored in the state file.
+- `tier` (String) The tier that the HCP Boundary cluster will be provisioned as, 'Standard' or 'Plus'.
 - `username` (String) The username of the initial admin user. This must be at least 3 characters in length, alphanumeric, hyphen, or period.
 
 ### Optional

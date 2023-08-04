@@ -10,8 +10,12 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
 // testAccProvider is the "main" provider instance
@@ -29,6 +33,16 @@ var testAccProvider *schema.Provider
 // not prevent reconfiguration that may happen should the address of
 // testAccProvider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
+
+var testProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+	"hcp": func() (tfprotov5.ProviderServer, error) {
+		providers := []func() tfprotov5.ProviderServer{
+			providerserver.NewProtocol5(NewFrameworkProvider(version.ProviderVersion)()),
+			New()().GRPCProvider,
+		}
+		return tf5muxserver.NewMuxServer(context.Background(), providers...)
+	},
+}
 
 // providerFactories are used to instantiate a provider during acceptance testing.
 // The factory function will be invoked for every Terraform CLI command executed

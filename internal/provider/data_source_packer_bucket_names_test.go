@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -14,11 +17,15 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 	bucketNames := testAccPackerDataBucketNamesBuilder("all")
 	config := testConfig(testAccConfigBuildersToString(bucketNames))
 
+	// Must not be Parallel
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					upsertRegistry(t)
+				},
 				Config: config,
 				// If this check fails, there are probably pre-existing buckets
 				// in the environment that need to be deleted before testing.

@@ -34,11 +34,12 @@ func New() func() *schema.Provider {
 				"hcp_hvn":                            dataSourceHvn(),
 				"hcp_hvn_peering_connection":         dataSourceHvnPeeringConnection(),
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
-				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 				"hcp_packer_bucket_names":            dataSourcePackerBucketNames(),
 				"hcp_packer_image_iteration":         dataSourcePackerImageIteration(),
 				"hcp_packer_image":                   dataSourcePackerImage(),
 				"hcp_packer_iteration":               dataSourcePackerIteration(),
+				"hcp_packer_run_task":                dataSourcePackerRunTask(),
+				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
@@ -53,6 +54,7 @@ func New() func() *schema.Provider {
 				"hcp_hvn_route":                      resourceHvnRoute(),
 				"hcp_packer_channel":                 resourcePackerChannel(),
 				"hcp_packer_channel_assignment":      resourcePackerChannelAssignment(),
+				"hcp_packer_run_task":                resourcePackerRunTask(),
 				"hcp_vault_cluster":                  resourceVaultCluster(),
 				"hcp_vault_cluster_admin_token":      resourceVaultClusterAdminToken(),
 			},
@@ -60,19 +62,16 @@ func New() func() *schema.Provider {
 				"client_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_ID", nil),
 					Description: "The OAuth2 Client ID for API operations.",
 				},
 				"client_secret": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("HCP_CLIENT_SECRET", nil),
 					Description: "The OAuth2 Client Secret for API operations.",
 				},
 				"project_id": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					DefaultFunc:  schema.EnvDefaultFunc("HCP_PROJECT_ID", nil),
 					ValidateFunc: validation.IsUUID,
 					Description:  "The default project in which resources should be created.",
 				},
@@ -106,8 +105,15 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 
 		// Sets up HCP SDK client.
 		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
+
 		clientID := d.Get("client_id").(string)
+		if clientID == "" {
+			clientID = os.Getenv("HCP_CLIENT_ID")
+		}
 		clientSecret := d.Get("client_secret").(string)
+		if clientSecret == "" {
+			clientSecret = os.Getenv("HCP_CLIENT_SECRET")
+		}
 
 		client, err := clients.NewClient(clients.ClientConfig{
 			ClientID:      clientID,
@@ -120,6 +126,9 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		}
 
 		projectID := d.Get("project_id").(string)
+		if projectID == "" {
+			projectID = os.Getenv("HCP_PROJECT_ID")
+		}
 
 		if projectID != "" {
 			getProjParams := project_service.NewProjectServiceGetParams()

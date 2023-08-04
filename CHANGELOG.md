@@ -1,3 +1,38 @@
+## v0.67.0 (July 26, 2023)
+
+IMPROVEMENTS:
+
+* Upgrade Go to version 1.19 [[GH-556](https://github.com/hashicorp/terraform-provider-hcp/pull/556)]
+## v0.66.0 (July 13, 2023)
+
+FEATURES:
+
+* Adds `hcp_packer_run_task` data source. [[GH-547](https://github.com/hashicorp/terraform-provider-hcp/pull/547)]
+* Adds `hcp_packer_run_task` resource. [[GH-547](https://github.com/hashicorp/terraform-provider-hcp/pull/547)]
+
+IMPROVEMENTS:
+
+* Updated Auth Guide to reflect the impact to the provider when using Project-Level Service Principals;  `project_id` within the provider configuration is needed. Fix for previous release in v0.64.0 [[GH-552](https://github.com/hashicorp/terraform-provider-hcp/pull/552)]
+* Updated Boundary `Tier` configuration to be case insensitive. [[GH-554](https://github.com/hashicorp/terraform-provider-hcp/pull/554)]
+## v0.65.0 (July 10, 2023)
+
+FEATURES:
+
+* Adds `tier` to the `hcp_boundary_cluster` resource to manage the cluster pricing and feature set. [[GH-544](https://github.com/hashicorp/terraform-provider-hcp/pull/544)]
+## v0.64.0 (July 07, 2023)
+
+FEATURES:
+
+* Adds `hcp_packer_bucket_names` data source. [[GH-536](https://github.com/hashicorp/terraform-provider-hcp/pull/536)]
+
+IMPROVEMENTS:
+
+* Updated Auth Guide to reflect the impact to the provider when using Project-Level Service Principals;  `project_id` within the provider configuration is needed. [[GH-543](https://github.com/hashicorp/terraform-provider-hcp/pull/543)]
+
+BUG FIXES:
+
+* Capture unknown errors from the HCP Go SDK when getting project or organization, where errors were previously replaced with a static message. [[GH-542](https://github.com/hashicorp/terraform-provider-hcp/pull/542)]
+* Resolve panics when Packer API client helpers receive unexpected error formats [[GH-545](https://github.com/hashicorp/terraform-provider-hcp/pull/545)]
 ## v0.63.0 (June 29, 2023)
 
 FEATURES:
