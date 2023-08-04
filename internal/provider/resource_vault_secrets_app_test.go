@@ -6,7 +6,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// TODO Add tests
-func TestAccFrameworkResourceApp(t *testing.T) {
-	resource.UnitTest(t, resource.TestCase{})
+func TestAccVaultSecretsResourceApp(t *testing.T) {
+
+	resource.Test(t, resource.TestCase{
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configResourceVaultSecretsApp,
+				Check:  resource.TestCheckResourceAttr("hcp_vaultsecrets_app.example", "app_name", "acctest-tf-app"),
+			},
+		},
+	})
 }
+
+const configResourceVaultSecretsApp = `
+resource "hcp_vaultsecrets_app" "exmple" {
+  app_name = "acctest-tf-app"
+  description = "Acceptance test run"
+}
+`
