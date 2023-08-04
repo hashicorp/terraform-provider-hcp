@@ -340,6 +340,25 @@ func validateVaultPathsFilter(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
+func validateVaultClusterProxyEndpoint(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	err := vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.ToLower(enumList)
+		msg := fmt.Sprintf("expected '%v' to be one of: %v", v, expectedEnumList)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
 func validateCIDRBlockHVN(v interface{}, path cty.Path) diag.Diagnostics {
 	// HVNs allow RFC 1918 Network CIDRs
 	return validateCIDRBlock(v, path, RFC1918Networks)

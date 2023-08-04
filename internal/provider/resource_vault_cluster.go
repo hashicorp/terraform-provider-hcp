@@ -93,6 +93,16 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Default:     false,
 				Optional:    true,
 			},
+			"proxy_endpoint": {
+				Description:      "Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.",
+				Type:             schema.TypeString,
+				Default:          "DISABLED",
+				Optional:         true,
+				ValidateDiagFunc: validateVaultClusterProxyEndpoint,
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					return strings.EqualFold(old, new)
+				},
+			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
@@ -283,6 +293,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 			},
 			"vault_private_endpoint_url": {
 				Description: "The private URL for the Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"vault_proxy_endpoint_url": {
+				Description: "The proxy URL for the Vault cluster. This will be empty if `proxy_endpoint` is `DISABLED`.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -717,6 +732,7 @@ func resourceVaultClusterDelete(ctx context.Context, d *schema.ResourceData, met
 
 	return nil
 }
+
 func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *schema.ResourceData, cluster *vaultmodels.HashicorpCloudVault20201125Cluster, clusterID string) diag.Diagnostics {
 	metricsConfig, diagErr := getObservabilityConfig("metrics_config", d)
 	if diagErr != nil {
