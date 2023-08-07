@@ -1,0 +1,3 @@
+```release-note:improvement
+Add `vault_plugin` resource as optional subresource for `hcp_vault_cluster`
+```
