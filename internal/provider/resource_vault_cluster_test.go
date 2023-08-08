@@ -189,6 +189,7 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cloud_provider", in.CloudProvider),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),

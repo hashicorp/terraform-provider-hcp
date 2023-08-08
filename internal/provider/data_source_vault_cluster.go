@@ -52,6 +52,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
+			"proxy_endpoint": {
+				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"min_vault_version": {
 				Description: "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:        schema.TypeString,
@@ -94,6 +99,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 			},
 			"vault_private_endpoint_url": {
 				Description: "The private URL for the Vault cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"vault_proxy_endpoint_url": {
+				Description: "The proxy URL for the Vault cluster. This will be empty if `proxy_endpoint` is `DISABLED`.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

@@ -390,6 +390,12 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 
 	publicEndpoint := d.Get("public_endpoint").(bool)
 
+	var httpProxyOption *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption
+	proxyEndpoint, ok := d.GetOk("proxy_endpoint")
+	if ok {
+		httpProxyOption = vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(proxyEndpoint.(string))).Pointer()
+	}
+
 	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
@@ -428,6 +434,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
+					HTTPProxyOption:  httpProxyOption,
 				},
 			},
 			ID:       clusterID,
@@ -468,6 +475,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
+					HTTPProxyOption:  httpProxyOption,
 				},
 			},
 			ID:       clusterID,
@@ -521,7 +529,6 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	// If we pass the major version upgrade configuration we need to update it after the creation of the cluster,
 	// since the cluster is created by default to automatic upgrade
 	if mvuConfig != nil {
-
 		_, err := clients.UpdateVaultMajorVersionUpgradeConfig(ctx, client, clusterLocationShared, payload.ClusterID, mvuConfig)
 		if err != nil {
 			return diag.Errorf("error updating Vault cluster major version upgrade config (%s): %v", payload.ClusterID, err)
@@ -870,6 +877,10 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
+	if err := d.Set("proxy_endpoint", cluster.Config.NetworkConfig.HTTPProxyOption); err != nil {
+		return err
+	}
+
 	if err := d.Set("metrics_config", flattenObservabilityConfig(cluster.Config.MetricsConfig, d, "metrics_config")); err != nil {
 		return err
 	}
@@ -892,6 +903,12 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	// Port 8200 required to communicate with HCP Vault via HTTPS
 	if err := d.Set("vault_private_endpoint_url", fmt.Sprintf("https://%s:8200", cluster.DNSNames.Private)); err != nil {
 		return err
+	}
+
+	if cluster.DNSNames.Proxy != "" {
+		if err := d.Set("vault_proxy_endpoint_url", fmt.Sprintf("https://%s", cluster.DNSNames.Proxy)); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("created_at", cluster.CreatedAt.String()); err != nil {
