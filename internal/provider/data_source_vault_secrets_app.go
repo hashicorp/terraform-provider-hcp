@@ -11,27 +11,26 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-type ExampleDataSource struct {
+type DataSourceVaultSecretsApp struct {
 	client *clients.Client
 }
 
-type ExampleDataSourceModel struct {
-	AppName types.String `tfsdk:"app_name"`
-	// TODO: Do we need project id and org id here?
+type DataSourceVaultSecretsAppModel struct {
+	AppName   types.String `tfsdk:"app_name"`
 	ProjectId types.String `tfsdk:"project_id"`
 	OrgId     types.String `tfsdk:"organization_id"`
 	Secrets   types.Map    `tfsdk:"secrets"`
 }
 
-func NewExampleDataSource() datasource.DataSource {
-	return &ExampleDataSource{}
+func NewVaultSecretsAppDataSource() datasource.DataSource {
+	return &DataSourceVaultSecretsApp{}
 }
 
-func (d *ExampleDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSourceVaultSecretsApp) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_vaultsecrets_app"
 }
 
-func (d *ExampleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSourceVaultSecretsApp) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Vault Secrets App Data Source",
 		Attributes: map[string]schema.Attribute{
@@ -58,7 +57,7 @@ func (d *ExampleDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 	}
 }
 
-func (d *ExampleDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceVaultSecretsApp) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -74,8 +73,8 @@ func (d *ExampleDataSource) Configure(ctx context.Context, req datasource.Config
 	d.client = client
 }
 
-func (d *ExampleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ExampleDataSourceModel
+func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data DataSourceVaultSecretsAppModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	client := d.client
