@@ -49,9 +49,6 @@ func main() {
 	}
 }
 
-// TODO:
-// - Add user agent back in
-// - Add validators
 func New() (func() tfprotov5.ProviderServer, error) {
 	ctx := context.Background()
 	providers := []func() tfprotov5.ProviderServer{
