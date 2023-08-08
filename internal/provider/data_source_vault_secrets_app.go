@@ -20,8 +20,8 @@ type DataSourceVaultSecretsApp struct {
 
 type DataSourceVaultSecretsAppModel struct {
 	AppName   types.String `tfsdk:"app_name"`
-	ProjectId types.String `tfsdk:"project_id"`
-	OrgId     types.String `tfsdk:"organization_id"`
+	ProjectID types.String `tfsdk:"project_id"`
+	OrgID     types.String `tfsdk:"organization_id"`
 	Secrets   types.Map    `tfsdk:"secrets"`
 }
 
@@ -38,7 +38,6 @@ func (d *DataSourceVaultSecretsApp) Schema(ctx context.Context, req datasource.S
 		MarkdownDescription: "Vault Secrets App Data Source",
 		Attributes: map[string]schema.Attribute{
 			"app_name": schema.StringAttribute{
-				//TODO Add validator
 				Description: "The name of the Vault Secrets application.",
 				Required:    true,
 			},

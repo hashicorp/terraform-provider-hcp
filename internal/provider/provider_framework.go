@@ -29,8 +29,8 @@ type ProviderFrameworkConfiguration struct {
 
 type ProviderFrameworkModel struct {
 	ClientSecret types.String `tfsdk:"client_secret"`
-	ClientId     types.String `tfsdk:"client_id"`
-	ProjectId    types.String `tfsdk:"project_id"`
+	ClientID     types.String `tfsdk:"client_id"`
+	ProjectID    types.String `tfsdk:"project_id"`
 }
 
 func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -72,13 +72,13 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	clientID := ""
-	if data.ClientId.ValueString() != "" {
-		clientID = data.ClientId.ValueString()
+	if data.ClientID.ValueString() != "" {
+		clientID = data.ClientID.ValueString()
 	}
 
 	clientSecret := ""
 	if data.ClientSecret.ValueString() != "" {
-		clientSecret = data.ClientId.ValueString()
+		clientSecret = data.ClientID.ValueString()
 	}
 
 	client, err := clients.NewClient(clients.ClientConfig{
@@ -93,8 +93,8 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	}
 
 	projectID := ""
-	if data.ProjectId.ValueString() != "" {
-		projectID = data.ProjectId.ValueString()
+	if data.ProjectID.ValueString() != "" {
+		projectID = data.ProjectID.ValueString()
 	}
 
 	if projectID != "" {
