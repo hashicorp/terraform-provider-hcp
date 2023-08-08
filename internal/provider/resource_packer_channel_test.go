@@ -32,30 +32,30 @@ func TestAccPackerChannel(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelConfig)),
-				Check:  testAccCheckPackerChannel(channelConfig.ResourceName(), channelSlug, bucketSlug, ""),
+				Check:  testAccCheckPackerChannel(channelConfig.BlockName(), channelSlug, bucketSlug, ""),
 			},
 			{
-				ResourceName:      channelConfig.ResourceName(),
+				ResourceName:      channelConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 			{ // Unrestrict channel (likely a no-op)
 				Config: testConfig(testAccConfigBuildersToString(unrestrictedChannelConfig)),
-				Check:  testAccCheckPackerChannel(unrestrictedChannelConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(unrestrictedChannelConfig.BlockName(), channelSlug, bucketSlug, "false"),
 			},
 			{ // Validate importing explicitly unrestricted channel
-				ResourceName:      unrestrictedChannelConfig.ResourceName(),
+				ResourceName:      unrestrictedChannelConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 			{ // Restrict channel
 				Config: testConfig(testAccConfigBuildersToString(restrictedChannelConfig)),
-				Check:  testAccCheckPackerChannel(restrictedChannelConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(restrictedChannelConfig.BlockName(), channelSlug, bucketSlug, "true"),
 			},
 			{ // Validate importing explicitly restricted channel
-				ResourceName:      restrictedChannelConfig.ResourceName(),
+				ResourceName:      restrictedChannelConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
@@ -85,30 +85,30 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 		Steps: []resource.TestStep{
 			{ // Validate "creating" (automatically adopting) a managed channel
 				Config: testConfig(testAccConfigBuildersToString(latestConfig)),
-				Check:  testAccCheckPackerChannel(latestConfig.ResourceName(), channelSlug, bucketSlug, ""),
+				Check:  testAccCheckPackerChannel(latestConfig.BlockName(), channelSlug, bucketSlug, ""),
 			},
 			{
-				ResourceName:      latestConfig.ResourceName(),
+				ResourceName:      latestConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 			{ // Unrestrict managed channel
 				Config: testConfig(testAccConfigBuildersToString(unrestrictedLatestConfig)),
-				Check:  testAccCheckPackerChannel(unrestrictedLatestConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(unrestrictedLatestConfig.BlockName(), channelSlug, bucketSlug, "false"),
 			},
 			{ // Validate importing explicitly unrestricted managed channel
-				ResourceName:      unrestrictedLatestConfig.ResourceName(),
+				ResourceName:      unrestrictedLatestConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
 			},
 			{ // Restrict managed channel
 				Config: testConfig(testAccConfigBuildersToString(restrictedLatestConfig)),
-				Check:  testAccCheckPackerChannel(restrictedLatestConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(restrictedLatestConfig.BlockName(), channelSlug, bucketSlug, "true"),
 			},
 			{ // Validate importing explicitly restricted managed channel
-				ResourceName:      restrictedLatestConfig.ResourceName(),
+				ResourceName:      restrictedLatestConfig.BlockName(),
 				ImportState:       true,
 				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
 				ImportStateVerify: true,
@@ -139,25 +139,25 @@ func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
 			// Normal channels
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelSlug, bucketSlug, "false"),
 			},
 			{ // Check drift mitigation for normal channel from false->true
 				PreConfig: func() {
 					updateChannelRestriction(t, bucketSlug, channelSlug, true)
 				},
 				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.ResourceName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelSlug, bucketSlug, "false"),
 			},
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelRestrictedConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelSlug, bucketSlug, "true"),
 			},
 			{ // Check drift mitigation for normal channel from true->false
 				PreConfig: func() {
 					updateChannelRestriction(t, bucketSlug, channelSlug, false)
 				},
 				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelRestrictedConfig.ResourceName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelSlug, bucketSlug, "true"),
 			},
 		},
 	})
@@ -184,25 +184,25 @@ func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.ResourceName(), latestSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestSlug, bucketSlug, "false"),
 			},
 			{ // Check drift mitigation for HCP managed channel from false->true
 				PreConfig: func() {
 					updateChannelRestriction(t, bucketSlug, latestSlug, true)
 				},
 				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.ResourceName(), latestSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestSlug, bucketSlug, "false"),
 			},
 			{
 				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestRestrictedConfig.ResourceName(), latestSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestSlug, bucketSlug, "true"),
 			},
 			{ // Check drift mitigation for HCP managed channel from true->false
 				PreConfig: func() {
 					updateChannelRestriction(t, bucketSlug, latestSlug, false)
 				},
 				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestRestrictedConfig.ResourceName(), latestSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestSlug, bucketSlug, "true"),
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func testAccPackerChannelBuilderFromChannel(oldChannel testAccConfigBuilderInter
 }
 
 func testAccPackerChannelBuilder(uniqueName string, channelName string, bucketName string, restricted string) testAccConfigBuilderInterface {
-	return &testAccConfigBuilder{
+	return &testAccResourceConfigBuilder{
 		resourceType: "hcp_packer_channel",
 		uniqueName:   uniqueName,
 		attributes: map[string]string{
