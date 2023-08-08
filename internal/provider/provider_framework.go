@@ -174,7 +174,11 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		func() resource.Resource {
+			return &vaultsecretsSecretResource{}
+		},
+	}
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {

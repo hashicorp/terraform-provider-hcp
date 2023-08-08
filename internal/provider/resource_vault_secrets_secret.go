@@ -32,6 +32,9 @@ func (r *vaultsecretsSecretResource) Schema(_ context.Context, _ resource.Schema
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			// TODO: Add validators
+			"app_name": schema.StringAttribute{
+				Required: true,
+			},
 			"secret_name": schema.StringAttribute{
 				Required: true,
 			},
@@ -129,8 +132,20 @@ func (r *vaultsecretsSecretResource) Update(ctx context.Context, req resource.Up
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	//TODO Add update
-	//res, err := clients.
+	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName, plan.SecretName, plan.SecretValue)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error updating secret", err.Error())
+		return
+	}
+
+	plan.SecretName = res.Name
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 }
 
