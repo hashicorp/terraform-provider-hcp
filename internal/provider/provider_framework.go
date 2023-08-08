@@ -138,7 +138,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
-func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Client) (project *models.ResourcemanagerProject, diags diagnostic.Diagnostics) {
+func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Client) (project *models.HashicorpCloudResourcemanagerProject, diags diagnostic.Diagnostics) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
 	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
@@ -157,7 +157,7 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
 	listProjParams.ScopeID = &orgID
-	scopeType := string(models.ResourceIDResourceTypeORGANIZATION)
+	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
 	listProjParams.ScopeType = &scopeType
 	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
 	if err != nil {
