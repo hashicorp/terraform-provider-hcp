@@ -622,7 +622,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
+	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
 		return nil
 	}
 
@@ -632,7 +632,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
@@ -739,6 +739,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	isSecondary := false
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
+	httpProxyOption := getHttpProxyOption(d)
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -770,7 +771,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
 					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, metricsConfig, auditConfig)
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -796,7 +797,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		auditConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, metricsConfig, auditConfig)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -822,6 +823,15 @@ func getPublicIpsEnabled(d *schema.ResourceData) *bool {
 	if d.HasChange("public_endpoint") {
 		publicIpsEnabled := d.Get("public_endpoint").(bool)
 		return &publicIpsEnabled
+	}
+	return nil
+}
+
+func getHttpProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption {
+	// If we don't change the proxy_endpoint, return nil so we don't pass http_proxy_option to the update.
+	if d.HasChange("proxy_endpoint") {
+		httpProxyOption := vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(d.Get("proxy_endpoint").(string)))
+		return &httpProxyOption
 	}
 	return nil
 }

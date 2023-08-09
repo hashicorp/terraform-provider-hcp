@@ -169,7 +169,7 @@ func UpdateVaultMajorVersionUpgradeConfig(ctx context.Context, client *Client, l
 // UpdateVaultCluster will make a call to the Vault service to update the Vault cluster configuration.
 func UpdateVaultClusterConfig(
 	ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
-	tier *string, publicIpsEnabled *bool,
+	tier *string, publicIpsEnabled *bool, httpProxyOption *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption,
 	metrics *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, auditLog *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig,
 ) (*vaultmodels.HashicorpCloudVault20201125UpdateResponse, error) {
 
@@ -181,11 +181,18 @@ func UpdateVaultClusterConfig(
 		config.Tier = &tier
 		updateMaskPaths = append(updateMaskPaths, "config.tier")
 	}
-	if publicIpsEnabled != nil {
-		config.NetworkConfig = &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
-			PublicIpsEnabled: *publicIpsEnabled,
+	if publicIpsEnabled != nil || httpProxyOption != nil {
+		config.NetworkConfig = &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{}
+
+		if publicIpsEnabled != nil {
+			config.NetworkConfig.PublicIpsEnabled = *publicIpsEnabled
+			updateMaskPaths = append(updateMaskPaths, "config.network_config.public_ips_enabled")
 		}
-		updateMaskPaths = append(updateMaskPaths, "config.network_config.public_ips_enabled")
+
+		if httpProxyOption != nil {
+			config.NetworkConfig.HTTPProxyOption = httpProxyOption
+			updateMaskPaths = append(updateMaskPaths, "config.network_config.http_proxy_option")
+		}
 	}
 	if metrics != nil {
 		config.MetricsConfig = metrics
