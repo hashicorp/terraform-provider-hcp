@@ -632,23 +632,10 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
-		}
-	}
-
-	if d.HasChange("public_endpoint") {
-		// Invoke update public IPs endpoint.
-		updateResp, err := clients.UpdateVaultClusterPublicIps(ctx, client, clusterLocationShared, clusterID, d.Get("public_endpoint").(bool))
-		if err != nil {
-			return diag.Errorf("error updating Vault cluster public endpoint (%s): %v", clusterID, err)
-		}
-
-		// Wait for the update cluster operation.
-		if err := clients.WaitForOperation(ctx, client, "update Vault cluster public endpoint", clusterLocationShared, updateResp.Operation.ID); err != nil {
-			return diag.Errorf("unable to update Vault cluster public endpoint (%s): %v", clusterID, err)
 		}
 	}
 
@@ -751,6 +738,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	}
 	isSecondary := false
 	destTier := getClusterTier(d)
+	publicIpsEnabled := getPublicIpsEnabled(d)
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -782,7 +770,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
 					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, metricsConfig, auditConfig)
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, metricsConfig, auditConfig)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -808,7 +796,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		auditConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, metricsConfig, auditConfig)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, metricsConfig, auditConfig)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -825,6 +813,15 @@ func getClusterTier(d *schema.ResourceData) *string {
 	if d.HasChange("tier") {
 		tier := strings.ToUpper(d.Get("tier").(string))
 		return &tier
+	}
+	return nil
+}
+
+func getPublicIpsEnabled(d *schema.ResourceData) *bool {
+	// If we don't change the public_endpoint, return nil so we don't pass public_ips_enabled to the update.
+	if d.HasChange("public_endpoint") {
+		publicIpsEnabled := d.Get("public_endpoint").(bool)
+		return &publicIpsEnabled
 	}
 	return nil
 }
