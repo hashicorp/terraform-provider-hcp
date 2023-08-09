@@ -345,8 +345,19 @@ func validateVaultClusterProxyEndpoint(v interface{}, path cty.Path) diag.Diagno
 
 	err := vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
-		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
-		expectedEnumList := strings.ToLower(enumList)
+		enumList := regexp.MustCompile(`\[(.*)\]`).FindStringSubmatch(err.Error())
+		expectedEnumList := strings.ToLower(enumList[1])
+
+		// Remove invalid option from allowed list in error message
+		expectedEnumList = strings.ReplaceAll(
+			expectedEnumList,
+			strings.ToLower(string(vaultmodels.HashicorpCloudVault20201125HTTPProxyOptionHTTPPROXYOPTIONINVALID)),
+			"",
+		)
+
+		// Format as comma-separated list
+		expectedEnumList = strings.Join(strings.Fields(expectedEnumList), ", ")
+
 		msg := fmt.Sprintf("expected '%v' to be one of: %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
