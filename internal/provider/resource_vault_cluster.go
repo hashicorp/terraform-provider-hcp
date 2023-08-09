@@ -916,6 +916,9 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		if err := d.Set("vault_proxy_endpoint_url", fmt.Sprintf("https://%s", cluster.DNSNames.Proxy)); err != nil {
 			return err
 		}
+	} else {
+		// This is needed to remove a previously-set vault_proxy_endpoint_url after an update to disable.
+		d.Set("vault_proxy_endpoint_url", cluster.DNSNames.Proxy)
 	}
 
 	if err := d.Set("created_at", cluster.CreatedAt.String()); err != nil {

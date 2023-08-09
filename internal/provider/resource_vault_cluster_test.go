@@ -200,7 +200,7 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", ""),
-			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url", ""),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "state"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "created_at"),
 
@@ -337,7 +337,7 @@ func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resou
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
-			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url", ""),
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "metrics_config.0"),
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "audit_log_config.0"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
