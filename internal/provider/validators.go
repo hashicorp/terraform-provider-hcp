@@ -460,3 +460,19 @@ func validateVaultPluginType(v interface{}, path cty.Path) diag.Diagnostics {
 
 	return diagnostics
 }
+
+func validateVaultPluginName(pluginName string, pluginType string, plugins []*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatus) diag.Diagnostics {
+	var found bool
+	for _, plugin := range plugins {
+		if strings.EqualFold(pluginName, plugin.PluginName) && strings.EqualFold(pluginType, string(*plugin.PluginType)) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return diag.Errorf(fmt.Sprintf("plugin of plugin name: %s and plugin type: %s is not supported for installation by HCP Vault", pluginName, pluginType))
+	}
+
+	return nil
+}

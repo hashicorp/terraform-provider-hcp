@@ -325,17 +325,40 @@ func DeletePlugin(ctx context.Context, client *Client, loc *sharedmodels.Hashico
 	}
 	request.Location = locInternal
 	request.ClusterID = clusterID
-	delPluginPluginParams := vault_service.NewDeletePluginParams()
-	delPluginPluginParams.Context = ctx
-	delPluginPluginParams.ClusterID = clusterID
-	delPluginPluginParams.LocationProjectID = loc.ProjectID
-	delPluginPluginParams.LocationOrganizationID = loc.OrganizationID
-	delPluginPluginParams.Body = request
+	delPluginParams := vault_service.NewDeletePluginParams()
+	delPluginParams.Context = ctx
+	delPluginParams.ClusterID = clusterID
+	delPluginParams.LocationProjectID = loc.ProjectID
+	delPluginParams.LocationOrganizationID = loc.OrganizationID
+	delPluginParams.Body = request
 
-	delPluginResp, err := client.Vault.DeletePlugin(delPluginPluginParams, nil)
+	delPluginResp, err := client.Vault.DeletePlugin(delPluginParams, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return delPluginResp.Payload, nil
+}
+
+// ListPlugins will make a call to the Vault service plugin status api to get names of valid plugins
+func ListPlugins(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string) (*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatusResponse, error) {
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
+
+	listPluginsParams := vault_service.NewPluginRegistrationStatusParams()
+	listPluginsParams.Context = ctx
+	listPluginsParams.ClusterID = clusterID
+	listPluginsParams.LocationProjectID = loc.ProjectID
+	listPluginsParams.LocationOrganizationID = loc.OrganizationID
+	listPluginsParams.LocationRegionProvider = &region.Provider
+	listPluginsParams.LocationRegionRegion = &region.Region
+
+	listPluginsResp, err := client.Vault.PluginRegistrationStatus(listPluginsParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return listPluginsResp.Payload, nil
 }

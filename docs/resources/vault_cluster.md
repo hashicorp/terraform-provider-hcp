@@ -61,7 +61,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://www.hashicorp.com/products/vault/pricing). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
-- `vault_plugin` (Block List) The external plugins that are to be installed on the vault cluster (see [below for nested schema](#nestedblock--vault_plugin))
+- `vault_plugin` (Block List) The external plugins to install on the vault cluster (see [below for nested schema](#nestedblock--vault_plugin))
 
 ### Read-Only
 

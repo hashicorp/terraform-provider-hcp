@@ -31,6 +31,7 @@ data "hcp_vault_cluster" "example" {
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `vault_plugin` (Block List) The external plugins to install on the vault cluster (see [below for nested schema](#nestedblock--vault_plugin))
 
 ### Read-Only
 
@@ -61,6 +62,15 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedblock--vault_plugin"></a>
+### Nested Schema for `vault_plugin`
+
+Required:
+
+- `plugin_name` (String) The name of the plugin
+- `plugin_type` (String) The type of the plugin
 
 
 <a id="nestedblock--audit_log_config"></a>

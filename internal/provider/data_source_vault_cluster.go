@@ -208,6 +208,26 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					},
 				},
 			},
+			"vault_plugin": {
+				Description: "The external plugins to install on the vault cluster",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"plugin_name": {
+							Description: "The name of the plugin",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+						"plugin_type": {
+							Description: "The type of the plugin",
+							Type:        schema.TypeString,
+							Required:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -242,8 +262,14 @@ func dataSourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(url)
 
+	plugins, err := clients.ListPlugins(ctx, client, loc, clusterID)
+	if err != nil {
+		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
+		return diag.FromErr(err)
+	}
+
 	// Cluster found, update resource data.
-	if err := setVaultClusterResourceData(d, cluster); err != nil {
+	if err := setVaultClusterResourceData(d, cluster, plugins.Plugins); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -277,7 +277,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				},
 			},
 			"vault_plugin": {
-				Description: "The external plugins that are to be installed on the vault cluster",
+				Description: "The external plugins to install on the vault cluster",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Computed:    true,
@@ -333,7 +333,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 }
 
 func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	client := meta.(*clients.Client)
 
 	clusterID := d.Get("cluster_id").(string)
@@ -361,7 +360,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if diagErr != nil {
 		return diagErr
 	}
-	pluginConfig, diagErr := getPluginConfig(d)
+
+	pluginConfig, diagErr := getPluginConfig(d, nil)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -557,7 +557,13 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := setVaultClusterResourceData(d, cluster); err != nil {
+	plugins, err := clients.ListPlugins(ctx, client, loc, clusterID)
+	if err != nil {
+		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
+		return diag.FromErr(err)
+	}
+
+	if err := setVaultClusterResourceData(d, cluster, plugins.Plugins); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -595,8 +601,14 @@ func resourceVaultClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return nil
 	}
 
+	plugins, err := clients.ListPlugins(ctx, client, loc, clusterID)
+	if err != nil {
+		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
+		return diag.FromErr(err)
+	}
+
 	// Cluster found, update resource data.
-	if err := setVaultClusterResourceData(d, cluster); err != nil {
+	if err := setVaultClusterResourceData(d, cluster, plugins.Plugins); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -648,7 +660,14 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	newPluginConfig, diagErr := getPluginConfig(d)
+	// get plugins for plugin-name validation in getPluginConfig
+	plugins, err := clients.ListPlugins(ctx, client, loc, clusterID)
+	if err != nil {
+		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
+		return diag.FromErr(err)
+	}
+
+	newPluginConfig, diagErr := getPluginConfig(d, plugins.Plugins)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -765,7 +784,13 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := setVaultClusterResourceData(d, cluster); err != nil {
+	plugins, err = clients.ListPlugins(ctx, client, loc, clusterID)
+	if err != nil {
+		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
+		return diag.FromErr(err)
+	}
+
+	if err := setVaultClusterResourceData(d, cluster, plugins.Plugins); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -892,8 +917,7 @@ func getClusterTier(d *schema.ResourceData) *string {
 }
 
 // setVaultClusterResourceData sets the KV pairs of the Vault cluster resource schema.
-func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.HashicorpCloudVault20201125Cluster) error {
-
+func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.HashicorpCloudVault20201125Cluster, plugins []*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatus) error {
 	if err := d.Set("cluster_id", cluster.ID); err != nil {
 		return err
 	}
@@ -1020,6 +1044,20 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 				return err
 			}
 		}
+	}
+
+	var pluginConfig []map[string]any
+	for _, plugin := range plugins {
+		if plugin.IsRegistered {
+			pluginMap := map[string]any{}
+			pluginMap["plugin_name"] = plugin.PluginName
+			pluginMap["plugin_type"] = plugin.PluginType
+			pluginConfig = append(pluginConfig, pluginMap)
+		}
+		if err = d.Set("vault_plugin", pluginConfig); err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -1235,7 +1273,7 @@ func flattenMajorVersionUpgradeConfig(config *vaultmodels.HashicorpCloudVault202
 	return []interface{}{configMap}
 }
 
-func getPluginConfig(d *schema.ResourceData) ([]*vaultmodels.HashicorpCloudVault20201125AddPluginRequest, diag.Diagnostics) {
+func getPluginConfig(d *schema.ResourceData, plugins []*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatus) ([]*vaultmodels.HashicorpCloudVault20201125AddPluginRequest, diag.Diagnostics) {
 	if !d.HasChange("vault_plugin") {
 		return nil, nil
 	}
@@ -1262,12 +1300,20 @@ func getPluginConfig(d *schema.ResourceData) ([]*vaultmodels.HashicorpCloudVault
 		}
 		pluginName := config["plugin_name"].(string)
 		pluginType := config["plugin_type"].(string)
+
+		if plugins != nil {
+			err := validateVaultPluginName(pluginName, pluginType, plugins)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		pluginConfigs = append(pluginConfigs, &vaultmodels.HashicorpCloudVault20201125AddPluginRequest{
 			PluginName: pluginName,
 			PluginType: pluginType,
 		})
-
 	}
+
 	return pluginConfigs, nil
 }
 
