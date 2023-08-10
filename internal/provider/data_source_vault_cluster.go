@@ -53,7 +53,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:    true,
 			},
 			"proxy_endpoint": {
-				Description: "Denotes that the cluster has a public endpoint. Defaults to false.",
+				Description: "Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
