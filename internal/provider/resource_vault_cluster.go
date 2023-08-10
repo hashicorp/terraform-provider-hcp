@@ -739,7 +739,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	isSecondary := false
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
-	httpProxyOption := getHttpProxyOption(d)
+	httpProxyOption := getHTTPProxyOption(d)
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -827,7 +827,7 @@ func getPublicIpsEnabled(d *schema.ResourceData) *bool {
 	return nil
 }
 
-func getHttpProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption {
+func getHTTPProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption {
 	// If we don't change the proxy_endpoint, return nil so we don't pass http_proxy_option to the update.
 	if d.HasChange("proxy_endpoint") {
 		httpProxyOption := vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(d.Get("proxy_endpoint").(string)))
