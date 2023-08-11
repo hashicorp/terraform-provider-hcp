@@ -120,7 +120,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 			if !projDiags.HasError() {
 				resp.Diagnostics.Append(projDiags...)
 			} else {
-				resp.Diagnostics.AddError(fmt.Sprintf("unable to get project from credentials"), "")
+				resp.Diagnostics.AddError("unable to get project from credentials", "")
 				return
 			}
 		}
