@@ -449,6 +449,12 @@ func validateVaultPluginType(v interface{}, path cty.Path) diag.Diagnostics {
 	if err != nil {
 		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
 		expectedEnumList := strings.ToLower(enumList)
+		// Remove invalid option from allowed list in error message
+		expectedEnumList = strings.ReplaceAll(
+			expectedEnumList,
+			strings.ToLower(string(vaultmodels.HashicorpCloudVault20201125PluginTypePLUGINTYPEINVALID)),
+			"",
+		)
 		msg := fmt.Sprintf("expected '%v' to be one of: %v", v, expectedEnumList)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
