@@ -19,6 +19,7 @@ type DataSourceVaultSecretsApp struct {
 }
 
 type DataSourceVaultSecretsAppModel struct {
+	Id        types.String `tfsdk:"id"`
 	AppName   types.String `tfsdk:"app_name"`
 	ProjectID types.String `tfsdk:"project_id"`
 	OrgID     types.String `tfsdk:"organization_id"`
@@ -37,6 +38,10 @@ func (d *DataSourceVaultSecretsApp) Schema(ctx context.Context, req datasource.S
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Vault Secrets App Data Source",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Set to be the app name",
+			},
 			"app_name": schema.StringAttribute{
 				Description: "The name of the Vault Secrets application.",
 				Required:    true,
@@ -111,6 +116,9 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 		openAppSecrets[secretName] = openSecret.Version.Value
 	}
 
+	data.Id = types.StringValue("some id")
+	data.OrgID = types.StringValue(client.Config.OrganizationID)
+	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	secretsMap, diag := types.MapValueFrom(ctx, types.StringType, openAppSecrets)
 	resp.Diagnostics.Append(diag...)
 	data.Secrets = secretsMap
