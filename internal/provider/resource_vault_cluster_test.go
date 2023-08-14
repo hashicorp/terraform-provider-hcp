@@ -286,6 +286,8 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
 			resource.TestCheckResourceAttr(vaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_plugin.0"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_plugin.0"),
 		),
 	}
 }
@@ -333,6 +335,8 @@ func updateTierPublicEndpointAndRemoveObservabilityData(t *testing.T, in *inputT
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_day", "WEDNESDAY"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.maintenance_window_time", "WINDOW_12AM_4AM"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_plugin.0"),
+			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_plugin.0"),
 		),
 	}
 }

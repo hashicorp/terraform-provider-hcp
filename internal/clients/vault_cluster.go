@@ -340,7 +340,7 @@ func DeletePlugin(ctx context.Context, client *Client, loc *sharedmodels.Hashico
 	return delPluginResp.Payload, nil
 }
 
-// ListPlugins will make a call to the Vault service plugin status api to get names of valid plugins
+// ListPlugins will make a call to the Vault service plugin status api to get all available plugins for the cluster.
 func ListPlugins(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string) (*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatusResponse, error) {
 	region := &sharedmodels.HashicorpCloudLocationRegion{}
 	if loc.Region != nil {

@@ -276,6 +276,10 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					},
 				},
 			},
+			// vault_plugin is a terraform resource used to specify a plugin for installation.
+			//
+			// plugin_name is only validated on updates because the PluginStatus API to list the valid available plugin names requires a created cluster.
+			// plugin_type is validated on create & update because there is a static list for valid plugint types.
 			"vault_plugin": {
 				Description: "The external plugins to install on the vault cluster",
 				Type:        schema.TypeList,
@@ -660,7 +664,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	// get plugins for plugin-name validation in getPluginConfig
+	// get list of plugins for plugin-name validation in getPluginConfig
 	plugins, err := clients.ListPlugins(ctx, client, loc, clusterID)
 	if err != nil {
 		log.Printf("[ERROR] Vault cluster (%s) failed to list plugins", clusterID)
