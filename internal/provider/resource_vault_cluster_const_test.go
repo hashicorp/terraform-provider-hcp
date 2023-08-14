@@ -30,13 +30,15 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// sets public_endpoint to true and add metrics and audit log
-const updatedVaultClusterPublicAndMetricsAuditLog = `
+// sets public_endpoint to true, proxy_endpoint to ENABLED,
+// add metrics and audit log, and update MVU
+const updatedVaultClusterPublicProxyObservabilityAndMVU = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
+	proxy_endpoint     = "{{ .ProxyEndpoint }}"
 	metrics_config			   {
 		splunk_hecendpoint = "https://http-input-splunkcloud.com"
 		splunk_token =       "test"
@@ -51,14 +53,15 @@ resource "hcp_vault_cluster" "test" {
 }
 `
 
-// changes tier, remove any metrics or audit log config, optionally toggle public
-// endpoint on or off
-const updatedVaultClusterTierAndMVUConfig = `
+// changes tier, remove any metrics or audit log config, and
+// toggle public_endpoint and proxy_endpoint
+const updatedVaultClusterTierPublicProxyAndMVU = `
 resource "hcp_vault_cluster" "test" {
 	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
+	proxy_endpoint     = "{{ .ProxyEndpoint }}"
 	major_version_upgrade_config {
 		upgrade_type = "SCHEDULED"
 		maintenance_window_day = "WEDNESDAY"
@@ -98,6 +101,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Region         string
 		Tier           string
 		PublicEndpoint string
+		ProxyEndpoint  string
 	}{
 		ClusterID:      in.VaultClusterName,
 		HvnID:          in.HvnName,
@@ -105,6 +109,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Region:         in.Region,
 		Tier:           tier,
 		PublicEndpoint: in.PublicEndpoint,
+		ProxyEndpoint:  in.ProxyEndpoint,
 	})
 	require.NoError(t, err)
 	return tfResources.String()

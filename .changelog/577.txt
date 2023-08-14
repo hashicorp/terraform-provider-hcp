@@ -1,0 +1,3 @@
+```release-note:improvement
+Add `proxy_endpoint` field to enable toggling the proxy option on HCP Vault clusters, along with corresponding read-only `vault_proxy_endpoint_url` field.
+```

@@ -27,6 +27,7 @@ type inputT struct {
 	UpdateTier1                string
 	UpdateTier2                string
 	PublicEndpoint             string
+	ProxyEndpoint              string
 	Secondary                  *inputT // optional
 	tf                         string
 }
@@ -54,6 +55,7 @@ func TestAccVaultClusterAzure(t *testing.T) {
 		UpdateTier1:                "STANDARD_SMALL",
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
+		ProxyEndpoint:              "DISABLED",
 	}
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
 	// save so e don't have to generate this again and again
@@ -81,6 +83,7 @@ func TestAccVaultClusterAWS(t *testing.T) {
 		UpdateTier1:                "STANDARD_SMALL",
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
+		ProxyEndpoint:              "DISABLED",
 	}
 
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
@@ -161,8 +164,8 @@ func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 		tfApply(t, in),
 		testTFDataSources(t, in),
 		updateClusterTier(t, in),
-		updateVaultPublicEndpointObservabilityDataAndMVU(t, in),
-		updateTierPublicEndpointAndRemoveObservabilityData(t, in),
+		updatePublicProxyObservabilityAndMVU(t, in),
+		updateTierPublicProxyAndRemoveObservability(t, in),
 	}
 }
 
@@ -189,6 +192,7 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cloud_provider", in.CloudProvider),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),
@@ -196,6 +200,7 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", ""),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url", ""),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "state"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "created_at"),
 
@@ -257,6 +262,7 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "cluster_id", in.VaultClusterDataSourceName, "cluster_id"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "hvn_id", in.VaultClusterDataSourceName, "hvn_id"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "public_endpoint", in.VaultClusterDataSourceName, "public_endpoint"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "proxy_endpoint", in.VaultClusterDataSourceName, "proxy_endpoint"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "min_vault_version", in.VaultClusterDataSourceName, "min_vault_version"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "tier", in.VaultClusterDataSourceName, "tier"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "organization_id", in.VaultClusterDataSourceName, "organization_id"),
@@ -266,8 +272,8 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "namespace", in.VaultClusterDataSourceName, "namespace"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_version", in.VaultClusterDataSourceName, "vault_version"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_public_endpoint_url", in.VaultClusterDataSourceName, "vault_public_endpoint_url"),
-			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_private_endpoint_url", in.VaultClusterDataSourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "vault_proxy_endpoint_url", in.VaultClusterDataSourceName, "vault_proxy_endpoint_url"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "created_at", in.VaultClusterDataSourceName, "created_at"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "state", in.VaultClusterDataSourceName, "state"),
 		),
@@ -278,7 +284,7 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.UpdateTier1)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier1),
@@ -289,19 +295,23 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 	}
 }
 
-// This step verifies the successful update of "public_endpoint", "audit_log", "metrics" and MVU config
-func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) resource.TestStep {
+// This step verifies the successful update of "public_endpoint", "proxy_endpoint", "audit_log", "metrics" and MVU config.
+func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "true"
+	newIn.ProxyEndpoint = "ENABLED"
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicAndMetricsAuditLog, newIn, newIn.UpdateTier1)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "ENABLED"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_proxy_endpoint_url"),
+			testAccCheckFullURL(in.VaultClusterResourceName, "vault_proxy_endpoint_url", ""),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "metrics_config.0.splunk_hecendpoint", "https://http-input-splunkcloud.com"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "metrics_config.0.splunk_token"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
@@ -311,20 +321,23 @@ func updateVaultPublicEndpointObservabilityDataAndMVU(t *testing.T, in *inputT) 
 	}
 }
 
-// This step verifies the successful update of both "tier" and "public_endpoint" and removal of "metrics" and "audit_log"
-func updateTierPublicEndpointAndRemoveObservabilityData(t *testing.T, in *inputT) resource.TestStep {
+// This step verifies the successful update of "tier", "public_endpoint", "proxy_endpoint" and removal of "metrics" and "audit_log"
+func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "false"
+	newIn.ProxyEndpoint = "DISABLED"
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierAndMVUConfig, newIn, newIn.UpdateTier2)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier2)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_private_endpoint_url", "8200"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "vault_proxy_endpoint_url", ""),
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "metrics_config.0"),
 			resource.TestCheckNoResourceAttr(in.VaultClusterResourceName, "audit_log_config.0"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "major_version_upgrade_config.0.upgrade_type", "SCHEDULED"),
