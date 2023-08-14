@@ -58,6 +58,7 @@ resource "hcp_vault_cluster" "example" {
 - `project_id` (String) The ID of the HCP project where the Vault cluster is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
+- `proxy_endpoint` (String) Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://www.hashicorp.com/products/vault/pricing). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
@@ -73,6 +74,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `self_link` (String) A unique URL identifying the Vault cluster.
 - `state` (String) The state of the Vault cluster.
 - `vault_private_endpoint_url` (String) The private URL for the Vault cluster.
+- `vault_proxy_endpoint_url` (String) The proxy URL for the Vault cluster. This will be empty if `proxy_endpoint` is `DISABLED`.
 - `vault_public_endpoint_url` (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - `vault_version` (String) The Vault version of the cluster.
 
