@@ -7,6 +7,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -19,18 +20,22 @@ type vaultsecretsSecretResource struct {
 }
 
 type Secret struct {
-	AppName     string `tfsdk:"app_name"`
-	SecretName  string `tfsdk:"secret_name"`
-	SecretValue string `tfsdk:"secret_value"`
+	Id          types.String `tfsdk:"id"`
+	AppName     string       `tfsdk:"app_name"`
+	SecretName  string       `tfsdk:"secret_name"`
+	SecretValue string       `tfsdk:"secret_value"`
 }
 
 func (r *vaultsecretsSecretResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_vaultsecrets_secret"
+	resp.TypeName = req.ProviderTypeName + "_vault_secrets_secret"
 }
 
 func (r *vaultsecretsSecretResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
 			// TODO: Add validators
 			"app_name": schema.StringAttribute{
 				Required: true,
@@ -81,6 +86,7 @@ func (r *vaultsecretsSecretResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	// TODO: add more to plan here?
+	plan.Id = types.StringValue("id")
 	plan.SecretName = res.Name
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
