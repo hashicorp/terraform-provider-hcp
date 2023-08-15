@@ -19,7 +19,7 @@ type DataSourceVaultSecretsApp struct {
 }
 
 type DataSourceVaultSecretsAppModel struct {
-	Id        types.String `tfsdk:"id"`
+	ID        types.String `tfsdk:"id"`
 	AppName   types.String `tfsdk:"app_name"`
 	ProjectID types.String `tfsdk:"project_id"`
 	OrgID     types.String `tfsdk:"organization_id"`
@@ -116,7 +116,7 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 		openAppSecrets[secretName] = openSecret.Version.Value
 	}
 
-	data.Id = data.AppName
+	data.ID = data.AppName
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	secretsMap, diag := types.MapValueFrom(ctx, types.StringType, openAppSecrets)
