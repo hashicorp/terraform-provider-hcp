@@ -116,7 +116,7 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 		openAppSecrets[secretName] = openSecret.Version.Value
 	}
 
-	data.Id = types.StringValue("some id")
+	data.Id = data.AppName
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	secretsMap, diag := types.MapValueFrom(ctx, types.StringType, openAppSecrets)
