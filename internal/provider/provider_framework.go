@@ -57,6 +57,26 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 	}
 }
 
+func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{}
+}
+
+func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		func() datasource.DataSource {
+			return &DataSourceVaultSecretsApp{}
+		},
+	}
+}
+
+func NewFrameworkProvider(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &ProviderFramework{
+			version: version,
+		}
+	}
+}
+
 // TODO add check for HCP env vars
 func (p *ProviderFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
@@ -171,24 +191,4 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
-}
-
-func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
-}
-
-func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		func() datasource.DataSource {
-			return &DataSourceVaultSecretsApp{}
-		},
-	}
-}
-
-func NewFrameworkProvider(version string) func() provider.Provider {
-	return func() provider.Provider {
-		return &ProviderFramework{
-			version: version,
-		}
-	}
 }
