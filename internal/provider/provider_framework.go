@@ -19,6 +19,7 @@ import (
 )
 
 // This is an implementation using the Provider framework
+// Docs can be found here: https://developer.hashicorp.com/terraform/plugin/framework
 type ProviderFramework struct {
 	version string
 }
