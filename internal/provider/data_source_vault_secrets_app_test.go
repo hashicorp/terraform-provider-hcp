@@ -16,6 +16,62 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
+	testAppName := generateRandomSlug()
+	dataSourceAddress := "data.hcp_vault_secrets_app.example"
+
+	firstSecretName := "secret_one"
+	secondSecretName := "secret_two"
+	firstSecretValue := "hey, this is version 1!"
+	secondSecretValue := "hey, this is version 2!"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t, map[string]bool{}) },
+		Steps: []resource.TestStep{
+			// Create two secrets, one with an additional version and check the latest secrets from data source
+			{
+				PreConfig: func() {
+					createTestApp(t, testAppName)
+
+					createTestAppSecret(t, testAppName, firstSecretName, "this shouldn't show up!")
+					createTestAppSecret(t, testAppName, firstSecretName, firstSecretValue)
+					createTestAppSecret(t, testAppName, secondSecretName, secondSecretValue)
+				},
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"hcp": {
+						VersionConstraint: "~> 0.66.0",
+						Source:            "hashicorp/hcp",
+					},
+				},
+				Config: fmt.Sprintf(`
+					data "hcp_vault_secrets_app" "example" {
+						app_name    = %q
+					}`, testAppName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "organization_id"),
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "project_id"),
+					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.secret_one", firstSecretValue),
+					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.secret_two", secondSecretValue),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+				Config: fmt.Sprintf(`
+				data "hcp_vault_secrets_app" "example" {
+					app_name    = %q
+				}`, testAppName),
+				PlanOnly: true,
+			},
+		},
+		CheckDestroy: func(s *terraform.State) error {
+			deleteTestAppSecret(t, testAppName, firstSecretName)
+			deleteTestAppSecret(t, testAppName, secondSecretName)
+			deleteTestApp(t, testAppName)
+			return nil
+		},
+	})
+}
+
 func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	testAppName := generateRandomSlug()
 	dataSourceAddress := "data.hcp_vault_secrets_app.foo"
