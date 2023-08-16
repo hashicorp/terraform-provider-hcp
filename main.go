@@ -26,6 +26,11 @@ import (
 // can be customized.
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
+// This provider utilizes Terraform Framework Muxing, which allows the provider
+// to maintain resources using both the SDKv2 and upgraded resources using the
+// plugin framework.
+// More documentation can be found here:
+// https://developer.hashicorp.com/terraform/plugin/framework/migrating/mux
 func main() {
 	var debugMode bool
 
