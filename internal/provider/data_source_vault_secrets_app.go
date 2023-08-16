@@ -36,11 +36,11 @@ func (d *DataSourceVaultSecretsApp) Metadata(ctx context.Context, req datasource
 
 func (d *DataSourceVaultSecretsApp) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Vault Secrets App Data Source",
+		MarkdownDescription: "The Vault Secrets app data source retrieves secrets and their latest version values for a given application.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
-				Description: "Set to be the app name",
+				Description: "The ID of this resource.",
 			},
 			"app_name": schema.StringAttribute{
 				Description: "The name of the Vault Secrets application.",
