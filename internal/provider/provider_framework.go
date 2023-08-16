@@ -78,7 +78,6 @@ func NewFrameworkProvider(version string) func() provider.Provider {
 	}
 }
 
-// TODO add check for HCP env vars
 func (p *ProviderFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
 	// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
@@ -95,11 +94,15 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	clientID := ""
 	if data.ClientID.ValueString() != "" {
 		clientID = data.ClientID.ValueString()
+	} else {
+		clientID = os.Getenv("HCP_CLIENT_ID")
 	}
 
 	clientSecret := ""
 	if data.ClientSecret.ValueString() != "" {
 		clientSecret = data.ClientID.ValueString()
+	} else {
+		clientSecret = os.Getenv("HCP_CLIENT_SECRET")
 	}
 
 	client, err := clients.NewClient(clients.ClientConfig{
@@ -116,6 +119,8 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	projectID := ""
 	if data.ProjectID.ValueString() != "" {
 		projectID = data.ProjectID.ValueString()
+	} else {
+		projectID = os.Getenv("HCP_PROJECT_ID")
 	}
 
 	if projectID != "" {
