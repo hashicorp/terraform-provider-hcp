@@ -53,9 +53,9 @@ func TestAccBoundaryCluster(t *testing.T) {
 	boundaryClusterDataSourceName := "data.hcp_boundary_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckBoundaryClusterDestroy,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBoundaryClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				// this test step tests boundary cluster creation.

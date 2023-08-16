@@ -37,8 +37,8 @@ func TestAcc_dataSourcePacker(t *testing.T) {
 	fingerprint := "42"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteChannel(t, acctestAlpineBucket, acctestProductionChannel, false)
 			deleteIteration(t, acctestAlpineBucket, fingerprint, false)
@@ -76,8 +76,8 @@ func TestAcc_dataSourcePacker_revokedIteration(t *testing.T) {
 	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteChannel(t, acctestUbuntuBucket, acctestProductionChannel, false)
 			deleteIteration(t, acctestUbuntuBucket, fingerprint, false)

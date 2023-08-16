@@ -112,8 +112,8 @@ var projectID = "prov-project-id-invalid"
 
 func TestAccMultiProject(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(t *terraform.State) error {
 			return nil
 		},
@@ -140,8 +140,8 @@ func TestAccMultiProject(t *testing.T) {
 
 func TestAccMultiProjectResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(t *terraform.State) error {
 			return nil
 		},

@@ -87,10 +87,10 @@ func TestAccVaultClusterAWS(t *testing.T) {
 	// save so e don't have to generate this again and again
 	awsTestInput.tf = tf
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckVaultClusterDestroy,
-		Steps:             awsTestSteps(t, awsTestInput),
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultClusterDestroy,
+		Steps:                    awsTestSteps(t, awsTestInput),
 	})
 }
 

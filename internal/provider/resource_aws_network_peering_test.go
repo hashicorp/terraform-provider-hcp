@@ -84,8 +84,8 @@ func TestAccAwsPeering(t *testing.T) {
 	resourceName := "hcp_aws_network_peering.peering"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"aws": {VersionConstraint: "~> 4.0.0"},
 		},

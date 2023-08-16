@@ -30,7 +30,7 @@ func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
 			iteration, _ = upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -76,7 +76,7 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, unrevokedIteration.ID)
 			revokedIteration = revokeIteration(t, unrevokedIteration.ID, bucketSlug, revokeAt)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

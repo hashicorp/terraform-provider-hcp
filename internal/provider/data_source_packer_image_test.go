@@ -63,7 +63,7 @@ func TestAcc_dataSourcePackerImage_Simple(t *testing.T) {
 			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -124,7 +124,7 @@ func TestAcc_dataSourcePackerImage_IterationID(t *testing.T) {
 			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -170,7 +170,7 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 			revokeIteration(t, iteration.ID, bucketSlug, revokeAt)
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -208,7 +208,7 @@ func TestAcc_dataSourcePackerImage_emptyChannel(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			upsertChannel(t, bucketSlug, channelSlug, "")
 		},
-		ProviderFactories: providerFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -237,8 +237,8 @@ func TestAcc_dataSourcePackerImage_channelAndIterationIDReject(t *testing.T) {
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testConfig(testAccConfigBuildersToString(config)),
