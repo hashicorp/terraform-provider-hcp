@@ -158,6 +158,8 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
+// This differs from the provider.go implementation due to the diagnostics used
+// by the plugin framework.
 func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Client) (project *models.HashicorpCloudResourcemanagerProject, diags diagnostic.Diagnostics) {
 	// Get the organization ID.
 	listOrgParams := organization_service.NewOrganizationServiceListParams()
