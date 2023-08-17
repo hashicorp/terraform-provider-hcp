@@ -61,7 +61,7 @@ func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
 func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 	bucketSlug := testAccCreateSlug("IterationRevoked")
 	channelSlug := bucketSlug // No need for a different slug
-	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
+	revokeAt := strfmt.DateTime(time.Now().UTC().Add(24 * time.Hour))
 
 	config := testAccPackerDataIterationBuilder("Revoked", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
 
