@@ -441,3 +441,44 @@ func validateBoundaryPassword(v interface{}, path cty.Path) diag.Diagnostics {
 
 	return diagnostics
 }
+
+func validateVaultPluginType(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	err := vaultmodels.HashicorpCloudVault20201125PluginType(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.ToLower(enumList)
+		// Remove invalid option from allowed list in error message
+		expectedEnumList = strings.ReplaceAll(
+			expectedEnumList,
+			strings.ToLower(string(vaultmodels.HashicorpCloudVault20201125PluginTypePLUGINTYPEINVALID)),
+			"",
+		)
+		msg := fmt.Sprintf("expected '%v' to be one of: %v", v, expectedEnumList)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}
+
+func validateVaultPluginName(pluginName string, pluginType string, plugins []*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatus) diag.Diagnostics {
+	var found bool
+	for _, plugin := range plugins {
+		if strings.EqualFold(pluginName, plugin.PluginName) && strings.EqualFold(pluginType, string(*plugin.PluginType)) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return diag.Errorf(fmt.Sprintf("plugin of plugin name: %s and plugin type: %s is not supported for installation by HCP Vault", pluginName, pluginType))
+	}
+
+	return nil
+}
