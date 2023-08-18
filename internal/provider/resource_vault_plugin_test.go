@@ -18,22 +18,28 @@ import (
 )
 
 var (
-	testAccVaultPluginConfig =
-	// fmt.Sprintf(
-	`
+	testAccVaultPluginConfig = fmt.Sprintf(`
+resource "hcp_hvn" "test" {
+	hvn_id            = "%s"
+	cloud_provider    = "aws"
+	region            = "us-west-2"
+}
 
-	resource "hcp_vault_plugin" "venafi_plugin" {
-        project_id         = "cb5fda6b-c906-4181-a535-2ff385a0910e"
-		cluster_id         = "vault-cluster"
-		plugin_name        = "venafi-pki-backend"
-		plugin_type        = "SECRET"
-	}
+resource "hcp_vault_cluster" "test" {
+	cluster_id         = "%s"
+	hvn_id             = hcp_hvn.test.hvn_id
+	tier               = "DEV"
+}
 
-`
-	// , addTimestampSuffix("test-hvn-aws-"), addTimestampSuffix("test-cluster-"))
+resource "hcp_vault_plugin" "venafi_plugin" {
+	project_id         = "cb5fda6b-c906-4181-a535-2ff385a0910e"
+	cluster_id         = "vault-cluster"
+	plugin_name        = "venafi-pki-backend"
+	plugin_type        = "SECRET"
+}
+`, addTimestampSuffix("test-hvn-aws-"), addTimestampSuffix("test-cluster-"))
 
 	testAccVaultPluginDataSourceConfig = fmt.Sprintf(`%s
-
 	data "hcp_vault_plugin" "test" {
 		cluster_id         = "vault-cluster"
 		plugin_name        = "venafi-pki-backend"
