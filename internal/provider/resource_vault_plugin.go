@@ -151,6 +151,11 @@ func resourceVaultPluginRead(ctx context.Context, d *schema.ResourceData, meta i
 	// if plugin is not registered, remove from state
 	if !found {
 		d.SetId("")
+		return nil
+	}
+
+	if err := setVaultPluginResourceData(d, projectID, clusterID, pluginName, pluginTypeString); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil
