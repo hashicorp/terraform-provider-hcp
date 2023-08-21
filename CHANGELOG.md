@@ -1,3 +1,9 @@
+## v0.69.0 (August 17, 2023)
+
+IMPROVEMENTS:
+
+* Add `proxy_endpoint` field to enable toggling the proxy option on HCP Vault clusters, along with corresponding read-only `vault_proxy_endpoint_url` field. [[GH-577](https://github.com/hashicorp/terraform-provider-hcp/pull/577)]
+* Adjusted wording in the documentation and error messages for `data.hcp_packer_image`. [[GH-571](https://github.com/hashicorp/terraform-provider-hcp/pull/571)]
 ## v0.68.0 (August 02, 2023)
 BREAKING CHANGES:
 
