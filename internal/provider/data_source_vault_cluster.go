@@ -162,6 +162,26 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"cloudwatch_access_key_id": {
+							Description: "CloudWatch access key ID for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_secret_access_key": {
+							Description: "CloudWatch secret access key for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_region": {
+							Description: "CloudWatch region for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_namespace": {
+							Description: "CloudWatch namespace for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -189,6 +209,26 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"datadog_region": {
 							Description: "Datadog region for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_access_key_id": {
+							Description: "CloudWatch access key ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_region": {
+							Description: "CloudWatch region for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_stream_name": {
+							Description: "CloudWatch stream name for the target log stream for audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_group_name": {
+							Description: "CloudWatch group name of the target log stream for audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
