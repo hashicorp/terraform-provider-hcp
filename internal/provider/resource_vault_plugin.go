@@ -136,28 +136,18 @@ func resourceVaultPluginRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(err)
 	}
 
-	found := false
 	for _, plugin := range pluginsResp.Plugins {
 		if strings.EqualFold(pluginName, plugin.PluginName) && pluginType == *plugin.PluginType && plugin.IsRegistered {
 			// Cluster found, update resource data.
 			if err := setVaultPluginResourceData(d, loc.ProjectID, clusterID, pluginName, pluginTypeString); err != nil {
 				return diag.FromErr(err)
 			}
-			found = true
-			break
+			return nil
 		}
 	}
 
 	// if plugin is not registered, remove from state
-	if !found {
-		d.SetId("")
-		return nil
-	}
-
-	if err := setVaultPluginResourceData(d, projectID, clusterID, pluginName, pluginTypeString); err != nil {
-		return diag.FromErr(err)
-	}
-
+	d.SetId("")
 	return nil
 }
 
@@ -284,7 +274,7 @@ func resourceVaultPluginImport(ctx context.Context, d *schema.ResourceData, meta
 	var err error
 
 	idParts := strings.SplitN(d.Id(), ":", 4)
-	if len(idParts) == 4 { // {project_id}:{hvn_id}:{hvn_route_id}
+	if len(idParts) == 4 { // {project_id}:{cluster_id}:{plugin_type}:{plugin_name}
 		if idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 			return nil, fmt.Errorf("unexpected format of ID (%q), expected {project_id}:{cluster_id}:{plugin_type}:{plugin_name}", d.Id())
 		}
@@ -292,7 +282,7 @@ func resourceVaultPluginImport(ctx context.Context, d *schema.ResourceData, meta
 		clusterID = idParts[1]
 		pluginType = idParts[2]
 		pluginName = idParts[3]
-	} else if len(idParts) == 3 { // {hvn_id}:{hvn_route_id}
+	} else if len(idParts) == 3 { // {cluster_id}:{plugin_type}:{plugin_name}
 		if idParts[0] == "" || idParts[1] == "" {
 			return nil, fmt.Errorf("unexpected format of ID (%q), expected {cluster_id}:{plugin_type}:{plugin_name}", d.Id())
 		}

@@ -67,7 +67,7 @@ func TestAccVaultPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "plugin_type", "SECRET"),
 				),
 			},
-			// Testing that we can import HVN route created in the previous step and that the
+			// Testing that we can import Vault plugin created in the previous step and that the
 			// resource terraform state will be exactly the same
 			{
 				ResourceName: resourceName,
