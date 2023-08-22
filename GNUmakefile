@@ -34,7 +34,7 @@ fmtcheck:
 	@./scripts/gofmtcheck.sh
 	$(GO_LINT) run --config $(GO_LINT_CONFIG_PATH) $(GO_LINT_ARGS)
 
-test: #fmtcheck
+test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
 
 test-ci: fmtcheck
