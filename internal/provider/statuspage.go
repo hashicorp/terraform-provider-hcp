@@ -111,6 +111,8 @@ func isHCPOperational() (diags diag.Diagnostics) {
 	return diags
 }
 
+// This functionality is a duplicate of isHCPOperational in order to return
+// the proper diagnostics for the terraform plugin framework
 func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
