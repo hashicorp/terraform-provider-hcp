@@ -53,7 +53,8 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories, CheckDestroy: testAccCheckHvnPeeringConnectionDestroy,
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckHvnPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			// Tests create
 			{
