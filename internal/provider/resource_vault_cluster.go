@@ -1082,11 +1082,15 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 	if cloudwatch := config.Cloudwatch; cloudwatch != nil {
 		configMap["cloudwatch_access_key_id"] = cloudwatch.AccessKeyID
 		configMap["cloudwatch_region"] = cloudwatch.Region
-		// Namespace is only used for streaming metrics
-		configMap["cloudwatch_namespace"] = cloudwatch.Namespace
-		// Stream name and group name are only used for streaming audit-logs
-		configMap["cloudwatch_stream_name"] = cloudwatch.StreamName
-		configMap["cloudwatch_group_name"] = cloudwatch.GroupName
+		// ensure we only set properties that are defined in metrics/audit-logs streaming
+		if propertyName == "metrics_config" {
+			// Namespace is only used for streaming metrics
+			configMap["cloudwatch_namespace"] = cloudwatch.Namespace
+		} else {
+			// Stream name and group name are only used for streaming audit-logs
+			configMap["cloudwatch_stream_name"] = cloudwatch.StreamName
+			configMap["cloudwatch_group_name"] = cloudwatch.GroupName
+		}
 		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
 		if cloudwatch.SecretAccessKey != "redacted" {
 			configMap["cloudwatch_secret_access_key"] = cloudwatch.SecretAccessKey
