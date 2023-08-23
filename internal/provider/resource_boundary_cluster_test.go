@@ -54,7 +54,8 @@ func TestAccBoundaryCluster(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories, CheckDestroy: testAccCheckBoundaryClusterDestroy,
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckBoundaryClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				// this test step tests boundary cluster creation.
