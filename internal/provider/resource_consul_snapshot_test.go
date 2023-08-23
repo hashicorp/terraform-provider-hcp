@@ -40,7 +40,8 @@ func TestAccConsulSnapshot(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories, CheckDestroy: testAccCheckConsulSnapshotDestroy,
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckConsulSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConsulSnapshotConfig),

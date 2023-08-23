@@ -103,7 +103,8 @@ func TestAccConsulCluster(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories, CheckDestroy: testAccCheckConsulClusterDestroy,
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{
 			// Tests create failure for IP Allowlist with too many CIDRs
 			{
