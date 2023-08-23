@@ -144,7 +144,7 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 	bucketSlug := testAccCreateSlug("ImageRevoked")
 	channelSlug := bucketSlug // No need for a different slug
 
-	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
+	revokeAt := strfmt.DateTime(time.Now().UTC().Add(24 * time.Hour))
 
 	buildOptions := defaultBuildOptions
 	region := buildOptions.images[0].Region
