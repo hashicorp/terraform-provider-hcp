@@ -1142,7 +1142,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	splunkToken, _ := config["splunk_token"].(string)
 	datadogAPIKey, _ := config["datadog_api_key"].(string)
 	datadogRegion, _ := config["datadog_region"].(string)
-	cloudwatchAccessKeyId, _ := config["cloudwatch_access_key_id"].(string)
+	cloudwatchAccessKeyID, _ := config["cloudwatch_access_key_id"].(string)
 	cloudwatchAccessKeySecret, _ := config["cloudwatch_secret_access_key"].(string)
 	cloudwatchRegion, _ := config["cloudwatch_region"].(string)
 
@@ -1195,16 +1195,16 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 	}
 
-	if cloudwatchAccessKeyId != "" || cloudwatchAccessKeySecret != "" || cloudwatchRegion != "" {
+	if cloudwatchAccessKeyID != "" || cloudwatchAccessKeySecret != "" || cloudwatchRegion != "" {
 		if observabilityConfig != nil {
 			return nil, tooManyProvidersErr
 		}
-		if cloudwatchAccessKeyId == "" || cloudwatchAccessKeySecret == "" || cloudwatchRegion == "" {
+		if cloudwatchAccessKeyID == "" || cloudwatchAccessKeySecret == "" || cloudwatchRegion == "" {
 			missingParamErr = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{
-				AccessKeyID:     cloudwatchAccessKeyId,
+				AccessKeyID:     cloudwatchAccessKeyID,
 				Region:          cloudwatchRegion,
 				SecretAccessKey: cloudwatchAccessKeySecret,
 				// other fields are only set by the external provider
