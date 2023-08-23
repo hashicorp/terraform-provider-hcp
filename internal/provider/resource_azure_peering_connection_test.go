@@ -106,7 +106,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
-		ProviderFactories: providerFactories, ExternalProviders: map[string]resource.ExternalProvider{
+		ProviderFactories: providerFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
 			"azurerm": {VersionConstraint: "~> 3.63"},
 			"azuread": {VersionConstraint: "~> 2.39"},
 		},

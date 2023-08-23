@@ -111,7 +111,8 @@ func TestAccTGWAttachment(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
-		ProviderFactories: providerFactories, ExternalProviders: map[string]resource.ExternalProvider{
+		ProviderFactories: providerFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
 			"aws": {VersionConstraint: "~> 4.0.0"},
 		},
 		CheckDestroy: testAccCheckTGWAttachmentDestroy,
