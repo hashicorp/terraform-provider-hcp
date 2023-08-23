@@ -102,9 +102,8 @@ func TestAccConsulCluster(t *testing.T) {
 	rootTokenResourceName := "hcp_consul_cluster_root_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConsulClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories, CheckDestroy: testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{
 			// Tests create failure for IP Allowlist with too many CIDRs
 			{

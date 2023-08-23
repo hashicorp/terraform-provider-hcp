@@ -105,9 +105,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 	resourceName := "hcp_azure_peering_connection.peering"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProviderFactories: providerFactories, ExternalProviders: map[string]resource.ExternalProvider{
 			"azurerm": {VersionConstraint: "~> 3.63"},
 			"azuread": {VersionConstraint: "~> 2.39"},
 		},

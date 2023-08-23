@@ -52,9 +52,8 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 	dataSourceName := "data.hcp_hvn_peering_connection.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHvnPeeringConnectionDestroy,
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories, CheckDestroy: testAccCheckHvnPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			// Tests create
 			{

@@ -52,9 +52,8 @@ func TestAccAwsHvnOnly(t *testing.T) {
 	dataSourceName := "data.hcp_hvn.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHvnDestroy,
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories, CheckDestroy: testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
 			// Tests create
 			{
@@ -129,9 +128,8 @@ func TestAccAzureHvnOnly(t *testing.T) {
 	dataSourceName := "data.hcp_hvn.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHvnDestroy,
+		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProviderFactories: providerFactories, CheckDestroy: testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
 			// Tests create
 			{
