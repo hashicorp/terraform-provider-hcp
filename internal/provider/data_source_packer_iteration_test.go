@@ -9,115 +9,136 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var (
-	acctestIterationBucket       = fmt.Sprintf("alpine-acc-itertest-%s", time.Now().Format("200601021504"))
-	acctestIterationUbuntuBucket = fmt.Sprintf("ubuntu-acc-itertest-%s", time.Now().Format("200601021504"))
-	acctestIterationChannel      = "production-iter-test"
-)
+func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
+	bucketSlug := testAccCreateSlug("IterationSimple")
+	channelSlug := bucketSlug // No need for a different slug
 
-var (
-	testAccPackerIterationAlpineProduction = fmt.Sprintf(`
-	data "hcp_packer_iteration" "alpine" {
-		bucket_name  = %q
-		channel = %q
-	}
-    # we make sure that this won't fail even when revoke_at is not set
-	output "revoke_at" {
-  		value = data.hcp_packer_iteration.alpine.revoke_at
-	}
-`, acctestIterationBucket, acctestIterationChannel)
+	config := testAccPackerDataIterationBuilder("Simple", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
 
-	testAccPackerIterationUbuntuProduction = fmt.Sprintf(`
-	data "hcp_packer_iteration" "ubuntu" {
-		bucket_name  = %q
-		channel = %q
-	}
-`, acctestIterationUbuntuBucket, acctestIterationChannel)
-)
+	var iteration *models.HashicorpCloudPackerIteration
 
-func TestAcc_dataSourcePackerIteration(t *testing.T) {
-	resourceName := "data.hcp_packer_iteration.alpine"
-	fingerprint := "43"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, "1234", nil)
+			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
+		},
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestIterationBucket, acctestIterationChannel, false)
-			deleteIteration(t, acctestIterationBucket, fingerprint, false)
-			deleteBucket(t, acctestIterationBucket, false)
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
-
 		Steps: []resource.TestStep{
-			// testing that getting the production channel of the alpine image
-			// works.
 			{
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestIterationBucket)
-					upsertIteration(t, acctestIterationBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestIterationBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestIterationBucket, fingerprint, itID)
-					upsertChannel(t, acctestIterationBucket, acctestIterationChannel, itID)
-				},
-				Config: testConfig(testAccPackerIterationAlpineProduction),
+				Config: testConfig(testAccConfigBuildersToString(config)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					testAccCheckIterationState(config.BlockName(), bucketSlug, channelSlug),
+					testAccCheckIterationStateMatchesIteration(config.BlockName(), &iteration),
 				),
+			},
+			{
+				// Test that references to `revoked_at` don't error when the
+				// the iteration is not revoked or scheduled for revocation.
+				//
+				// Checked in this manner because you cant check for attributes
+				// set to empty strings with `resource.TestCheckResourceAttr`
+				Config: testConfig(testAccConfigBuildersToString(
+					config,
+					testAccOutputBuilder("revoke_at", config.AttributeRef("revoke_at")),
+				)),
 			},
 		},
 	})
 }
 
 func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
-	resourceName := "data.hcp_packer_iteration.ubuntu"
-	fingerprint := "43"
-	revokeAt := strfmt.DateTime(time.Now().UTC().Add(5 * time.Minute))
+	bucketSlug := testAccCreateSlug("IterationRevoked")
+	channelSlug := bucketSlug // No need for a different slug
+	revokeAt := strfmt.DateTime(time.Now().UTC().Add(24 * time.Hour))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+	config := testAccPackerDataIterationBuilder("Revoked", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
+
+	var revokedIteration *models.HashicorpCloudPackerIteration
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			unrevokedIteration, _ := upsertCompleteIteration(t, bucketSlug, "1234", nil)
+			upsertChannel(t, bucketSlug, channelSlug, unrevokedIteration.ID)
+			revokedIteration = revokeIteration(t, unrevokedIteration.ID, bucketSlug, revokeAt)
+		},
 		ProviderFactories: providerFactories,
-		CheckDestroy: func(*terraform.State) error {
-			deleteChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, false)
-			deleteIteration(t, acctestIterationUbuntuBucket, fingerprint, false)
-			deleteBucket(t, acctestIterationUbuntuBucket, false)
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
 			return nil
 		},
-
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					upsertRegistry(t)
-					upsertBucket(t, acctestIterationUbuntuBucket)
-					upsertIteration(t, acctestIterationUbuntuBucket, fingerprint)
-					itID, err := getIterationIDFromFingerPrint(t, acctestIterationUbuntuBucket, fingerprint)
-					if err != nil {
-						t.Fatal(err.Error())
-					}
-					upsertBuild(t, acctestIterationUbuntuBucket, fingerprint, itID)
-					upsertChannel(t, acctestIterationUbuntuBucket, acctestIterationChannel, itID)
-					// Schedule revocation to the future, otherwise we won't be able to revoke an iteration that
-					// it's assigned to a channel
-					revokeIteration(t, itID, acctestIterationUbuntuBucket, revokeAt)
-					// Sleep to make sure the iteration is revoked when we test
-					time.Sleep(5 * time.Second)
-				},
-				Config: testConfig(testAccPackerIterationUbuntuProduction),
+				Config: testConfig(testAccConfigBuildersToString(config)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttr(resourceName, "revoke_at", revokeAt.String()),
+					testAccCheckIterationState(config.BlockName(), bucketSlug, channelSlug),
+					resource.TestCheckResourceAttr(config.BlockName(), "revoke_at", revokeAt.String()),
+					testAccCheckIterationStateMatchesIteration(config.BlockName(), &revokedIteration),
 				),
 			},
 		},
 	})
+}
+
+func testAccPackerDataIterationBuilder(uniqueName string, bucketName string, channelName string) testAccConfigBuilderInterface {
+	return &testAccResourceConfigBuilder{
+		isData:       true,
+		resourceType: "hcp_packer_iteration",
+		uniqueName:   uniqueName,
+		attributes: map[string]string{
+			"bucket_name": bucketName,
+			"channel":     channelName,
+		},
+	}
+}
+
+func testAccCheckIterationState(resourceName, bucketName, channelName string) resource.TestCheckFunc {
+	return resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+		resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+		resource.TestCheckResourceAttr(resourceName, "bucket_name", bucketName),
+		resource.TestCheckResourceAttr(resourceName, "channel", channelName),
+	)
+}
+
+func testAccCheckIterationStateMatchesIteration(resourceName string, iterationPtr **models.HashicorpCloudPackerIteration) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		var iteration *models.HashicorpCloudPackerIteration
+		if iterationPtr != nil {
+			iteration = *iterationPtr
+		}
+		if iteration == nil {
+			iteration = &models.HashicorpCloudPackerIteration{}
+		}
+
+		checks := []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceName, "bucket_name", iteration.BucketSlug),
+			resource.TestCheckResourceAttr(resourceName, "ulid", iteration.ID),
+			resource.TestCheckResourceAttr(resourceName, "fingerprint", iteration.Fingerprint),
+			resource.TestCheckResourceAttr(resourceName, "incremental_version", fmt.Sprintf("%d", iteration.IncrementalVersion)),
+			resource.TestCheckResourceAttr(resourceName, "author_id", iteration.AuthorID),
+			resource.TestCheckResourceAttr(resourceName, "created_at", iteration.CreatedAt.String()),
+			resource.TestCheckResourceAttr(resourceName, "updated_at", iteration.UpdatedAt.String()),
+		}
+
+		if !iteration.RevokeAt.IsZero() {
+			checks = append(checks, resource.TestCheckResourceAttr(resourceName, "revoke_at", iteration.RevokeAt.String()))
+		}
+
+		return resource.ComposeAggregateTestCheckFunc(checks...)(state)
+	}
 }

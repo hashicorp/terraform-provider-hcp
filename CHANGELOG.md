@@ -1,3 +1,26 @@
+## v0.69.0 (August 17, 2023)
+
+IMPROVEMENTS:
+
+* Add `proxy_endpoint` field to enable toggling the proxy option on HCP Vault clusters, along with corresponding read-only `vault_proxy_endpoint_url` field. [[GH-577](https://github.com/hashicorp/terraform-provider-hcp/pull/577)]
+* Adjusted wording in the documentation and error messages for `data.hcp_packer_image`. [[GH-571](https://github.com/hashicorp/terraform-provider-hcp/pull/571)]
+## v0.68.0 (August 02, 2023)
+BREAKING CHANGES:
+
+* Removed the `iteration` block from `hcp_packer_channel`, previously deprecated in v0.63.0 [[GH-555](https://github.com/hashicorp/terraform-provider-hcp/pull/555)]
+
+FEATURES:
+
+* Channel restriction can now be configured with the `restricted` field of `hcp_packer_channel` [[GH-555](https://github.com/hashicorp/terraform-provider-hcp/pull/555)]
+
+IMPROVEMENTS:
+
+* Add support for HCP Packer Managed channels to `hcp_packer_channel`. Also adds a read-only `managed` attribute. [[GH-555](https://github.com/hashicorp/terraform-provider-hcp/pull/555)]
+
+DEPRECATIONS:
+
+* The `hcp_packer_image_iteration` data source is now deprecated.
+Use the `hcp_packer_image` or `hcp_packer_iteration` data sources instead. [[GH-569](https://github.com/hashicorp/terraform-provider-hcp/pull/569)]
 ## v0.67.0 (July 26, 2023)
 
 IMPROVEMENTS:
