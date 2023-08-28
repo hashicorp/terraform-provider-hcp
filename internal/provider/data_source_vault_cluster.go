@@ -217,6 +217,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"cloudwatch_secret_access_key": {
+							Description: "CloudWatch secret access key for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"cloudwatch_region": {
 							Description: "CloudWatch region for streaming audit logs",
 							Type:        schema.TypeString,
