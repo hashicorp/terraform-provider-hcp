@@ -73,6 +73,7 @@ Read-Only:
 - `cloudwatch_access_key_id` (String) CloudWatch access key ID for streaming audit logs
 - `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
 - `cloudwatch_region` (String) CloudWatch region for streaming audit logs
+- `cloudwatch_secret_access_key` (String) CloudWatch secret access key for streaming audit logs
 - `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 - `datadog_region` (String) Datadog region for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
