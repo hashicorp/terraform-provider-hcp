@@ -59,7 +59,11 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		func() resource.Resource {
+			return &vaultsecretsAppResource{}
+		},
+	}
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
