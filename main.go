@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider-sdkv2"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
