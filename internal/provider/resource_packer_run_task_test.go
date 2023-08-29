@@ -46,7 +46,7 @@ func TestAccPackerRunTask(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 		},
-		ProviderFactories: providerFactories, Steps: []resource.TestStep{
+		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check:  testAccCheckPackerRunTaskStateMatchesAPI(runTask.BlockName()),

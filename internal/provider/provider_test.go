@@ -42,11 +42,8 @@ var testProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, 
 		}
 		return tf5muxserver.NewMuxServer(context.Background(), providers...)
 	},
-}
-
-var dummyProviderFactory = map[string](func() (*schema.Provider, error)){
-	"dummy": func() (*schema.Provider, error) {
-		return testAccNewDummyProvider(), nil
+	"dummy": func() (tfprotov5.ProviderServer, error) {
+		return testAccNewDummyProvider().GRPCProvider(), nil
 	},
 }
 

@@ -177,7 +177,6 @@ func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 		},
 		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		ProviderFactories:        dummyProviderFactory,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

@@ -286,7 +286,6 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 		},
 		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		ProviderFactories:        dummyProviderFactory,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
