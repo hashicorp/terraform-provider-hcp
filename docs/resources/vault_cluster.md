@@ -83,6 +83,9 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 Optional:
 
+- `cloudwatch_access_key_id` (String) CloudWatch access key ID for streaming audit logs
+- `cloudwatch_region` (String) CloudWatch region for streaming audit logs
+- `cloudwatch_secret_access_key` (String, Sensitive) CloudWatch secret access key for streaming audit logs
 - `datadog_api_key` (String, Sensitive) Datadog api key for streaming audit logs
 - `datadog_region` (String) Datadog region for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
@@ -90,6 +93,11 @@ Optional:
 - `grafana_user` (String) Grafana user for streaming audit logs
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 - `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
+
+Read-Only:
+
+- `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
+- `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 
 
 <a id="nestedblock--major_version_upgrade_config"></a>
@@ -110,6 +118,9 @@ Optional:
 
 Optional:
 
+- `cloudwatch_access_key_id` (String) CloudWatch access key ID for streaming metrics
+- `cloudwatch_region` (String) CloudWatch region for streaming metrics
+- `cloudwatch_secret_access_key` (String, Sensitive) CloudWatch secret access key for streaming metrics
 - `datadog_api_key` (String, Sensitive) Datadog api key for streaming metrics
 - `datadog_region` (String) Datadog region for streaming metrics
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
@@ -117,6 +128,10 @@ Optional:
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 - `splunk_token` (String, Sensitive) Splunk token for streaming metrics
+
+Read-Only:
+
+- `cloudwatch_namespace` (String) CloudWatch namespace for streaming metrics
 
 
 <a id="nestedblock--timeouts"></a>

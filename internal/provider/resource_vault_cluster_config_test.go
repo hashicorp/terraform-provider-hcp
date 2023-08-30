@@ -11,11 +11,11 @@ import (
 )
 
 func TestGetValidObservabilityConfig(t *testing.T) {
-	cases := []struct {
+	cases := map[string]struct {
 		config        map[string]interface{}
 		expectedError string
 	}{
-		{
+		"multiple providers not allowed": {
 			config: map[string]interface{}{
 				"grafana_user":       "test",
 				"grafana_password":   "pwd",
@@ -27,58 +27,55 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 			},
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
-		{
+		"grafana missing params": {
 			config: map[string]interface{}{
-				"grafana_user":       "test",
-				"grafana_password":   "",
-				"grafana_endpoint":   "",
-				"splunk_hecendpoint": "",
-				"splunk_token":       "",
-				"datadog_api_key":    "",
-				"datadog_region":     "",
+				"grafana_user": "test",
 			},
 			expectedError: "grafana configuration is invalid: configuration information missing",
 		},
-		{
+		"splunk missing params": {
 			config: map[string]interface{}{
-				"grafana_user":       "",
-				"grafana_password":   "",
-				"grafana_endpoint":   "",
-				"splunk_hecendpoint": "",
-				"splunk_token":       "test",
-				"datadog_api_key":    "",
-				"datadog_region":     "",
+				"splunk_token": "test",
 			},
 			expectedError: "splunk configuration is invalid: configuration information missing",
 		},
-		{
+		"datadog missing params": {
 			config: map[string]interface{}{
-				"grafana_user":       "",
-				"grafana_password":   "",
-				"grafana_endpoint":   "",
-				"splunk_hecendpoint": "",
-				"splunk_token":       "",
-				"datadog_api_key":    "",
-				"datadog_region":     "us1",
+				"datadog_region": "us1",
 			},
 			expectedError: "datadog configuration is invalid: configuration information missing",
 		},
+		"cloudwatch missing params": {
+			config: map[string]interface{}{
+				"cloudwatch_access_key_id": "1111111",
+			},
+			expectedError: "cloudwatch configuration is invalid: configuration information missing",
+		},
+		"too many providers takes precedence over missing params": {
+			config: map[string]interface{}{
+				"datadog_region":           "us1",
+				"cloudwatch_access_key_id": "1111111",
+			},
+			expectedError: "multiple configurations found: must contain configuration for only one provider",
+		},
 	}
 
-	for _, c := range cases {
-		_, diags := getValidObservabilityConfig(c.config)
-		foundError := false
-		if diags.HasError() {
-			for _, d := range diags {
-				if strings.Contains(d.Summary, c.expectedError) {
-					foundError = true
-					break
+	for tcName, c := range cases {
+		t.Run(tcName, func(t *testing.T) {
+			_, diags := getValidObservabilityConfig(c.config)
+			foundError := false
+			if diags.HasError() {
+				for _, d := range diags {
+					if strings.Contains(d.Summary, c.expectedError) {
+						foundError = true
+						break
+					}
 				}
 			}
-		}
-		if !foundError {
-			t.Fatalf("Expected an error: %v", c.expectedError)
-		}
+			if !foundError {
+				t.Fatalf("Expected an error: %v", c.expectedError)
+			}
+		})
 	}
 }
 

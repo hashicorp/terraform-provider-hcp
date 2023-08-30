@@ -192,6 +192,27 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
+						"cloudwatch_access_key_id": {
+							Description: "CloudWatch access key ID for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cloudwatch_secret_access_key": {
+							Description: "CloudWatch secret access key for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"cloudwatch_region": {
+							Description: "CloudWatch region for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cloudwatch_namespace": {
+							Description: "CloudWatch namespace for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -239,6 +260,32 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description: "Datadog region for streaming audit logs",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"cloudwatch_access_key_id": {
+							Description: "CloudWatch access key ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cloudwatch_secret_access_key": {
+							Description: "CloudWatch secret access key for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"cloudwatch_region": {
+							Description: "CloudWatch region for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"cloudwatch_stream_name": {
+							Description: "CloudWatch stream name for the target log stream for audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"cloudwatch_group_name": {
+							Description: "CloudWatch group name of the target log stream for audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -1031,6 +1078,30 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 			}
 		}
 	}
+
+	if cloudwatch := config.Cloudwatch; cloudwatch != nil {
+		configMap["cloudwatch_access_key_id"] = cloudwatch.AccessKeyID
+		configMap["cloudwatch_region"] = cloudwatch.Region
+		// ensure we only set properties that are defined in metrics/audit-logs streaming
+		if propertyName == "metrics_config" {
+			// Namespace is only used for streaming metrics
+			configMap["cloudwatch_namespace"] = cloudwatch.Namespace
+		} else {
+			// Stream name and group name are only used for streaming audit-logs
+			configMap["cloudwatch_stream_name"] = cloudwatch.StreamName
+			configMap["cloudwatch_group_name"] = cloudwatch.GroupName
+		}
+		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+		if cloudwatch.SecretAccessKey != "redacted" {
+			configMap["cloudwatch_secret_access_key"] = cloudwatch.SecretAccessKey
+		} else {
+			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+				config := configParam.([]interface{})[0].(map[string]interface{})
+				configMap["cloudwatch_secret_access_key"] = config["cloudwatch_secret_access_key"].(string)
+			}
+		}
+	}
+
 	return []interface{}{configMap}
 }
 
@@ -1040,9 +1111,10 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 	}
 
 	emptyConfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
-		Grafana: &vaultmodels.HashicorpCloudVault20201125Grafana{},
-		Splunk:  &vaultmodels.HashicorpCloudVault20201125Splunk{},
-		Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{},
+		Grafana:    &vaultmodels.HashicorpCloudVault20201125Grafana{},
+		Splunk:     &vaultmodels.HashicorpCloudVault20201125Splunk{},
+		Datadog:    &vaultmodels.HashicorpCloudVault20201125Datadog{},
+		Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1063,53 +1135,88 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 }
 
 func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
+	grafanaEndpoint, _ := config["grafana_endpoint"].(string)
+	grafanaUser, _ := config["grafana_user"].(string)
+	grafanaPassword, _ := config["grafana_password"].(string)
+	splunkEndpoint, _ := config["splunk_hecendpoint"].(string)
+	splunkToken, _ := config["splunk_token"].(string)
+	datadogAPIKey, _ := config["datadog_api_key"].(string)
+	datadogRegion, _ := config["datadog_region"].(string)
+	cloudwatchAccessKeyID, _ := config["cloudwatch_access_key_id"].(string)
+	cloudwatchAccessKeySecret, _ := config["cloudwatch_secret_access_key"].(string)
+	cloudwatchRegion, _ := config["cloudwatch_region"].(string)
 
-	observabilityConfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{}
-
-	grafanaEndpoint := config["grafana_endpoint"].(string)
-	grafanaUser := config["grafana_user"].(string)
-	grafanaPassword := config["grafana_password"].(string)
-	splunkEndpoint := config["splunk_hecendpoint"].(string)
-	splunkToken := config["splunk_token"].(string)
-	datadogAPIKey := config["datadog_api_key"].(string)
-	datadogRegion := config["datadog_region"].(string)
+	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
+	// only return an error about a missing field for a specific provider after ensuring there's a single provider
+	var missingParamErr diag.Diagnostics
+	tooManyProvidersErr := diag.Errorf("multiple configurations found: must contain configuration for only one provider")
 
 	if grafanaEndpoint != "" || grafanaUser != "" || grafanaPassword != "" {
 		if grafanaEndpoint == "" || grafanaUser == "" || grafanaPassword == "" {
-			return nil, diag.Errorf("grafana configuration is invalid: configuration information missing")
-		} else if splunkEndpoint != "" || splunkToken != "" || datadogAPIKey != "" || datadogRegion != "" {
-			return nil, diag.Errorf("multiple configurations found: must contain configuration for only one provider")
+			missingParamErr = diag.Errorf("grafana configuration is invalid: configuration information missing")
 		}
-		observabilityConfig.Grafana = &vaultmodels.HashicorpCloudVault20201125Grafana{
-			Endpoint: grafanaEndpoint,
-			User:     grafanaUser,
-			Password: grafanaPassword,
+
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Grafana: &vaultmodels.HashicorpCloudVault20201125Grafana{
+				Endpoint: grafanaEndpoint,
+				User:     grafanaUser,
+				Password: grafanaPassword,
+			},
 		}
 	}
 
 	if splunkEndpoint != "" || splunkToken != "" {
-		if splunkEndpoint == "" || splunkToken == "" {
-			return nil, diag.Errorf("splunk configuration is invalid: configuration information missing")
-		} else if datadogAPIKey != "" || datadogRegion != "" {
-			return nil, diag.Errorf("multiple configurations found: must contain configuration for only one provider")
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
 		}
-		observabilityConfig.Splunk = &vaultmodels.HashicorpCloudVault20201125Splunk{
-			HecEndpoint: splunkEndpoint,
-			Token:       splunkToken,
+		if splunkEndpoint == "" || splunkToken == "" {
+			missingParamErr = diag.Errorf("splunk configuration is invalid: configuration information missing")
+		}
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Splunk: &vaultmodels.HashicorpCloudVault20201125Splunk{
+				HecEndpoint: splunkEndpoint,
+				Token:       splunkToken,
+			},
 		}
 	}
 
 	if datadogAPIKey != "" || datadogRegion != "" {
-		if datadogAPIKey == "" || datadogRegion == "" {
-			return nil, diag.Errorf("datadog configuration is invalid: configuration information missing")
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
 		}
-		observabilityConfig.Datadog = &vaultmodels.HashicorpCloudVault20201125Datadog{
-			APIKey: datadogAPIKey,
-			Region: datadogRegion,
+		if datadogAPIKey == "" || datadogRegion == "" {
+			missingParamErr = diag.Errorf("datadog configuration is invalid: configuration information missing")
+		}
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{
+				APIKey: datadogAPIKey,
+				Region: datadogRegion,
+			},
 		}
 	}
 
-	return &observabilityConfig, nil
+	if cloudwatchAccessKeyID != "" || cloudwatchAccessKeySecret != "" || cloudwatchRegion != "" {
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
+		}
+		if cloudwatchAccessKeyID == "" || cloudwatchAccessKeySecret == "" || cloudwatchRegion == "" {
+			missingParamErr = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
+		}
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{
+				AccessKeyID:     cloudwatchAccessKeyID,
+				Region:          cloudwatchRegion,
+				SecretAccessKey: cloudwatchAccessKeySecret,
+				// other fields are only set by the external provider
+			},
+		}
+	}
+
+	if missingParamErr != nil {
+		return nil, missingParamErr
+	}
+
+	return observabilityConfig, nil
 }
 
 func getMajorVersionUpgradeConfig(d *schema.ResourceData) (*vaultmodels.HashicorpCloudVault20201125MajorVersionUpgradeConfig, diag.Diagnostics) {

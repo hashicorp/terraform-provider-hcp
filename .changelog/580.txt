@@ -1,0 +1,3 @@
+```release-note:improvement
+Add CloudWatch as an observability provider for streaming audit logs and metrics from HCP Vault clusters.
+```
