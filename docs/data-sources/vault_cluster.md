@@ -27,6 +27,8 @@ data "hcp_vault_cluster" "example" {
 
 ### Optional
 
+- `audit_log_config` (Block List) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `project_id` (String) The ID of the HCP project where the Vault cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
@@ -34,13 +36,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 ### Read-Only
 
-- `audit_log_config` (Block List) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
 - `cloud_provider` (String) The provider where the HCP Vault cluster is located.
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
-- `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
@@ -57,16 +57,14 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `vault_public_endpoint_url` (String) The public URL for the Vault cluster. This will be empty if `public_endpoint` is `false`.
 - `vault_version` (String) The Vault version of the cluster.
 
-<a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
+<a id="nestedblock--audit_log_config"></a>
+### Nested Schema for `audit_log_config`
 
 Optional:
 
-- `default` (String)
-
-
-<a id="nestedblock--audit_log_config"></a>
-### Nested Schema for `audit_log_config`
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming audit logs
+- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming audit logs
+- `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 
 Read-Only:
 
@@ -81,18 +79,14 @@ Read-Only:
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 
 
-<a id="nestedatt--major_version_upgrade_config"></a>
-### Nested Schema for `major_version_upgrade_config`
-
-Read-Only:
-
-- `maintenance_window_day` (String)
-- `maintenance_window_time` (String)
-- `upgrade_type` (String)
-
-
 <a id="nestedblock--metrics_config"></a>
 ### Nested Schema for `metrics_config`
+
+Optional:
+
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming metrics
+- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming metrics
+- `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 
 Read-Only:
 
@@ -104,3 +98,21 @@ Read-Only:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `default` (String)
+
+
+<a id="nestedatt--major_version_upgrade_config"></a>
+### Nested Schema for `major_version_upgrade_config`
+
+Read-Only:
+
+- `maintenance_window_day` (String)
+- `maintenance_window_time` (String)
+- `upgrade_type` (String)
