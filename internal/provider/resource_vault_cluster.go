@@ -213,6 +213,22 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"elasticsearch_endpoint": {
+							Description: "ElasticSearch endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"elasticsearch_user": {
+							Description: "ElasticSearch user for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"elasticsearch_password": {
+							Description: "ElasticSearch password for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
 					},
 				},
 			},
@@ -286,6 +302,22 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description: "CloudWatch group name of the target log stream for audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
+						},
+						"elasticsearch_endpoint": {
+							Description: "ElasticSearch endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"elasticsearch_user": {
+							Description: "ElasticSearch user for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"elasticsearch_password": {
+							Description: "ElasticSearch password for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
 						},
 					},
 				},
@@ -1100,6 +1132,21 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 				configMap["cloudwatch_secret_access_key"] = config["cloudwatch_secret_access_key"].(string)
 			}
 		}
+
+		if elasticsearch := config.Elasticsearch; elasticsearch != nil {
+			configMap["elasticsearch_endpoint"] = elasticsearch.Endpoint
+			configMap["elasticsearch_user"] = elasticsearch.User
+
+			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+			if elasticsearch.Password != "redacted" {
+				configMap["elasticsearch_password"] = elasticsearch.Password
+			} else {
+				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+					config := configParam.([]interface{})[0].(map[string]interface{})
+					configMap["elasticsearch_password"] = config["elasticsearch_password"].(string)
+				}
+			}
+		}
 	}
 
 	return []interface{}{configMap}
@@ -1111,10 +1158,11 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 	}
 
 	emptyConfig := vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
-		Grafana:    &vaultmodels.HashicorpCloudVault20201125Grafana{},
-		Splunk:     &vaultmodels.HashicorpCloudVault20201125Splunk{},
-		Datadog:    &vaultmodels.HashicorpCloudVault20201125Datadog{},
-		Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
+		Grafana:       &vaultmodels.HashicorpCloudVault20201125Grafana{},
+		Splunk:        &vaultmodels.HashicorpCloudVault20201125Splunk{},
+		Datadog:       &vaultmodels.HashicorpCloudVault20201125Datadog{},
+		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
+		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1145,6 +1193,9 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	cloudwatchAccessKeyID, _ := config["cloudwatch_access_key_id"].(string)
 	cloudwatchAccessKeySecret, _ := config["cloudwatch_secret_access_key"].(string)
 	cloudwatchRegion, _ := config["cloudwatch_region"].(string)
+	elasticsearchEndpoint, _ := config["elasticsearch_endpoint"].(string)
+	elasticsearchUser, _ := config["elasticsearch_user"].(string)
+	elasticsearchPassword, _ := config["elasticsearch_password"].(string)
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
@@ -1209,6 +1260,24 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				SecretAccessKey: cloudwatchAccessKeySecret,
 				// other fields are only set by the external provider
 			},
+		}
+
+		if elasticsearchEndpoint != "" || elasticsearchUser != "" || elasticsearchPassword != "" {
+			if observabilityConfig != nil {
+				return nil, tooManyProvidersErr
+			}
+
+			if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
+				missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
+			}
+
+			observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+				Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{
+					Endpoint: elasticsearchEndpoint,
+					User:     elasticsearchUser,
+					Password: elasticsearchPassword,
+				},
+			}
 		}
 	}
 
