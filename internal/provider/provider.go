@@ -1,4 +1,4 @@
-package providersdkv2
+package provider
 
 import (
 	"context"
