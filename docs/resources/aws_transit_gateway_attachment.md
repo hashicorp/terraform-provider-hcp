@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_aws_transit_gateway_attachment - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HashiCorp Virtual Networks"
 description: |-
   The AWS transit gateway attachment resource allows you to manage a transit gateway attachment. The transit gateway attachment attaches an HVN to a user-owned transit gateway in AWS. Note that the HVN and transit gateway must be located in the same AWS region.
 ---

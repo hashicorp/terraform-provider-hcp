@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_consul_cluster_root_token - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Consul"
 description: |-
   The cluster root token resource is the token used to bootstrap the cluster's ACL system. You can also generate this root token from the HCP Consul UI.
 ---

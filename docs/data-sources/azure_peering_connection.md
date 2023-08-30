@@ -1,6 +1,6 @@
 ---
 page_title: "Data Source hcp_azure_peering_connection - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HashiCorp Virtual Networks"
 description: |-
   The Azure peering connection data source provides information about a peering connection between an HVN and a peer Azure VNet.
 ---

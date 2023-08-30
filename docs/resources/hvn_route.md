@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_hvn_route - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HashiCorp Virtual Networks"
 description: |-
   The HVN route resource allows you to manage an HVN route.
 ---

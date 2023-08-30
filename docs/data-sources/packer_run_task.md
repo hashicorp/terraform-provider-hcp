@@ -1,6 +1,6 @@
 ---
 page_title: "hcp_packer_run_task Data Source - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Packer"
 description: |-
   The Packer Run Task data source gets the configuration information needed to set up an HCP Packer Registry's run task.
 ---

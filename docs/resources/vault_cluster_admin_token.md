@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_vault_cluster_admin_token - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault"
 description: |-
   The Vault cluster admin token resource generates an admin-level token for the HCP Vault cluster.
 ---
