@@ -72,10 +72,10 @@ func TestAccPerformanceReplication_ValidationsAws(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckVaultClusterDestroy,
-		Steps:             performanceReplicationSteps(t, awsPerfReplicationTestInput),
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultClusterDestroy,
+		Steps:                    performanceReplicationSteps(t, awsPerfReplicationTestInput),
 	})
 }
 

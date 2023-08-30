@@ -39,9 +39,9 @@ func TestAccConsulSnapshot(t *testing.T) {
 	resourceName := "hcp_consul_snapshot.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckConsulSnapshotDestroy,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConsulSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConsulSnapshotConfig),

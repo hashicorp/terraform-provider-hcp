@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
@@ -37,25 +38,13 @@ var testAccProviderConfigure sync.Once
 var testProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
 	"hcp": func() (tfprotov5.ProviderServer, error) {
 		providers := []func() tfprotov5.ProviderServer{
-			providerserver.NewProtocol5(NewFrameworkProvider(version.ProviderVersion)()),
+			providerserver.NewProtocol5(provider.NewFrameworkProvider(version.ProviderVersion)()),
 			New()().GRPCProvider,
 		}
 		return tf5muxserver.NewMuxServer(context.Background(), providers...)
 	},
 	"dummy": func() (tfprotov5.ProviderServer, error) {
 		return testAccNewDummyProvider().GRPCProvider(), nil
-	},
-}
-
-// providerFactories are used to instantiate a provider during acceptance testing.
-// The factory function will be invoked for every Terraform CLI command executed
-// to create a provider server to which the CLI can reattach.
-var providerFactories = map[string](func() (*schema.Provider, error)){
-	"hcp": func() (*schema.Provider, error) {
-		return New()(), nil
-	},
-	"dummy": func() (*schema.Provider, error) {
-		return testAccNewDummyProvider(), nil
 	},
 }
 

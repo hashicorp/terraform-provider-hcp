@@ -209,7 +209,6 @@ func TestAcc_dataSourcePackerImage_emptyChannel(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, "")
 		},
 		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
-		ProviderFactories:        dummyProviderFactory,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

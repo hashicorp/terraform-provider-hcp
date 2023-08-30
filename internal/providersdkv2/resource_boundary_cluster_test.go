@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package providersdkv2
+package provider
 
 import (
 	"context"
@@ -54,7 +54,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-: providerFactories,
+: testProtoV5ProviderFactories,
 		CheckDestroy:      testAccCheckBoundaryClusterDestroy,
 		Steps: []resource.TestStep{
 			{
