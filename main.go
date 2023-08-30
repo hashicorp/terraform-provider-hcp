@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider-sdkv2"
+	provider "github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	providersdkv2 "github.com/hashicorp/terraform-provider-hcp/internal/providersdkv2"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
@@ -55,10 +57,24 @@ func main() {
 // More documentation can be found here:
 // https://developer.hashicorp.com/terraform/plugin/framework/migrating/mux
 
+func New() func() (tfprotov6.ProviderServer, error) {
+	providers := []func() tfprotov6.ProviderServer{
+		func() tfprotov6.ProviderServer {
+			return upgradedSdkProvider
+		},
+	
+		// Example terraform-plugin-framework provider
+		providerserver.NewProtocol6(frameworkprovider.New(version)())
+	}
+	
+	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
+	
+}
+
 func New() (func() tfprotov5.ProviderServer, error) {
 	ctx := context.Background()
 	providers := []func() tfprotov5.ProviderServer{
-		provider.New()().GRPCProvider,
+		providersdkv2.New()().GRPCProvider,
 		providerserver.NewProtocol5(
 			provider.NewFrameworkProvider(version.ProviderVersion)(),
 		),
