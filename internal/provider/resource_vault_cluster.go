@@ -1261,23 +1261,23 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				// other fields are only set by the external provider
 			},
 		}
+	}
 
-		if elasticsearchEndpoint != "" || elasticsearchUser != "" || elasticsearchPassword != "" {
-			if observabilityConfig != nil {
-				return nil, tooManyProvidersErr
-			}
+	if elasticsearchEndpoint != "" || elasticsearchUser != "" || elasticsearchPassword != "" {
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
+		}
 
-			if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
-				missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
-			}
+		if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
+			missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
+		}
 
-			observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
-				Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{
-					Endpoint: elasticsearchEndpoint,
-					User:     elasticsearchUser,
-					Password: elasticsearchPassword,
-				},
-			}
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{
+				Endpoint: elasticsearchEndpoint,
+				User:     elasticsearchUser,
+				Password: elasticsearchPassword,
+			},
 		}
 	}
 
