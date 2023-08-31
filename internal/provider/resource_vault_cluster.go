@@ -1205,7 +1205,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	cloudwatchAccessKeySecret, _ := config["cloudwatch_secret_access_key"].(string)
 	cloudwatchRegion, _ := config["cloudwatch_region"].(string)
 	elasticsearchEndpoint, _ := config["elasticsearch_endpoint"].(string)
-	elasticsearchDataset, _ := config['elasticsearch_dataset'].(string)
+	elasticsearchDataset, _ := config["elasticsearch_dataset"].(string)
 	elasticsearchUser, _ := config["elasticsearch_user"].(string)
 	elasticsearchPassword, _ := config["elasticsearch_password"].(string)
 
@@ -1289,7 +1289,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				Endpoint: elasticsearchEndpoint,
 				User:     elasticsearchUser,
 				Password: elasticsearchPassword,
-				Dataset: elasticsearchDataset,
+				Dataset:  elasticsearchDataset,
 			},
 		}
 	}
