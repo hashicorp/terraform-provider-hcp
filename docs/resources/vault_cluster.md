@@ -101,6 +101,7 @@ Read-Only:
 
 - `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
 - `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
+- `elasticsearch_dataset` (String) ElasticSearch dataset for streaming metrics
 
 
 <a id="nestedblock--major_version_upgrade_config"></a>
@@ -138,6 +139,7 @@ Optional:
 Read-Only:
 
 - `cloudwatch_namespace` (String) CloudWatch namespace for streaming metrics
+- `elasticsearch_dataset` (String) ElasticSearch dataset for streaming metrics
 
 
 <a id="nestedblock--timeouts"></a>
