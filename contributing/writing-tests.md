@@ -67,6 +67,10 @@ write the regular expression.
 
 For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#environment-variables) for more information.
 
+```sh
+export TF_LOG=...
+```
+
 ## Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimizes the
