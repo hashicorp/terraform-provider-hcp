@@ -471,3 +471,28 @@ func validateBoundaryPassword(v interface{}, path cty.Path) diag.Diagnostics {
 
 	return diagnostics
 }
+
+func validateVaultPluginType(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	err := vaultmodels.HashicorpCloudVault20201125PluginType(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	if err != nil {
+		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
+		expectedEnumList := strings.ToLower(enumList)
+		// Remove invalid option from allowed list in error message
+		expectedEnumList = strings.ReplaceAll(
+			expectedEnumList,
+			strings.ToLower(string(vaultmodels.HashicorpCloudVault20201125PluginTypePLUGINTYPEINVALID)),
+			"",
+		)
+		msg := fmt.Sprintf("expected '%v' to be one of: %v", v, expectedEnumList)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg + " (value is case-insensitive).",
+			AttributePath: path,
+		})
+	}
+
+	return diagnostics
+}

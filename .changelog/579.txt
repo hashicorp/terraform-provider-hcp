@@ -1,0 +1,3 @@
+```release-note:improvement
+Add `hcp_vault_plugin` resource
+```
