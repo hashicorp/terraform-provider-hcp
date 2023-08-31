@@ -288,3 +288,64 @@ func DeleteVaultPathsFilter(ctx context.Context, client *Client, loc *sharedmode
 
 	return deleteResp.Payload, nil
 }
+
+// AddPlugin will make a call to the Vault service to add a plugin to a Vault cluster
+func AddPlugin(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
+	request *vaultmodels.HashicorpCloudVault20201125AddPluginRequest) (vaultmodels.HashicorpCloudVault20201125AddPluginResponse, error) {
+
+	addPluginParams := vault_service.NewAddPluginParams()
+	addPluginParams.Context = ctx
+	addPluginParams.ClusterID = clusterID
+	addPluginParams.LocationProjectID = loc.ProjectID
+	addPluginParams.LocationOrganizationID = loc.OrganizationID
+	addPluginParams.Body = request
+
+	addPluginResp, err := client.Vault.AddPlugin(addPluginParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return addPluginResp.Payload, nil
+}
+
+// DeletePlugin will make a call to the Vault service to remove a plugin to a Vault cluster
+func DeletePlugin(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
+	request *vaultmodels.HashicorpCloudVault20201125DeletePluginRequest) (vaultmodels.HashicorpCloudVault20201125DeletePluginResponse, error) {
+
+	delPluginParams := vault_service.NewDeletePluginParams()
+	delPluginParams.Context = ctx
+	delPluginParams.ClusterID = clusterID
+	delPluginParams.LocationProjectID = loc.ProjectID
+	delPluginParams.LocationOrganizationID = loc.OrganizationID
+	delPluginParams.Body = request
+
+	delPluginResp, err := client.Vault.DeletePlugin(delPluginParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return delPluginResp.Payload, nil
+}
+
+// ListPlugins will make a call to the Vault service plugin status api to get all available plugins for the cluster.
+func ListPlugins(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string) (*vaultmodels.HashicorpCloudVault20201125PluginRegistrationStatusResponse, error) {
+	region := &sharedmodels.HashicorpCloudLocationRegion{}
+	if loc.Region != nil {
+		region = loc.Region
+	}
+
+	listPluginsParams := vault_service.NewPluginRegistrationStatusParams()
+	listPluginsParams.Context = ctx
+	listPluginsParams.ClusterID = clusterID
+	listPluginsParams.LocationProjectID = loc.ProjectID
+	listPluginsParams.LocationOrganizationID = loc.OrganizationID
+	listPluginsParams.LocationRegionProvider = &region.Provider
+	listPluginsParams.LocationRegionRegion = &region.Region
+
+	listPluginsResp, err := client.Vault.PluginRegistrationStatus(listPluginsParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return listPluginsResp.Payload, nil
+}

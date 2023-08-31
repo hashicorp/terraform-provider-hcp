@@ -12,6 +12,7 @@ import (
 
 func TestGetValidObservabilityConfig(t *testing.T) {
 	cases := map[string]struct {
+	cases := map[string]struct {
 		config        map[string]interface{}
 		expectedError string
 	}{
@@ -31,19 +32,25 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
 		"grafana missing params": {
+		"grafana missing params": {
 			config: map[string]interface{}{
+				"grafana_user": "test",
 				"grafana_user": "test",
 			},
 			expectedError: "grafana configuration is invalid: configuration information missing",
 		},
 		"splunk missing params": {
+		"splunk missing params": {
 			config: map[string]interface{}{
+				"splunk_token": "test",
 				"splunk_token": "test",
 			},
 			expectedError: "splunk configuration is invalid: configuration information missing",
 		},
 		"datadog missing params": {
+		"datadog missing params": {
 			config: map[string]interface{}{
+				"datadog_region": "us1",
 				"datadog_region": "us1",
 			},
 			expectedError: "datadog configuration is invalid: configuration information missing",
@@ -69,6 +76,22 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 		},
 	}
 
+	for tcName, c := range cases {
+		t.Run(tcName, func(t *testing.T) {
+			_, diags := getValidObservabilityConfig(c.config)
+			foundError := false
+			if diags.HasError() {
+				for _, d := range diags {
+					if strings.Contains(d.Summary, c.expectedError) {
+						foundError = true
+						break
+					}
+				}
+			}
+			if !foundError {
+				t.Fatalf("Expected an error: %v", c.expectedError)
+			}
+		})
 	for tcName, c := range cases {
 		t.Run(tcName, func(t *testing.T) {
 			_, diags := getValidObservabilityConfig(c.config)
