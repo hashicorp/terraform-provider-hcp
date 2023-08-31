@@ -187,6 +187,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
+						"elasticsearch_dataset": {
+							Description: "ElasticSearch dataset for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"elasticsearch_user": {
 							Description: "ElasticSearch user for streaming metrics",
 							Type:        schema.TypeString,
@@ -257,6 +262,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description: "ElasticSearch endpoint for streaming audit logs",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"elasticsearch_dataset": {
+							Description: "ElasticSearch dataset for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"elasticsearch_user": {
 							Description: "ElasticSearch user for streaming audit logs",
