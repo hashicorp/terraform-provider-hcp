@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	provider "github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	providersdkv2 "github.com/hashicorp/terraform-provider-hcp/internal/providersdkv2"
@@ -49,26 +48,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// This provider utilizes Terraform Framework Muxing, which allows the provider
-// to maintain resources using both the SDKv2 and upgraded resources using the
-// plugin framework.
-// More documentation can be found here:
-// https://developer.hashicorp.com/terraform/plugin/framework/migrating/mux
-
-func New() func() (tfprotov6.ProviderServer, error) {
-	providers := []func() tfprotov6.ProviderServer{
-		func() tfprotov6.ProviderServer {
-			return upgradedSdkProvider
-		},
-	
-		// Example terraform-plugin-framework provider
-		providerserver.NewProtocol6(frameworkprovider.New(version)())
-	}
-	
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
-	
 }
 
 func New() (func() tfprotov5.ProviderServer, error) {
