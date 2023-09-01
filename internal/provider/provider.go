@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	vs "github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
-	providersdkv2 "github.com/hashicorp/terraform-provider-hcp/internal/providersdkv2"
 )
 
 // This is an implementation using the Provider framework
@@ -86,7 +86,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
 		// This helper verifies HCP's status and either returns a warning for degraded performance
 		// or errors out if there's an outage.
-		resp.Diagnostics.Append(providersdkv2.IsHCPOperationalFramework()...)
+		resp.Diagnostics.Append(isHCPOperationalFramework()...)
 	}
 
 	// Sets up HCP SDK client.
@@ -197,8 +197,22 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	if len(listProjResp.Payload.Projects) > 1 {
 		diags.AddWarning("There is more than one project associated with the organization of the configured credentials.", `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`)
 
-		return providersdkv2.GetOldestProject(listProjResp.Payload.Projects), diags
+		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
+}
+
+// getOldestProject retrieves the oldest project from a list based on its created_at time.
+func getOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
+	oldestTime := time.Now()
+
+	for _, proj := range projects {
+		projTime := time.Time(proj.CreatedAt)
+		if projTime.Before(oldestTime) {
+			oldestProj = proj
+			oldestTime = projTime
+		}
+	}
+	return oldestProj
 }
