@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package providersdkv2
 
 import (
 	"context"
@@ -53,9 +53,9 @@ func TestAccBoundaryCluster(t *testing.T) {
 	boundaryClusterDataSourceName := "data.hcp_boundary_cluster.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-: testProtoV5ProviderFactories,
-		CheckDestroy:      testAccCheckBoundaryClusterDestroy,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBoundaryClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				// this test step tests boundary cluster creation.

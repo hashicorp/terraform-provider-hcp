@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 
-	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
@@ -106,69 +105,6 @@ func isHCPOperational() (diags diag.Diagnostics) {
 			Summary:  "You may experience issues using HCP.",
 			Detail:   fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)),
 		})
-	}
-
-	return diags
-}
-
-// This functionality is a duplicate of isHCPOperational in order to return
-// the proper diagnostics for the terraform plugin framework
-func IsHCPOperationalFramework() (diags diagnostic.Diagnostics) {
-	req, err := http.NewRequest("GET", statuspageURL, nil)
-	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
-
-		return diags
-	}
-
-	var cl = http.Client{}
-	resp, err := cl.Do(req)
-	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
-
-		return diags
-	}
-	defer resp.Body.Close()
-
-	jsBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable read response to verify HCP status: %s", err))
-
-		return diags
-	}
-
-	sp := statuspage{}
-	err = json.Unmarshal(jsBytes, &sp)
-	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err))
-
-		return diags
-	}
-
-	// Translate the status page component IDs into a map of component name and operation status.
-	var systemStatus = map[string]status{}
-
-	for _, c := range sp.Components {
-		name, ok := hcpComponentIds[c.ID]
-		if ok {
-			systemStatus[name] = c.Status
-		}
-	}
-
-	operational := true
-	for _, st := range systemStatus {
-		if st != "operational" {
-			operational = false
-		}
-	}
-
-	if !operational {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)))
 	}
 
 	return diags
