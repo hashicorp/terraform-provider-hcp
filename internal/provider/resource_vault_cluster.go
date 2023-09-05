@@ -314,7 +314,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 						},
 						"elasticsearch_dataset": {
-							Description: "ElasticSearch dataset for streaming metrics",
+							Description: "ElasticSearch dataset for streaming audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
