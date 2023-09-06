@@ -216,7 +216,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						"elasticsearch_endpoint": {
 							Description: "ElasticSearch endpoint for streaming metrics",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 						},
 						"elasticsearch_dataset": {
 							Description: "ElasticSearch dataset for streaming metrics",
@@ -226,12 +226,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						"elasticsearch_user": {
 							Description: "ElasticSearch user for streaming metrics",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming metrics",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Sensitive:   true,
 						},
 					},
@@ -311,7 +311,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						"elasticsearch_endpoint": {
 							Description: "ElasticSearch endpoint for streaming audit logs",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 						},
 						"elasticsearch_dataset": {
 							Description: "ElasticSearch dataset for streaming audit logs",
@@ -321,12 +321,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						"elasticsearch_user": {
 							Description: "ElasticSearch user for streaming audit logs",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming audit logs",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Sensitive:   true,
 						},
 					},
