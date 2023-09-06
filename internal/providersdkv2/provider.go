@@ -40,6 +40,7 @@ func New() func() *schema.Provider {
 				"hcp_packer_iteration":               dataSourcePackerIteration(),
 				"hcp_packer_run_task":                dataSourcePackerRunTask(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
+				"hcp_vault_plugin":                   dataSourceVaultPlugin(),
 			},
 			ResourcesMap: map[string]*schema.Resource{
 				"hcp_aws_network_peering":            resourceAwsNetworkPeering(),
@@ -57,6 +58,7 @@ func New() func() *schema.Provider {
 				"hcp_packer_run_task":                resourcePackerRunTask(),
 				"hcp_vault_cluster":                  resourceVaultCluster(),
 				"hcp_vault_cluster_admin_token":      resourceVaultClusterAdminToken(),
+				"hcp_vault_plugin":                   resourceVaultPlugin(),
 			},
 			Schema: map[string]*schema.Schema{
 				"client_id": {
