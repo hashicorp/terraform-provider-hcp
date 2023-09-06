@@ -1,12 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package vaultsecrets
+package provider
 
 import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
 	secondSecretValue := "hey, this is version 2!"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t, map[string]bool{}) },
+		PreCheck: func() { TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
 			{
@@ -55,7 +56,7 @@ func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
 				),
 			},
 			{
-				ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+				ProtoV5ProviderFactories: TestProtoV5ProviderFactories,
 				Config: fmt.Sprintf(`
 				data "hcp_vault_secrets_app" "example" {
 					app_name    = %q
@@ -82,8 +83,8 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	secondSecretValue := "hey, this is version 2!"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		PreCheck:                 func() { TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: TestProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
 			{
@@ -118,13 +119,18 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 func createTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := clients.NewClient(clients.ClientConfig{
+		ClientID:      os.Getenv("HCP_CLIENT_ID"),
+		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
+		SourceChannel: "terraform-provider-hcp",
+	})
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.CreateVaultSecretsApp(context.Background(), client, loc, appName)
+	_, err = clients.CreateVaultSecretsApp(context.Background(), client, loc, appName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,13 +139,18 @@ func createTestApp(t *testing.T, appName string) {
 func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := clients.NewClient(clients.ClientConfig{
+		ClientID:      os.Getenv("HCP_CLIENT_ID"),
+		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
+		SourceChannel: "terraform-provider-hcp",
+	})
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.CreateVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName, secretValue)
+	_, err = clients.CreateVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName, secretValue)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,13 +159,18 @@ func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) 
 func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := clients.NewClient(clients.ClientConfig{
+		ClientID:      os.Getenv("HCP_CLIENT_ID"),
+		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
+		SourceChannel: "terraform-provider-hcp",
+	})
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName)
+	err = clients.DeleteVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -163,13 +179,18 @@ func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 func deleteTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := clients.NewClient(clients.ClientConfig{
+		ClientID:      os.Getenv("HCP_CLIENT_ID"),
+		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
+		SourceChannel: "terraform-provider-hcp",
+	})
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsApp(context.Background(), client, loc, appName)
+	err = clients.DeleteVaultSecretsApp(context.Background(), client, loc, appName)
 	if err != nil {
 		t.Error(err)
 	}
