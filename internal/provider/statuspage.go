@@ -96,3 +96,19 @@ func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 
 	return diags
 }
+
+func printStatus(m map[string]status) string {
+	var maxLenKey int
+	for k := range m {
+		if len(k) > maxLenKey {
+			maxLenKey = len(k)
+		}
+	}
+
+	pr := ""
+	for k, v := range m {
+		pr += fmt.Sprintf("%s:%*s %s\n", k, 5+(maxLenKey-len(k)), " ", v)
+	}
+
+	return pr
+}

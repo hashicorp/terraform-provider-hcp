@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	vs "github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 )
 
 // This is an implementation using the Provider framework
@@ -70,7 +69,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource {
-			return &vs.DataSourceVaultSecretsApp{}
+			return &DataSourceVaultSecretsApp{}
 		},
 	}
 }
