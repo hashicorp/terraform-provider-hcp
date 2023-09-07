@@ -53,9 +53,9 @@ func TestAccVaultPlugin(t *testing.T) {
 	dataSourceName := "data.hcp_vault_plugin.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckVaultPluginDestroy,
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultPluginDestroy,
 
 		Steps: []resource.TestStep{
 			// Testing Create
