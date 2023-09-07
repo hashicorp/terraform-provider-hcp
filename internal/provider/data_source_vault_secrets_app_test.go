@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -119,11 +118,11 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 func createTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      os.Getenv("HCP_CLIENT_ID"),
-		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
-		SourceChannel: "terraform-provider-hcp",
-	})
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -139,11 +138,10 @@ func createTestApp(t *testing.T, appName string) {
 func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) {
 	t.Helper()
 
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      os.Getenv("HCP_CLIENT_ID"),
-		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
-		SourceChannel: "terraform-provider-hcp",
-	})
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -159,11 +157,11 @@ func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) 
 func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 	t.Helper()
 
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      os.Getenv("HCP_CLIENT_ID"),
-		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
-		SourceChannel: "terraform-provider-hcp",
-	})
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
@@ -179,11 +177,11 @@ func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 func deleteTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      os.Getenv("HCP_CLIENT_ID"),
-		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
-		SourceChannel: "terraform-provider-hcp",
-	})
+	client, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
