@@ -118,7 +118,7 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 func createTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client, err := NewClient()
+	client, err := newDefaultClient()
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -138,7 +138,7 @@ func createTestApp(t *testing.T, appName string) {
 func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) {
 	t.Helper()
 
-	client, err := NewClient()
+	client, err := newDefaultClient()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) 
 func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 	t.Helper()
 
-	client, err := NewClient()
+	client, err := newDefaultClient()
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -177,7 +177,7 @@ func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 func deleteTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client, err := NewClient()
+	client, err := newDefaultClient()
 	if err != nil {
 		t.Fatal(err)
 		return

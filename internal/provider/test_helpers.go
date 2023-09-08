@@ -43,7 +43,7 @@ func testPreCheck(t *testing.T) {
 
 // Configures a new HCP client. This allows us to not rely on the
 // terraform configure method for test setup
-func NewClient() (*clients.Client, error) {
+func newDefaultClient() (*clients.Client, error) {
 	client, err := clients.NewClient(clients.ClientConfig{
 		ClientID:      os.Getenv("HCP_CLIENT_ID"),
 		ClientSecret:  os.Getenv("HCP_CLIENT_SECRET"),
