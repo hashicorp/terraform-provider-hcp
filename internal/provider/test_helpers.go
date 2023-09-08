@@ -22,11 +22,11 @@ var TestProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, 
 	},
 }
 
-// testAccPreCheck verifies and sets required provider testing configuration
+// testPreCheck verifies and sets required provider testing configuration
 //
-// This PreCheck function should be present in every acceptance test. It ensures
-// testing functions that attempt to call HCP APIs are previously configured.
-func TestAccPreCheck(t *testing.T) {
+// This testPreCheck function should be present in every acceptance test. It ensures
+// credentials and other test environment settings are configured.
+func testPreCheck(t *testing.T) {
 
 	if os.Getenv("HCP_CLIENT_ID") == "" {
 		t.Fatal("HCP_CLIENT_ID must be set for acceptance tests")
