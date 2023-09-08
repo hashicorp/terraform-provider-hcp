@@ -82,7 +82,7 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	secondSecretValue := "hey, this is version 2!"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { testPreCheck(t) },
 		ProtoV5ProviderFactories: TestProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
