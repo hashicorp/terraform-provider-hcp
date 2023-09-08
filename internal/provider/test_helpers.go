@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
-var TestProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+var testProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
 	"hcp": func() (tfprotov5.ProviderServer, error) {
 		providers := []func() tfprotov5.ProviderServer{
 			providerserver.NewProtocol5(NewFrameworkProvider(version.ProviderVersion)()),

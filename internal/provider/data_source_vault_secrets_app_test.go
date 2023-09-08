@@ -83,7 +83,7 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testPreCheck(t) },
-		ProtoV5ProviderFactories: TestProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
 			{
