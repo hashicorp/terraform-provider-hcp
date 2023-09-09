@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-version"
 	consulmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/models"
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -95,8 +96,7 @@ func validateStringInSlice(valid []string, ignoreCase bool) schema.SchemaValidat
 // validateSemVer ensures a specified string is a SemVer.
 func validateSemVer(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
-
-	if !regexp.MustCompile(`^v?\d+.\d+.\d+$`).MatchString(v.(string)) {
+	if _, err := version.NewSemver(v.(string)); err != nil {
 		msg := "must be a valid semver"
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,

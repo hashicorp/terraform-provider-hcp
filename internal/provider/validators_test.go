@@ -102,8 +102,12 @@ func Test_validateSemVer(t *testing.T) {
 			input:    "1.2.3",
 			expected: nil,
 		},
+		"valid pre-release semver": {
+			input:    "1.2.3-rc",
+			expected: nil,
+		},
 		"invalid semver": {
-			input: "v1.2.3.4.5",
+			input: "v1.2.3.beta",
 			expected: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
