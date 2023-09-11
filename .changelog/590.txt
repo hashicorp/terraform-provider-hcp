@@ -1,0 +1,3 @@
+```release-note:improvement
+Update semver validation to allow specification of pre-release versions
+```
