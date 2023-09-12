@@ -95,7 +95,7 @@ func resourceVaultPluginCreate(ctx context.Context, d *schema.ResourceData, meta
 		ProjectID:      projectID,
 	}
 
-	log.Printf("[INFO] Adding Vault Plugin (%s) on Vault Cluster (%s)", pluginName, clusterID)
+	log.Printf("[INFO] Adding Vault Plugin (%s) on Vault Cluster (%s) [project_id=%s, organization_id=%s]", pluginName, clusterID, loc.ProjectID, loc.OrganizationID)
 
 	req := &vaultmodels.HashicorpCloudVault20201125AddPluginRequest{PluginName: pluginName, PluginType: pluginType}
 	_, err = clients.AddPlugin(ctx, client, loc, clusterID, req)
