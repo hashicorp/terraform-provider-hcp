@@ -1275,12 +1275,12 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 	}
 
-	if elasticsearchEndpoint != "" || elasticsearchDataset != "" || elasticsearchUser != "" || elasticsearchPassword != "" {
+	if elasticsearchEndpoint != "" || elasticsearchUser != "" || elasticsearchPassword != "" {
 		if observabilityConfig != nil {
 			return nil, tooManyProvidersErr
 		}
 
-		if elasticsearchEndpoint == "" || elasticsearchDataset == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
+		if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
 			missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
 		}
 
