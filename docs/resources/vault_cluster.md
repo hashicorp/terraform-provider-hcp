@@ -88,6 +88,9 @@ Optional:
 - `cloudwatch_secret_access_key` (String, Sensitive) CloudWatch secret access key for streaming audit logs
 - `datadog_api_key` (String, Sensitive) Datadog api key for streaming audit logs
 - `datadog_region` (String) Datadog region for streaming audit logs
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming audit logs
+- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming audit logs
+- `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
@@ -99,9 +102,6 @@ Read-Only:
 - `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
 - `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 - `elasticsearch_dataset` (String) ElasticSearch dataset for streaming audit logs
-- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming audit logs
-- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming audit logs
-- `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 
 
 <a id="nestedblock--major_version_upgrade_config"></a>
@@ -127,6 +127,9 @@ Optional:
 - `cloudwatch_secret_access_key` (String, Sensitive) CloudWatch secret access key for streaming metrics
 - `datadog_api_key` (String, Sensitive) Datadog api key for streaming metrics
 - `datadog_region` (String) Datadog region for streaming metrics
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming metrics
+- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming metrics
+- `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_password` (String, Sensitive) Grafana password for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
@@ -137,9 +140,6 @@ Read-Only:
 
 - `cloudwatch_namespace` (String) CloudWatch namespace for streaming metrics
 - `elasticsearch_dataset` (String) ElasticSearch dataset for streaming metrics
-- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming metrics
-- `elasticsearch_password` (String, Sensitive) ElasticSearch password for streaming metrics
-- `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 
 
 <a id="nestedblock--timeouts"></a>
