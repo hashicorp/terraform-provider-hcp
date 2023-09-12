@@ -13,6 +13,7 @@ import (
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -32,8 +33,7 @@ resource "hcp_vault_cluster" "test" {
 }
 
 resource "hcp_vault_plugin" "venafi_plugin" {
-	project_id         = "cb5fda6b-c906-4181-a535-2ff385a0910e"
-	cluster_id         = "vault-cluster"
+	cluster_id         = hcp_vault_cluster.test.cluster_id
 	plugin_name        = "venafi-pki-backend"
 	plugin_type        = "SECRET"
 }
@@ -41,7 +41,7 @@ resource "hcp_vault_plugin" "venafi_plugin" {
 
 	testAccVaultPluginDataSourceConfig = fmt.Sprintf(`%s
 	data "hcp_vault_plugin" "test" {
-		cluster_id         = "vault-cluster"
+		cluster_id         = hcp_vault_cluster.test.cluster_id
 		plugin_name        = "venafi-pki-backend"
 		plugin_type        = "SECRET"
 	}
@@ -171,7 +171,11 @@ func isPluginRegistered(client *clients.Client, id string) (bool, error) {
 
 	pluginsResp, err := clients.ListPlugins(context.Background(), client, loc, clusterID)
 	if err != nil {
-		return false, fmt.Errorf("unable to list plugins %q: %v", id, err)
+		// if cluster is deleted, plugin doesn't exist
+		if clients.IsResponseCodeNotFound(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("unable to list plugins %q: %v. code: %d", id, err, grpcstatus.Code(err))
 	}
 
 	for _, plugin := range pluginsResp.Plugins {
@@ -181,5 +185,4 @@ func isPluginRegistered(client *clients.Client, id string) (bool, error) {
 	}
 
 	return false, nil
-
 }
