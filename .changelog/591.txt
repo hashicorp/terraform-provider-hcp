@@ -1,0 +1,3 @@
+```release-note:bug
+update hcp_vault_plugin resource test. remove hard coded values that were used for local testing.
+```
