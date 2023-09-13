@@ -13,14 +13,14 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: configResourceVaultSecretsApp,
-				Check:  resource.TestCheckResourceAttr("hcp_vaultsecrets_app.example", "app_name", "acctest-tf-app"),
+				Check:  resource.TestCheckResourceAttr("hcp_vault_secrets_app.example", "app_name", "acctest-tf-app"),
 			},
 		},
 	})
 }
 
 const configResourceVaultSecretsApp = `
-resource "hcp_vaultsecrets_app" "exmple" {
+resource "hcp_vault_secrets_app" "example" {
   app_name = "acctest-tf-app"
   description = "Acceptance test run"
 }

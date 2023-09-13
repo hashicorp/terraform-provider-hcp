@@ -19,7 +19,7 @@ type vaultsecretsAppResource struct {
 }
 
 func (r *vaultsecretsAppResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_vaultsecrets_app"
+	resp.TypeName = req.ProviderTypeName + "_vault_secrets_app"
 }
 
 func (r *vaultsecretsAppResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
