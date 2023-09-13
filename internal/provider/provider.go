@@ -71,6 +71,9 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		func() datasource.DataSource {
 			return &DataSourceVaultSecretsApp{}
 		},
+		func() datasource.DataSource {
+			return &DataSourceVaultSecretsSecret{}
+		},
 	}
 }
 
