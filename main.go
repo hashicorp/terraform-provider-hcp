@@ -4,10 +4,17 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	provider "github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	providersdkv2 "github.com/hashicorp/terraform-provider-hcp/internal/providersdkv2"
+	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -26,17 +33,36 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	if debugMode {
-		plugin.Serve(&plugin.ServeOpts{
-			Debug:        true,
-			ProviderFunc: provider.New(),
-			ProviderAddr: "registry.terraform.io/hashicorp/hcp",
-		})
-
+	provider, err := New()
+	if err != nil {
 		return
 	}
 
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: provider.New(),
-	})
+	var serveOpts []tf5server.ServeOpt
+
+	if debugMode {
+		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
+	}
+
+	err = tf5server.Serve("registry.terraform.io/hashicorp/hcp", provider, serveOpts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func New() (func() tfprotov5.ProviderServer, error) {
+	ctx := context.Background()
+	providers := []func() tfprotov5.ProviderServer{
+		providersdkv2.New()().GRPCProvider,
+		providerserver.NewProtocol5(
+			provider.NewFrameworkProvider(version.ProviderVersion)(),
+		),
+	}
+
+	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+
+	if err != nil {
+		return nil, err
+	}
+	return muxServer.ProviderServer, nil
 }

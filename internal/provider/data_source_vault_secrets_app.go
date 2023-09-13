@@ -5,107 +5,122 @@ package provider
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func dataSourceVaultSecretsApp() *schema.Resource {
-	return &schema.Resource{
-		Description: "The Vault Secrets app data source retrieves secrets and their latest version values for a given application.",
-		ReadContext: dataSourceVaultSecretsAppRead,
-		Schema: map[string]*schema.Schema{
-			"app_name": {
-				Description:      "The name of the Vault Secrets application.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validateSlugID,
+type DataSourceVaultSecretsApp struct {
+	client *clients.Client
+}
+
+type DataSourceVaultSecretsAppModel struct {
+	ID        types.String `tfsdk:"id"`
+	AppName   types.String `tfsdk:"app_name"`
+	ProjectID types.String `tfsdk:"project_id"`
+	OrgID     types.String `tfsdk:"organization_id"`
+	Secrets   types.Map    `tfsdk:"secrets"`
+}
+
+func NewVaultSecretsAppDataSource() datasource.DataSource {
+	return &DataSourceVaultSecretsApp{}
+}
+
+func (d *DataSourceVaultSecretsApp) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vault_secrets_app"
+}
+
+func (d *DataSourceVaultSecretsApp) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "The Vault Secrets app data source retrieves secrets and their latest version values for a given application.",
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of this resource.",
 			},
-			"organization_id": {
+			"app_name": schema.StringAttribute{
+				Description: "The name of the Vault Secrets application.",
+				Required:    true,
+			},
+			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the Vault Secrets app is located.",
-				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"project_id": {
+			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project where the Vault Secrets app is located.",
-				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"secrets": {
+			"secrets": schema.MapAttribute{
 				Description: "A map of all secrets in the Vault Secrets app. Key is the secret name, value is the latest secret version value.",
-				Type:        schema.TypeMap,
 				Computed:    true,
 				Sensitive:   true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				ElementType: types.StringType,
 			},
 		},
 	}
 }
 
-func dataSourceVaultSecretsAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	appName, ok := d.Get("app_name").(string)
-	if !ok {
-		return diag.Errorf("Failed to read app_name during data source Read.")
+func (d *DataSourceVaultSecretsApp) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
 	}
-	client := meta.(*clients.Client)
+
+	client, ok := req.ProviderData.(*clients.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *clients.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	d.client = client
+}
+
+func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data DataSourceVaultSecretsAppModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	client := d.client
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Unconfigured HCP Client",
+			"Expected configured HCP client. Please report this issue to the provider developers.",
+		)
+		return
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	log.Printf("[INFO] Listing Vault Secrets App secrets (%s) [project_id=%s, organization_id=%s]", appName, loc.ProjectID, loc.OrganizationID)
-
-	appSecrets, err := clients.ListVaultSecretsAppSecrets(ctx, client, loc, appName)
+	appSecrets, err := clients.ListVaultSecretsAppSecrets(ctx, client, loc, data.AppName.ValueString())
 	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			return diag.Errorf("VCS app (%s) does not exist", appName)
-		}
-		return diag.FromErr(err)
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
 	}
 
 	openAppSecrets := map[string]string{}
 	for _, appSecret := range appSecrets {
 		secretName := appSecret.Name
 
-		log.Printf("[INFO] Opening latest Vault Secrets App Secret (%s - %s) [project_id=%s, organization_id=%s]", appName, secretName, loc.ProjectID, loc.OrganizationID)
-
-		openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, appName, secretName)
+		openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), secretName)
 		if err != nil {
-			if clients.IsResponseCodeNotFound(err) {
-				return diag.Errorf("Vault Secrets App Secret (%s - %s) does not exist", appName, secretName)
-			}
-			return diag.FromErr(err)
+			resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
+			return
 		}
-
 		openAppSecrets[secretName] = openSecret.Version.Value
 	}
 
-	err = setVaultSecretsAppDataSourceAttributes(d, appName, loc, openAppSecrets)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
-}
-
-func setVaultSecretsAppDataSourceAttributes(d *schema.ResourceData, appName string, loc *sharedmodels.HashicorpCloudLocationLocation, openSecrets map[string]string) error {
-	d.SetId(appName)
-
-	if err := d.Set("organization_id", loc.OrganizationID); err != nil {
-		return err
-	}
-	if err := d.Set("project_id", loc.ProjectID); err != nil {
-		return err
-	}
-	if err := d.Set("secrets", openSecrets); err != nil {
-		return err
-	}
-
-	return nil
+	data.ID = data.AppName
+	data.OrgID = types.StringValue(client.Config.OrganizationID)
+	data.ProjectID = types.StringValue(client.Config.ProjectID)
+	secretsMap, diag := types.MapValueFrom(ctx, types.StringType, openAppSecrets)
+	resp.Diagnostics.Append(diag...)
+	data.Secrets = secretsMap
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

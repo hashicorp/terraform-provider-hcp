@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package providersdkv2
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
 // Status endpoint for prod.
@@ -34,13 +34,14 @@ type component struct {
 
 type status string
 
-// This functionality is a duplicate of isHCPOperational in order to return
-// the proper diagnostics for the terraform plugin framework
-func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
+func isHCPOperational() (diags diag.Diagnostics) {
 	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable to create request to verify HCP status: %s", err),
+		})
 
 		return diags
 	}
@@ -48,8 +49,11 @@ func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 	var cl = http.Client{}
 	resp, err := cl.Do(req)
 	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable to complete request to verify HCP status: %s", err),
+		})
 
 		return diags
 	}
@@ -57,8 +61,11 @@ func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 
 	jsBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable read response to verify HCP status: %s", err))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable read response to verify HCP status: %s", err),
+		})
 
 		return diags
 	}
@@ -66,8 +73,11 @@ func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 	sp := statuspage{}
 	err = json.Unmarshal(jsBytes, &sp)
 	if err != nil {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err),
+		})
 
 		return diags
 	}
@@ -90,8 +100,11 @@ func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 	}
 
 	if !operational {
-		diags.AddWarning("You may experience issues using HCP.",
-			fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "You may experience issues using HCP.",
+			Detail:   fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)),
+		})
 	}
 
 	return diags
