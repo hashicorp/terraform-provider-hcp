@@ -182,6 +182,26 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"elasticsearch_endpoint": {
+							Description: "ElasticSearch endpoint for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_dataset": {
+							Description: "ElasticSearch dataset for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_user": {
+							Description: "ElasticSearch user for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_password": {
+							Description: "ElasticSearch password for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -234,6 +254,26 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"cloudwatch_group_name": {
 							Description: "CloudWatch group name of the target log stream for audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_endpoint": {
+							Description: "ElasticSearch endpoint for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_dataset": {
+							Description: "ElasticSearch dataset for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_user": {
+							Description: "ElasticSearch user for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"elasticsearch_password": {
+							Description: "ElasticSearch password for streaming audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
