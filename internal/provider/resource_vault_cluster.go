@@ -1289,7 +1289,6 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				Endpoint: elasticsearchEndpoint,
 				User:     elasticsearchUser,
 				Password: elasticsearchPassword,
-				Dataset:  elasticsearchDataset,
 			},
 		}
 	}
