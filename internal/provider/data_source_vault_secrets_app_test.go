@@ -129,7 +129,7 @@ func createTestApp(t *testing.T, appName string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err = clients.CreateVaultSecretsApp(context.Background(), client, loc, appName)
+	_, err = clients.CreateVaultSecretsApp(context.Background(), client, loc, appName, "")
 	if err != nil {
 		t.Fatal(err)
 	}
