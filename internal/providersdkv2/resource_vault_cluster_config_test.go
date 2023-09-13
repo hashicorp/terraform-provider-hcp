@@ -17,13 +17,16 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 	}{
 		"multiple providers not allowed": {
 			config: map[string]interface{}{
-				"grafana_user":       "test",
-				"grafana_password":   "pwd",
-				"grafana_endpoint":   "https://grafana",
-				"splunk_hecendpoint": "https://http-input-splunkcloud.com",
-				"splunk_token":       "test",
-				"datadog_api_key":    "test_datadog",
-				"datadog_region":     "us1",
+				"grafana_user":           "test",
+				"grafana_password":       "pwd",
+				"grafana_endpoint":       "https://grafana",
+				"splunk_hecendpoint":     "https://http-input-splunkcloud.com",
+				"splunk_token":           "test",
+				"datadog_api_key":        "test_datadog",
+				"datadog_region":         "us1",
+				"elasticsearch_user":     "test",
+				"elasticsearch_password": "test_elasticsearch",
+				"elasticsearch_endpoint": "https://elasticsearch",
 			},
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
@@ -50,6 +53,12 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"cloudwatch_access_key_id": "1111111",
 			},
 			expectedError: "cloudwatch configuration is invalid: configuration information missing",
+		},
+		"elasticsearch missing params": {
+			config: map[string]interface{}{
+				"elasticsearch_user": "test",
+			},
+			expectedError: "elasticsearch configuration is invalid: configuration information missing",
 		},
 		"too many providers takes precedence over missing params": {
 			config: map[string]interface{}{
