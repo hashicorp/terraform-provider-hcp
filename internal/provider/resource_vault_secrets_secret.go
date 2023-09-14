@@ -86,7 +86,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 	}
 
 	// TODO: add more to plan here?
-	plan.ID = types.StringValue("id")
+	plan.ID = types.StringValue(plan.AppName)
 	plan.SecretName = res.Name
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

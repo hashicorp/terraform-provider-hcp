@@ -7,6 +7,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -25,6 +26,9 @@ func (r *resourceVaultsecretsApp) Metadata(_ context.Context, req resource.Metad
 func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
 			// TODO: Add validators
 			"app_name": schema.StringAttribute{
 				Required: true,
@@ -52,8 +56,9 @@ func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.Conf
 }
 
 type App struct {
-	AppName     string `tfsdk:"app_name"`
-	Description string `tfsdk:"description"`
+	ID          types.String `tfsdk:"id"`
+	AppName     string       `tfsdk:"app_name"`
+	Description string       `tfsdk:"description"`
 }
 
 func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -75,6 +80,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	plan.ID = types.StringValue(res.Name)
 	plan.AppName = res.Name
 	plan.Description = res.Description
 	diags = resp.State.Set(ctx, plan)
