@@ -67,6 +67,9 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		func() resource.Resource {
 			return &vaultsecretsAppResource{}
 		},
+		func() resource.Resource {
+			return &vaultsecretsSecretResource{}
+		},
 	}
 }
 
