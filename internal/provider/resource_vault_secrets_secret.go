@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func NewVaultSecretsSecretResource() *vaultsecretsSecretResource {
-	return &vaultsecretsSecretResource{}
+func NewVaultSecretsSecretResource() *resourceVaultsecretsSecret {
+	return &resourceVaultsecretsSecret{}
 }
 
-type vaultsecretsSecretResource struct {
+type resourceVaultsecretsSecret struct {
 	client *clients.Client
 }
 
@@ -26,11 +26,11 @@ type Secret struct {
 	SecretValue string       `tfsdk:"secret_value"`
 }
 
-func (r *vaultsecretsSecretResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceVaultsecretsSecret) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_vault_secrets_secret"
 }
 
-func (r *vaultsecretsSecretResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -50,7 +50,7 @@ func (r *vaultsecretsSecretResource) Schema(_ context.Context, _ resource.Schema
 	}
 }
 
-func (r *vaultsecretsSecretResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceVaultsecretsSecret) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -66,7 +66,7 @@ func (r *vaultsecretsSecretResource) Configure(_ context.Context, req resource.C
 	r.client = client
 }
 
-func (r *vaultsecretsSecretResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan Secret
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -96,7 +96,7 @@ func (r *vaultsecretsSecretResource) Create(ctx context.Context, req resource.Cr
 	}
 }
 
-func (r *vaultsecretsSecretResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state Secret
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -125,7 +125,7 @@ func (r *vaultsecretsSecretResource) Read(ctx context.Context, req resource.Read
 	}
 }
 
-func (r *vaultsecretsSecretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan Secret
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -155,7 +155,7 @@ func (r *vaultsecretsSecretResource) Update(ctx context.Context, req resource.Up
 
 }
 
-func (r *vaultsecretsSecretResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Secret
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
