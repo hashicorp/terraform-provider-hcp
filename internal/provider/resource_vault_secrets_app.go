@@ -10,19 +10,19 @@ import (
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func NewVaultSecretsAppResource() *vaultsecretsAppResource {
-	return &vaultsecretsAppResource{}
+func NewVaultSecretsAppResource() *resourceVaultsecretsApp {
+	return &resourceVaultsecretsApp{}
 }
 
-type vaultsecretsAppResource struct {
+type resourceVaultsecretsApp struct {
 	client *clients.Client
 }
 
-func (r *vaultsecretsAppResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceVaultsecretsApp) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_vault_secrets_app"
 }
 
-func (r *vaultsecretsAppResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			// TODO: Add validators
@@ -36,7 +36,7 @@ func (r *vaultsecretsAppResource) Schema(_ context.Context, _ resource.SchemaReq
 	}
 }
 
-func (r *vaultsecretsAppResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -51,13 +51,12 @@ func (r *vaultsecretsAppResource) Configure(_ context.Context, req resource.Conf
 	r.client = client
 }
 
-// TODO Check that this is what gets returned
 type App struct {
 	AppName     string `tfsdk:"app_name"`
 	Description string `tfsdk:"description"`
 }
 
-func (r *vaultsecretsAppResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan App
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -86,7 +85,7 @@ func (r *vaultsecretsAppResource) Create(ctx context.Context, req resource.Creat
 	}
 }
 
-func (r *vaultsecretsAppResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state App
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -115,7 +114,7 @@ func (r *vaultsecretsAppResource) Read(ctx context.Context, req resource.ReadReq
 	}
 }
 
-func (r *vaultsecretsAppResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan App
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -143,7 +142,7 @@ func (r *vaultsecretsAppResource) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (r *vaultsecretsAppResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state App
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
