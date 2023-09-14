@@ -60,7 +60,7 @@ func (d *DataSourceVaultSecretsSecret) Schema(ctx context.Context, req datasourc
 				Computed:    true,
 			},
 			"secret_value": schema.StringAttribute{
-				Description: "A map of all secrets in the Vault Secrets app. Key is the secret name, value is the latest secret version value.",
+				Description: "The secret value corresponding to the secret name input.",
 				Computed:    true,
 			},
 		},
