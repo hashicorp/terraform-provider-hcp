@@ -20,7 +20,7 @@ type vaultsecretsSecretResource struct {
 }
 
 type Secret struct {
-	Id          types.String `tfsdk:"id"`
+	ID          types.String `tfsdk:"id"`
 	AppName     string       `tfsdk:"app_name"`
 	SecretName  string       `tfsdk:"secret_name"`
 	SecretValue string       `tfsdk:"secret_value"`
@@ -86,7 +86,7 @@ func (r *vaultsecretsSecretResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	// TODO: add more to plan here?
-	plan.Id = types.StringValue("id")
+	plan.ID = types.StringValue("id")
 	plan.SecretName = res.Name
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
