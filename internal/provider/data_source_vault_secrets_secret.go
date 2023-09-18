@@ -88,7 +88,7 @@ func (d *DataSourceVaultSecretsSecret) Read(ctx context.Context, req datasource.
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	client := d.client
-	if d.client == nil {
+	if client == nil {
 		resp.Diagnostics.AddError(
 			"Unconfigured HCP Client",
 			"Expected configured HCP client. Please report this issue to the provider developers.",
