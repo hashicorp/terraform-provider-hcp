@@ -3,10 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -36,9 +39,15 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			// TODO: Add validators
 			"app_name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 36),
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
+						"must contain only letters, numbers or hyphens",
+					),
+				},
 			},
 			"secret_name": schema.StringAttribute{
 				Required: true,
