@@ -99,7 +99,6 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// TODO: add more to plan here?
 	plan.ID = plan.AppName
 	plan.SecretName = types.StringValue(res.Name)
 

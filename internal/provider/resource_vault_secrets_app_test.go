@@ -1,27 +1,28 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccVaultSecretsResourceApp(t *testing.T) {
-
+	testAppName := generateRandomSlug()
 	resource.Test(t, resource.TestCase{
 		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: configResourceVaultSecretsApp,
-				Check:  resource.TestCheckResourceAttr("hcp_vault_secrets_app.example", "app_name", "acctest-tf-app"),
+				Config: fmt.Sprintf(`
+					resource "hcp_vault_secrets_app" "example" {
+						app_name = %q
+						description = "Acceptance test run"
+				  }`, testAppName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_vault_secrets_app.example", "app_name", testAppName),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_app.example", "description", "Acceptance test run"),
+				),
 			},
 		},
 	})
 }
-
-const configResourceVaultSecretsApp = `
-resource "hcp_vault_secrets_app" "example" {
-  app_name = "acctest-tf-app"
-  description = "Acceptance test run"
-}
-`

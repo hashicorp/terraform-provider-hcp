@@ -38,7 +38,6 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Required:    true,
 				Description: "The Vault Secrets App name.",
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 36),
 					stringvalidator.RegexMatches(
 						regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
 						"must contain only letters, numbers or hyphens",
