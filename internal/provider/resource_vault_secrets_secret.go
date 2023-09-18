@@ -88,12 +88,8 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 	// TODO: add more to plan here?
 	plan.ID = types.StringValue(plan.AppName)
 	plan.SecretName = res.Name
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -117,12 +113,7 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 	state.SecretName = res.Name
 	state.SecretValue = res.LatestVersion
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -146,13 +137,8 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 	}
 
 	plan.SecretName = res.Name
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

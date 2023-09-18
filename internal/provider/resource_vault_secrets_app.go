@@ -83,12 +83,8 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 	plan.ID = types.StringValue(res.Name)
 	plan.AppName = res.Name
 	plan.Description = res.Description
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
