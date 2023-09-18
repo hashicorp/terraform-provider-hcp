@@ -35,12 +35,15 @@ func (r *resourceVaultsecretsSecret) Metadata(_ context.Context, req resource.Me
 
 func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "The Vault Secrets secret resource manages a secret within a given application.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Description: "The id of the resource",
+				Computed:    true,
 			},
 			"app_name": schema.StringAttribute{
-				Required: true,
+				Description: "The name of the application the secret can be found in",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 36),
 					stringvalidator.RegexMatches(
@@ -50,10 +53,12 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 				},
 			},
 			"secret_name": schema.StringAttribute{
-				Required: true,
+				Description: "The name of the secret",
+				Required:    true,
 			},
 			"secret_value": schema.StringAttribute{
-				Required: true,
+				Description: "The value of the secret",
+				Required:    true,
 			},
 		},
 	}
