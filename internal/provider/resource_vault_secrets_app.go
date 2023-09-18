@@ -46,7 +46,7 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "The Vault Secrets app name description",
+				Description: "The Vault Secrets app description",
 				Optional:    true,
 			},
 		},
