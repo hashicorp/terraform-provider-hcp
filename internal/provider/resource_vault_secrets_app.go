@@ -76,7 +76,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 
 	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName, plan.Description)
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Cannot create app")
+		resp.Diagnostics.AddError("Error creating Vault Secrets App", err.Error())
 		return
 	}
 

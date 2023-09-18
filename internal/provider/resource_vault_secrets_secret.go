@@ -81,7 +81,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 
 	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName, plan.SecretName, plan.SecretValue)
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Cannot create secret")
+		resp.Diagnostics.AddError("Error creating Vault Secrets Secret", err.Error())
 		return
 	}
 
