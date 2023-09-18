@@ -28,7 +28,7 @@ resource "hcp_vault_secrets_app" "example" {
 
 ### Optional
 
-- `description` (String) The Vault Secrets app name description
+- `description` (String) The Vault Secrets app description
 
 ### Read-Only
 
