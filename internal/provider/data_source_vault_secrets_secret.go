@@ -37,7 +37,7 @@ func (d *DataSourceVaultSecretsSecret) Metadata(ctx context.Context, req datasou
 
 func (d *DataSourceVaultSecretsSecret) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Vault Secrets secret data source retrieves a singular secret and it's latest version.",
+		MarkdownDescription: "The Vault Secrets secret data source retrieves a singular secret and its latest version.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
