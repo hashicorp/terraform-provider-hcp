@@ -31,15 +31,3 @@ func TestAccVaultSecretsResourceSecret(t *testing.T) {
 		},
 	})
 }
-
-func testAccCheckVaultSecretsSecretExists() {
-
-}
-
-const configResourceVaultSecretsSecret = `
-resource "hcp_vault_secrets_secret" "example" {
-  app_name = "%q"
-  secret_name = "test_secret"
-  secret_value = "super secret"
-}
-`
