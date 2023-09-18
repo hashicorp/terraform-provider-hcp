@@ -21,9 +21,9 @@ type resourceVaultsecretsSecret struct {
 
 type Secret struct {
 	ID          types.String `tfsdk:"id"`
-	AppName     string       `tfsdk:"app_name"`
-	SecretName  string       `tfsdk:"secret_name"`
-	SecretValue string       `tfsdk:"secret_value"`
+	AppName     types.String `tfsdk:"app_name"`
+	SecretName  types.String `tfsdk:"secret_name"`
+	SecretValue types.String `tfsdk:"secret_value"`
 }
 
 func (r *resourceVaultsecretsSecret) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -79,15 +79,15 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName, plan.SecretName, plan.SecretValue)
+	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.String(), plan.SecretName.String(), plan.SecretValue.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Vault Secrets Secret", err.Error())
 		return
 	}
 
 	// TODO: add more to plan here?
-	plan.ID = types.StringValue(plan.AppName)
-	plan.SecretName = res.Name
+	plan.ID = plan.AppName
+	plan.SecretName = types.StringValue(res.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -105,13 +105,13 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, state.AppName, state.SecretName)
+	res, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.String(), state.SecretName.String())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get secret")
 	}
 
-	state.SecretName = res.Name
-	state.SecretValue = res.LatestVersion
+	state.SecretName = types.StringValue(res.Name)
+	state.SecretValue = types.StringValue(res.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -129,14 +129,14 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName, plan.SecretName, plan.SecretValue)
+	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.String(), plan.SecretName.String(), plan.SecretValue.String())
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating secret", err.Error())
 		return
 	}
 
-	plan.SecretName = res.Name
+	plan.SecretName = types.StringValue(res.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -154,7 +154,7 @@ func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.De
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsAppSecret(ctx, r.client, loc, state.AppName, state.SecretName)
+	err := clients.DeleteVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.String(), state.SecretName.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting secret", err.Error())
 		return
