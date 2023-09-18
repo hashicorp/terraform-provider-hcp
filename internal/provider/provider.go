@@ -24,6 +24,8 @@ import (
 
 // This is an implementation using the Provider framework
 // Docs can be found here: https://developer.hashicorp.com/terraform/plugin/framework
+// NOTE: All other resources and data sources for other products can be found in the
+// providersdkv2 folder at the same level
 type ProviderFramework struct {
 	version string
 }
