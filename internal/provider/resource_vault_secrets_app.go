@@ -11,7 +11,7 @@ import (
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func NewVaultSecretsAppResource() *resourceVaultsecretsApp {
+func NewVaultSecretsAppResource() resource.Resource {
 	return &resourceVaultsecretsApp{}
 }
 
