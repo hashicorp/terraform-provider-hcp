@@ -22,7 +22,7 @@ type resourceVaultsecretsSecret struct {
 	client *clients.Client
 }
 
-type Secret struct {
+type VaultSecretsSecret struct {
 	ID          types.String `tfsdk:"id"`
 	AppName     types.String `tfsdk:"app_name"`
 	SecretName  types.String `tfsdk:"secret_name"`
@@ -81,7 +81,7 @@ func (r *resourceVaultsecretsSecret) Configure(_ context.Context, req resource.C
 }
 
 func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan Secret
+	var plan VaultSecretsSecret
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 }
 
 func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state Secret
+	var state VaultSecretsSecret
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -130,7 +130,7 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 }
 
 func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan Secret
+	var plan VaultSecretsSecret
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -155,7 +155,7 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 }
 
 func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state Secret
+	var state VaultSecretsSecret
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
