@@ -57,8 +57,8 @@ func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.Conf
 
 type App struct {
 	ID          types.String `tfsdk:"id"`
-	AppName     string       `tfsdk:"app_name"`
-	Description string       `tfsdk:"description"`
+	AppName     types.String `tfsdk:"app_name"`
+	Description types.String `tfsdk:"description"`
 }
 
 func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -74,15 +74,15 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName, plan.Description)
+	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName.String(), plan.Description.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Vault Secrets App", err.Error())
 		return
 	}
 
 	plan.ID = types.StringValue(res.Name)
-	plan.AppName = res.Name
-	plan.Description = res.Description
+	plan.AppName = types.StringValue(res.Name)
+	plan.Description = types.StringValue(res.Description)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -100,20 +100,14 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName)
+	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.String())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
 	}
 
-	state.AppName = res.Name
-	state.Description = res.Description
-
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	state.AppName = types.StringValue(res.Name)
+	state.Description = types.StringValue(res.Description)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -129,19 +123,15 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName, plan.Description)
+	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.String(), plan.Description.String())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
 	}
 
-	plan.AppName = res.Name
-	plan.Description = res.Description
+	plan.AppName = types.StringValue(res.Name)
+	plan.Description = types.StringValue(res.Description)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -157,7 +147,7 @@ func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.Delet
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName)
+	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName.String())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting app", err.Error())
 		return
