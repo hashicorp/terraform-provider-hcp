@@ -45,7 +45,6 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 				Description: "The name of the application the secret can be found in",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 36),
 					stringvalidator.RegexMatches(
 						regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
 						"must contain only letters, numbers or hyphens",
@@ -55,6 +54,12 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 			"secret_name": schema.StringAttribute{
 				Description: "The name of the secret",
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[_\da-zA-Z]{3,36}$`),
+						"must contain only letters, numbers or underscores",
+					),
+				},
 			},
 			"secret_value": schema.StringAttribute{
 				Description: "The value of the secret",
