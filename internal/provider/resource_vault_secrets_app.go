@@ -47,6 +47,10 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Description: "The Vault Secrets app description",
 				Optional:    true,
 			},
+			"project_id": schema.StringAttribute{
+				Description: "The ID of the HCP project where the HCP Vault Secrets app is located.",
+				Computed:    true,
+			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the project the HCP Vault Secrets app is located.",
 				Computed:    true,
@@ -74,6 +78,7 @@ type VaultSecretsApp struct {
 	ID             types.String `tfsdk:"id"`
 	AppName        types.String `tfsdk:"app_name"`
 	Description    types.String `tfsdk:"description"`
+	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
 }
 
@@ -100,6 +105,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 	plan.AppName = types.StringValue(res.Name)
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
+	plan.ProjectID = types.StringValue(loc.ProjectID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -149,6 +155,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 	plan.AppName = types.StringValue(res.Name)
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
+	plan.ProjectID = types.StringValue(loc.ProjectID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
