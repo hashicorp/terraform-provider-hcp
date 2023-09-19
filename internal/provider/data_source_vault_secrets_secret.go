@@ -51,16 +51,16 @@ func (d *DataSourceVaultSecretsSecret) Schema(ctx context.Context, req datasourc
 				Description: "The name of the Vault Secrets secret.",
 				Required:    true,
 			},
+			"secret_value": schema.StringAttribute{
+				Description: "The secret value corresponding to the secret name input.",
+				Computed:    true,
+			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the Vault Secrets app is located.",
 				Computed:    true,
 			},
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project where the Vault Secrets app is located.",
-				Computed:    true,
-			},
-			"secret_value": schema.StringAttribute{
-				Description: "The secret value corresponding to the secret name input.",
 				Computed:    true,
 			},
 		},
