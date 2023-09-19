@@ -31,4 +31,4 @@ data "hcp_vault_secrets_secret" "example" {
 - `id` (String) The ID of this resource.
 - `organization_id` (String) The ID of the HCP organization where the Vault Secrets app is located.
 - `project_id` (String) The ID of the HCP project where the Vault Secrets app is located.
-- `secret_value` (String) The secret value corresponding to the secret name input.
+- `secret_value` (String, Sensitive) The secret value corresponding to the secret name input.
