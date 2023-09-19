@@ -153,6 +153,7 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	plan.ID = plan.AppName
 	plan.SecretName = types.StringValue(res.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

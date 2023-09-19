@@ -139,6 +139,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
 	}
 
+	plan.ID = types.StringValue(res.Name)
 	plan.AppName = types.StringValue(res.Name)
 	plan.Description = types.StringValue(res.Description)
 
