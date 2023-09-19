@@ -51,6 +51,7 @@ func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 	updateParams := secret_service.NewUpdateAppParams()
 	updateParams.Context = ctx
 	updateParams.Name = appName
+	updateParams.Body.Description = description
 	updateParams.LocationOrganizationID = loc.OrganizationID
 	updateParams.LocationProjectID = loc.ProjectID
 
