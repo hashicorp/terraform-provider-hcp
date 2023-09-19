@@ -93,7 +93,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.String(), plan.SecretName.String(), plan.SecretValue.String())
+	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.ValueString(), plan.SecretName.ValueString(), plan.SecretValue.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Vault Secrets Secret", err.Error())
 		return
@@ -118,13 +118,12 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.String(), state.SecretName.String())
+	res, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.ValueString(), state.SecretName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get secret")
 	}
 
-	state.SecretName = types.StringValue(res.Name)
-	state.SecretValue = types.StringValue(res.Name)
+	state.SecretValue = types.StringValue(res.Version.Value)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -142,7 +141,7 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.String(), plan.SecretName.String(), plan.SecretValue.String())
+	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.ValueString(), plan.SecretName.ValueString(), plan.SecretValue.ValueString())
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating secret", err.Error())
@@ -167,7 +166,7 @@ func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.De
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.String(), state.SecretName.String())
+	err := clients.DeleteVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.ValueString(), state.SecretName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting secret", err.Error())
 		return

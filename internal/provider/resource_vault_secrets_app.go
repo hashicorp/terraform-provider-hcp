@@ -38,8 +38,7 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Required:    true,
 				Description: "The Vault Secrets App name.",
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
 						"must contain only letters, numbers or hyphens",
 					),
 				},
@@ -86,7 +85,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName.String(), plan.Description.String())
+	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Vault Secrets App", err.Error())
 		return
@@ -112,7 +111,7 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.String())
+	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
 	}
@@ -135,7 +134,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.String(), plan.Description.String())
+	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
 	}
@@ -159,7 +158,7 @@ func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.Delet
 		ProjectID:      r.client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName.String())
+	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting app", err.Error())
 		return
