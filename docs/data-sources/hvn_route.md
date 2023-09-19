@@ -46,4 +46,3 @@ Optional:
 
 - `default` (String)
 
----

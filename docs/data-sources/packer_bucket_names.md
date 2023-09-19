@@ -35,4 +35,3 @@ Optional:
 
 - `default` (String)
 
----
