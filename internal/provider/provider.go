@@ -24,6 +24,8 @@ import (
 
 // This is an implementation using the Provider framework
 // Docs can be found here: https://developer.hashicorp.com/terraform/plugin/framework
+// NOTE: All other resources and data sources for other products can be found in the
+// providersdkv2 folder at the same level
 type ProviderFramework struct {
 	version string
 }
@@ -63,17 +65,16 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		NewVaultSecretsAppResource,
+		NewVaultSecretsSecretResource,
+	}
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		func() datasource.DataSource {
-			return &DataSourceVaultSecretsApp{}
-		},
-		func() datasource.DataSource {
-			return &DataSourceVaultSecretsSecret{}
-		},
+		NewVaultSecretsAppDataSource,
+		NewVaultSecretsSecretDataSource,
 	}
 }
 
