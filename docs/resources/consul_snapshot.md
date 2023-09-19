@@ -53,5 +53,3 @@ Optional:
 - `default` (String)
 - `delete` (String)
 - `update` (String)
-
-
