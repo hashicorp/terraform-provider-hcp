@@ -13,11 +13,12 @@ import (
 )
 
 // CreateVaultSecretsApp will create a Vault Secrets application.
-func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*secretmodels.Secrets20230613App, error) {
+func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20230613App, error) {
 
 	createParams := secret_service.NewCreateAppParams()
 	createParams.Context = ctx
 	createParams.Body.Name = appName
+	createParams.Body.Description = description
 	createParams.LocationOrganizationID = loc.OrganizationID
 	createParams.LocationProjectID = loc.ProjectID
 
@@ -27,6 +28,39 @@ func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 	}
 
 	return createResp.Payload.App, nil
+}
+
+// GetVaultSecretsApp will read a Vault Secrets application
+func GetVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*secretmodels.Secrets20230613App, error) {
+	getParams := secret_service.NewGetAppParams()
+	getParams.Context = ctx
+	getParams.Name = appName
+	getParams.LocationOrganizationID = loc.OrganizationID
+	getParams.LocationProjectID = loc.ProjectID
+
+	getResp, err := client.VaultSecrets.GetApp(getParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return getResp.Payload.App, nil
+}
+
+// UpdateVaultSecretsApp will update an app's description
+func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20230613App, error) {
+	updateParams := secret_service.NewUpdateAppParams()
+	updateParams.Context = ctx
+	updateParams.Name = appName
+	updateParams.Body.Description = description
+	updateParams.LocationOrganizationID = loc.OrganizationID
+	updateParams.LocationProjectID = loc.ProjectID
+
+	updateResp, err := client.VaultSecrets.UpdateApp(updateParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResp.Payload.App, nil
 }
 
 // ListVaultSecretsAppSecrets will retrieve all app secrets metadata for a Vault Secrets application.
