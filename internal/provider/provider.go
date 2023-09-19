@@ -74,6 +74,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewVaultSecretsAppDataSource,
+		NewVaultSecretsSecretDataSource,
 	}
 }
 
