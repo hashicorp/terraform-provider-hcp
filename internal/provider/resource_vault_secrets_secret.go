@@ -23,10 +23,11 @@ type resourceVaultsecretsSecret struct {
 }
 
 type VaultSecretsSecret struct {
-	ID          types.String `tfsdk:"id"`
-	AppName     types.String `tfsdk:"app_name"`
-	SecretName  types.String `tfsdk:"secret_name"`
-	SecretValue types.String `tfsdk:"secret_value"`
+	ID             types.String `tfsdk:"id"`
+	AppName        types.String `tfsdk:"app_name"`
+	SecretName     types.String `tfsdk:"secret_name"`
+	SecretValue    types.String `tfsdk:"secret_value"`
+	OrganizationID types.String `tfsdk:"organization_id"`
 }
 
 func (r *resourceVaultsecretsSecret) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -64,6 +65,10 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 			"secret_value": schema.StringAttribute{
 				Description: "The value of the secret",
 				Required:    true,
+			},
+			"organization_id": schema.StringAttribute{
+				Description: "The ID of the HCP organization where the project the HCP Vault Secrets secret is located.",
+				Computed:    true,
 			},
 		},
 	}
@@ -106,6 +111,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 
 	plan.ID = plan.AppName
 	plan.SecretName = types.StringValue(res.Name)
+	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -155,6 +161,7 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 
 	plan.ID = plan.AppName
 	plan.SecretName = types.StringValue(res.Name)
+	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
