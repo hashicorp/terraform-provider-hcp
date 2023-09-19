@@ -28,7 +28,7 @@ resource "hcp_vault_secrets_secret" "example" {
 
 - `app_name` (String) The name of the application the secret can be found in
 - `secret_name` (String) The name of the secret
-- `secret_value` (String) The value of the secret
+- `secret_value` (String, Sensitive) The value of the secret
 
 ### Read-Only
 

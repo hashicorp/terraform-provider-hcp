@@ -66,6 +66,7 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 			"secret_value": schema.StringAttribute{
 				Description: "The value of the secret",
 				Required:    true,
+				Sensitive:   true,
 			},
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project where the HCP Vault Secrets secret is located.",
