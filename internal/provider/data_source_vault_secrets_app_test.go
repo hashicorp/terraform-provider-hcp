@@ -16,6 +16,62 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
+func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
+	testAppName := generateRandomSlug()
+	dataSourceAddress := "data.hcp_vault_secrets_app.example"
+
+	firstSecretName := "secret_one"
+	secondSecretName := "secret_two"
+	firstSecretValue := "hey, this is version 1!"
+	secondSecretValue := "hey, this is version 2!"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testPreCheck(t) },
+		Steps: []resource.TestStep{
+			// Create two secrets, one with an additional version and check the latest secrets from data source
+			{
+				PreConfig: func() {
+					createTestApp(t, testAppName)
+
+					createTestAppSecret(t, testAppName, firstSecretName, "this shouldn't show up!")
+					createTestAppSecret(t, testAppName, firstSecretName, firstSecretValue)
+					createTestAppSecret(t, testAppName, secondSecretName, secondSecretValue)
+				},
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"hcp": {
+						VersionConstraint: "~> 0.66.0",
+						Source:            "hashicorp/hcp",
+					},
+				},
+				Config: fmt.Sprintf(`
+					data "hcp_vault_secrets_app" "example" {
+						app_name    = %q
+					}`, testAppName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "organization_id"),
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "project_id"),
+					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.secret_one", firstSecretValue),
+					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.secret_two", secondSecretValue),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+				Config: fmt.Sprintf(`
+				data "hcp_vault_secrets_app" "example" {
+					app_name    = %q
+				}`, testAppName),
+				PlanOnly: true,
+			},
+		},
+		CheckDestroy: func(s *terraform.State) error {
+			deleteTestAppSecret(t, testAppName, firstSecretName)
+			deleteTestAppSecret(t, testAppName, secondSecretName)
+			deleteTestApp(t, testAppName)
+			return nil
+		},
+	})
+}
+
 func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	testAppName := generateRandomSlug()
 	dataSourceAddress := "data.hcp_vault_secrets_app.foo"
@@ -26,8 +82,8 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	secondSecretValue := "hey, this is version 2!"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t, map[string]bool{}) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testPreCheck(t) },
+		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
 			{
@@ -62,13 +118,18 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 func createTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := newDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.CreateVaultSecretsApp(context.Background(), client, loc, appName)
+	_, err = clients.CreateVaultSecretsApp(context.Background(), client, loc, appName, "app description")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,13 +138,17 @@ func createTestApp(t *testing.T, appName string) {
 func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := newDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.CreateVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName, secretValue)
+	_, err = clients.CreateVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName, secretValue)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,13 +157,18 @@ func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) 
 func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := newDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName)
+	err = clients.DeleteVaultSecretsAppSecret(context.Background(), client, loc, appName, secretName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -107,13 +177,18 @@ func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 func deleteTestApp(t *testing.T, appName string) {
 	t.Helper()
 
-	client := testAccProvider.Meta().(*clients.Client)
+	client, err := newDefaultClient()
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	err := clients.DeleteVaultSecretsApp(context.Background(), client, loc, appName)
+	err = clients.DeleteVaultSecretsApp(context.Background(), client, loc, appName)
 	if err != nil {
 		t.Error(err)
 	}

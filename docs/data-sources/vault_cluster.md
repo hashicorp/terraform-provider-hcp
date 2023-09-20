@@ -68,7 +68,16 @@ Optional:
 
 Read-Only:
 
+- `cloudwatch_access_key_id` (String) CloudWatch access key ID for streaming audit logs
+- `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
+- `cloudwatch_region` (String) CloudWatch region for streaming audit logs
+- `cloudwatch_secret_access_key` (String) CloudWatch secret access key for streaming audit logs
+- `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 - `datadog_region` (String) Datadog region for streaming audit logs
+- `elasticsearch_dataset` (String) ElasticSearch dataset for streaming audit logs
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming audit logs
+- `elasticsearch_password` (String) ElasticSearch password for streaming audit logs
+- `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
@@ -89,7 +98,15 @@ Read-Only:
 
 Read-Only:
 
+- `cloudwatch_access_key_id` (String) CloudWatch access key ID for streaming metrics
+- `cloudwatch_namespace` (String) CloudWatch namespace for streaming metrics
+- `cloudwatch_region` (String) CloudWatch region for streaming metrics
+- `cloudwatch_secret_access_key` (String) CloudWatch secret access key for streaming metrics
 - `datadog_region` (String) Datadog region for streaming metrics
+- `elasticsearch_dataset` (String) ElasticSearch dataset for streaming metrics
+- `elasticsearch_endpoint` (String) ElasticSearch endpoint for streaming metrics
+- `elasticsearch_password` (String) ElasticSearch password for streaming metrics
+- `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics

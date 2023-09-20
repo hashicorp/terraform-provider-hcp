@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
 // Status endpoint for prod.
@@ -34,14 +34,13 @@ type component struct {
 
 type status string
 
-func isHCPOperational() (diags diag.Diagnostics) {
+// This functionality is a duplicate of isHCPOperational in order to return
+// the proper diagnostics for the terraform plugin framework
+func isHCPOperationalFramework() (diags diagnostic.Diagnostics) {
 	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "You may experience issues using HCP.",
-			Detail:   fmt.Sprintf("Unable to create request to verify HCP status: %s", err),
-		})
+		diags.AddWarning("You may experience issues using HCP.",
+			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
 
 		return diags
 	}
@@ -49,11 +48,8 @@ func isHCPOperational() (diags diag.Diagnostics) {
 	var cl = http.Client{}
 	resp, err := cl.Do(req)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "You may experience issues using HCP.",
-			Detail:   fmt.Sprintf("Unable to complete request to verify HCP status: %s", err),
-		})
+		diags.AddWarning("You may experience issues using HCP.",
+			fmt.Sprintf("Unable to create request to verify HCP status: %s", err))
 
 		return diags
 	}
@@ -61,11 +57,8 @@ func isHCPOperational() (diags diag.Diagnostics) {
 
 	jsBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "You may experience issues using HCP.",
-			Detail:   fmt.Sprintf("Unable read response to verify HCP status: %s", err),
-		})
+		diags.AddWarning("You may experience issues using HCP.",
+			fmt.Sprintf("Unable read response to verify HCP status: %s", err))
 
 		return diags
 	}
@@ -73,11 +66,8 @@ func isHCPOperational() (diags diag.Diagnostics) {
 	sp := statuspage{}
 	err = json.Unmarshal(jsBytes, &sp)
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "You may experience issues using HCP.",
-			Detail:   fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err),
-		})
+		diags.AddWarning("You may experience issues using HCP.",
+			fmt.Sprintf("Unable unmarshal response to verify HCP status: %s", err))
 
 		return diags
 	}
@@ -100,11 +90,8 @@ func isHCPOperational() (diags diag.Diagnostics) {
 	}
 
 	if !operational {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  "You may experience issues using HCP.",
-			Detail:   fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)),
-		})
+		diags.AddWarning("You may experience issues using HCP.",
+			fmt.Sprintf("HCP is reporting the following:\n\n%v\nPlease check https://status.hashicorp.com for more details.", printStatus(systemStatus)))
 	}
 
 	return diags
