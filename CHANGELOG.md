@@ -1,3 +1,14 @@
+## v0.71.0 (September 20, 2023)
+
+FEATURES:
+
+* Add data source for pulling in a single secret. [[GH-594](https://github.com/hashicorp/terraform-provider-hcp/pull/594)]
+* Add resource to create app in Vault Secrets. [[GH-593](https://github.com/hashicorp/terraform-provider-hcp/pull/593)]
+
+IMPROVEMENTS:
+
+* Add ElasticSearch as an observability provider for streaming audit logs and metrics from HCP Vault clusters. [[GH-586](https://github.com/hashicorp/terraform-provider-hcp/pull/586)]
+* Update to use the Terraform Multiplexing framework [[GH-565](https://github.com/hashicorp/terraform-provider-hcp/pull/565)]
 ## v0.70.0 (September 13, 2023)
 
 IMPROVEMENTS:
