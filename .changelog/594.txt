@@ -1,0 +1,3 @@
+```release-note:feature
+Add data source for pulling in a single secret.
+```
