@@ -108,7 +108,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 
 	clientSecret := ""
 	if data.ClientSecret.ValueString() != "" {
-		clientSecret = data.ClientID.ValueString()
+		clientSecret = data.ClientSecret.ValueString()
 	} else {
 		clientSecret = os.Getenv("HCP_CLIENT_SECRET")
 	}
