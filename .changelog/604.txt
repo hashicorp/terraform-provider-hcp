@@ -1,0 +1,3 @@
+```release-note:bug
+project_id unauthorized issue when using config client secret
+```
