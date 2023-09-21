@@ -1,9 +1,9 @@
 name: Prerelease
 
 on:
-  # Run Every Wednesday at 12:00 AM UTC
+  # Run Every Wednesday at 01:00 AM UTC
   schedule:
-    - cron: '0 0 * * 3'
+    - cron: '0 2 * * 3'
   workflow_dispatch:
 
 permissions: write-all
