@@ -1,10 +1,15 @@
 name: Prerelease
 
 on:
-  # Run Every Wednesday at 12:00 AM UTC
+  # Run Every Wednesday at 01:00 AM UTC
   schedule:
-    - cron: '0 0 * * 3'
+    - cron: '0 2 * * 3'
   workflow_dispatch:
+    inputs:
+      release-as-patch:
+        description: "Patch Release (default: Minor)"
+        type: boolean
+        default: false
 
 permissions: write-all
 
@@ -70,12 +75,21 @@ jobs:
         env:
           GOPRIVATE: 'github.com/hashicorp/*'
           GITHUB_TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+          IS_PATCH: ${{ contains(inputs.release-as-patch, 'true') }}
         run: |
           CURRENT_VERSION_PARTS=(${CURRENT_VERSION//./ })
           MAJOR=${CURRENT_VERSION_PARTS[0]}
           MINOR=${CURRENT_VERSION_PARTS[1]}
           PATCH=${CURRENT_VERSION_PARTS[2]}
-          MINOR=$((MINOR+1))
+          
+          if [[ $IS_PATCH == "true" ]] 
+          then
+            PATCH=1
+          else
+            MINOR=$((MINOR+1))
+            PATCH=0
+          fi
+          
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
           
