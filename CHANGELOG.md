@@ -1,3 +1,9 @@
+## v0.71.1 (September 25, 2023)
+
+BUG FIXES:
+
+* project_id unauthorized issue when using config client secret [[GH-604](https://github.com/hashicorp/terraform-provider-hcp/pull/604)]
+
 ## v0.71.0 (September 20, 2023)
 
 FEATURES:
