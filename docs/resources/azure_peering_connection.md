@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_azure_peering_connection - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HashiCorp Virtual Networks"
 description: |-
   The Azure peering connection resource allows you to manage a peering connection between an HVN and a peer Azure VNet.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_hvn - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HashiCorp Virtual Networks"
 description: |-
   The HVN resource allows you to manage a HashiCorp Virtual Network in HCP.
 ---

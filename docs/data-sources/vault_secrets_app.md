@@ -1,6 +1,6 @@
 ---
 page_title: "Data Source hcp_vault_secrets_app - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault Secrets"
 description: |-
   The Vault Secrets app data source retrieves secrets and their latest version values for a given application.
 ---

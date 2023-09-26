@@ -1,0 +1,15 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "HashiCorp Virtual Networks"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_hvn/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

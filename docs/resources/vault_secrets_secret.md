@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_vault_secrets_secret - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault Secrets"
 description: |-
   The Vault Secrets secret resource manages a secret within a given application.
 ---

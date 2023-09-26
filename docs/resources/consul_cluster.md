@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_consul_cluster - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Consul"
 description: |-
   The Consul cluster resource allows you to manage an HCP Consul cluster.
 ---

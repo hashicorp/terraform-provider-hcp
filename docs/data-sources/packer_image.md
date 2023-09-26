@@ -1,6 +1,6 @@
 ---
 page_title: "Data Source hcp_packer_image - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Packer"
 description: |-
   The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.
 ---

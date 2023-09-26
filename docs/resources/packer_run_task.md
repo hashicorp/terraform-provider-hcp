@@ -1,6 +1,6 @@
 ---
 page_title: "hcp_packer_run_task Resource - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Packer"
 description: |-
   The Packer Run Task resource allows you to regenerate the HMAC key for an HCP Packer Registry's run task.
   If you do not need to regenerate the HMAC key, it is recommended to use the hcp_packer_run_task data source instead.

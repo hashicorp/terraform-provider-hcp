@@ -1,0 +1,3 @@
+```release-note:improvement
+Updating docs to use sub-categories
+```

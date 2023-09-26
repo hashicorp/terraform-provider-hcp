@@ -1,6 +1,6 @@
 ---
 page_title: "hcp_packer_image_iteration Data Source - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Packer"
 description: |-
   The Packer ImageIteration data source iteration gets the most recent iteration (or build) of an image, given a channel.
 ---
