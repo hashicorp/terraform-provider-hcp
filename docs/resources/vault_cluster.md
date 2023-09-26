@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_vault_cluster - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault"
 description: |-
   The Vault cluster resource allows you to manage an HCP Vault cluster.
 ---

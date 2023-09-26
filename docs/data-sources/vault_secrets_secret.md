@@ -1,6 +1,6 @@
 ---
 page_title: "Data Source hcp_vault_secrets_secret - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault Secrets"
 description: |-
   The Vault Secrets secret data source retrieves a singular secret and its latest version.
 ---
