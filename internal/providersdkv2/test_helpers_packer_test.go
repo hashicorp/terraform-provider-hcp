@@ -255,28 +255,6 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strf
 	return resp.Payload.Iteration
 }
 
-func getIterationIDFromFingerPrint(t *testing.T, bucketSlug string, fingerprint string) (string, error) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	getItParams := packer_service.NewPackerServiceGetIterationParams()
-	getItParams.LocationOrganizationID = loc.OrganizationID
-	getItParams.LocationProjectID = loc.ProjectID
-	getItParams.BucketSlug = bucketSlug
-	getItParams.Fingerprint = &fingerprint
-
-	ok, err := client.Packer.PackerServiceGetIteration(getItParams, nil)
-	if err != nil {
-		return "", err
-	}
-	return ok.Payload.Iteration.ID, nil
-}
-
 type buildOptions struct {
 	labels        map[string]string
 	cloudProvider string
@@ -487,61 +465,5 @@ func deleteBucket(t *testing.T, bucketSlug string, logOnError bool) {
 	}
 	if logOnError {
 		t.Logf("unexpected DeleteBucket error, expected nil. Got %v", err)
-	}
-}
-
-func deleteIteration(t *testing.T, bucketSlug string, iterationFingerprint string, logOnError bool) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	iterationID, err := getIterationIDFromFingerPrint(t, bucketSlug, iterationFingerprint)
-	if err != nil {
-		if logOnError {
-			t.Logf(err.Error())
-		}
-		return
-	}
-
-	deleteItParams := packer_service.NewPackerServiceDeleteIterationParams()
-	deleteItParams.LocationOrganizationID = loc.OrganizationID
-	deleteItParams.LocationProjectID = loc.ProjectID
-	deleteItParams.BucketSlug = &bucketSlug
-	deleteItParams.IterationID = iterationID
-
-	_, err = client.Packer.PackerServiceDeleteIteration(deleteItParams, nil)
-	if err == nil {
-		return
-	}
-	if logOnError {
-		t.Logf("unexpected DeleteIteration error, expected nil. Got %v", err)
-	}
-}
-
-func deleteChannel(t *testing.T, bucketSlug string, channelSlug string, logOnError bool) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	deleteChParams := packer_service.NewPackerServiceDeleteChannelParams()
-	deleteChParams.LocationOrganizationID = loc.OrganizationID
-	deleteChParams.LocationProjectID = loc.ProjectID
-	deleteChParams.BucketSlug = bucketSlug
-	deleteChParams.Slug = channelSlug
-
-	_, err := client.Packer.PackerServiceDeleteChannel(deleteChParams, nil)
-	if err == nil {
-		return
-	}
-	if logOnError {
-		t.Logf("unexpected DeleteChannel error, expected nil. Got %v", err)
 	}
 }
