@@ -3,6 +3,7 @@ page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
 subcategory: "HCP Consul"
 description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
 
 # {{.Name}} ({{.Type}})
 
@@ -13,4 +14,3 @@ description: |-
 {{ tffile "examples/data-sources/hcp_consul_cluster/data-source.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
-
