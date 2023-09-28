@@ -1,3 +1,12 @@
+## v0.72.0 (September 28, 2023)
+BREAKING CHANGES:
+
+* Removed the `hcp_packer_image_iteration` data source, previously deprecated in [v0.68.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.68.0) [[GH-609](https://github.com/hashicorp/terraform-provider-hcp/pull/609)]
+
+IMPROVEMENTS:
+
+* Update to Go 1.20 per the [Go support policy](https://go.dev/doc/devel/release#policy). [[GH-610](https://github.com/hashicorp/terraform-provider-hcp/pull/610)]
+* Updating docs to use sub-categories [[GH-585](https://github.com/hashicorp/terraform-provider-hcp/pull/585)]
 ## v0.71.1 (September 25, 2023)
 
 BUG FIXES:
