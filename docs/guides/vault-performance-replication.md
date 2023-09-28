@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "HCP Vault"
 page_title: "Configure Vault performance replication - HCP Provider"
 description: |-
     Configure performance replication between two Plus tier clusters.

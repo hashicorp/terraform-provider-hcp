@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "HCP Vault"
 page_title: "Create a Vault cluster and admin token - HCP Provider"
 description: |-
     An example of creating a Vault cluster and admin token.
