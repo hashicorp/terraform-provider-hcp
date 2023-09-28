@@ -3,6 +3,7 @@ page_title: "hcp_vault_cluster Data Source - terraform-provider-hcp"
 subcategory: "HCP Vault"
 description: |-
   The cluster data source provides information about an existing HCP Vault cluster.
+---
 
 # hcp_vault_cluster (Data Source)
 
@@ -110,4 +111,3 @@ Read-Only:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
-
