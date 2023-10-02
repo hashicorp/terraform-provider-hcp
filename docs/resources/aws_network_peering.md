@@ -3,6 +3,7 @@ page_title: "hcp_aws_network_peering Resource - terraform-provider-hcp"
 subcategory: "HashiCorp Virtual Networks"
 description: |-
   The AWS network peering resource allows you to manage a network peering between an HVN and a peer AWS VPC.
+---
 
 # hcp_aws_network_peering (Resource)
 
