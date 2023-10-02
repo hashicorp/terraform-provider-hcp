@@ -103,6 +103,28 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					return strings.EqualFold(old, new)
 				},
 			},
+			"ip_allowlist": {
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description:      "IP address range in CIDR notation.",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateConsulClusterCIDR,
+						},
+						"description": {
+							Description:      "Description to help identify source (maximum 255 chars).",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateConsulClusterCIDRDescription,
+						},
+					},
+				},
+				MaxItems: 50,
+			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
