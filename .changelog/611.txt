@@ -1,0 +1,3 @@
+```release-note:feature
+Add `ip_allowlist` field for HCP Vault clusters to create, or update allowed IP address ranges (CIDRs) for inbound traffic.
+```
