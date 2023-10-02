@@ -58,6 +58,7 @@ resource "hcp_vault_cluster" "example" {
 - `project_id` (String) The ID of the HCP project where the Vault cluster is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
+- `ip_allowlist` (Block List, Max: 50) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `proxy_endpoint` (String) Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `tier` (String) Tier of the HCP Vault cluster. Valid options for tiers - `dev`, `starter_small`, `standard_small`, `standard_medium`, `standard_large`, `plus_small`, `plus_medium`, `plus_large`. See [pricing information](https://www.hashicorp.com/products/vault/pricing). Changing a cluster's size or tier is only available to admins. See [Scale a cluster](https://registry.terraform.io/providers/hashicorp/hcp/latest/docs/guides/vault-scaling).
@@ -140,6 +141,18 @@ Read-Only:
 
 - `cloudwatch_namespace` (String) CloudWatch namespace for streaming metrics
 - `elasticsearch_dataset` (String) ElasticSearch dataset for streaming metrics
+
+
+<a id="nestedblock--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Required:
+
+- `address` (String) IP address range in CIDR notation.
+
+Optional:
+
+- `description` (String) Description to help identify source (maximum 255 chars).
 
 
 <a id="nestedblock--timeouts"></a>
