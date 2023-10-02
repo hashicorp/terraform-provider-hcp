@@ -3,6 +3,7 @@ page_title: "hcp_packer_bucket_names Data Source - terraform-provider-hcp"
 subcategory: "HCP Packer"
 description: |-
   The Packer Bucket Names data source gets the names of all of the buckets in a single HCP Packer registry.
+---
 
 # hcp_packer_bucket_names (Data Source)
 
@@ -34,4 +35,3 @@ data "hcp_packer_bucket_names" "all" {}
 Optional:
 
 - `default` (String)
-

@@ -3,6 +3,7 @@ page_title: "hcp_packer_channel Resource - terraform-provider-hcp"
 subcategory: "HCP Packer"
 description: |-
   The Packer Channel resource allows you to manage a bucket channel within an active HCP Packer Registry.
+---
 
 # hcp_packer_channel (Resource)
 

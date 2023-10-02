@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "HCP Packer"
 page_title: "Advanced Packer Channel Management - HCP Provider"
 description: |-
     A guide to integreting HCP Packer resources and data sources for more advanced channel management.
