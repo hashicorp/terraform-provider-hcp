@@ -3,6 +3,7 @@ page_title: "hcp_hvn_peering_connection Data Source - terraform-provider-hcp"
 subcategory: "HashiCorp Virtual Networks"
 description: |-
   The HVN peering connection data source provides information about an existing peering connection between HVNs.
+---
 
 # hcp_hvn_peering_connection (Data Source)
 
@@ -46,4 +47,3 @@ data "hcp_hvn_peering_connection" "test" {
 Optional:
 
 - `default` (String)
-
