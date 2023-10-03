@@ -38,6 +38,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
+- `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
 - `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
@@ -45,7 +46,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform#review-hcpvault-tf). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
-- `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRs supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `proxy_endpoint` (String) Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
 - `public_endpoint` (Boolean) Denotes that the cluster has a public endpoint. Defaults to false.
 - `region` (String) The region where the HCP Vault cluster is located.
@@ -85,6 +85,15 @@ Read-Only:
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 
 
+<a id="nestedatt--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Read-Only:
+
+- `address` (String)
+- `description` (String)
+
+
 <a id="nestedatt--major_version_upgrade_config"></a>
 ### Nested Schema for `major_version_upgrade_config`
 
@@ -112,12 +121,3 @@ Read-Only:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
-
-
-<a id="nestedatt--ip_allowlist"></a>
-### Nested Schema for `ip_allowlist`
-
-Read-Only:
-
-- `address` (String)
-- `description` (String)

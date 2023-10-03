@@ -397,7 +397,7 @@ func Test_validateConsulClusterCIDR(t *testing.T) {
 	for n, tc := range tcs {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
-			result := validateConsulClusterCIDR(tc.input, nil)
+			result := validateCIDRRange(tc.input, nil)
 			r.Equal(tc.expected, result)
 		})
 	}
@@ -428,7 +428,7 @@ func Test_validateConsulClusterCIDRDescription(t *testing.T) {
 	for n, tc := range tcs {
 		t.Run(n, func(t *testing.T) {
 			r := require.New(t)
-			result := validateConsulClusterCIDRDescription(tc.input, nil)
+			result := validateCIDRRangeDescription(tc.input, nil)
 			r.Equal(tc.expected, result)
 		})
 	}
