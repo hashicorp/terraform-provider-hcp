@@ -507,6 +507,12 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		httpProxyOption = vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(proxyEndpoint.(string))).Pointer()
 	}
 
+	cidrs := d.Get("ip_allowlist").([]interface{})
+	ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
+	if err != nil {
+		return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+	}
+
 	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
@@ -546,6 +552,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
@@ -1532,4 +1539,24 @@ func getPathStrings(pathFilter interface{}) []string {
 
 func printPlusScalingWarningMsg() {
 	log.Printf("[WARN] When scaling Plus-tier Vault clusters, be sure to keep the size of all clusters in a replication group in sync")
+}
+
+// buildIPAllowlistVaultCluster returns a vault model for the IP allowlist.
+func buildIPAllowlistVaultCluster(cidrs []interface{}) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, error) {
+	ipAllowList := make([]*vaultmodels.HashicorpCloudVault20201125CidrRange, len(cidrs))
+
+	for i, cidr := range cidrs {
+		cidrMap := cidr.(map[string]interface{})
+		address := cidrMap["address"].(string)
+		description := cidrMap["description"].(string)
+
+		cidrRange := &vaultmodels.HashicorpCloudVault20201125CidrRange{
+			Address:     address,
+			Description: description,
+		}
+
+		ipAllowList[i] = cidrRange
+	}
+
+	return ipAllowList, nil
 }
