@@ -3,6 +3,7 @@ page_title: "hcp_consul_versions Data Source - terraform-provider-hcp"
 subcategory: "HCP Consul"
 description: |-
   The Consul versions data source provides the Consul versions supported by HCP.
+---
 
 # hcp_consul_versions (Data Source)
 
@@ -34,4 +35,3 @@ data "hcp_consul_versions" "default" {}
 Optional:
 
 - `default` (String)
-

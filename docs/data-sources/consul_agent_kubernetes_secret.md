@@ -3,6 +3,7 @@ page_title: "hcp_consul_agent_kubernetes_secret Data Source - terraform-provider
 subcategory: "HCP Consul"
 description: |-
   The agent config Kubernetes secret data source provides Consul agents running in Kubernetes the configuration needed to connect to the Consul cluster.
+---
 
 # hcp_consul_agent_kubernetes_secret (Data Source)
 
@@ -41,4 +42,3 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 Optional:
 
 - `default` (String)
-

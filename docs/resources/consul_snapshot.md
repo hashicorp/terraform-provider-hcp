@@ -3,6 +3,7 @@ page_title: "hcp_consul_snapshot Resource - terraform-provider-hcp"
 subcategory: "HCP Consul"
 description: |-
   The Consul snapshot resource allows users to manage Consul snapshots of an HCP Consul cluster. Snapshots currently have a retention policy of 30 days.
+---
 
 # hcp_consul_snapshot (Resource)
 

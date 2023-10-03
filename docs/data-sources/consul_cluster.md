@@ -3,6 +3,7 @@ page_title: "hcp_consul_cluster Data Source - terraform-provider-hcp"
 subcategory: "HCP Consul"
 description: |-
   The cluster data source provides information about an existing HCP Consul cluster.
+---
 
 # hcp_consul_cluster (Data Source)
 
@@ -72,4 +73,3 @@ Read-Only:
 
 - `address` (String)
 - `description` (String)
-
