@@ -3,6 +3,7 @@ page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
 subcategory: "HCP Consul"
 description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
 
 # {{.Name}} ({{.Type}})
 
@@ -11,6 +12,5 @@ description: |-
 ## Example Usage
 
 {{ tffile "examples/data-sources/hcp_consul_agent_helm_config/data-source.tf" }}
-
 
 {{ .SchemaMarkdown | trimspace }}

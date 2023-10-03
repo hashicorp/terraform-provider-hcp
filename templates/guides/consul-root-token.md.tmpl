@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "HCP Consul"
 page_title: "Create a new ACL root token - HCP Provider"
 description: |-
     An example of creating a new ACL root token.
