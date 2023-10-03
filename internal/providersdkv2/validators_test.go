@@ -362,7 +362,7 @@ func Test_validateConsulClusterSize(t *testing.T) {
 	}
 }
 
-func Test_validateConsulClusterCIDR(t *testing.T) {
+func Test_validateCIDRRange(t *testing.T) {
 	tcs := map[string]struct {
 		input    string
 		expected diag.Diagnostics
@@ -403,7 +403,7 @@ func Test_validateConsulClusterCIDR(t *testing.T) {
 	}
 }
 
-func Test_validateConsulClusterCIDRDescription(t *testing.T) {
+func Test_validateCIDRRangeDescription(t *testing.T) {
 	invalidInput := "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
 	tcs := map[string]struct {
 		input    string
