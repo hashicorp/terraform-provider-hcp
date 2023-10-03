@@ -3,6 +3,7 @@ page_title: "hcp_boundary_cluster Resource - terraform-provider-hcp"
 subcategory: "HCP Boundary"
 description: |-
   This resource allows you to manage an HCP Boundary cluster
+---
 
 # hcp_boundary_cluster (Resource)
 
