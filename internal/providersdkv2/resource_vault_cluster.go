@@ -1038,6 +1038,20 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 		return err
 	}
 
+	if cluster.Config.NetworkConfig != nil {
+		ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+		for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+			cidr := map[string]interface{}{
+				"description": cidrRange.Description,
+				"address":     cidrRange.Address,
+			}
+			ipAllowlist[i] = cidr
+		}
+		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
+			return err
+		}
+	}
+
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
 		ProjectID:      cluster.Location.ProjectID,
