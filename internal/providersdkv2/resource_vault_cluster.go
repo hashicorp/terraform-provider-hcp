@@ -740,7 +740,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
+	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "ip_allowlist", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
 		return nil
 	}
 
@@ -750,7 +750,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("ip_allowlist") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
@@ -858,6 +858,10 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
 	httpProxyOption := getHTTPProxyOption(d)
+	ipAllowlist, diagErr := getIpAllowlist(d, clusterID)
+	if diagErr != nil {
+		return diagErr
+	}
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -950,6 +954,19 @@ func getHTTPProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault
 	if d.HasChange("proxy_endpoint") {
 		httpProxyOption := vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(d.Get("proxy_endpoint").(string)))
 		return &httpProxyOption
+	}
+	return nil
+}
+
+func getIpAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, diag.Diagnostics) {
+	// If we don't change the ip_allowlist_endpoint, return nil so we don't pass ip_allowlist to the update.
+	if d.HasChange("ip_allowlist") {
+		cidrs := d.Get("ip_allowlist").([]interface{})
+		ip_allowlist, err := buildIPAllowlistVaultCluster(cidrs)
+		if err != nil {
+			return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+		}
+		return ip_allowlist
 	}
 	return nil
 }
