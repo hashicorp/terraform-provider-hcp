@@ -1,3 +1,8 @@
+## v0.72.1 (October 03, 2023)
+
+BUG FIXES:
+
+* Fix documentation formatting issue introduced by [#585](https://github.com/hashicorp/terraform-provider-hcp/pull/585) [[GH-620](https://github.com/hashicorp/terraform-provider-hcp/pull/620)]
 ## v0.72.0 (September 28, 2023)
 BREAKING CHANGES:
 

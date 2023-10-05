@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "HCP Consul"
 page_title: "Consul Federation with Auto HVN Peering - HCP Provider"
 description: |-
     An example of federating a new HCP Consul cluster with an existing one via auto peering.

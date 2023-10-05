@@ -3,6 +3,7 @@ page_title: "hcp_hvn_peering_connection Resource - terraform-provider-hcp"
 subcategory: "HashiCorp Virtual Networks"
 description: |-
   The HVN peering connection resource allows you to manage a peering connection between HVNs.
+---
 
 # hcp_hvn_peering_connection (Resource)
 
