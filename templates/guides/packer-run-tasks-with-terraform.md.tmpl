@@ -1,5 +1,5 @@
 ---
-subcategory: "HCP Packer"
+subcategory: ""
 page_title: "Packer Run Tasks with Terraform - HCP Provider"
 description: |-
     A guide to integrating HCP Packer with Terraform using Run Tasks. 

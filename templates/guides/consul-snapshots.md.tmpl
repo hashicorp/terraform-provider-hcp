@@ -1,5 +1,5 @@
 ---
-subcategory: "HCP Consul"
+subcategory: ""
 page_title: "Create Consul cluster snapshots in HCP - HCP Provider"
 description: |-
     An example of creating an HCP Consul cluster snapshot.
