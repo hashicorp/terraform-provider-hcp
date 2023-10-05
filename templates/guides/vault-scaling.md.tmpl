@@ -1,5 +1,5 @@
 ---
-subcategory: "HCP Vault"
+subcategory: ""
 page_title: "Resize or scale a Vault cluster - HCP Provider"
 description: |-
     Change a current HCP Vault cluster in terms of tiers (Dev, Starter, Standard, Plus) or sizes (S, M, L).
