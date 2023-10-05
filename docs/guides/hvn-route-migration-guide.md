@@ -1,5 +1,5 @@
 ---
-subcategory: "HashiCorp Virtual Networks"
+subcategory: ""
 page_title: "HVN Route Migration Guide - HCP Provider"
 description: |-
     An guide to migrating HCP networking resources to use HVN routes.
