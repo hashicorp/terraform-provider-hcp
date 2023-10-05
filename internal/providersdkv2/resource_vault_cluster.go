@@ -893,7 +893,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
 					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -919,7 +919,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		auditConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -964,11 +964,11 @@ func getIpAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.Ha
 		cidrs := d.Get("ip_allowlist").([]interface{})
 		ip_allowlist, err := buildIPAllowlistVaultCluster(cidrs)
 		if err != nil {
-			return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+			return nil, diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
 		}
-		return ip_allowlist
+		return ip_allowlist, nil
 	}
-	return nil
+	return nil, nil
 }
 
 // setVaultClusterResourceData sets the KV pairs of the Vault cluster resource schema.
