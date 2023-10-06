@@ -1,3 +1,8 @@
+## v0.72.2 (October 06, 2023)
+
+BUG FIXES:
+
+* Fix documentation duplicate subcategory issue introduced by [#620](https://github.com/hashicorp/terraform-provider-hcp/pull/620) [[GH-622](https://github.com/hashicorp/terraform-provider-hcp/pull/622)]
 ## v0.72.1 (October 03, 2023)
 
 BUG FIXES:
