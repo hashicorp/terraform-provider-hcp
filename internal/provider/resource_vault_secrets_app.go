@@ -129,6 +129,7 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
+		return
 	}
 
 	state.AppName = types.StringValue(res.Name)
@@ -152,6 +153,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
+		return
 	}
 
 	plan.ID = types.StringValue(res.Name)
