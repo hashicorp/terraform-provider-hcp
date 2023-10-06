@@ -84,7 +84,7 @@ jobs:
           
           if [[ $IS_PATCH == "true" ]] 
           then
-            PATCH=1
+            PATCH=$((PATCH+1))
           else
             MINOR=$((MINOR+1))
             PATCH=0

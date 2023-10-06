@@ -1,0 +1,3 @@
+```release-note:bug
+Prevent crash when a vault_secrets_app resource no longer exists.
+````
