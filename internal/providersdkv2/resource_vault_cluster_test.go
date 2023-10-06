@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -28,6 +29,7 @@ type inputT struct {
 	UpdateTier2                string
 	PublicEndpoint             string
 	ProxyEndpoint              string
+	IpAllowlist                []*vaultmodels.HashicorpCloudVault20201125CidrRange
 	Secondary                  *inputT // optional
 	tf                         string
 }
@@ -56,6 +58,12 @@ func TestAccVaultClusterAzure(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
+		IpAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+			{
+				Address:     "172.25.14.0/24",
+				Description: "some description",
+			},
+		},
 	}
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
 	// save so e don't have to generate this again and again
@@ -84,6 +92,12 @@ func TestAccVaultClusterAWS(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
+		IpAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+			{
+				Address:     "172.25.14.0/24",
+				Description: "some description",
+			},
+		},
 	}
 
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
@@ -193,6 +207,10 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
+			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
+				"address":     "172.25.14.0/24",
+				"description": "some description",
+			}),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),
@@ -263,6 +281,7 @@ func testTFDataSources(t *testing.T, in *inputT) resource.TestStep {
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "hvn_id", in.VaultClusterDataSourceName, "hvn_id"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "public_endpoint", in.VaultClusterDataSourceName, "public_endpoint"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "proxy_endpoint", in.VaultClusterDataSourceName, "proxy_endpoint"),
+			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "ip_allowlist", in.VaultClusterDataSourceName, "ip_allowlist"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "min_vault_version", in.VaultClusterDataSourceName, "min_vault_version"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "tier", in.VaultClusterDataSourceName, "tier"),
 			resource.TestCheckResourceAttrPair(in.VaultClusterResourceName, "organization_id", in.VaultClusterDataSourceName, "organization_id"),
@@ -295,17 +314,27 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 	}
 }
 
-// This step verifies the successful update of "public_endpoint", "proxy_endpoint", "audit_log", "metrics" and MVU config.
+// This step verifies the successful update of "public_endpoint", "proxy_endpoint", "ip_allowlist", "audit_log", "metrics" and MVU config.
 func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "true"
 	newIn.ProxyEndpoint = "ENABLED"
+	newIn.IpAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+		{
+			Address:     "172.25.14.0/24",
+			Description: "some description",
+		},
+	}
 	return resource.TestStep{
 		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "ENABLED"),
+			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
+				"address":     "172.25.14.0/24",
+				"description": "some description",
+			}),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
@@ -321,11 +350,17 @@ func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.Tes
 	}
 }
 
-// This step verifies the successful update of "tier", "public_endpoint", "proxy_endpoint" and removal of "metrics" and "audit_log"
+// This step verifies the successful update of "tier", "public_endpoint", "proxy_endpoint", "ip_allowlist" and removal of "metrics" and "audit_log"
 func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "false"
 	newIn.ProxyEndpoint = "DISABLED"
+	newIn.IpAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+		{
+			Address:     "172.25.14.0/24",
+			Description: "some description",
+		},
+	}
 	return resource.TestStep{
 		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier2)),
 		Check: resource.ComposeTestCheckFunc(
@@ -333,6 +368,10 @@ func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resou
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
+			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
+				"address":     "172.25.14.0/24",
+				"description": "some description",
+			}),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),

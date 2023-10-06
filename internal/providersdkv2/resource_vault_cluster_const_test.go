@@ -9,6 +9,7 @@ import (
 	"testing"
 	"text/template"
 
+	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,6 +40,7 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
+	ip_allowlist 	   = "{{ .IpAllowlist }}"
 	metrics_config			   {
 		splunk_hecendpoint = "https://http-input-splunkcloud.com"
 		splunk_token =       "test"
@@ -62,6 +64,7 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
+	ip_allowlist	   = "{{ .IpAllowlist }}"
 	major_version_upgrade_config {
 		upgrade_type = "SCHEDULED"
 		maintenance_window_day = "WEDNESDAY"
@@ -102,6 +105,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier           string
 		PublicEndpoint string
 		ProxyEndpoint  string
+		IpAllowlist    []*vaultmodels.HashicorpCloudVault20201125CidrRange
 	}{
 		ClusterID:      in.VaultClusterName,
 		HvnID:          in.HvnName,
@@ -110,6 +114,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier:           tier,
 		PublicEndpoint: in.PublicEndpoint,
 		ProxyEndpoint:  in.ProxyEndpoint,
+		IpAllowlist:    in.IpAllowlist,
 	})
 	require.NoError(t, err)
 	return tfResources.String()
