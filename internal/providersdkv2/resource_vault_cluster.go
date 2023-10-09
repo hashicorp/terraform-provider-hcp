@@ -858,7 +858,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
 	httpProxyOption := getHTTPProxyOption(d)
-	ipAllowlist, diagErr := getIpAllowlist(d, clusterID)
+	ipAllowlist, diagErr := getIPAllowlist(d, clusterID)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -958,15 +958,15 @@ func getHTTPProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault
 	return nil
 }
 
-func getIpAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, diag.Diagnostics) {
+func getIPAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, diag.Diagnostics) {
 	// If we don't change the ip_allowlist_endpoint, return nil so we don't pass ip_allowlist to the update.
 	if d.HasChange("ip_allowlist") {
 		cidrs := d.Get("ip_allowlist").([]interface{})
-		ip_allowlist, err := buildIPAllowlistVaultCluster(cidrs)
+		ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
 		if err != nil {
 			return nil, diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
 		}
-		return ip_allowlist, nil
+		return ipAllowlist, nil
 	}
 	return nil, nil
 }

@@ -29,7 +29,7 @@ type inputT struct {
 	UpdateTier2                string
 	PublicEndpoint             string
 	ProxyEndpoint              string
-	IpAllowlist                []*vaultmodels.HashicorpCloudVault20201125CidrRange
+	IPAllowlist                []*vaultmodels.HashicorpCloudVault20201125CidrRange
 	Secondary                  *inputT // optional
 	tf                         string
 }
@@ -58,7 +58,7 @@ func TestAccVaultClusterAzure(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
-		IpAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+		IPAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
 			{
 				Address:     "172.25.14.0/24",
 				Description: "some description",
@@ -92,7 +92,7 @@ func TestAccVaultClusterAWS(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
-		IpAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+		IPAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
 			{
 				Address:     "172.25.14.0/24",
 				Description: "some description",
@@ -319,7 +319,7 @@ func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.Tes
 	newIn := *in
 	newIn.PublicEndpoint = "true"
 	newIn.ProxyEndpoint = "ENABLED"
-	newIn.IpAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+	newIn.IPAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
 		{
 			Address:     "172.25.14.0/24",
 			Description: "some description",
@@ -355,7 +355,7 @@ func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resou
 	newIn := *in
 	newIn.PublicEndpoint = "false"
 	newIn.ProxyEndpoint = "DISABLED"
-	newIn.IpAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+	newIn.IPAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
 		{
 			Address:     "172.25.14.0/24",
 			Description: "some description",

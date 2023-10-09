@@ -105,7 +105,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier           string
 		PublicEndpoint string
 		ProxyEndpoint  string
-		IpAllowlist    []*vaultmodels.HashicorpCloudVault20201125CidrRange
+		IPAllowlist    []*vaultmodels.HashicorpCloudVault20201125CidrRange
 	}{
 		ClusterID:      in.VaultClusterName,
 		HvnID:          in.HvnName,
@@ -114,7 +114,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier:           tier,
 		PublicEndpoint: in.PublicEndpoint,
 		ProxyEndpoint:  in.ProxyEndpoint,
-		IpAllowlist:    in.IpAllowlist,
+		IPAllowlist:    in.IPAllowlist,
 	})
 	require.NoError(t, err)
 	return tfResources.String()
