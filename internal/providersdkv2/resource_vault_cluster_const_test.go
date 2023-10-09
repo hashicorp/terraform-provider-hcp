@@ -40,7 +40,7 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
-	ip_allowlist 	   = "{{ .IpAllowlist }}"
+	ip_allowlist 	   = "{{ .IPAllowlist }}"
 	metrics_config			   {
 		splunk_hecendpoint = "https://http-input-splunkcloud.com"
 		splunk_token =       "test"
@@ -64,7 +64,7 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
-	ip_allowlist	   = "{{ .IpAllowlist }}"
+	ip_allowlist	   = "{{ .IPAllowlist }}"
 	major_version_upgrade_config {
 		upgrade_type = "SCHEDULED"
 		maintenance_window_day = "WEDNESDAY"
