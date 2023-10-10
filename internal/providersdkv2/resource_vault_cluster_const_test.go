@@ -40,7 +40,6 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
-	ip_allowlist 	   = "{{ .IPAllowlist }}"
 	metrics_config			   {
 		splunk_hecendpoint = "https://http-input-splunkcloud.com"
 		splunk_token =       "test"
@@ -52,6 +51,7 @@ resource "hcp_vault_cluster" "test" {
 	major_version_upgrade_config {
 		upgrade_type = "MANUAL"
 	}
+	{{ .IPAllowlist }}
 }
 `
 
@@ -64,12 +64,12 @@ resource "hcp_vault_cluster" "test" {
 	tier               = "{{ .Tier }}"
 	public_endpoint    = {{ .PublicEndpoint }}
 	proxy_endpoint     = "{{ .ProxyEndpoint }}"
-	ip_allowlist	   = "{{ .IPAllowlist }}"
 	major_version_upgrade_config {
 		upgrade_type = "SCHEDULED"
 		maintenance_window_day = "WEDNESDAY"
 		maintenance_window_time = "WINDOW_12AM_4AM"
 	}
+	{{ .IPAllowlist }}
 }
 `
 
@@ -105,7 +105,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier           string
 		PublicEndpoint string
 		ProxyEndpoint  string
-		IPAllowlist    []*vaultmodels.HashicorpCloudVault20201125CidrRange
+		IPAllowlist    string
 	}{
 		ClusterID:      in.VaultClusterName,
 		HvnID:          in.HvnName,
@@ -114,8 +114,19 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier:           tier,
 		PublicEndpoint: in.PublicEndpoint,
 		ProxyEndpoint:  in.ProxyEndpoint,
-		IPAllowlist:    in.IPAllowlist,
+		IPAllowlist:    convertIPAllowlistToTFBlocks(in.IPAllowlist),
 	})
 	require.NoError(t, err)
 	return tfResources.String()
+}
+
+func convertIPAllowlistToTFBlocks(ipAlowlist []*vaultmodels.HashicorpCloudVault20201125CidrRange) string {
+	out := ""
+	for _, entry := range ipAlowlist {
+		out += fmt.Sprintf(`ip_allowlist {
+			address = "%s"
+			description = "%s"
+		  }`, entry.Address, entry.Description)
+	}
+	return out
 }
