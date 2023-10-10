@@ -84,10 +84,9 @@ func (d *DataSourceProject) Read(ctx context.Context, req datasource.ReadRequest
 
 	// Determine the ID
 	id := data.Project.ValueString()
+	id = strings.TrimPrefix(id, "project/")
 	if id == "" {
 		id = d.client.Config.ProjectID
-	} else if strings.HasPrefix(id, "project/") {
-		id = strings.TrimPrefix(id, "project/")
 	}
 
 	if d.client == nil {

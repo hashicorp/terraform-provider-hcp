@@ -24,13 +24,13 @@ type displayNameValidator struct {
 }
 
 // Description describes the validation in plain text formatting.
-func (validator displayNameValidator) Description(_ context.Context) string {
+func (v displayNameValidator) Description(_ context.Context) string {
 	return invalidDisplayNameErr
 }
 
 // MarkdownDescription describes the validation in Markdown formatting.
-func (validator displayNameValidator) MarkdownDescription(ctx context.Context) string {
-	return validator.Description(ctx)
+func (v displayNameValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
 }
 
 // Validate performs the validation.

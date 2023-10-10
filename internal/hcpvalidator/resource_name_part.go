@@ -24,13 +24,13 @@ type resourceNamePartValidator struct {
 }
 
 // Description describes the validation in plain text formatting.
-func (validator resourceNamePartValidator) Description(_ context.Context) string {
+func (v resourceNamePartValidator) Description(_ context.Context) string {
 	return invalidResourceNamePartErr
 }
 
 // MarkdownDescription describes the validation in Markdown formatting.
-func (validator resourceNamePartValidator) MarkdownDescription(ctx context.Context) string {
-	return validator.Description(ctx)
+func (v resourceNamePartValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
 }
 
 // Validate performs the validation.

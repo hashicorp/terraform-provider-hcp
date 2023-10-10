@@ -59,10 +59,6 @@ func TestDisplayNameValidator(t *testing.T) {
 func TestDisplayNameValidator_Good(t *testing.T) {
 	t.Parallel()
 
-	type testCase struct {
-		val         types.String
-		expectError bool
-	}
 	tests := []string{
 		"goodName", "1goodName", "goodName1", "good-Name", "good1Name2", "goodNamE",
 		"GOODNAME", "GOODNAME1", "GOOD-NAME", "GOOD1NAME2", "GOODNAME",
@@ -91,10 +87,6 @@ func TestDisplayNameValidator_Good(t *testing.T) {
 func TestDisplayNameValidator_Bad(t *testing.T) {
 	t.Parallel()
 
-	type testCase struct {
-		val         types.String
-		expectError bool
-	}
 	tests := []string{
 		"bad@", "bad#", "bad$", "bad%", "bad^", "bad&", "bad*", "bad(", "bad)", "bad/", "bad\\",
 		"a", "1", "-",
