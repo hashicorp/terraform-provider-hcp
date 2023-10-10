@@ -44,7 +44,10 @@ func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataReque
 
 func (r *resourceProject) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The project resource manages a HCP Project.",
+		MarkdownDescription: fmt.Sprintf(`The project resource manages a HCP Project.
+
+The user or service account that is running Terraform when creating a %s resource must have %s on the specified organization.`,
+			"`hcp_project`", "`roles/Admin`"),
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,

@@ -3,11 +3,14 @@ page_title: "Resource hcp_project - terraform-provider-hcp"
 subcategory: "Cloud Platform"
 description: |-
   The project resource manages a HCP Project.
+  The user or service account that is running Terraform when creating a hcp_project resource must have roles/Admin on the specified organization.
 ---
 
 # hcp_project (Resource)
 
 The project resource manages a HCP Project.
+
+The user or service account that is running Terraform when creating a `hcp_project` resource must have `roles/Admin` on the specified organization.
 
 ## Example Usage
 
