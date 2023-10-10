@@ -61,7 +61,8 @@ func (r *resourceProject) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"name": schema.StringAttribute{
-				Required: true, Description: "The project's name.",
+				Required:    true,
+				Description: "The project's name.",
 				Validators: []validator.String{
 					hcpvalidator.DisplayName(),
 					stringvalidator.LengthBetween(3, 36),
