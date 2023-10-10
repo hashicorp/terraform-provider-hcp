@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 )
 
 // This is an implementation using the Provider framework
@@ -68,6 +70,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 	return []func() resource.Resource{
 		NewVaultSecretsAppResource,
 		NewVaultSecretsSecretResource,
+		resourcemanager.NewProjectResource,
 	}
 }
 
