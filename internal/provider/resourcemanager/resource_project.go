@@ -47,7 +47,7 @@ func (r *resourceProject) Schema(_ context.Context, _ resource.SchemaRequest, re
 		MarkdownDescription: fmt.Sprintf(`The project resource manages a HCP Project.
 
 The user or service account that is running Terraform when creating a %s resource must have %s on the specified organization.`,
-			"`hcp_project`", "`roles/Admin`"),
+			"`hcp_project`", "`roles/admin`"),
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
