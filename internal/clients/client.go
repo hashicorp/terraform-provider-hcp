@@ -9,29 +9,35 @@ import (
 	"log"
 	"strings"
 
-	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
-	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
-	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
+
+	cloud_boundary "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client/boundary_service"
 
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client/consul_service"
+
+	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
+
+	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
+
+	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+
+	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
 	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client/secret_service"
-
-	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
-
-	cloud_boundary "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client/boundary_service"
 
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
@@ -40,15 +46,16 @@ import (
 type Client struct {
 	Config ClientConfig
 
+	Billing      billing_account_service.ClientService
+	Boundary     boundary_service.ClientService
+	Consul       consul_service.ClientService
 	Network      network_service.ClientService
 	Operation    operation_service.ClientService
-	Project      project_service.ClientService
 	Organization organization_service.ClientService
-	Consul       consul_service.ClientService
+	Packer       packer_service.ClientService
+	Project      project_service.ClientService
 	Vault        vault_service.ClientService
 	VaultSecrets secret_service.ClientService
-	Packer       packer_service.ClientService
-	Boundary     boundary_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -87,15 +94,16 @@ func NewClient(config ClientConfig) (*Client, error) {
 	client := &Client{
 		Config: config,
 
+		Billing:      cloud_billing.New(httpClient, nil).BillingAccountService,
+		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
+		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
 		Network:      cloud_network.New(httpClient, nil).NetworkService,
 		Operation:    cloud_operation.New(httpClient, nil).OperationService,
-		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
 		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
+		Packer:       cloud_packer.New(httpClient, nil).PackerService,
+		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
 		Vault:        cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets: cloud_vault_secrets.New(httpClient, nil).SecretService,
-		Packer:       cloud_packer.New(httpClient, nil).PackerService,
-		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
 	}
 
 	return client, nil
