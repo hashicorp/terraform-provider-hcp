@@ -1,6 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
-package provider
+package vaultsecrets_test
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
 func TestAcc_dataSourceVaultSecretsSecret(t *testing.T) {
@@ -18,8 +19,8 @@ func TestAcc_dataSourceVaultSecretsSecret(t *testing.T) {
 	testSecretValue := "some value"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testPreCheck(t) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {

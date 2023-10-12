@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 )
 
 // This is an implementation using the Provider framework
@@ -68,18 +69,22 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewVaultSecretsAppResource,
-		NewVaultSecretsSecretResource,
+		// Resource Manager
 		resourcemanager.NewProjectResource,
+		// Vault Secrets
+		vaultsecrets.NewVaultSecretsAppResource,
+		vaultsecrets.NewVaultSecretsSecretResource,
 	}
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewVaultSecretsAppDataSource,
-		NewVaultSecretsSecretDataSource,
+		// Resource Manager
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
+		// Vault Secrets
+		vaultsecrets.NewVaultSecretsAppDataSource,
+		vaultsecrets.NewVaultSecretsSecretDataSource,
 	}
 }
 
