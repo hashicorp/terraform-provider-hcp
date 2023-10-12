@@ -10,16 +10,16 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/hcp-sdk-go v0.65.0
+	github.com/hashicorp/hcp-sdk-go v0.66.0
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
-	github.com/hashicorp/terraform-plugin-framework v1.4.0
+	github.com/hashicorp/terraform-plugin-framework v1.4.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
 	github.com/hashicorp/terraform-plugin-go v0.19.0
 	github.com/hashicorp/terraform-plugin-mux v0.12.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
-	google.golang.org/grpc v1.58.2
+	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819
+	google.golang.org/grpc v1.58.3
 )
 
 require (
@@ -60,6 +60,7 @@ require (
 	github.com/hashicorp/terraform-exec v0.19.0 // indirect
 	github.com/hashicorp/terraform-json v0.17.1 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.5.1
 	github.com/hashicorp/terraform-registry-address v0.2.2 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect

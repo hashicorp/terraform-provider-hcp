@@ -1,0 +1,11 @@
+```release-note:feature
+Add `hcp_project` resource.
+```
+
+```release-note:feature
+Add `hcp_project` data source.
+```
+
+```release-note:feature
+Add `hcp_organization` data source.
+```
