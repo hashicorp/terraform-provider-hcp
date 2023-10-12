@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 

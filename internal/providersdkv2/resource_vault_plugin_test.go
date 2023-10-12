@@ -13,9 +13,8 @@ import (
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	grpcstatus "google.golang.org/grpc/status"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var (
