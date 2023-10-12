@@ -1,3 +1,14 @@
+## v0.73.0 (October 12, 2023)
+
+FEATURES:
+
+* Add `hcp_organization` data source. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+* Add `hcp_project` data source. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+* Add `hcp_project` resource. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+
+BUG FIXES:
+
+* Prevent crash when a vault_secrets_app resource no longer exists. [[GH-619](https://github.com/hashicorp/terraform-provider-hcp/pull/619)]
 ## v0.72.2 (October 06, 2023)
 
 BUG FIXES:
