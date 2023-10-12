@@ -196,8 +196,15 @@ func azureTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 
 // This step tests Vault cluster and admin token resource creation.
 func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.TestStep {
+	newIn := *in
+	newIn.IPAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
+		{
+			Address:     "172.25.14.0/24",
+			Description: "some description",
+		},
+	}
 	return resource.TestStep{
-		Config: testConfig(in.tf),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, in.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "cluster_id", in.VaultClusterName),
