@@ -594,6 +594,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
