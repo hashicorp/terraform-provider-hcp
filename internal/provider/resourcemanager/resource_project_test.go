@@ -82,7 +82,7 @@ resource "hcp_project" "example" {
 }`, name, description)
 }
 
-// testAccCheckExampleResourceExists queries the API and retrieves the matching
+// testAccProjectResourceExists queries the API and retrieves the matching
 // project.
 func testAccProjectResourceExists(t *testing.T, resourceName string, project *models.HashicorpCloudResourcemanagerProject) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

@@ -33,6 +33,9 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 
+	cloud_service_principals "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
+
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
@@ -46,16 +49,17 @@ import (
 type Client struct {
 	Config ClientConfig
 
-	Billing      billing_account_service.ClientService
-	Boundary     boundary_service.ClientService
-	Consul       consul_service.ClientService
-	Network      network_service.ClientService
-	Operation    operation_service.ClientService
-	Organization organization_service.ClientService
-	Packer       packer_service.ClientService
-	Project      project_service.ClientService
-	Vault        vault_service.ClientService
-	VaultSecrets secret_service.ClientService
+	Billing           billing_account_service.ClientService
+	Boundary          boundary_service.ClientService
+	Consul            consul_service.ClientService
+	Network           network_service.ClientService
+	Operation         operation_service.ClientService
+	Organization      organization_service.ClientService
+	Packer            packer_service.ClientService
+	Project           project_service.ClientService
+	ServicePrincipals service_principals_service.ClientService
+	Vault             vault_service.ClientService
+	VaultSecrets      secret_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -94,16 +98,17 @@ func NewClient(config ClientConfig) (*Client, error) {
 	client := &Client{
 		Config: config,
 
-		Billing:      cloud_billing.New(httpClient, nil).BillingAccountService,
-		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
-		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
-		Network:      cloud_network.New(httpClient, nil).NetworkService,
-		Operation:    cloud_operation.New(httpClient, nil).OperationService,
-		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Packer:       cloud_packer.New(httpClient, nil).PackerService,
-		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
-		Vault:        cloud_vault.New(httpClient, nil).VaultService,
-		VaultSecrets: cloud_vault_secrets.New(httpClient, nil).SecretService,
+		Billing:           cloud_billing.New(httpClient, nil).BillingAccountService,
+		Boundary:          cloud_boundary.New(httpClient, nil).BoundaryService,
+		Consul:            cloud_consul.New(httpClient, nil).ConsulService,
+		Network:           cloud_network.New(httpClient, nil).NetworkService,
+		Operation:         cloud_operation.New(httpClient, nil).OperationService,
+		Organization:      cloud_resource_manager.New(httpClient, nil).OrganizationService,
+		Packer:            cloud_packer.New(httpClient, nil).PackerService,
+		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
+		ServicePrincipals: cloud_service_principals.New(httpClient, nil).ServicePrincipalsService,
+		Vault:             cloud_vault.New(httpClient, nil).VaultService,
+		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
 	}
 
 	return client, nil
