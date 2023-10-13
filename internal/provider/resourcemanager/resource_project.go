@@ -267,5 +267,5 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("resource_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("resource_name"), req, resp)
 }
