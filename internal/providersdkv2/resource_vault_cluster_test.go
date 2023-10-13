@@ -58,12 +58,6 @@ func TestAccVaultClusterAzure(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
-		IPAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
-			{
-				Address:     "172.25.14.0/24",
-				Description: "some description",
-			},
-		},
 	}
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
 	// save so e don't have to generate this again and again
@@ -92,12 +86,6 @@ func TestAccVaultClusterAWS(t *testing.T) {
 		UpdateTier2:                "STANDARD_MEDIUM",
 		PublicEndpoint:             "false",
 		ProxyEndpoint:              "DISABLED",
-		IPAllowlist: []*vaultmodels.HashicorpCloudVault20201125CidrRange{
-			{
-				Address:     "172.25.14.0/24",
-				Description: "some description",
-			},
-		},
 	}
 
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
@@ -207,10 +195,6 @@ func createClusteAndTestAdminTokenGeneration(t *testing.T, in *inputT) resource.
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "region", in.Region),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
-			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
-				"address":     "172.25.14.0/24",
-				"description": "some description",
-			}),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "namespace", "admin"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_version"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "organization_id"),
@@ -355,12 +339,6 @@ func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resou
 	newIn := *in
 	newIn.PublicEndpoint = "false"
 	newIn.ProxyEndpoint = "DISABLED"
-	newIn.IPAllowlist = []*vaultmodels.HashicorpCloudVault20201125CidrRange{
-		{
-			Address:     "172.25.14.0/24",
-			Description: "some description",
-		},
-	}
 	return resource.TestStep{
 		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier2)),
 		Check: resource.ComposeTestCheckFunc(
@@ -368,10 +346,6 @@ func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resou
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
-			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
-				"address":     "172.25.14.0/24",
-				"description": "some description",
-			}),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_private_endpoint_url"),
