@@ -62,7 +62,7 @@ func TestAccVaultClusterAzure(t *testing.T) {
 	azureTestInput.tf = tf
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps:                    azureTestSteps(t, azureTestInput),
 	})
@@ -91,7 +91,7 @@ func TestAccVaultClusterAWS(t *testing.T) {
 	awsTestInput.tf = tf
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps:                    awsTestSteps(t, awsTestInput),
 	})
