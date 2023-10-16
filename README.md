@@ -10,7 +10,7 @@ The HashiCorp Cloud Platform (HCP) Terraform Provider is a plugin for Terraform 
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.1.5
 
 > [!WARNING]
 > An upcoming release of the provider will require a Terraform with version >= 1.1.5
