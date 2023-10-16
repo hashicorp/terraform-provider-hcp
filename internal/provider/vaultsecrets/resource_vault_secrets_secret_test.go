@@ -14,7 +14,7 @@ import (
 func TestAccVaultSecretsResourceSecret(t *testing.T) {
 	testAppName := generateRandomSlug()
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {

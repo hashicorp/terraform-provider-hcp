@@ -22,7 +22,7 @@ func TestAccProjectResource(t *testing.T) {
 	projectNameUpdated := acctest.RandString(16)
 	descriptionUpdated := acctest.RandString(200)
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{

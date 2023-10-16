@@ -12,23 +12,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
-// ProtoV5ProviderFactories provides a Provider Factory to be used within
+// ProtoV6ProviderFactories provides a Provider Factory to be used within
 // acceptance tests.
-var ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"hcp": func() (tfprotov5.ProviderServer, error) {
-		providers := []func() tfprotov5.ProviderServer{
-			providerserver.NewProtocol5(provider.NewFrameworkProvider(version.ProviderVersion)()),
+var ProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"hcp": func() (tfprotov6.ProviderServer, error) {
+		providers := []func() tfprotov6.ProviderServer{
+			providerserver.NewProtocol6(provider.NewFrameworkProvider(version.ProviderVersion)()),
 		}
 
-		return tf5muxserver.NewMuxServer(context.Background(), providers...)
+		return tf6muxserver.NewMuxServer(context.Background(), providers...)
 	},
 }
 

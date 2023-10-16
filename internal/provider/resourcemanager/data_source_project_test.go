@@ -16,7 +16,7 @@ func TestAccProjectDataSource(t *testing.T) {
 	description := acctest.RandString(64)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
