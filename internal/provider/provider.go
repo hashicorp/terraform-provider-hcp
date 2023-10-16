@@ -72,6 +72,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsSecretResource,
 		// IAM
 		iam.NewServicePrincipalResource,
+		iam.NewServicePrincipalKeyResource,
 	}
 }
 
