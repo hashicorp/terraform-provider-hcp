@@ -1,0 +1,12 @@
+
+```release-note:feature
+Add `hcp_service_principal` resource.
+```
+
+```release-note:feature
+Add `hcp_service_principal` data source.
+```
+
+```release-note:feature
+Add `hcp_service_principal_key` resource.
+```
