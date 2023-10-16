@@ -8,9 +8,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_validateStringNotEmpty(t *testing.T) {
