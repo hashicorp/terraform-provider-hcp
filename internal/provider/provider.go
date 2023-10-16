@@ -84,6 +84,8 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppDataSource,
 		vaultsecrets.NewVaultSecretsSecretDataSource,
+		// IAM
+		iam.NewServicePrincipalDataSource,
 	}
 }
 
