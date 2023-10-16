@@ -49,8 +49,9 @@ The user or service account that is running Terraform when creating a %s resourc
 				},
 			},
 			"resource_name": schema.StringAttribute{
-				Computed:    true,
-				Description: "The service principal's resource name in the format \"iam/project/<project_id>/service-principal/<name>\" or \"iam/organization/<organization_id>/service-principal/<name>\"",
+				Computed: true,
+				Description: fmt.Sprintf("The service principal's resource name in the format `%s` or `%s`",
+					"iam/project/<project_id>/service-principal/<name>", "iam/organization/<organization_id>/service-principal/<name>"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

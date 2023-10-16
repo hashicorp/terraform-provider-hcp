@@ -40,7 +40,7 @@ func (d *DataSourceServicePrincipal) Schema(ctx context.Context, req datasource.
 				Computed:    true,
 			},
 			"resource_name": schema.StringAttribute{
-				Description: fmt.Sprintf("The service principal's resource name in format %q or %q",
+				Description: fmt.Sprintf("The service principal's resource name in format `%s` or `%s`",
 					"iam/project/<project_id>/service-principal/<name>", "iam/organization/<organization_id>/service-principal/<name>"),
 				Required: true,
 			},
