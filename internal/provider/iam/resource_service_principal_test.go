@@ -149,7 +149,7 @@ resource "hcp_service_principal" "example" {
 }
 
 // testAccCheckServicePrincipalResourceExists queries the API and retrieves the matching
-// project.
+// service principal.
 func testAccServicePrincipalResourceExists(t *testing.T, resourceName string, sp *models.HashicorpCloudIamServicePrincipal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
@@ -161,7 +161,7 @@ func testAccServicePrincipalResourceExists(t *testing.T, resourceName string, sp
 		// Get the SP resource name from state
 		rname := rs.Primary.Attributes["resource_name"]
 
-		// Fetch the project
+		// Fetch the SP
 		client := acctest.HCPClients(t)
 		getParams := service_principals_service.NewServicePrincipalsServiceGetServicePrincipalParams()
 		getParams.ResourceName = rname
