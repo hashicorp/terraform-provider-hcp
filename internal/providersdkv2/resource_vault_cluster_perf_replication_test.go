@@ -29,14 +29,14 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 		cloud_provider    = "{{ .CloudProvider }}"
 		region            = "{{ .Region }}"
 	}
-	
+
 	resource "hcp_hvn" "hvn2" {
 		hvn_id            = "{{ .Secondary.HvnName }}"
 		cidr_block        = "{{ .Secondary.GetHvnCidr }}"
 		cloud_provider    = "{{ .Secondary.CloudProvider }}"
 		region            = "{{ .Secondary.Region }}"
 	}
-	
+
 	%s
 	`, tfCode)
 
@@ -73,7 +73,7 @@ func TestAccPerformanceReplication_ValidationsAws(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps:                    performanceReplicationSteps(t, awsPerfReplicationTestInput),
 	})

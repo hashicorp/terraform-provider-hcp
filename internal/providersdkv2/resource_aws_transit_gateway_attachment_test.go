@@ -95,7 +95,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
      // an actual peering which HCP will populate with a set of tags (the ones below).
      // After succesfull "apply"" test will try to run "plan" operation
      // to make sure there are no changes to the state and if we don't specify these
-     // tags here then it will fail. 
+     // tags here then it will fail.
 	 hvn_id          = hcp_hvn.test.hvn_id
 	 organization_id = hcp_hvn.test.organization_id
 	 project_id      = hcp_hvn.test.project_id
@@ -110,7 +110,7 @@ func TestAccTGWAttachment(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"aws": {VersionConstraint: "~> 4.0.0"},
 		},

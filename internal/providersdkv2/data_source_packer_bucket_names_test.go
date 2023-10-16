@@ -20,7 +20,7 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 	// Must not be Parallel, requires that no buckets exist at start of test
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
