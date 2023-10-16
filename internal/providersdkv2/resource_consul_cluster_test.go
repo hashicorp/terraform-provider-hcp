@@ -39,7 +39,7 @@ var createConsulClusterCIDRExceeded = consulClusterConfig("test-failure", `
 		address = "172.25.16.0/24"
 		description = "this is a first IPV4 address"
 	}
-	
+
 	ip_allowlist {
 		address = "172.25.10.0/24"
 		description = "this is a secondIPV4 address"
@@ -63,7 +63,7 @@ func consulClusterConfig(clusterID string, opt string) string {
 		hvn_id             = hcp_hvn.test.hvn_id
 		tier               = "STANDARD"
 		min_consul_version = data.hcp_consul_versions.test.recommended
-	
+
 		%s
 	}
 	`, clusterID, opt)
@@ -81,11 +81,11 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 	data "hcp_consul_versions" "test" {}
 
 	%s
-	
+
 	data "hcp_consul_cluster" "test" {
 		cluster_id = hcp_consul_cluster.test.cluster_id
 	}
-	
+
 	resource "hcp_consul_cluster_root_token" "test" {
 		cluster_id = hcp_consul_cluster.test.cluster_id
 	}
@@ -103,7 +103,7 @@ func TestAccConsulCluster(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckConsulClusterDestroy,
 		Steps: []resource.TestStep{
 			// Tests create failure for IP Allowlist with too many CIDRs
