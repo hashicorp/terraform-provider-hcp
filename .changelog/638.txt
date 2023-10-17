@@ -1,0 +1,4 @@
+```release-note:deprecate
+An upcoming release will deprecate support for Terraform versions before 1.1.5.
+Please upgrade to be able to use the latest releases of the provider.
+```
