@@ -1197,7 +1197,7 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 
 			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
 			if newrelic.LicenseKey != "redacted" {
-				configMap["newrelic_licence_key"] = newrelic.LicenseKey
+				configMap["newrelic_license_key"] = newrelic.LicenseKey
 			} else {
 				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 					config := configParam.([]interface{})[0].(map[string]interface{})
