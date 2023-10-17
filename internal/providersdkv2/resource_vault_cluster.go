@@ -234,6 +234,22 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 					},
 				},
 			},
@@ -328,6 +344,22 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
+						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 					},
 				},
@@ -1158,6 +1190,21 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 				}
 			}
 		}
+
+		if newrelic := config.Newrelic; newrelic != nil {
+			configMap["newrelic_account_id"] = newrelic.AccountID
+			configMap["newrelic_region"] = newrelic.Region
+
+			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+			if newrelic.LicenseKey != "redacted" {
+				configMap["newrelic_licence_key"] = newrelic.LicenseKey
+			} else {
+				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+					config := configParam.([]interface{})[0].(map[string]interface{})
+					configMap["newrelic_license_key"] = config["newrelic_license_key"].(string)
+				}
+			}
+		}
 	}
 
 	return []interface{}{configMap}
@@ -1174,6 +1221,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Datadog:       &vaultmodels.HashicorpCloudVault20201125Datadog{},
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
+		Newrelic:      &vaultmodels.HashicorpCloudVault20201125NewRelic{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1207,6 +1255,9 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	elasticsearchEndpoint, _ := config["elasticsearch_endpoint"].(string)
 	elasticsearchUser, _ := config["elasticsearch_user"].(string)
 	elasticsearchPassword, _ := config["elasticsearch_password"].(string)
+	newrelicAccountID, _ := config["newrelic_account_id"].(string)
+	newrelicLicenseKey, _ := config["newrelic_license_key"].(string)
+	newrelicRegion, _ := config["newrelic_region"].(string)
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
@@ -1288,6 +1339,24 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				Endpoint: elasticsearchEndpoint,
 				User:     elasticsearchUser,
 				Password: elasticsearchPassword,
+			},
+		}
+	}
+
+	if newrelicAccountID != "" || newrelicLicenseKey != "" || newrelicRegion != "" {
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
+		}
+
+		if newrelicAccountID == "" || newrelicLicenseKey == "" || newrelicRegion == "" {
+			missingParamErr = diag.Errorf("newrelic configuration is invalid: configuration information missing")
+		}
+
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Newrelic: &vaultmodels.HashicorpCloudVault20201125NewRelic{
+				AccountID:  newrelicAccountID,
+				LicenseKey: newrelicLicenseKey,
+				Region:     (*vaultmodels.HashicorpCloudVault20201125NewRelicRegion)(&newrelicRegion),
 			},
 		}
 	}

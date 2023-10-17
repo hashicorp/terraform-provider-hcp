@@ -202,6 +202,21 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -274,6 +289,21 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
