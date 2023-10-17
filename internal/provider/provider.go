@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 )
@@ -68,6 +70,9 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppResource,
 		vaultsecrets.NewVaultSecretsSecretResource,
+		// IAM
+		iam.NewServicePrincipalResource,
+		iam.NewServicePrincipalKeyResource,
 	}
 }
 
@@ -79,6 +84,8 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppDataSource,
 		vaultsecrets.NewVaultSecretsSecretDataSource,
+		// IAM
+		iam.NewServicePrincipalDataSource,
 	}
 }
 
