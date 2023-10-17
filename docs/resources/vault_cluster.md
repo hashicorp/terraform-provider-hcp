@@ -94,6 +94,9 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming audit logs
+- `newrelic_region` (String) NewRelic region for streaming audit logs
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 - `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
 
@@ -133,6 +136,9 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_password` (String, Sensitive) Grafana password for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming metrics
+- `newrelic_region` (String) NewRelic region for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 - `splunk_token` (String, Sensitive) Splunk token for streaming metrics
 
