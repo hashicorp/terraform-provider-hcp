@@ -16,7 +16,7 @@ func TestAccServicePrincipalKeyResource(t *testing.T) {
 	var spk, spk2, spk3 models.HashicorpCloudIamServicePrincipalKey
 
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
