@@ -1,0 +1,3 @@
+```release-note:bug
+Fix hcp_project import
+```
