@@ -1,6 +1,2 @@
 # Project can be imported by specifying the project id
 terraform import hcp_project.example 840e3701-55b6-4f86-8c17-b1fe397303c5
-
-# Project can be imported by specifying the project resource name
-terraform import hcp_project.example project/840e3701-55b6-4f86-8c17-b1fe397303c5
-
