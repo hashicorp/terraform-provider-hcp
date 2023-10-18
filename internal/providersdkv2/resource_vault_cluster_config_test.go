@@ -29,7 +29,7 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"elasticsearch_endpoint": "https://elasticsearch",
 				"newrelic_account_id":    "123456",
 				"newrelic_license_key":   "abcdefg",
-				"newrelic_region":        "westus2",
+				"newrelic_region":        "US",
 			},
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
