@@ -38,6 +38,9 @@ jobs:
             # "Enhancement is not a valid type of changelog entry, but it's a common mistake.
             echo "::error::Found invalid type (enhancement) in changelog - did you mean improvement?"
             exit 1
+          elif grep -q ':deprecate$' $changelog_files; then
+            echo "::error::Found invalid type (deprecate) in changelog - did you mean deprecation?"
+            exit 1
           elif grep -q ':bugs$' $changelog_files; then
             echo "::error::Found invalid type (bugs) in changelog - did you mean bug?"
             exit 1
