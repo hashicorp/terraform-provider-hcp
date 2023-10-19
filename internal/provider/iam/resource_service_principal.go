@@ -211,7 +211,7 @@ func (r *resourceServicePrincipal) Delete(ctx context.Context, req resource.Dele
 	deleteParams.ResourceName = state.ResourceName.ValueString()
 	_, err := r.client.ServicePrincipals.ServicePrincipalsServiceDeleteServicePrincipal(deleteParams, nil)
 	if err != nil {
-		var getErr *service_principals_service.ServicePrincipalsServiceGetServicePrincipalDefault
+		var getErr *service_principals_service.ServicePrincipalsServiceDeleteServicePrincipalDefault
 		if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
 			resp.State.RemoveResource(ctx)
 			return

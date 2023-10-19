@@ -73,6 +73,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
+		iam.NewWorkloadIdentityProviderResource,
 	}
 }
 
