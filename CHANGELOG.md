@@ -1,3 +1,9 @@
+## v0.74.1 (October 19, 2023)
+
+DEPRECATIONS:
+
+* An upcoming release will deprecate support for Terraform versions before 1.1.5.
+Please upgrade to be able to use the latest releases of the provider. [[GH-644](https://github.com/hashicorp/terraform-provider-hcp/pull/644)]
 ## v0.74.0 (October 19, 2023)
 
 FEATURES:
