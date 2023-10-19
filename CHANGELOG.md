@@ -1,3 +1,14 @@
+## v0.74.0 (October 19, 2023)
+
+FEATURES:
+
+* Add `hcp_service_principal_key` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` data source. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+
+BUG FIXES:
+
+* Fix hcp_project import [[GH-642](https://github.com/hashicorp/terraform-provider-hcp/pull/642)]
 ## v0.73.0 (October 12, 2023)
 
 FEATURES:
