@@ -5,6 +5,9 @@
 # all resource-manager resources and clients are owned by the cloud-foundations team
 *resourcemanager* @hashicorp/cloud-foundations
 
+# all iam resources and clients are owned by the cloud-identity team
+*iam* @hashicorp/cloud-identity
+
 # all Consul resources and clients are owned by the cloud-consul team
 *consul* @hashicorp/cloud-consul
 /internal/consul/ @hashicorp/cloud-consul
