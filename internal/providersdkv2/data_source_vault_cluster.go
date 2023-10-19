@@ -212,7 +212,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"newrelic_region": {
-							Description: "NewRelic region for streaming metrics",
+							Description: "NewRelic region for streaming metrics, allowed values are \"US\" and \"EU\"",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -302,7 +302,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"newrelic_region": {
-							Description: "NewRelic region for streaming audit logs",
+							Description: "NewRelic region for streaming audit logs, allowed values are \"US\" and \"EU\"",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
