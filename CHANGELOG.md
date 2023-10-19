@@ -1,3 +1,20 @@
+## v0.74.1 (October 19, 2023)
+
+DEPRECATIONS:
+
+* An upcoming release will deprecate support for Terraform versions before 1.1.5.
+Please upgrade to be able to use the latest releases of the provider. [[GH-644](https://github.com/hashicorp/terraform-provider-hcp/pull/644)]
+## v0.74.0 (October 19, 2023)
+
+FEATURES:
+
+* Add `hcp_service_principal_key` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` data source. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+
+BUG FIXES:
+
+* Fix hcp_project import [[GH-642](https://github.com/hashicorp/terraform-provider-hcp/pull/642)]
 ## v0.73.0 (October 12, 2023)
 
 FEATURES:
