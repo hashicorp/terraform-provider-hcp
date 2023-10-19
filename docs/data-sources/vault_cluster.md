@@ -83,7 +83,7 @@ Read-Only:
 - `grafana_user` (String) Grafana user for streaming audit logs
 - `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
 - `newrelic_license_key` (String) NewRelic license key for streaming audit logs
-- `newrelic_region` (String) NewRelic region for streaming audit logs
+- `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 
 
@@ -115,5 +115,5 @@ Read-Only:
 - `grafana_user` (String) Grafana user for streaming metrics
 - `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
 - `newrelic_license_key` (String) NewRelic license key for streaming metrics
-- `newrelic_region` (String) NewRelic region for streaming metrics
+- `newrelic_region` (String) NewRelic region for streaming metrics, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
