@@ -2,7 +2,7 @@
 # the repo. Unless a later match takes precedence
 # *
 
-# all Platform resources and clients are owned by the cloud-foundations team
+# all resource-manager resources and clients are owned by the cloud-foundations team
 *resourcemanager* @hashicorp/cloud-foundations
 
 # all Consul resources and clients are owned by the cloud-consul team
