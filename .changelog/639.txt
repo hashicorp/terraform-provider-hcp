@@ -1,3 +1,0 @@
-```release-note:improvement
-Add NewRelic as an observability provider for streaming audit logs and metrics from HCP Vault clusters.
-```
