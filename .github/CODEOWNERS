@@ -13,10 +13,10 @@
 /internal/consul/ @hashicorp/cloud-consul
 
 # all Networking resources and clients are owned by the cloud-control-plane team
-*hvn* @hashicorp/cloud-control-plane
-*aws* @hashicorp/cloud-control-plane
-*azure* @hashicorp/cloud-control-plane
-*peering* @hashicorp/cloud-control-plane
+*hvn* @hashicorp/cloud-platform-systems
+*aws* @hashicorp/cloud-platform-systems
+*azure* @hashicorp/cloud-platform-systems
+*peering* @hashicorp/cloud-platform-systems
 
 # all Packer resources and clients are owned by the cloud-packer team
 *packer* @hashicorp/cloud-packer
