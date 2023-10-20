@@ -27,6 +27,9 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"elasticsearch_user":     "test",
 				"elasticsearch_password": "test_elasticsearch",
 				"elasticsearch_endpoint": "https://elasticsearch",
+				"newrelic_account_id":    "123456",
+				"newrelic_license_key":   "abcdefg",
+				"newrelic_region":        "US",
 			},
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
@@ -59,6 +62,12 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"elasticsearch_user": "test",
 			},
 			expectedError: "elasticsearch configuration is invalid: configuration information missing",
+		},
+		"newrelic missing params": {
+			config: map[string]interface{}{
+				"newrelic_account_id": "123456",
+			},
+			expectedError: "newrelic configuration is invalid: configuration information missing",
 		},
 		"too many providers takes precedence over missing params": {
 			config: map[string]interface{}{
