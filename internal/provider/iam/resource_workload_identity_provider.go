@@ -42,7 +42,7 @@ func (r *resourceWorkloadIdentityProvider) Metadata(_ context.Context, req resou
 
 func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The workload identity provider resource allows mapping an external identity to a HCP Service Principal.",
+		MarkdownDescription: "The workload identity provider resource allows federating an external identity to a HCP Service Principal.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
