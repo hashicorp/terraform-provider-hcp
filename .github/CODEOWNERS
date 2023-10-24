@@ -12,7 +12,7 @@
 *consul* @hashicorp/cloud-consul
 /internal/consul/ @hashicorp/cloud-consul
 
-# all Networking resources and clients are owned by the cloud-control-plane team
+# all Networking resources and clients are owned by the cloud-platform-systems team
 *hvn* @hashicorp/cloud-platform-systems
 *aws* @hashicorp/cloud-platform-systems
 *azure* @hashicorp/cloud-platform-systems
