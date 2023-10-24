@@ -1,3 +1,0 @@
-```release-note:feature
-Revert pull request that adds new relic provider support to terraform for vault audit logs/metrics.
-```
