@@ -116,8 +116,8 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 						Description: "The URL of the OIDC Issuer that is allowed to exchange workload identities.",
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(
-								regexp.MustCompile(`^https://.*\..+/$`),
-								"must be a valid URL starting with https:// and must end in /",
+								regexp.MustCompile(`^https://.+$`),
+								"must be a valid URL starting with https://",
 							),
 						},
 					},
