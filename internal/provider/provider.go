@@ -82,6 +82,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// Resource Manager
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
+		resourcemanager.NewIAMPolicyDataSource,
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppDataSource,
 		vaultsecrets.NewVaultSecretsSecretDataSource,
