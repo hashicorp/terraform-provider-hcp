@@ -1,3 +1,15 @@
+## v0.75.0 (October 25, 2023)
+BREAKING CHANGES:
+
+* Drops support for Terraform CLI versions prior to v1.1.5, previously deprecated in provider release v0.74.1 [[GH-637](https://github.com/hashicorp/terraform-provider-hcp/pull/637)]
+
+FEATURES:
+
+* Add `hcp_iam_workload_identity_provider` resource. [[GH-647](https://github.com/hashicorp/terraform-provider-hcp/pull/647)]
+
+IMPROVEMENTS:
+
+* Upgrade to Terraform Provider Protocol 6 [[GH-637](https://github.com/hashicorp/terraform-provider-hcp/pull/637)]
 ## v0.74.1 (October 19, 2023)
 
 DEPRECATIONS:
