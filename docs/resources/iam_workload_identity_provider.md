@@ -49,13 +49,13 @@ resource "hcp_iam_workload_identity_provider" "example" {
     # The allowed audience should be set to the Object ID of the Azure Managed
     # Identity. In this example, this would be the Object ID of a User Managed
     # Identity that will be attached to "my-app" workloads on Azure.
-    allowed_audience = ["api://10bacc1d-f3f5-499d-a14c-684c1471b27f"]
+    allowed_audiences = ["api://10bacc1d-f3f5-499d-a14c-684c1471b27f"]
   }
 
   # Only allow workload's that are assigned the expected managed identity.
   # The access_token given to Azure workload's will have the oid claim set to
   # that of the managed identity.
-  conditional_access = "jwt_claims.oid is `066c643f-86c0-490a-854c-35e77ddc7851`"
+  conditional_access = "jwt_claims.oid == `066c643f-86c0-490a-854c-35e77ddc7851`"
 }
 ```
 
@@ -77,7 +77,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
   # Only allow workload's that are assigned the expected service account ID
   # GCP will set the subject to that of the service account associated with the
   # workload.
-  conditional_access = "jwt_token.sub is `107517467455664443766`"
+  conditional_access = "jwt_claims.sub == `107517467455664443766`"
 }
 ```
 
