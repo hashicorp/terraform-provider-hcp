@@ -94,6 +94,16 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming audit logs
+- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming audit logs
+- `http_codec` (String) HTTP codec for streaming audit logs
+- `http_compression` (Boolean) HTTP compression flag for streaming audit logs
+- `http_headers` (Map of String) HTTP headers for streaming audit logs
+- `http_method` (String) HTTP payload method for streaming audit logs
+- `http_payload_prefix` (String) HTTP payload prefix for streaming audit logs
+- `http_payload_suffix` (String) HTTP payload suffix for streaming audit logs
+- `http_uri` (String) HTTP URI for streaming audit logs
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 - `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
 
@@ -133,6 +143,16 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_password` (String, Sensitive) Grafana password for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming metrics
+- `http_basic_user` (String) HTTP basic authentication username for streaming metrics
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming metrics
+- `http_codec` (String) HTTP codec for streaming metrics
+- `http_compression` (Boolean) HTTP compression flag for streaming metrics
+- `http_headers` (Map of String) HTTP headers for streaming metrics
+- `http_method` (String) HTTP payload method for streaming metrics
+- `http_payload_prefix` (String) HTTP payload prefix for streaming metrics
+- `http_payload_suffix` (String) HTTP payload suffix for streaming metrics
+- `http_uri` (String) HTTP URI for streaming metrics
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 - `splunk_token` (String, Sensitive) Splunk token for streaming metrics
 
