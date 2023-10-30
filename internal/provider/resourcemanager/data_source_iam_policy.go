@@ -192,20 +192,13 @@ func (d *DataSourceIAMPolicy) Read(ctx context.Context, req datasource.ReadReque
 				MemberID: principal.ID,
 			}
 
-			switch *principal.Type {
-			case iamModels.HashicorpCloudIamPrincipalTypePRINCIPALTYPEUSER:
-				m.MemberType = models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer()
-			case iamModels.HashicorpCloudIamPrincipalTypePRINCIPALTYPEGROUP:
-				m.MemberType = models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeGROUP.Pointer()
-			case iamModels.HashicorpCloudIamPrincipalTypePRINCIPALTYPESERVICE:
-				m.MemberType = models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeSERVICEPRINCIPAL.Pointer()
-			default:
-				resp.Diagnostics.AddError(
-					fmt.Sprintf("Unsupported principal type (%s) for IAM Policy", *principal.Type),
-					"Please report this issue to the provider developers.",
-				)
+			t, err := clients.IamPrincipalTypeToBindingType(principal)
+			if err != nil {
+				resp.Diagnostics.AddError("Error converting principal types", err.Error())
+				return
 			}
 
+			m.MemberType = t
 			b.Members[i] = m
 		}
 

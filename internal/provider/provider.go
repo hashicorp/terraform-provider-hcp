@@ -66,7 +66,12 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		// Resource Manager
+		resourcemanager.NewOrganizationIAMPolicyResource,
+		resourcemanager.NewOrganizationIAMBindingResource,
+
 		resourcemanager.NewProjectResource,
+		resourcemanager.NewProjectIAMPolicyResource,
+		resourcemanager.NewProjectIAMBindingResource,
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppResource,
 		vaultsecrets.NewVaultSecretsSecretResource,
