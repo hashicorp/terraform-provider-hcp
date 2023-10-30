@@ -12,22 +12,26 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
 )
 
-var (
-	orgIAMSchema = schema.Schema{
-		MarkdownDescription: "Allows definitively setting the organization's IAM policy. " +
-			"This will replace any existing policy already attached.",
+// orgIAMSchema is the schema for the organization IAM resources
+// (policy/binding). It will be merged with the base policy.
+func orgIAMSchema(binding bool) schema.Schema {
+	// Determine the description based on if it is for the policy or binding
+	d := "Sets the organization's IAM policy and replaces any existing policy."
+	if binding {
+		d = "Updates the organization's IAM policy to bind a role to a new member. Existing bindings are preserved."
 	}
 
-	_ iampolicy.NewResourceIamUpdaterFunc = newOrgIAMPolicyUpdater
-	_ iampolicy.ResourceIamUpdater        = &orgIAMPolicyUpdater{}
-)
+	return schema.Schema{
+		MarkdownDescription: d,
+	}
+}
 
 func NewOrganizationIAMPolicyResource() resource.Resource {
-	return iampolicy.NewResourceIamPolicy("organization", orgIAMSchema, "", newOrgIAMPolicyUpdater)
+	return iampolicy.NewResourceIamPolicy("organization", orgIAMSchema(false), "", newOrgIAMPolicyUpdater)
 }
 
 func NewOrganizationIAMBindingResource() resource.Resource {
-	return iampolicy.NewResourceIamBinding("organization", orgIAMSchema, "", newOrgIAMPolicyUpdater)
+	return iampolicy.NewResourceIamBinding("organization", orgIAMSchema(true), "", newOrgIAMPolicyUpdater)
 }
 
 type orgIAMPolicyUpdater struct {
@@ -81,3 +85,8 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 
 	return res.GetPayload().Policy, diags
 }
+
+var (
+	_ iampolicy.NewResourceIamUpdaterFunc = newOrgIAMPolicyUpdater
+	_ iampolicy.ResourceIamUpdater        = &orgIAMPolicyUpdater{}
+)

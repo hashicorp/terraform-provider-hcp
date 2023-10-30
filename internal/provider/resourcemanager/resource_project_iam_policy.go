@@ -18,10 +18,15 @@ import (
 
 // projectIAMSchema is the schema for the project IAM resources
 // (policy/binding). It will be merged with the base policy.
-func projectIAMSchema() schema.Schema {
+func projectIAMSchema(binding bool) schema.Schema {
+	// Determine the description based on if it is for the policy or binding
+	d := "Sets the project's IAM policy and replaces any existing policy."
+	if binding {
+		d = "Updates the project's IAM policy to bind a role to a new member. Existing bindings are preserved."
+	}
+
 	return schema.Schema{
-		MarkdownDescription: "Allows definitively setting the project's IAM policy. " +
-			"This will replace any existing policy already attached.",
+		MarkdownDescription: d,
 		Attributes: map[string]schema.Attribute{
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project to apply the IAM Policy to. If unspecified, the project configured on the provider is used.",
@@ -32,15 +37,14 @@ func projectIAMSchema() schema.Schema {
 			},
 		},
 	}
-
 }
 
 func NewProjectIAMPolicyResource() resource.Resource {
-	return iampolicy.NewResourceIamPolicy("project", projectIAMSchema(), "project_id", newProjectIAMPolicyUpdater)
+	return iampolicy.NewResourceIamPolicy("project", projectIAMSchema(false), "project_id", newProjectIAMPolicyUpdater)
 }
 
 func NewProjectIAMBindingResource() resource.Resource {
-	return iampolicy.NewResourceIamBinding("project", projectIAMSchema(), "project_id", newProjectIAMPolicyUpdater)
+	return iampolicy.NewResourceIamBinding("project", projectIAMSchema(true), "project_id", newProjectIAMPolicyUpdater)
 }
 
 type projectIAMPolicyUpdater struct {
