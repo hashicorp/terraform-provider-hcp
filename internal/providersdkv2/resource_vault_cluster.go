@@ -232,6 +232,58 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming metrics",
+							Type:        schema.TypeMap,
+							Optional:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming metrics",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 					},
 				},
 			},
@@ -326,6 +378,58 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
+						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming audit logs",
+							Type:        schema.TypeMap,
+							Optional:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming audit logs",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 					},
 				},
@@ -1156,6 +1260,42 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 				}
 			}
 		}
+
+		if http := config.HTTP; http != nil {
+			configMap["http_headers"] = http.Headers
+			configMap["http_codec"] = http.Codec
+			configMap["http_compression"] = http.Compression
+			configMap["http_method"] = http.Method
+			configMap["http_payload_prefix"] = http.PayloadPrefix
+			configMap["http_payload_suffix"] = http.PayloadSuffix
+			configMap["http_uri"] = http.URI
+
+			if http.Basic != nil {
+				configMap["http_basic_user"] = http.Basic.User
+
+				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+				if http.Basic.Password != "redacted" {
+					configMap["http_basic_password"] = http.Basic.Password
+				} else {
+					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+						config := configParam.([]interface{})[0].(map[string]interface{})
+						configMap["http_basic_password"] = config["http_basic_password"].(string)
+					}
+				}
+			}
+
+			if http.Bearer != nil {
+				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+				if http.Bearer.Token != "redacted" {
+					configMap["http_bearer_token"] = http.Bearer.Token
+				} else {
+					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+						config := configParam.([]interface{})[0].(map[string]interface{})
+						configMap["http_bearer_token"] = config["http_bearer_token"].(string)
+					}
+				}
+			}
+		}
 	}
 
 	return []interface{}{configMap}
@@ -1172,6 +1312,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Datadog:       &vaultmodels.HashicorpCloudVault20201125Datadog{},
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
+		HTTP:          &vaultmodels.HashicorpCloudVault20201125HTTP{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1205,6 +1346,16 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	elasticsearchEndpoint, _ := config["elasticsearch_endpoint"].(string)
 	elasticsearchUser, _ := config["elasticsearch_user"].(string)
 	elasticsearchPassword, _ := config["elasticsearch_password"].(string)
+	httpBasicUser, _ := config["http_basic_user"].(string)
+	httpBasicPassword, _ := config["http_basic_password"].(string)
+	httpBearerToken, _ := config["http_bearer_token"].(string)
+	httpHeaders, _ := config["http_headers"].(map[string]interface{})
+	httpCodec, _ := config["http_codec"].(string)
+	httpCompression, _ := config["http_compression"].(bool)
+	httpMethod, _ := config["http_method"].(string)
+	httpPayloadPrefix, _ := config["http_payload_prefix"].(string)
+	httpPayloadSuffix, _ := config["http_payload_suffix"].(string)
+	httpURI, _ := config["http_uri"].(string)
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
@@ -1286,6 +1437,54 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				Endpoint: elasticsearchEndpoint,
 				User:     elasticsearchUser,
 				Password: elasticsearchPassword,
+			},
+		}
+	}
+
+	if httpURI != "" || httpMethod != "" || httpCodec != "" {
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
+		}
+
+		if httpURI == "" || httpMethod == "" || httpCodec == "" {
+			missingParamErr = diag.Errorf("http configuration is invalid: configuration information missing")
+		}
+
+		var httpBearerAuth *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth
+		var httpBasicAuth *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth
+
+		if httpBearerToken != "" {
+			httpBearerAuth = &vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth{
+				Token: httpBearerToken,
+			}
+
+			// only one of basic or bearer authentication should be submitted
+			if httpBasicUser != "" || httpBasicPassword != "" {
+				missingParamErr = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
+			}
+		} else {
+			// http basic requires both the username and password to be filled
+			if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
+				missingParamErr = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
+			} else {
+				httpBasicAuth = &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
+					User:     httpBasicUser,
+					Password: httpBasicPassword,
+				}
+			}
+		}
+
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			HTTP: &vaultmodels.HashicorpCloudVault20201125HTTP{
+				Headers:       httpHeaders,
+				Bearer:        httpBearerAuth,
+				Basic:         httpBasicAuth,
+				Codec:         (*vaultmodels.HashicorpCloudVault20201125HTTPEncodingCodec)(&httpCodec),
+				Compression:   httpCompression,
+				PayloadPrefix: httpPayloadPrefix,
+				PayloadSuffix: httpPayloadSuffix,
+				Method:        httpMethod,
+				URI:           httpURI,
 			},
 		}
 	}

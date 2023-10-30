@@ -201,6 +201,56 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming metrics",
+							Type:        schema.TypeMap,
+							Computed:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming metrics",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -273,6 +323,56 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming audit logs",
+							Type:        schema.TypeMap,
+							Computed:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming audit logs",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
