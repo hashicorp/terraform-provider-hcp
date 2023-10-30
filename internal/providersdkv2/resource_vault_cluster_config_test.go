@@ -60,6 +60,43 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 			},
 			expectedError: "elasticsearch configuration is invalid: configuration information missing",
 		},
+		"http missing params": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_basic_user":     "user",
+				"http_basic_password": "pass",
+			},
+			expectedError: "http configuration is invalid: configuration information missing",
+		},
+		"http provide bearer and basic auth": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_method":         "POST",
+				"http_codec":          "JSON",
+				"http_basic_user":     "test",
+				"http_basic_password": "pass",
+				"http_bearer_token":   "111111111",
+			},
+			expectedError: "http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both",
+		},
+		"http basic auth without username": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_method":         "POST",
+				"http_codec":          "JSON",
+				"http_basic_password": "pass",
+			},
+			expectedError: "http configuration is invalid: basic authentication requires username and password",
+		},
+		"http basic auth without password": {
+			config: map[string]interface{}{
+				"http_uri":        "https://localhost:3000",
+				"http_method":     "POST",
+				"http_codec":      "JSON",
+				"http_basic_user": "test",
+			},
+			expectedError: "http configuration is invalid: basic authentication requires username and password",
+		},
 		"too many providers takes precedence over missing params": {
 			config: map[string]interface{}{
 				"datadog_region":           "us1",
