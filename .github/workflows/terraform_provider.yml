@@ -2,8 +2,6 @@ name: Terraform Provider Checks
 
 on:
   pull_request:
-    paths-ignore:
-      - 'README.md'
   push:
     branches:
       - main
