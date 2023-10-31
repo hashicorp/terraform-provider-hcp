@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-// PolicyDataType is a custom type for handling marshalled policy_data.
+// PolicyDataType is a custom type for handling marshaled policy_data.
 type PolicyDataType struct {
 	basetypes.StringType
 }
@@ -122,7 +122,7 @@ func (v PolicyDataValue) Type(ctx context.Context) attr.Type {
 }
 
 // StringSemanticEquals checks that two policies are semantically equal. This is
-// critical for supressing planned changes where the only delta is the ordering
+// critical for suppressing planned changes where the only delta is the ordering
 // of bindings or members within a binding.
 func (v PolicyDataValue) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -145,8 +145,8 @@ func (v PolicyDataValue) StringSemanticEquals(ctx context.Context, newValuable b
 	// called for each Value.
 	var existingPolicy models.HashicorpCloudResourcemanagerPolicy
 	var newPolicy models.HashicorpCloudResourcemanagerPolicy
-	existingPolicy.UnmarshalBinary([]byte(v.ValueString()))
-	newPolicy.UnmarshalBinary([]byte(newValue.ValueString()))
+	_ = existingPolicy.UnmarshalBinary([]byte(v.ValueString()))
+	_ = newPolicy.UnmarshalBinary([]byte(newValue.ValueString()))
 
 	// If the times are equivalent, keep the prior value
 	return Equal(&existingPolicy, &newPolicy), diags

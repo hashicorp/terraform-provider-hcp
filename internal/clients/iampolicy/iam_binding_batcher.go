@@ -149,7 +149,7 @@ func newPolicyFuture() *policyFuture {
 	}
 }
 
-// Get retrieves the resource's IAM Policy or returns an error that occured.
+// Get retrieves the resource's IAM Policy or returns an error that occurred.
 // This is a blocking call.
 func (f *policyFuture) Get() (p *models.HashicorpCloudResourcemanagerPolicy, d diag.Diagnostics) {
 	<-f.doneCh
@@ -199,10 +199,7 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 	bindings := ToMap(ep)
 	for _, rm := range f.removers {
 		if members, ok := bindings[rm.RoleID]; ok {
-			if _, ok := members[rm.Members[0].MemberID]; ok {
-				delete(members, rm.Members[0].MemberID)
-			}
-
+			delete(members, rm.Members[0].MemberID)
 			if len(members) == 0 {
 				delete(bindings, rm.RoleID)
 			}

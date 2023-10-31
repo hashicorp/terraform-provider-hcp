@@ -135,9 +135,6 @@ func (d *DataSourceIAMPolicy) ValidateConfig(ctx context.Context, req datasource
 		resp.Diagnostics.AddError("Too many principals bound in the policy",
 			fmt.Sprintf("A maximum of %d principals may be bound", maxIAMPrincipalBindings))
 	}
-
-	return
-
 }
 
 func (d *DataSourceIAMPolicy) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

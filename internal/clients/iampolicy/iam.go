@@ -26,13 +26,6 @@ type ResourceIamUpdater interface {
 	// A mutex guards against concurrent to call to the SetResourceIamPolicy method.
 	// The mutex key should be globally unique.
 	GetMutexKey() string
-
-	// Returns the unique resource identifier.
-	//GetResourceId() string
-
-	// Textual description of this resource to be used in error message.
-	// The description should include the unique resource identifier.
-	//DescribeResource() string
 }
 
 type TerraformResourceData interface {

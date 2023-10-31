@@ -53,6 +53,6 @@ func IamPrincipalTypeToBindingType(p *models.HashicorpCloudIamPrincipal) (*rmMod
 	case models.HashicorpCloudIamPrincipalTypePRINCIPALTYPESERVICE:
 		return rmModels.HashicorpCloudResourcemanagerPolicyBindingMemberTypeSERVICEPRINCIPAL.Pointer(), nil
 	default:
-		return nil, fmt.Errorf("Unsupported principal type (%s) for IAM Policy", *p.Type)
+		return nil, fmt.Errorf("unsupported principal type (%s) for IAM Policy", *p.Type)
 	}
 }
