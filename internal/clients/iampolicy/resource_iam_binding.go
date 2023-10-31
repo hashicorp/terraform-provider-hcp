@@ -40,6 +40,20 @@ var (
 	}
 )
 
+// NewResourceIamBinding creates a new Terraform Resource for managing IAM
+// Bindings for the given resource. By implementing NewResourceIamUpdaterFunc,
+// the resource will inherit all functionality needed to allow IAM Bindings.
+//
+// The typeName is the type that supports IAM ("project", "organization",
+// "vault_secrets_app", etc).
+
+// parentSpecificSchema should be a schema that includes a MarkdownDescription
+// and any necessary Attributes to target the specific resource ("project_id",
+// "resource_name", etc)
+//
+// importAttrName allows specifying the attribute to be set when a user runs
+// `terraform import`. Subsequent calls to SetResourceIamPolicy can use this
+// information to populate the policy.
 func NewResourceIamBinding(
 	typeName string,
 	parentSpecificSchema schema.Schema,
@@ -165,7 +179,7 @@ func (r *resourceBinding) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	// Check if the binding is in the policy
-	bindings := policyToMap(ep)
+	bindings := ToMap(ep)
 	binding, diags := getBinding(ctx, &req.State)
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)

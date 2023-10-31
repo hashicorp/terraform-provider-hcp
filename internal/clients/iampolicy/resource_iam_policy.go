@@ -11,12 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 var (
 	basePolicySchema = map[string]schema.Attribute{
 		"policy_data": schema.StringAttribute{
+			CustomType:  PolicyDataType{},
 			Required:    true,
 			Description: "The policy to apply.",
 			PlanModifiers: []planmodifier.String{
@@ -30,6 +32,21 @@ var (
 	}
 )
 
+// NewResourceIamPolicy creates a new Terraform Resource for definitively
+// managing the IAM Policy for the given resource. By implementing
+// NewResourceIamUpdaterFunc, the resource will inherit all functionality needed
+// to allow Terraform to manage the IAM Policy for the resource.
+//
+// The typeName is the type that supports IAM ("project", "organization",
+// "vault_secrets_app", etc).
+
+// parentSpecificSchema should be a schema that includes a MarkdownDescription
+// and any necessary Attributes to target the specific resource ("project_id",
+// "resource_name", etc)
+//
+// importAttrName allows specifying the attribute to be set when a user runs
+// `terraform import`. Subsequent calls to SetResourceIamPolicy can use this
+// information to populate the policy.
 func NewResourceIamPolicy(
 	typeName string,
 	parentSpecificSchema schema.Schema,
@@ -185,7 +202,7 @@ func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, update
 
 	// Get the encoded policy
 	var diags diag.Diagnostics
-	var encodedPolicyData string
+	var encodedPolicyData PolicyDataValue
 	diags.Append(in.GetAttribute(ctx, path.Root("policy_data"), &encodedPolicyData)...)
 	if diags.HasError() {
 		return diags
@@ -193,7 +210,7 @@ func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, update
 
 	// Unmarshall it
 	var p models.HashicorpCloudResourcemanagerPolicy
-	if err := p.UnmarshalBinary([]byte(encodedPolicyData)); err != nil {
+	if err := p.UnmarshalBinary([]byte(encodedPolicyData.ValueString())); err != nil {
 		diags.AddError("failed to unmarshal policy_data", err.Error())
 		return diags
 	}
@@ -236,6 +253,8 @@ func storeIamPolicyData(ctx context.Context, d TerraformResourceData, p *models.
 
 	// Store the updated policy
 	d.SetAttribute(ctx, path.Root("etag"), etag)
-	d.SetAttribute(ctx, path.Root("policy_data"), string(raw))
+	d.SetAttribute(ctx, path.Root("policy_data"), PolicyDataValue{
+		StringValue: basetypes.NewStringValue(string(raw)),
+	})
 	return diags
 }
