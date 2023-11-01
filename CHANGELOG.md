@@ -1,3 +1,10 @@
+## v0.76.0 (November 01, 2023)
+
+BUG FIXES:
+
+* Fix some documentation mistakes in examples for the `hcp_iam_workload_identity_provider` resource. [[GH-657](https://github.com/hashicorp/terraform-provider-hcp/pull/657)]
+* Removed unnecessary validation of a trailing slash on the `oidc.issuer_uri`
+field for the `hcp_iam_workload_identity_provider` resource. [[GH-656](https://github.com/hashicorp/terraform-provider-hcp/pull/656)]
 ## v0.75.0 (October 25, 2023)
 BREAKING CHANGES:
 
