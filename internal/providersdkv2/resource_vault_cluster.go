@@ -1359,12 +1359,12 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
-	var missingParamErr diag.Diagnostics
+	var invalidProviderConfigError diag.Diagnostics
 	tooManyProvidersErr := diag.Errorf("multiple configurations found: must contain configuration for only one provider")
 
 	if grafanaEndpoint != "" || grafanaUser != "" || grafanaPassword != "" {
 		if grafanaEndpoint == "" || grafanaUser == "" || grafanaPassword == "" {
-			missingParamErr = diag.Errorf("grafana configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("grafana configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
@@ -1381,7 +1381,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if splunkEndpoint == "" || splunkToken == "" {
-			missingParamErr = diag.Errorf("splunk configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("splunk configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Splunk: &vaultmodels.HashicorpCloudVault20201125Splunk{
@@ -1396,7 +1396,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if datadogAPIKey == "" || datadogRegion == "" {
-			missingParamErr = diag.Errorf("datadog configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("datadog configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{
@@ -1411,7 +1411,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if cloudwatchAccessKeyID == "" || cloudwatchAccessKeySecret == "" || cloudwatchRegion == "" {
-			missingParamErr = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{
@@ -1429,7 +1429,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 
 		if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
-			missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
@@ -1447,7 +1447,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 
 		if httpURI == "" || httpMethod == "" || httpCodec == "" {
-			missingParamErr = diag.Errorf("http configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: configuration information missing")
 		}
 
 		var httpBearerAuth *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth
@@ -1460,12 +1460,12 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 
 			// only one of basic or bearer authentication should be submitted
 			if httpBasicUser != "" || httpBasicPassword != "" {
-				missingParamErr = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
+				invalidProviderConfigError = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
 			}
 		} else {
 			// http basic requires both the username and password to be filled
 			if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
-				missingParamErr = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
+				invalidProviderConfigError = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
 			} else {
 				httpBasicAuth = &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
 					User:     httpBasicUser,
@@ -1489,8 +1489,8 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 	}
 
-	if missingParamErr != nil {
-		return nil, missingParamErr
+	if invalidProviderConfigError != nil {
+		return nil, invalidProviderConfigError
 	}
 
 	return observabilityConfig, nil
