@@ -13,5 +13,5 @@ resource "hcp_iam_workload_identity_provider" "example" {
   # Only allow workload's that are assigned the expected service account ID
   # GCP will set the subject to that of the service account associated with the
   # workload.
-  conditional_access = "jwt_token.sub is `107517467455664443766`"
+  conditional_access = "jwt_claims.sub == `107517467455664443766`"
 }

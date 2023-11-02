@@ -1,0 +1,4 @@
+```release-note:bug
+Removed unnecessary validation of a trailing slash on the `oidc.issuer_uri`
+field for the `hcp_iam_workload_identity_provider` resource.
+```

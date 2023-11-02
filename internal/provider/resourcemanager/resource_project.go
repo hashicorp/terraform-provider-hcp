@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -73,10 +74,12 @@ The user or service account that is running Terraform when creating a %s resourc
 			},
 			"description": schema.StringAttribute{
 				Description: "The project's description",
+				Computed:    true,
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 256),
 				},
+				Default: stringdefault.StaticString(""),
 			},
 		},
 	}
