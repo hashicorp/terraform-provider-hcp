@@ -255,7 +255,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 						},
 						"http_codec": {
-							Description: "HTTP codec for streaming metrics",
+							Description: "HTTP codec for streaming metrics, allowed values are JSON and NDJSON",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -402,7 +402,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 						},
 						"http_codec": {
-							Description: "HTTP codec for streaming audit logs",
+							Description: "HTTP codec for streaming audit logs, allowed values are JSON and NDJSON",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},

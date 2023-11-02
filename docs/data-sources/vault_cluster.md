@@ -84,7 +84,7 @@ Read-Only:
 - `http_basic_password` (String) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided
 - `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided.
 - `http_bearer_token` (String) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
-- `http_codec` (String) HTTP codec for streaming audit logs
+- `http_codec` (String) HTTP codec for streaming audit logs, allowed values are JSON and NDJSON
 - `http_compression` (Boolean) HTTP compression flag for streaming audit logs
 - `http_headers` (Map of String) HTTP headers for streaming audit logs
 - `http_method` (String) HTTP payload method for streaming audit logs
@@ -123,7 +123,7 @@ Read-Only:
 - `http_basic_password` (String) HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_bearer_token is not provided
 - `http_basic_user` (String) HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_bearer_token is not provided.
 - `http_bearer_token` (String) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
-- `http_codec` (String) HTTP codec for streaming metrics
+- `http_codec` (String) HTTP codec for streaming metrics, allowed values are JSON and NDJSON
 - `http_compression` (Boolean) HTTP compression flag for streaming metrics
 - `http_headers` (Map of String) HTTP headers for streaming metrics
 - `http_method` (String) HTTP payload method for streaming metrics
