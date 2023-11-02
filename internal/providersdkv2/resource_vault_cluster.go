@@ -265,7 +265,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 						},
 						"http_method": {
-							Description: "HTTP payload method for streaming metrics",
+							Description: "HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -412,7 +412,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 						},
 						"http_method": {
-							Description: "HTTP payload method for streaming audit logs",
+							Description: "HTTP payload method for streaming audit logs, , allowed values are PATCH, POST, or PUT",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -1444,6 +1444,10 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	if httpURI != "" || httpMethod != "" || httpCodec != "" {
 		if observabilityConfig != nil {
 			return nil, tooManyProvidersErr
+		}
+
+		if httpMethod != "POST" && httpMethod != "PUT" && httpMethod != "PATCH" {
+			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
 
 		if httpCodec != "JSON" && httpCodec != "NDJSON" {

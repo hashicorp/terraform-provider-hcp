@@ -100,7 +100,7 @@ Optional:
 - `http_codec` (String) HTTP codec for streaming audit logs, allowed values are JSON and NDJSON
 - `http_compression` (Boolean) HTTP compression flag for streaming audit logs
 - `http_headers` (Map of String) HTTP headers for streaming audit logs
-- `http_method` (String) HTTP payload method for streaming audit logs
+- `http_method` (String) HTTP payload method for streaming audit logs, , allowed values are PATCH, POST, or PUT
 - `http_payload_prefix` (String) HTTP payload prefix for streaming audit logs
 - `http_payload_suffix` (String) HTTP payload suffix for streaming audit logs
 - `http_uri` (String) HTTP URI for streaming audit logs
@@ -149,7 +149,7 @@ Optional:
 - `http_codec` (String) HTTP codec for streaming metrics, allowed values are JSON and NDJSON
 - `http_compression` (Boolean) HTTP compression flag for streaming metrics
 - `http_headers` (Map of String) HTTP headers for streaming metrics
-- `http_method` (String) HTTP payload method for streaming metrics
+- `http_method` (String) HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT
 - `http_payload_prefix` (String) HTTP payload prefix for streaming metrics
 - `http_payload_suffix` (String) HTTP payload suffix for streaming metrics
 - `http_uri` (String) HTTP URI for streaming metrics

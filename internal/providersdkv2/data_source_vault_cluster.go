@@ -232,7 +232,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"http_method": {
-							Description: "HTTP payload method for streaming metrics",
+							Description: "HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -357,7 +357,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"http_method": {
-							Description: "HTTP payload method for streaming audit logs",
+							Description: "HTTP payload method for streaming audit logs, allowed values are PATCH, POST, or PUT",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
