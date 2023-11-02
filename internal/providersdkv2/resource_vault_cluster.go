@@ -1446,11 +1446,11 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 
-		if httpMethod != "POST" && httpMethod != "PUT" && httpMethod != "PATCH" {
+		if strings.ToUpper(httpMethod) != "POST" && strings.ToUpper(httpMethod) != "PUT" && strings.ToUpper(httpMethod) != "PATCH" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
 
-		if httpCodec != "JSON" && httpCodec != "NDJSON" {
+		if strings.ToUpper(httpMethod) != "JSON" && strings.ToUpper(httpMethod) != "NDJSON" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
 		}
 
