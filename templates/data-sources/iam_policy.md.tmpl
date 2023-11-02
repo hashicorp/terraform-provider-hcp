@@ -1,0 +1,25 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "Cloud Platform"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+To see what each role grants, please see [HCP
+Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#organization-role).
+The basic roles can be referenced as follows:
+
+* `roles/owner`
+* `roles/admin`
+* `roles/contributor`
+* `roles/viewer`
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_iam_policy/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
