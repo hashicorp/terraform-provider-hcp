@@ -20,6 +20,10 @@ import (
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client/consul_service"
 
+	cloud_iam "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/iam_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
+
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 
@@ -32,9 +36,6 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
-
-	cloud_service_principals "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
@@ -52,6 +53,7 @@ type Client struct {
 	Billing           billing_account_service.ClientService
 	Boundary          boundary_service.ClientService
 	Consul            consul_service.ClientService
+	IAM               iam_service.ClientService
 	Network           network_service.ClientService
 	Operation         operation_service.ClientService
 	Organization      organization_service.ClientService
@@ -101,12 +103,13 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Billing:           cloud_billing.New(httpClient, nil).BillingAccountService,
 		Boundary:          cloud_boundary.New(httpClient, nil).BoundaryService,
 		Consul:            cloud_consul.New(httpClient, nil).ConsulService,
+		IAM:               cloud_iam.New(httpClient, nil).IamService,
 		Network:           cloud_network.New(httpClient, nil).NetworkService,
 		Operation:         cloud_operation.New(httpClient, nil).OperationService,
 		Organization:      cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Packer:            cloud_packer.New(httpClient, nil).PackerService,
 		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
-		ServicePrincipals: cloud_service_principals.New(httpClient, nil).ServicePrincipalsService,
+		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
 		Vault:             cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
 	}
