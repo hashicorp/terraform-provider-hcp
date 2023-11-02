@@ -1332,6 +1332,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 	return getValidObservabilityConfig(config)
 }
 
+// if http observability information is provided, this function ensures that authentication fields are valid and returns the authentication method used
 func validateHttpAuth(httpBasicUser string, httpBasicPassword string, httpBearerToken string) (diag.Diagnostics, *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth) {
 	var httpConfigError diag.Diagnostics
 
