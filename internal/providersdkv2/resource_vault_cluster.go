@@ -1332,6 +1332,36 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 	return getValidObservabilityConfig(config)
 }
 
+func validateHttpAuth(httpBasicUser string, httpBasicPassword string, httpBearerToken string) (diag.Diagnostics, *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth) {
+	var httpConfigError diag.Diagnostics
+
+	// only one of basic or bearer authentication should be submitted
+	if httpBearerToken != "" && httpBasicUser != "" || httpBearerToken != "" && httpBasicPassword != "" {
+		httpConfigError = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
+	} else if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
+		// http basic requires both the username and password to be filled
+		httpConfigError = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
+	}
+
+	if httpConfigError != nil {
+		return httpConfigError, nil, nil
+	}
+
+	if httpBearerToken != "" {
+		httpBearerAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth{
+			Token: httpBearerToken,
+		}
+		return nil, httpBearerAuth, nil
+	}
+
+	httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
+		User:     httpBasicUser,
+		Password: httpBasicPassword,
+	}
+
+	return nil, nil, httpBasicAuth
+}
+
 func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
 	grafanaEndpoint, _ := config["grafana_endpoint"].(string)
 	grafanaUser, _ := config["grafana_user"].(string)
@@ -1458,28 +1488,10 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: configuration information missing")
 		}
 
-		var httpBearerAuth *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth
-		var httpBasicAuth *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth
+		httpConfigError, httpBearerAuth, httpBasicAuth := validateHttpAuth(httpBasicUser, httpBasicPassword, httpBearerToken)
 
-		if httpBearerToken != "" {
-			httpBearerAuth = &vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth{
-				Token: httpBearerToken,
-			}
-
-			// only one of basic or bearer authentication should be submitted
-			if httpBasicUser != "" || httpBasicPassword != "" {
-				invalidProviderConfigError = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
-			}
-		} else {
-			// http basic requires both the username and password to be filled
-			if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
-				invalidProviderConfigError = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
-			} else {
-				httpBasicAuth = &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
-					User:     httpBasicUser,
-					Password: httpBasicPassword,
-				}
-			}
+		if httpConfigError != nil {
+			invalidProviderConfigError = httpConfigError
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
