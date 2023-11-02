@@ -68,6 +68,14 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 			},
 			expectedError: "http configuration is invalid: configuration information missing",
 		},
+		"http invalid codec": {
+			config: map[string]interface{}{
+				"http_uri":    "https://localhost:3000",
+				"http_method": "POST",
+				"http_codec":  "SOME_VALUE",
+			},
+			expectedError: "http configuration is invalud: allowed values for http_codec are only \"JSON\" or \"NDJSON\"",
+		},
 		"http provide bearer and basic auth": {
 			config: map[string]interface{}{
 				"http_uri":            "https://localhost:3000",

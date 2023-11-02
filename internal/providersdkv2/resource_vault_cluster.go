@@ -1446,6 +1446,10 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 
+		if httpCodec != "JSON" && httpCodec != "NDJSON" {
+			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
+		}
+
 		if httpURI == "" || httpMethod == "" || httpCodec == "" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: configuration information missing")
 		}
