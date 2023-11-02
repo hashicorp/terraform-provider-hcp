@@ -94,9 +94,9 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
-- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming audit logs
-- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs
-- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming audit logs
+- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided
+- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided.
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
 - `http_codec` (String) HTTP codec for streaming audit logs
 - `http_compression` (Boolean) HTTP compression flag for streaming audit logs
 - `http_headers` (Map of String) HTTP headers for streaming audit logs
@@ -145,7 +145,7 @@ Optional:
 - `grafana_user` (String) Grafana user for streaming metrics
 - `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming metrics
 - `http_basic_user` (String) HTTP basic authentication username for streaming metrics
-- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming metrics
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
 - `http_codec` (String) HTTP codec for streaming metrics
 - `http_compression` (Boolean) HTTP compression flag for streaming metrics
 - `http_headers` (Map of String) HTTP headers for streaming metrics
