@@ -202,12 +202,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"http_basic_user": {
-							Description: "HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_bearer_token is not provided.",
+							Description: "HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"http_basic_password": {
-							Description: "HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_bearer_token is not provided",
+							Description: "HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -327,12 +327,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Computed:    true,
 						},
 						"http_basic_user": {
-							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided.",
+							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"http_basic_password": {
-							Description: "HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_bearer_token is not provided",
+							Description: "HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
