@@ -1333,11 +1333,11 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 }
 
 // if http observability information is provided, this function ensures that authentication fields are valid and returns the authentication method used
-func validateHTTPAuth(httpBasicUser string, httpBasicPassword string, httpBearerToken string) (diag.Diagnostics, *vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth) {
+func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) (*vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth, diag.Diagnostics) {
 	var httpConfigError diag.Diagnostics
 
 	// only one of basic or bearer authentication should be submitted
-	if httpBearerToken != "" && httpBasicUser != "" || httpBearerToken != "" && httpBasicPassword != "" {
+	if httpBearerToken != "" && (httpBasicUser != "" || httpBasicPassword != "") {
 		httpConfigError = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
 	} else if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
 		// http basic requires both the username and password to be filled
@@ -1345,14 +1345,14 @@ func validateHTTPAuth(httpBasicUser string, httpBasicPassword string, httpBearer
 	}
 
 	if httpConfigError != nil {
-		return httpConfigError, nil, nil
+		return nil, nil, httpConfigError
 	}
 
 	if httpBearerToken != "" {
 		httpBearerAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth{
 			Token: httpBearerToken,
 		}
-		return nil, httpBearerAuth, nil
+		return httpBearerAuth, nil, nil
 	}
 
 	httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
@@ -1360,7 +1360,7 @@ func validateHTTPAuth(httpBasicUser string, httpBasicPassword string, httpBearer
 		Password: httpBasicPassword,
 	}
 
-	return nil, nil, httpBasicAuth
+	return nil, httpBasicAuth, nil
 }
 
 func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
@@ -1489,7 +1489,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: configuration information missing")
 		}
 
-		httpConfigError, httpBearerAuth, httpBasicAuth := validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken)
+		httpBearerAuth, httpBasicAuth, httpConfigError := validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken)
 
 		if httpConfigError != nil {
 			invalidProviderConfigError = httpConfigError
