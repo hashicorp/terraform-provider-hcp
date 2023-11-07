@@ -1396,12 +1396,16 @@ func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) 
 		return httpBearerAuth, nil, nil
 	}
 
-	httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
-		User:     httpBasicUser,
-		Password: httpBasicPassword,
+	if httpBasicUser != "" && httpBasicPassword != "" {
+		httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
+			User:     httpBasicUser,
+			Password: httpBasicPassword,
+		}
+
+		return nil, httpBasicAuth, nil
 	}
 
-	return nil, httpBasicAuth, nil
+	return nil, nil, nil
 }
 
 func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
