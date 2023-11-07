@@ -1384,7 +1384,8 @@ func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) 
 	// only one of basic or bearer authentication should be submitted
 	if httpBearerToken != "" && (httpBasicUser != "" || httpBasicPassword != "") {
 		return nil, nil, diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
-	} else if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
+	}
+	if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
 		// http basic requires both the username and password to be filled
 		return nil, nil, diag.Errorf("http configuration is invalid: basic authentication requires username and password")
 	}
@@ -1396,7 +1397,7 @@ func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) 
 		return httpBearerAuth, nil, nil
 	}
 
-	if httpBasicUser != "" && httpBasicPassword != "" {
+	if httpBasicUser != "" || httpBasicPassword != "" {
 		httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
 			User:     httpBasicUser,
 			Password: httpBasicPassword,
