@@ -1381,18 +1381,12 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 
 // if http observability information is provided, this function ensures that authentication fields are valid and returns the authentication method used
 func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) (*vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth, diag.Diagnostics) {
-	var httpConfigError diag.Diagnostics
-
 	// only one of basic or bearer authentication should be submitted
 	if httpBearerToken != "" && (httpBasicUser != "" || httpBasicPassword != "") {
-		httpConfigError = diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
+		return nil, nil, diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
 	} else if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
 		// http basic requires both the username and password to be filled
-		httpConfigError = diag.Errorf("http configuration is invalid: basic authentication requires username and password")
-	}
-
-	if httpConfigError != nil {
-		return nil, nil, httpConfigError
+		return nil, nil, diag.Errorf("http configuration is invalid: basic authentication requires username and password")
 	}
 
 	if httpBearerToken != "" {
