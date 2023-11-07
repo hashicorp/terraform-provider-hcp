@@ -93,6 +93,11 @@ func NewClient(config ClientConfig) (*Client, error) {
 		return nil, fmt.Errorf("invalid HCP config: %w", err)
 	}
 
+	// Fetch a token to verify that we have valid credentials
+	if _, err := hcp.Token(); err != nil {
+		return nil, fmt.Errorf("no valid credentials available: %w", err)
+	}
+
 	httpClient, err := sdk.New(sdk.Config{
 		HCPConfig:     hcp,
 		SourceChannel: config.SourceChannel,
