@@ -1562,7 +1562,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 
 		if newrelicAccountID == "" || newrelicLicenseKey == "" || newrelicRegion == "" {
-			missingParamErr = diag.Errorf("newrelic configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("newrelic configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
