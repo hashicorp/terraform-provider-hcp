@@ -84,6 +84,7 @@ type ClientConfig struct {
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
 	hcp, err := hcpConfig.NewHCPConfig(
+		hcpConfig.FromEnv(),
 		hcpConfig.WithClientCredentials(
 			config.ClientID,
 			config.ClientSecret,
