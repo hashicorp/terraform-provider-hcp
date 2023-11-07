@@ -81,6 +81,9 @@ Read-Only:
 - `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
+- `newrelic_license_key` (String) NewRelic license key for streaming audit logs
+- `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `http_basic_password` (String) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided
 - `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided
 - `http_bearer_token` (String) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
@@ -120,6 +123,9 @@ Read-Only:
 - `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
+- `newrelic_license_key` (String) NewRelic license key for streaming metrics
+- `newrelic_region` (String) NewRelic region for streaming metrics, allowed values are "US" and "EU"
 - `http_basic_password` (String) HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also provided
 - `http_basic_user` (String) HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also provided
 - `http_bearer_token` (String) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided

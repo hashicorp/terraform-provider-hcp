@@ -201,6 +201,21 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming metrics, allowed values are \"US\" and \"EU\"",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"http_basic_user": {
 							Description: "HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
 							Type:        schema.TypeString,
@@ -323,6 +338,21 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming audit logs, allowed values are \"US\" and \"EU\"",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},

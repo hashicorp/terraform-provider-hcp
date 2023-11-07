@@ -241,6 +241,16 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description: "HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also specified",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
 							Sensitive:   true,
 						},
 						"http_bearer_token": {
@@ -281,6 +291,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"http_uri": {
 							Description: "HTTP URI for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming metrics, allowed values are \"US\" and \"EU\"",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -390,6 +405,17 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
 						"http_bearer_token": {
 							Description: "HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
 							Type:        schema.TypeString,
@@ -428,6 +454,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"http_uri": {
 							Description: "HTTP URI for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_region": {
+							Description: "NewRelic region for streaming audit logs, allowed values are \"US\" and \"EU\"",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -1296,6 +1327,21 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 				}
 			}
 		}
+
+		if newrelic := config.Newrelic; newrelic != nil {
+			configMap["newrelic_account_id"] = newrelic.AccountID
+			configMap["newrelic_region"] = newrelic.Region
+
+			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+			if newrelic.LicenseKey != "redacted" {
+				configMap["newrelic_license_key"] = newrelic.LicenseKey
+			} else {
+				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+					config := configParam.([]interface{})[0].(map[string]interface{})
+					configMap["newrelic_license_key"] = config["newrelic_license_key"].(string)
+				}
+			}
+		}
 	}
 
 	return []interface{}{configMap}
@@ -1313,6 +1359,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
 		HTTP:          &vaultmodels.HashicorpCloudVault20201125HTTP{},
+		Newrelic:      &vaultmodels.HashicorpCloudVault20201125NewRelic{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1387,6 +1434,9 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	httpPayloadPrefix, _ := config["http_payload_prefix"].(string)
 	httpPayloadSuffix, _ := config["http_payload_suffix"].(string)
 	httpURI, _ := config["http_uri"].(string)
+	newrelicAccountID, _ := config["newrelic_account_id"].(string)
+	newrelicLicenseKey, _ := config["newrelic_license_key"].(string)
+	newrelicRegion, _ := config["newrelic_region"].(string)
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
@@ -1473,10 +1523,6 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	}
 
 	if httpURI != "" || httpMethod != "" || httpCodec != "" {
-		if observabilityConfig != nil {
-			return nil, tooManyProvidersErr
-		}
-
 		if strings.ToUpper(httpMethod) != "POST" && strings.ToUpper(httpMethod) != "PUT" && strings.ToUpper(httpMethod) != "PATCH" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
@@ -1506,6 +1552,24 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 				PayloadSuffix: httpPayloadSuffix,
 				Method:        httpMethod,
 				URI:           httpURI,
+			},
+		}
+	}
+
+	if newrelicAccountID != "" || newrelicLicenseKey != "" || newrelicRegion != "" {
+		if observabilityConfig != nil {
+			return nil, tooManyProvidersErr
+		}
+
+		if newrelicAccountID == "" || newrelicLicenseKey == "" || newrelicRegion == "" {
+			missingParamErr = diag.Errorf("newrelic configuration is invalid: configuration information missing")
+		}
+
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			Newrelic: &vaultmodels.HashicorpCloudVault20201125NewRelic{
+				AccountID:  newrelicAccountID,
+				LicenseKey: newrelicLicenseKey,
+				Region:     (*vaultmodels.HashicorpCloudVault20201125NewRelicRegion)(&newrelicRegion),
 			},
 		}
 	}
