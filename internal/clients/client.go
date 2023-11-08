@@ -43,6 +43,7 @@ import (
 	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
 
+	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
 
@@ -82,9 +83,24 @@ type ClientConfig struct {
 
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
+	hcp, err := hcpConfig.NewHCPConfig(
+		hcpConfig.FromEnv(),
+		hcpConfig.WithClientCredentials(
+			config.ClientID,
+			config.ClientSecret,
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("invalid HCP config: %w", err)
+	}
+
+	// Fetch a token to verify that we have valid credentials
+	if _, err := hcp.Token(); err != nil {
+		return nil, fmt.Errorf("no valid credentials available: %w", err)
+	}
+
 	httpClient, err := sdk.New(sdk.Config{
-		ClientID:      config.ClientID,
-		ClientSecret:  config.ClientSecret,
+		HCPConfig:     hcp,
 		SourceChannel: config.SourceChannel,
 	})
 	if err != nil {
