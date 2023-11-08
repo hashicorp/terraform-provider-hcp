@@ -94,6 +94,19 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided
+- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming audit logs, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming audit logs
+- `http_headers` (Map of String) HTTP headers for streaming audit logs
+- `http_method` (String) HTTP payload method for streaming audit logs, , allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming audit logs
+- `http_payload_suffix` (String) HTTP payload suffix for streaming audit logs
+- `http_uri` (String) HTTP URI for streaming audit logs
+- `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming audit logs
+- `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 - `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
 
@@ -133,6 +146,19 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_password` (String, Sensitive) Grafana password for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `http_basic_password` (String) HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also specified
+- `http_basic_user` (String) HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also specified
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming metrics, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming metrics
+- `http_headers` (Map of String) HTTP headers for streaming metrics
+- `http_method` (String) HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming metrics
+- `http_payload_suffix` (String) HTTP payload suffix for streaming metrics
+- `http_uri` (String) HTTP URI for streaming metrics
+- `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming metrics
+- `newrelic_region` (String) NewRelic region for streaming metrics, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 - `splunk_token` (String, Sensitive) Splunk token for streaming metrics
 
