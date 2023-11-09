@@ -1,3 +1,0 @@
-```release-note:improvement
-Add custom http endpoints as an observability provider for streaming audit logs and metrics from HCP Vault clusters.
-```
