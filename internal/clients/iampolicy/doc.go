@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // iampolicy is a helper package for creating Terraform resources that modify an
 // HCP Resource's IAM Policy. By implementing a single interface, a resource can
 // provide an authoratative Policy resource and a Binding resource. Using this
