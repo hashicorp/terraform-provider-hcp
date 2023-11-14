@@ -242,17 +242,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
-						"newrelic_account_id": {
-							Description: "NewRelic Account ID for streaming metrics",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-						"newrelic_license_key": {
-							Description: "NewRelic license key for streaming metrics",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Sensitive:   true,
-						},
 						"http_bearer_token": {
 							Description: "HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
 							Type:        schema.TypeString,
@@ -293,6 +282,17 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description: "HTTP URI for streaming metrics",
 							Type:        schema.TypeString,
 							Optional:    true,
+						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
 						},
 						"newrelic_region": {
 							Description: "NewRelic region for streaming metrics, allowed values are \"US\" and \"EU\"",
@@ -394,24 +394,8 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
-						"http_basic_user": {
-							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
 						"http_basic_password": {
 							Description: "HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Sensitive:   true,
-						},
-						"newrelic_account_id": {
-							Description: "NewRelic Account ID for streaming audit logs",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-						"newrelic_license_key": {
-							Description: "NewRelic license key for streaming audit logs",
 							Type:        schema.TypeString,
 							Optional:    true,
 							Sensitive:   true,
@@ -457,8 +441,24 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
+						"newrelic_account_id": {
+							Description: "NewRelic Account ID for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"newrelic_license_key": {
+							Description: "NewRelic license key for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
 						"newrelic_region": {
 							Description: "NewRelic region for streaming audit logs, allowed values are \"US\" and \"EU\"",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -1358,7 +1358,6 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Datadog:       &vaultmodels.HashicorpCloudVault20201125Datadog{},
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
-		HTTP:          &vaultmodels.HashicorpCloudVault20201125HTTP{},
 		Newrelic:      &vaultmodels.HashicorpCloudVault20201125NewRelic{},
 	}
 
