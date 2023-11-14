@@ -9,10 +9,13 @@ import (
 	"os"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 
@@ -34,9 +37,10 @@ type ProviderFrameworkConfiguration struct {
 }
 
 type ProviderFrameworkModel struct {
-	ClientSecret types.String `tfsdk:"client_secret"`
-	ClientID     types.String `tfsdk:"client_id"`
-	ProjectID    types.String `tfsdk:"project_id"`
+	ClientSecret   types.String `tfsdk:"client_secret"`
+	ClientID       types.String `tfsdk:"client_id"`
+	CredentialFile types.String `tfsdk:"credential_file"`
+	ProjectID      types.String `tfsdk:"project_id"`
 }
 
 func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -50,14 +54,28 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"client_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client ID for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_secret")),
+					stringvalidator.ConflictsWith(path.MatchRoot("credential_file")),
+				},
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client Secret for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_id")),
+				},
 			},
 			"project_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "The default project in which resources should be created.",
+			},
+			"credential_file": schema.StringAttribute{
+				Optional: true,
+				Description: "The path to an HCP credential file to use to authenticate the provider to HCP. " +
+					"You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. " +
+					"Using a credential file allows you to authenticate the provider as a service principal via client " +
+					"credentials or dynamically based on Workload Identity Federation.",
 			},
 		},
 	}
@@ -132,9 +150,10 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	}
 
 	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      clientID,
-		ClientSecret:  clientSecret,
-		SourceChannel: "terraform-provider-hcp",
+		ClientID:       clientID,
+		ClientSecret:   clientSecret,
+		CredentialFile: data.CredentialFile.ValueString(),
+		SourceChannel:  "terraform-provider-hcp",
 	})
 
 	if err != nil {
