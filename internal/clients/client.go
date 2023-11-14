@@ -85,13 +85,11 @@ type ClientConfig struct {
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
 	// Build the HCP Config options
-	var opts []hcpConfig.HCPConfigOption
+	opts := []hcpConfig.HCPConfigOption{hcpConfig.FromEnv()}
 	if config.ClientID != "" && config.ClientSecret != "" {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
-	} else {
-		opts = append(opts, hcpConfig.FromEnv())
 	}
 
 	// Create the HCP Config
