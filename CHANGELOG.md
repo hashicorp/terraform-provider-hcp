@@ -1,3 +1,17 @@
+## v0.77.0 (November 14, 2023)
+
+FEATURES:
+
+* Add `hcp_organization_iam_binding` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_organization_iam_policy` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_project_iam_binding` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_project_iam_policy` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add support to authenticate the provider using credential files. [[GH-672](https://github.com/hashicorp/terraform-provider-hcp/pull/672)]
+
+IMPROVEMENTS:
+
+* Add NewRelic as an observability provider for streaming audit logs and metrics from HCP Vault clusters. [[GH-653](https://github.com/hashicorp/terraform-provider-hcp/pull/653)]
+* The change introduces the ability to provide configuration via environment variables, which will allow credentials to be provided via environment variable (either directly or via a creds file). [[GH-666](https://github.com/hashicorp/terraform-provider-hcp/pull/666)]
 ## v0.76.0 (November 01, 2023)
 
 BUG FIXES:
