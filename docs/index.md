@@ -124,6 +124,7 @@ resource "hcp_vault_cluster" "example" {
 
 - `client_id` (String) The OAuth2 Client ID for API operations.
 - `client_secret` (String) The OAuth2 Client Secret for API operations.
+- `credential_file` (String) The path to an HCP credential file to use to authenticate the provider to HCP. You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. Using a credential file allows you to authenticate the provider as a service principal via client credentials or dynamically based on Workload Identity Federation.
 - `project_id` (String) The default project in which resources should be created.
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
 
