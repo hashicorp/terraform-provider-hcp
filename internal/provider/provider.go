@@ -9,10 +9,13 @@ import (
 	"os"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 
@@ -51,10 +54,17 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"client_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client ID for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_secret")),
+					stringvalidator.ConflictsWith(path.MatchRoot("credential_file")),
+				},
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client Secret for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_id")),
+				},
 			},
 			"project_id": schema.StringAttribute{
 				Optional:    true,
