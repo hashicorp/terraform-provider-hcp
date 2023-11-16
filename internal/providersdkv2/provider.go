@@ -75,6 +75,14 @@ func New() func() *schema.Provider {
 					ValidateFunc: validation.IsUUID,
 					Description:  "The default project in which resources should be created.",
 				},
+				"credential_file": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: "The path to an HCP credential file to use to authenticate the provider to HCP. " +
+						"You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. " +
+						"Using a credential file allows you to authenticate the provider as a service principal via client " +
+						"credentials or dynamically based on Workload Identity Federation.",
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -116,9 +124,10 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		}
 
 		client, err := clients.NewClient(clients.ClientConfig{
-			ClientID:      clientID,
-			ClientSecret:  clientSecret,
-			SourceChannel: userAgent,
+			ClientID:       clientID,
+			ClientSecret:   clientSecret,
+			CredentialFile: d.Get("credential_file").(string),
+			SourceChannel:  userAgent,
 		})
 		if err != nil {
 			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)

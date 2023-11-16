@@ -67,8 +67,9 @@ type Client struct {
 
 // ClientConfig specifies configuration for the client that interacts with HCP
 type ClientConfig struct {
-	ClientID     string
-	ClientSecret string
+	ClientID       string
+	ClientSecret   string
+	CredentialFile string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
 	OrganizationID string
@@ -83,13 +84,16 @@ type ClientConfig struct {
 
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
-	hcp, err := hcpConfig.NewHCPConfig(
-		hcpConfig.FromEnv(),
-		hcpConfig.WithClientCredentials(
-			config.ClientID,
-			config.ClientSecret,
-		),
-	)
+	// Build the HCP Config options
+	opts := []hcpConfig.HCPConfigOption{hcpConfig.FromEnv()}
+	if config.ClientID != "" && config.ClientSecret != "" {
+		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
+	} else if config.CredentialFile != "" {
+		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
+	}
+
+	// Create the HCP Config
+	hcp, err := hcpConfig.NewHCPConfig(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("invalid HCP config: %w", err)
 	}
@@ -108,14 +112,12 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	httpClient.SetLogger(logger{})
-
 	if ShouldLog() {
 		httpClient.Debug = true
 	}
 
 	client := &Client{
-		Config: config,
-
+		Config:            config,
 		Billing:           cloud_billing.New(httpClient, nil).BillingAccountService,
 		Boundary:          cloud_boundary.New(httpClient, nil).BoundaryService,
 		Consul:            cloud_consul.New(httpClient, nil).ConsulService,
