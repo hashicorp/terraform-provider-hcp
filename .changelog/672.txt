@@ -1,0 +1,3 @@
+```release-note:feature
+Add support to authenticate the provider using credential files.
+```
