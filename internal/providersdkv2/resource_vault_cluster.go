@@ -1359,6 +1359,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
 		Newrelic:      &vaultmodels.HashicorpCloudVault20201125NewRelic{},
+		HTTP:          &vaultmodels.HashicorpCloudVault20201125HTTP{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
