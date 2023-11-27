@@ -1,0 +1,11 @@
+```release-note:deprecation
+The `data.hcp_packer_iteration.incremental_version` attribute is now deprecated and will be removed in a future release. Use the `fingerprint`, `id` or `uuid` attributes to reference iterations instead.
+```
+
+```release-note:deprecation
+The `hcp_packer_channel_assignment.iteration_version` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead.
+```
+
+```release-note:deprecation
+The `hcp_packer_channel_assignment.iteration_id` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead.
+```

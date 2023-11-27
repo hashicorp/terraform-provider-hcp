@@ -82,6 +82,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:     true,
 				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
 				ValidateFunc: validation.StringIsNotEmpty,
+				Deprecated:   "This attribute will be removed in a future version. Use `iteration_fingerprint` to reference iterations instead.",
 			},
 			"iteration_version": {
 				Description:  "The incremental version of the iteration assigned to the channel.",
@@ -90,6 +91,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Computed:     true,
 				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
 				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
+				Deprecated:   "This attribute will be removed in a future version. Use `iteration_fingerprint` to reference iterations instead.",
 			},
 			// Computed Values
 			"organization_id": {
