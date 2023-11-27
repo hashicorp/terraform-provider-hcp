@@ -147,8 +147,12 @@ func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 	return channel.GetPayload().Channel, nil
 }
 
-func UpdatePackerChannelAssignment(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
-	iteration *packermodels.HashicorpCloudPackerIteration) (*packermodels.HashicorpCloudPackerChannel, error) {
+func UpdatePackerChannelAssignment(
+	ctx context.Context, client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	bucketSlug string, channelSlug string,
+	iterationFingerprint string,
+) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -157,19 +161,9 @@ func UpdatePackerChannelAssignment(ctx context.Context, client *Client, loc *sha
 
 	maskPaths := []string{}
 
-	if iteration != nil {
-		if iteration.ID != "" {
-			params.Body.IterationID = iteration.ID
-			maskPaths = append(maskPaths, "iterationId")
-		}
-		if iteration.Fingerprint != "" {
-			params.Body.Fingerprint = iteration.Fingerprint
-			maskPaths = append(maskPaths, "fingerprint")
-		}
-		if iteration.IncrementalVersion > 0 {
-			params.Body.IncrementalVersion = iteration.IncrementalVersion
-			maskPaths = append(maskPaths, "incrementalVersion")
-		}
+	if iterationFingerprint != "" {
+		params.Body.Fingerprint = iterationFingerprint
+		maskPaths = append(maskPaths, "fingerprint")
 	}
 
 	if len(maskPaths) == 0 {
