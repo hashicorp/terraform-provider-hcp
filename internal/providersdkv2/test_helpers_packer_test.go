@@ -250,6 +250,8 @@ func revokeIteration(t *testing.T, iterationID, bucketSlug string, revokeAt strf
 	}
 	if resp == nil {
 		t.Fatal("expected non-nil response from UpdateIteration, got nil")
+	} else if resp.Payload == nil {
+		t.Fatal("expected non-nil Payload in response from UpdateIteration, got nil")
 	}
 
 	return resp.Payload.Iteration
@@ -318,11 +320,15 @@ func upsertCompleteBuild(t *testing.T, bucketSlug, fingerprint, iterationID stri
 		}
 		if getResp == nil {
 			t.Fatalf("unexpected GetBuild response, expected non nil. Got nil.")
+		} else if getResp.Payload == nil {
+			t.Fatalf("unexpected GetBuild response payload, expected non nil. Got nil.")
 		}
 		build = getResp.Payload.Build
 	} else {
 		if createResp == nil {
 			t.Fatalf("unexpected CreateBuild response, expected non nil. Got nil.")
+		} else if createResp.Payload == nil {
+			t.Fatalf("unexpected CreateBuild response payload, expected non nil. Got nil.")
 		}
 		build = createResp.Payload.Build
 	}
@@ -346,6 +352,8 @@ func upsertCompleteBuild(t *testing.T, bucketSlug, fingerprint, iterationID stri
 	}
 	if updateResp == nil {
 		t.Fatalf("unexpected UpdateBuild response, expected non nil. Got nil.")
+	} else if updateResp.Payload == nil {
+		t.Fatalf("unexpected UpdateBuild response payload, expected non nil. Got nil.")
 	}
 	return updateResp.Payload.Build
 }

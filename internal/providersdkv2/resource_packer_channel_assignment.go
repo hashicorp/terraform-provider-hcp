@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"strings"
 
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
@@ -38,7 +37,6 @@ func resourcePackerChannelAssignment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePackerChannelAssignmentImport,
 		},
-		CustomizeDiff: resourcePackerChannelAssignmentCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"channel_name": {
@@ -55,6 +53,12 @@ func resourcePackerChannelAssignment() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			"iteration_fingerprint": {
+				Description:  "The fingerprint of the iteration assigned to the channel.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
 			// Optional inputs
 			"project_id": {
 				Description: `
@@ -66,32 +70,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsUUID,
-			},
-			"iteration_fingerprint": {
-				Description:  "The fingerprint of the iteration assigned to the channel.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"iteration_id": {
-				Description:  "The ID of the iteration assigned to the channel.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
-				ValidateFunc: validation.StringIsNotEmpty,
-				Deprecated:   "This attribute will be removed in a future version. Use `iteration_fingerprint` to reference iterations instead.",
-			},
-			"iteration_version": {
-				Description:  "The incremental version of the iteration assigned to the channel.",
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"iteration_id", "iteration_fingerprint", "iteration_version"},
-				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
-				Deprecated:   "This attribute will be removed in a future version. Use `iteration_fingerprint` to reference iterations instead.",
 			},
 			// Computed Values
 			"organization_id": {
@@ -118,7 +96,7 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	if channel == nil {
+	if channel == nil || channel.Slug == "" {
 		d.SetId("")
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
@@ -146,7 +124,7 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
-	} else if channel == nil {
+	} else if channel == nil || channel.Slug == "" {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) not found.", channelName, bucketName, loc.ProjectID),
@@ -164,27 +142,15 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 		}}
 	}
 
-	iterID := d.Get("iteration_id").(string)
-	if iterID == unassignString {
-		iterID = ""
-	}
-
 	iterFingerprint := d.Get("iteration_fingerprint").(string)
 	if iterFingerprint == unassignString {
 		iterFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName,
-		&packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: int32(d.Get("iteration_version").(int)),
-			ID:                 iterID,
-			Fingerprint:        iterFingerprint,
-		},
-	)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iterFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.SetId(updatedChannel.ID)
 
 	if err := setPackerChannelAssignmentIterationData(d, updatedChannel.Iteration); err != nil {
@@ -204,19 +170,12 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	iteration := &packermodels.HashicorpCloudPackerIteration{}
-	assignmentHasChanges := d.HasChanges("iteration_version", "iteration_id", "iteration_fingerprint")
-	if !assignmentHasChanges || d.HasChange("iteration_version") {
-		iteration.IncrementalVersion = int32(d.Get("iteration_version").(int))
-	}
-	if iterID := d.Get("iteration_id").(string); (!assignmentHasChanges || d.HasChange("iteration_id")) && iterID != unassignString {
-		iteration.ID = iterID
-	}
-	if iterFingerpint := d.Get("iteration_fingerprint").(string); (!assignmentHasChanges || d.HasChange("iteration_fingerprint")) && iterFingerpint != unassignString {
-		iteration.Fingerprint = iterFingerpint
+	iterFingerpint := d.Get("iteration_fingerprint").(string)
+	if iterFingerpint == unassignString {
+		iterFingerpint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iteration)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iterFingerpint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -238,7 +197,7 @@ func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, nil)
+	_, err = clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, "")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -304,7 +263,7 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return nil, err
-	} else if channel == nil {
+	} else if channel == nil || channel.Slug == "" {
 		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) not found", channelName, bucketName, loc.ProjectID)
 	} else if channel.Managed {
 		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have an iteration assigned by Terraform", channelName, bucketName, loc.ProjectID)
@@ -319,108 +278,15 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	client := meta.(*clients.Client)
-	var err error
-	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve project ID: %v", err)
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	bucketName := d.Get("bucket_name").(string)
-
-	if (d.HasChange("iteration_id") && !d.NewValueKnown("iteration_id")) ||
-		(d.HasChange("iteration_fingerprint") && !d.NewValueKnown("iteration_fingerprint")) ||
-		(d.HasChanges("iteration_version") && !d.NewValueKnown("iteration_id")) {
-		if err := d.SetNewComputed("iteration_id"); err != nil {
-			return err
-		}
-		if err := d.SetNewComputed("iteration_fingerprint"); err != nil {
-			return err
-		}
-		if err := d.SetNewComputed("iteration_version"); err != nil {
-			return err
-		}
-	} else {
-		var iteration *packermodels.HashicorpCloudPackerIteration
-		var itErr error
-
-		if rawID, ok := d.GetOk("iteration_id"); ok && d.HasChange("iteration_id") && d.NewValueKnown("iteration_id") {
-			if id := rawID.(string); id != unassignString {
-				iteration, itErr = clients.GetIterationFromID(ctx, client, loc, bucketName, id)
-			} else {
-				iteration = &packermodels.HashicorpCloudPackerIteration{}
-			}
-		} else if rawFingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("iteration_fingerprint") && d.NewValueKnown("iteration_fingerprint") {
-			if fingerprint := rawFingerprint.(string); fingerprint != unassignString {
-				iteration, itErr = clients.GetIterationFromFingerprint(ctx, client, loc, bucketName, fingerprint)
-			} else {
-				iteration = &packermodels.HashicorpCloudPackerIteration{}
-			}
-		} else if rawVersion, ok := d.GetOk("iteration_version"); ok && d.HasChange("iteration_version") && d.NewValueKnown("iteration_version") {
-			if version := int32(rawVersion.(int)); version != 0 {
-				iteration, itErr = clients.GetIterationFromVersion(ctx, client, loc, bucketName, version)
-			} else {
-				iteration = &packermodels.HashicorpCloudPackerIteration{}
-			}
-		}
-
-		if itErr != nil {
-			return itErr
-		} else if iteration != nil {
-			if err := d.SetNew("iteration_version", iteration.IncrementalVersion); err != nil {
-				return err
-			}
-
-			id := iteration.ID
-			if id == "" {
-				id = unassignString
-			}
-			if err := d.SetNew("iteration_id", id); err != nil {
-				return err
-			}
-
-			fingerprint := iteration.Fingerprint
-			if fingerprint == "" {
-				fingerprint = unassignString
-			}
-			if err := d.SetNew("iteration_fingerprint", fingerprint); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 func setPackerChannelAssignmentIterationData(d *schema.ResourceData, i *packermodels.HashicorpCloudPackerIteration) error {
 	var iteration packermodels.HashicorpCloudPackerIteration
 
 	if i == nil {
 		iteration = packermodels.HashicorpCloudPackerIteration{
-			IncrementalVersion: 0,
-			ID:                 "",
-			Fingerprint:        "",
+			Fingerprint: "",
 		}
 	} else {
 		iteration = *i
-	}
-
-	if err := d.Set("iteration_version", iteration.IncrementalVersion); err != nil {
-		return err
-	}
-
-	id := iteration.ID
-	if id == "" {
-		id = unassignString
-	}
-	if err := d.Set("iteration_id", id); err != nil {
-		return err
 	}
 
 	fingerprint := iteration.Fingerprint

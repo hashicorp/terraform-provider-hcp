@@ -67,12 +67,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"incremental_version": {
-				Description: "Incremental version of this iteration",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Deprecated:  "This attribute will be removed in a future version. Use `fingerprint` to reference iterations instead.",
-			},
 			"created_at": {
 				Description: "Creation time of this iteration",
 				Type:        schema.TypeString,
@@ -130,9 +124,6 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ulid", iteration.ID); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("incremental_version", iteration.IncrementalVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("updated_at", iteration.UpdatedAt.String()); err != nil {

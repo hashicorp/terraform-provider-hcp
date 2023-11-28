@@ -39,7 +39,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `created_at` (String) Creation time of this iteration
 - `fingerprint` (String) The unique fingerprint associated with this iteration; often a git sha.
 - `id` (String) The ID of this resource.
-- `incremental_version` (Number, Deprecated) Incremental version of this iteration
 - `organization_id` (String) The ID of the organization this HCP Packer registry is located in.
 - `revoke_at` (String) The revocation time of this iteration. This field will be null for any iteration that has not been revoked or scheduled for revocation.
 - `ulid` (String) The ULID of this iteration.

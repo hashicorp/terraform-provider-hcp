@@ -41,12 +41,10 @@ resource "hcp_packer_channel_assignment" "staging" {
 
 - `bucket_name` (String) The slug of the HCP Packer Registry bucket where the channel is located.
 - `channel_name` (String) The name of the HCP Packer channel being managed.
+- `iteration_fingerprint` (String) The fingerprint of the iteration assigned to the channel.
 
 ### Optional
 
-- `iteration_fingerprint` (String) The fingerprint of the iteration assigned to the channel.
-- `iteration_id` (String, Deprecated) The ID of the iteration assigned to the channel.
-- `iteration_version` (Number, Deprecated) The incremental version of the iteration assigned to the channel.
 - `project_id` (String) The ID of the HCP project where the channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
