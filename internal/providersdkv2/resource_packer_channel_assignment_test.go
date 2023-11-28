@@ -192,6 +192,9 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 				`"doesNotExist"`,
 				`.*iteration with attributes \(fingerprint: doesNotExist\) does not exist.*`,
 			),
+			{ // Create a dummy non-empty state so that `CheckDestroy` will run.
+				Config: testAccConfigDummyNonemptyState,
+			},
 		},
 	})
 }
