@@ -20,85 +20,88 @@ var (
 	subscriptionID            = os.Getenv("ARM_SUBSCRIPTION_ID")
 	tenantID                  = os.Getenv("ARM_TENANT_ID")
 	testAccAzurePeeringConfig = fmt.Sprintf(`
-provider "azurerm" {
-  features {}
-}
+	  provider "azurerm" {
+		features {}
+	  }
 
-resource "hcp_hvn" "test" {
-  hvn_id         = "%[1]s"
-  cloud_provider = "azure"
-  region         = "eastus"
-  cidr_block     = "172.25.16.0/20"
-}
+	  resource "hcp_hvn" "test" {
+		hvn_id         = "%[1]s"
+		cloud_provider = "azure"
+		region         = "eastus"
+		cidr_block     = "172.25.16.0/20"
+	  }
 
-// This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
-resource "hcp_azure_peering_connection" "peering" {
-  hvn_link                 = hcp_hvn.test.self_link
-  peering_id               = "%[1]s"
-  peer_vnet_name           = azurerm_virtual_network.vnet.name
-  peer_subscription_id     = "%[2]s"
-  peer_tenant_id           = "%[3]s"
-  peer_resource_group_name = azurerm_resource_group.rg.name
-  peer_vnet_region         = "eastus"
-}
+	  // This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
+	  resource "hcp_azure_peering_connection" "peering" {
+		hvn_link                 = hcp_hvn.test.self_link
+		peering_id               = "%[1]s"
+		peer_vnet_name           = azurerm_virtual_network.vnet.name
+		peer_subscription_id     = "%[2]s"
+		peer_tenant_id           = "%[3]s"
+		peer_resource_group_name = azurerm_resource_group.rg.name
+		peer_vnet_region         = "eastus"
 
-// This data source is the same as the resource above, but waits for the connection to be Active before returning.
-data "hcp_azure_peering_connection" "peering" {
-  hvn_link                 = hcp_hvn.test.self_link
-  peering_id               = hcp_azure_peering_connection.peering.peering_id
-  wait_for_active_state    = true
-}
+		allow_forwarded_traffic = false
+		use_remote_gateways     = false
+	  }
 
-// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
-resource "hcp_hvn_route" "route" {
-  hvn_route_id = "%[1]s"
-  hvn_link = hcp_hvn.test.self_link
-  destination_cidr = "172.31.0.0/16"
-  target_link = data.hcp_azure_peering_connection.peering.self_link
-}
+	  // This data source is the same as the resource above, but waits for the connection to be Active before returning.
+	  data "hcp_azure_peering_connection" "peering" {
+		hvn_link                 = hcp_hvn.test.self_link
+		peering_id               = hcp_azure_peering_connection.peering.peering_id
+		wait_for_active_state    = true
+	  }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "%[1]s"
-  location = "East US"
-}
+	  // The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
+	  resource "hcp_hvn_route" "route" {
+		hvn_route_id = "%[1]s"
+		hvn_link = hcp_hvn.test.self_link
+		destination_cidr = "172.31.0.0/16"
+		target_link = data.hcp_azure_peering_connection.peering.self_link
+	  }
 
-resource "azurerm_virtual_network" "vnet" {
-  name                = "%[1]s"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+	  resource "azurerm_resource_group" "rg" {
+		name     = "%[1]s"
+		location = "East US"
+	  }
 
-  address_space = [
-    "10.0.0.0/16"
-  ]
-}
+	  resource "azurerm_virtual_network" "vnet" {
+		name                = "%[1]s"
+		location            = azurerm_resource_group.rg.location
+		resource_group_name = azurerm_resource_group.rg.name
 
-resource "azuread_service_principal" "principal" {
-  application_id = hcp_azure_peering_connection.peering.application_id
-}
+		address_space = [
+		  "10.0.0.0/16"
+		]
+	  }
 
-resource "azurerm_role_definition" "definition" {
-  name  = "%[1]s"
-  scope = azurerm_virtual_network.vnet.id
+	  resource "azuread_service_principal" "principal" {
+		application_id = hcp_azure_peering_connection.peering.application_id
+	  }
 
-  assignable_scopes = [
-    azurerm_virtual_network.vnet.id
-  ]
+	  resource "azurerm_role_definition" "definition" {
+		name  = "%[1]s"
+		scope = azurerm_virtual_network.vnet.id
 
-  permissions {
-    actions = [
-      "Microsoft.Network/virtualNetworks/peer/action",
-      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
-    ]
-  }
-}
+		assignable_scopes = [
+		  azurerm_virtual_network.vnet.id
+		]
 
-resource "azurerm_role_assignment" "assignment" {
-  principal_id       = azuread_service_principal.principal.id
-  scope              = azurerm_virtual_network.vnet.id
-  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
-}
-`, uniqueAzurePeeringTestID, subscriptionID, tenantID)
+		permissions {
+		  actions = [
+			"Microsoft.Network/virtualNetworks/peer/action",
+			"Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
+			"Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
+		  ]
+		}
+	  }
+
+	  resource "azurerm_role_assignment" "assignment" {
+		principal_id       = azuread_service_principal.principal.id
+		scope              = azurerm_virtual_network.vnet.id
+		role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
+	  }
+	  `, uniqueAzurePeeringTestID, subscriptionID, tenantID)
 )
 
 func TestAccAzurePeeringConnection(t *testing.T) {
@@ -124,6 +127,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
 					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttrSet(resourceName, "allow_forwarded_traffic"),
+					resource.TestCheckResourceAttrSet(resourceName, "use_remote_gateways"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
