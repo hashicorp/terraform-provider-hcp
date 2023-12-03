@@ -6,7 +6,6 @@ package providersdkv2
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -16,10 +15,8 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID  = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
-	subscriptionID            = os.Getenv("ARM_SUBSCRIPTION_ID")
-	tenantID                  = os.Getenv("ARM_TENANT_ID")
-	testAccAzurePeeringConfig = fmt.Sprintf(`
+	intAzurePeeringTestID        = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	testAccAzurePeeringConfigInt = fmt.Sprintf(`
 	  provider "azurerm" {
 		features {}
 	  }
@@ -74,37 +71,10 @@ var (
 		  "10.0.0.0/16"
 		]
 	  }
-
-	  resource "azuread_service_principal" "principal" {
-		application_id = hcp_azure_peering_connection.peering.application_id
-	  }
-
-	  resource "azurerm_role_definition" "definition" {
-		name  = "%[1]s"
-		scope = azurerm_virtual_network.vnet.id
-
-		assignable_scopes = [
-		  azurerm_virtual_network.vnet.id
-		]
-
-		permissions {
-		  actions = [
-			"Microsoft.Network/virtualNetworks/peer/action",
-			"Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-			"Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
-		  ]
-		}
-	  }
-
-	  resource "azurerm_role_assignment" "assignment" {
-		principal_id       = azuread_service_principal.principal.id
-		scope              = azurerm_virtual_network.vnet.id
-		role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
-	  }
-	  `, uniqueAzurePeeringTestID, subscriptionID, tenantID)
+	  `, intAzurePeeringTestID, subscriptionID, tenantID)
 )
 
-func TestAccAzurePeeringConnection(t *testing.T) {
+func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 	resourceName := "hcp_azure_peering_connection.peering"
 
 	resource.Test(t, resource.TestCase{
@@ -114,19 +84,19 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 			"azurerm": {VersionConstraint: "~> 3.63"},
 			"azuread": {VersionConstraint: "~> 2.39"},
 		},
-		CheckDestroy: testAccCheckAzurePeeringDestroy,
+		CheckDestroy: testAccCheckAzurePeeringDestroyInternal,
 
 		Steps: []resource.TestStep{
 			{
 				// Tests create
-				Config: testConfig(testAccAzurePeeringConfig),
+				Config: testConfig(testAccAzurePeeringConfigInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
-					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					testAccCheckAzurePeeringExistsInternal(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", intAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", intAzurePeeringTestID, HvnResourceType, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
-					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", intAzurePeeringTestID),
 					resource.TestCheckResourceAttrSet(resourceName, "allow_forwarded_traffic"),
 					resource.TestCheckResourceAttrSet(resourceName, "use_remote_gateways"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
@@ -135,7 +105,7 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", intAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
 					// Note: azure_peering_id is not set until the peering is accepted after creation.
 				),
 			},
@@ -157,14 +127,14 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 			},
 			// Tests read
 			{
-				Config: testConfig(testAccAzurePeeringConfig),
+				Config: testConfig(testAccAzurePeeringConfigInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
-					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					testAccCheckAzurePeeringExistsInternal(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", intAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", intAzurePeeringTestID, HvnResourceType, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
-					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", intAzurePeeringTestID),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
@@ -172,14 +142,14 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", intAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAzurePeeringExists(name string) resource.TestCheckFunc {
+func testAccCheckAzurePeeringExistsInternal(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -219,8 +189,7 @@ func testAccCheckAzurePeeringExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
-
+func testAccCheckAzurePeeringDestroyInternal(s *terraform.State) error {
 	client := testAccProvider.Meta().(*clients.Client)
 
 	for _, rs := range s.RootModule().Resources {
