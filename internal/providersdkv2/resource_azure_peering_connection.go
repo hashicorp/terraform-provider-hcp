@@ -31,7 +31,6 @@ func resourceAzurePeeringConnection() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAzurePeeringConnectionImport,
 		},
-
 		Schema: map[string]*schema.Schema{
 			// Required inputs
 			"hvn_link": {
@@ -78,6 +77,21 @@ func resourceAzurePeeringConnection() *schema.Resource {
 				Description: "The resource group name of the peer VNet in Azure.",
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
+			},
+			// Optional inputs
+			"allow_forwarded_traffic": {
+				Description: "Whether the forwarded traffic originating from the peered VNet is allowed in the HVN",
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				ForceNew:    true,
+			},
+			"use_remote_gateways": {
+				Description: "If the HVN should use the gateway of the peered VNet",
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
 				ForceNew:    true,
 			},
 			// Computed outputs
@@ -142,6 +156,8 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 	peerVnetRegion := d.Get("peer_vnet_region").(string)
 	peerTenantID := d.Get("peer_tenant_id").(string)
 	peerResourceGroupName := d.Get("peer_resource_group_name").(string)
+	allowForwardedTraffic := d.Get("allow_forwarded_traffic").(bool)
+	useRemoteGateways := d.Get("use_remote_gateways").(bool)
 
 	hvnLink, err := buildLinkFromURL(d.Get("hvn_link").(string), HvnResourceType, client.Config.OrganizationID)
 	if err != nil {
@@ -192,11 +208,13 @@ func resourceAzurePeeringConnectionCreate(ctx context.Context, d *schema.Resourc
 			},
 			Target: &networkmodels.HashicorpCloudNetwork20200907PeeringTarget{
 				AzureTarget: &networkmodels.HashicorpCloudNetwork20200907AzurePeeringTarget{
-					Region:            peerVnetRegion,
-					ResourceGroupName: peerResourceGroupName,
-					SubscriptionID:    peerSubscriptionID,
-					TenantID:          peerTenantID,
-					VnetName:          peerVnetID,
+					Region:                peerVnetRegion,
+					ResourceGroupName:     peerResourceGroupName,
+					SubscriptionID:        peerSubscriptionID,
+					TenantID:              peerTenantID,
+					VnetName:              peerVnetID,
+					AllowForwardedTraffic: allowForwardedTraffic,
+					UseRemoteGateways:     useRemoteGateways,
 				},
 			},
 		},
@@ -343,6 +361,12 @@ func setAzurePeeringResourceData(d *schema.ResourceData, peering *networkmodels.
 		return err
 	}
 	if err := d.Set("application_id", peering.Target.AzureTarget.ApplicationID); err != nil {
+		return err
+	}
+	if err := d.Set("allow_forwarded_traffic", peering.Target.AzureTarget.AllowForwardedTraffic); err != nil {
+		return err
+	}
+	if err := d.Set("use_remote_gateways", peering.Target.AzureTarget.UseRemoteGateways); err != nil {
 		return err
 	}
 	if err := d.Set("created_at", peering.CreatedAt.String()); err != nil {
