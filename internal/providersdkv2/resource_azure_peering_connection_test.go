@@ -218,7 +218,6 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			"azuread": {VersionConstraint: "~> 2.39"},
 		},
 		CheckDestroy: testAccCheckAzurePeeringDestroy,
-
 		Steps: []resource.TestStep{
 			{
 				// Tests create
@@ -230,8 +229,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
 					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
-					resource.TestCheckResourceAttrSet(resourceName, "allow_forwarded_traffic"),
-					resource.TestCheckResourceAttrSet(resourceName, "use_remote_gateways"),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
@@ -240,6 +239,48 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
 					// Note: azure_peering_id is not set until the peering is accepted after creation.
+				),
+			},
+			{
+				// Tests create / Enables Hub/Spoke with NVA connectivity
+				Config: testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			{
+				// Tests create - Enables Hub/Spoke with Gateway transit
+				Config: testConfig(baseConfig(peeringHubSpokeGatewayConfig, "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
 				),
 			},
 			// Tests import
