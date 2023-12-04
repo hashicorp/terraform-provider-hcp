@@ -114,9 +114,9 @@ resource "azurerm_role_assignment" "assignment" {
 
 ### Optional
 
-- `timeouts` (Block) (see [below for nested schema](#nestedblock--timeouts))
-- `allow_forwarded_traffic` (Boolean) Controls if forwarded traffic from VMs in the remote virtual network is allowed. Defaults to false.
-- `use_remote_gateways` (Boolean) Controls if remote gateways can be used on the local virtual network. If the flag is set to true, HCP will configure the peering link attribute `AllowGatewayTransit` on the remote virtual network to true as well, causing the use of gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway. Defaults to false.
+- `allow_forwarded_traffic` (Boolean) Whether the forwarded traffic originating from the peered VNet is allowed in the HVN
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `use_remote_gateways` (Boolean) If the HVN should use the gateway of the peered VNet
 
 ### Read-Only
 
