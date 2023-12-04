@@ -83,15 +83,15 @@ func resourceAzurePeeringConnection() *schema.Resource {
 			"allow_forwarded_traffic": {
 				Description: "Whether the forwarded traffic originating from the peered VNet is allowed in the HVN",
 				Type:        schema.TypeBool,
-				Default:     false,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 			},
 			"use_remote_gateways": {
 				Description: "If the HVN should use the gateway of the peered VNet",
 				Type:        schema.TypeBool,
-				Default:     false,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 			},
 			// Computed outputs
