@@ -21,21 +21,64 @@ var (
 	tenantID                 = os.Getenv("ARM_TENANT_ID")
 )
 
+// peeringHubSpokeNVAConfig is the hcp_azure_peering_connection config params
+// to enable a Hub and Spoke archtecture in the NVA model.
 var peeringHubSpokeNVAConfig = `
 	  allow_forwarded_traffic = true
 	  use_remote_gateways     = false
 `
 
+// peeringHubSpokeGatewayConfig is the hcp_azure_peering_connection config params
+// to enable a Hub and Spoke archtecture using Gateway transit.
 var peeringHubSpokeGatewayConfig = `
-	  allow_forwarded_traffic = true
-	  use_remote_gateways     = false
+	  allow_forwarded_traffic = false
+	  use_remote_gateways     = true
 `
 
+// peeringHubSpokeNVAandGatewayConfig is the hcp_azure_peering_connection config
+// params to enable a Hub and Spoke archtecture supporting both NVA and Gateway.
 var peeringHubSpokeNVAandGatewayConfig = `
 	  allow_forwarded_traffic = true
 	  use_remote_gateways     = true
 `
 
+// gatewayConfig is the additional components required for Hub and Spoke architecture
+// using a Gateway.
+func gatewayConfig() string {
+	return fmt.Sprintf(`
+	resource "azurerm_subnet" "subnet" {
+	  name                 = "GatewaySubnet"
+	  resource_group_name  = azurerm_resource_group.rg.name
+	  virtual_network_name = azurerm_virtual_network.vnet.name
+	  address_prefixes     = ["10.0.1.0/24"]
+	}
+
+	resource "azurerm_public_ip" "ip" {
+	  name                = "%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+	  allocation_method   = "Dynamic"
+	}
+
+	resource "azurerm_virtual_network_gateway" "gateway" {
+	  name                = "%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+	  type                = "Vpn"
+	  enable_bgp          = false
+      sku                 = "Basic"
+
+	  ip_configuration {
+		name                          = "%[1]s"
+		public_ip_address_id          = azurerm_public_ip.ip.id
+		private_ip_address_allocation = "Dynamic"
+		subnet_id                     = azurerm_subnet.subnet.id
+	  }
+	}
+	`, uniqueAzurePeeringTestID)
+}
+
+// fullConfig includes all components for the general test
 var fullConfig = baseConfig("", `
 	resource "azuread_service_principal" "principal" {
 	  application_id = hcp_azure_peering_connection.peering.application_id
@@ -65,6 +108,8 @@ var fullConfig = baseConfig("", `
 	}
 `)
 
+// baseConfig is the config excluding the authorization components (SP, Role, Role assignment).
+// This is used to support HashiCorp internal engineers.
 func baseConfig(hubSpokeConfig, optConfig string) string {
 	return fmt.Sprintf(`
 	provider "azurerm" {
@@ -203,9 +248,8 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 
 // TestAccAzurePeeringConnectionInternal is almost identical to the standard
 // TestAccAzurePeeringConnection test, but does not include the Azure Service Principal
-// components which allow permission for HCP to peer from the "Customer" account
-// to HCP dataplane.
-// This modified test exists for HashiCorp internal contributors to adhere to on-dmand
+// components which allow permission for HCP to peer from the "Customer" account to HCP dataplane.
+// This modified test exists for HashiCorp internal contributors to adhere to on-demand
 // service principal creation via doormat.
 func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 	resourceName := "hcp_azure_peering_connection.peering"
@@ -221,7 +265,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Tests create
-				Config: testConfig(baseConfig("", "")),
+				PreConfig: outputServicePrincipalInstructions,
+				Config:    testConfig(baseConfig("", "")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -243,7 +288,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create / Enables Hub/Spoke with NVA connectivity
-				Config: testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
+				PreConfig: outputServicePrincipalInstructions,
+				Config:    testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -264,7 +310,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create - Enables Hub/Spoke with Gateway transit
-				Config: testConfig(baseConfig(peeringHubSpokeGatewayConfig, "")),
+				PreConfig: outputServicePrincipalInstructions,
+				Config:    testConfig(baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig())),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -273,6 +320,28 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
 					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
 					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			{
+				// Tests create - Enables Hub/Spoke with NVA and Gateway transit
+				PreConfig: outputServicePrincipalInstructions,
+				Config:    testConfig(baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig())),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
@@ -364,7 +433,6 @@ func testAccCheckAzurePeeringExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
-
 	client := testAccProvider.Meta().(*clients.Client)
 
 	for _, rs := range s.RootModule().Resources {
@@ -405,4 +473,16 @@ func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func outputServicePrincipalInstructions() {
+	fmt.Printf(`
+NOTE:
+Once peering has entered the PENDING state the test will hang until an
+Azure Service Principal (and related role + role assignment) has been manually
+created.
+
+Internally, this is done by visiting the Azure subscription via Doormat and
+clicking the "HVN Peering SP" button.
+	`)
 }
