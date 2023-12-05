@@ -1,0 +1,7 @@
+```release-note:feature
+ Add optional attribute `allow_forwarded_traffic` to `hcp_azure_peering_connection` resource.
+ ```
+
+```release-note:feature
+ Add optional attribute `use_remote_gateways` to `hcp_azure_peering_connection` resource.
+ ```

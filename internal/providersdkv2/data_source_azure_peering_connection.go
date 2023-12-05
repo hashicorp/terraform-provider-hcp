@@ -85,6 +85,16 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"allow_forwarded_traffic": {
+				Description: "Whether the forwarded traffic originating from the peered VNet is allowed in the HVN",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+			"use_remote_gateways": {
+				Description: "If the HVN should use the gateway of the peered VNet",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 			"azure_peering_id": {
 				Description: "The peering connection ID used by Azure.",
 				Type:        schema.TypeString,

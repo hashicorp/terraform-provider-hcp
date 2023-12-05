@@ -36,6 +36,7 @@ data "hcp_azure_peering_connection" "test" {
 
 ### Read-Only
 
+- `allow_forwarded_traffic` (Boolean) Whether the forwarded traffic originating from the peered VNet is allowed in the HVN
 - `application_id` (String) The ID of the Azure application whose credentials are used to peer the HCP HVN's underlying VNet with the customer VNet.
 - `azure_peering_id` (String) The peering connection ID used by Azure.
 - `created_at` (String) The time that the peering connection was created.
@@ -52,6 +53,7 @@ If not specified, the project specified in the HCP Provider config block will be
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `self_link` (String) A unique URL identifying the peering connection
 - `state` (String) The state of the Azure peering connection.
+- `use_remote_gateways` (Boolean) If the HVN should use the gateway of the peered VNet
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

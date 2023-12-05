@@ -114,7 +114,9 @@ resource "azurerm_role_assignment" "assignment" {
 
 ### Optional
 
+- `allow_forwarded_traffic` (Boolean) Whether the forwarded traffic originating from the peered VNet is allowed in the HVN
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `use_remote_gateways` (Boolean) If the HVN should use the gateway of the peered VNet
 
 ### Read-Only
 
