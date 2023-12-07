@@ -265,8 +265,7 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Tests create
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig("", "")),
+				Config: testConfig(baseConfig("", "")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -288,8 +287,7 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create / Enables Hub/Spoke with NVA connectivity
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
+				Config: testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -310,8 +308,7 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create - Enables Hub/Spoke with Gateway transit
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig())),
+				Config: testConfig(baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig())),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -332,8 +329,7 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create - Enables Hub/Spoke with NVA and Gateway transit
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig())),
+				Config: testConfig(baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig())),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -473,16 +469,4 @@ func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func outputServicePrincipalInstructions() {
-	fmt.Printf(`
-NOTE:
-Once peering has entered the PENDING state the test will hang until an
-Azure Service Principal (and related role + role assignment) has been manually
-created.
-
-Internally, this is done by visiting the Azure subscription via Doormat and
-clicking the "HVN Peering SP" button.
-	`)
 }
