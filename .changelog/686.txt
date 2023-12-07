@@ -1,4 +1,0 @@
-```release-note:bug
-Azure peering connection E2E tests failing, refactored and moved internal tests
-to be individually-named.
-```
