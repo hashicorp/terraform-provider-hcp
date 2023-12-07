@@ -165,7 +165,7 @@ func baseConfig(hubSpokeConfig, optConfig string) string {
 	  peer_vnet_region         = "eastus"
 
 	  // Hub/Spoke networking config
-    %[4]s
+      %[4]s
 	}
 
 	// This data source is the same as the resource above, but waits for the connection to be Active before returning.
