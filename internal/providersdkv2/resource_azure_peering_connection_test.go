@@ -78,8 +78,8 @@ func gatewayConfig() string {
 	`, uniqueAzurePeeringTestID)
 }
 
-// fullConfig includes all components for the general test
-var fullConfig = baseConfig("", `
+// azureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
+var azureAdConfig = `
 	resource "azuread_service_principal" "principal" {
 	  application_id = hcp_azure_peering_connection.peering.application_id
 	}
@@ -106,7 +106,38 @@ var fullConfig = baseConfig("", `
 	  scope              = azurerm_virtual_network.vnet.id
 	  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 	}
-`)
+`
+
+// standardConfig is the configuration for a basic Azure peering.
+func standardConfig() string {
+	return baseConfig("", azureAdConfig)
+}
+
+// nvaConfigWithAd is the configuration for a Hub / Spoke architecture using the
+// NVA model, including Service Principal components.
+func nvaConfigWithAd() string {
+	return baseConfig(peeringHubSpokeNVAConfig, azureAdConfig)
+}
+
+// gatewayConfigWithAd is the configuration for a Hub / Spoke architecture using
+// the Gateway model, including Service Principal components.
+func gatewayConfigWithAd() string {
+	return baseConfig(peeringHubSpokeGatewayConfig, fmt.Sprintf(`
+    %s
+
+    %s
+    `, azureAdConfig, gatewayConfig()))
+}
+
+// nvaGatewayConfigWithAd is the configuration for a Hub / Spoke architecture using
+// NVA and the Gateway model, including Service Principal components.
+func nvaGatewayConfigWithAd() string {
+	return baseConfig(peeringHubSpokeNVAandGatewayConfig, fmt.Sprintf(`
+    %s
+
+    %s
+    `, azureAdConfig, gatewayConfig()))
+}
 
 // baseConfig is the config excluding the authorization components (SP, Role, Role assignment).
 // This is used to support HashiCorp internal engineers.
@@ -186,87 +217,7 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Tests create
-				Config: testConfig(fullConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
-					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
-					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
-					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
-					resource.TestCheckResourceAttrSet(resourceName, "allow_forwarded_traffic"),
-					resource.TestCheckResourceAttrSet(resourceName, "use_remote_gateways"),
-					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
-					// Note: azure_peering_id is not set until the peering is accepted after creation.
-				),
-			},
-			// Tests import
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
-					peerID := rs.Primary.Attributes["peering_id"]
-					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
-				},
-				ImportStateVerify: true,
-			},
-			// Tests read
-			{
-				Config: testConfig(fullConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAzurePeeringExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
-					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
-					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
-					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
-					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccAzurePeeringConnectionInternal is almost identical to the standard
-// TestAccAzurePeeringConnection test, but does not include the Azure Service Principal
-// components which allow permission for HCP to peer from the "Customer" account to HCP dataplane.
-// This modified test exists for HashiCorp internal contributors to adhere to on-demand
-// service principal creation via doormat.
-func TestAccAzurePeeringConnectionInternal(t *testing.T) {
-	resourceName := "hcp_azure_peering_connection.peering"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"azurerm": {VersionConstraint: "~> 3.63"},
-			"azuread": {VersionConstraint: "~> 2.39"},
-		},
-		CheckDestroy: testAccCheckAzurePeeringDestroy,
-		Steps: []resource.TestStep{
-			{
-				// Tests create
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig("", "")),
+				Config: testConfig(standardConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -288,8 +239,7 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 			},
 			{
 				// Tests create / Enables Hub/Spoke with NVA connectivity
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
+				Config: testConfig(nvaConfigWithAd()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -309,9 +259,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 				),
 			},
 			{
-				// Tests create - Enables Hub/Spoke with Gateway transit
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig())),
+				// Tests create / Enables Hub/Spoke with Gateway connectivity
+				Config: testConfig(gatewayConfigWithAd()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -331,9 +280,317 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 				),
 			},
 			{
+				// Tests create / Enables Hub/Spoke with NVA and Gateway connectivity
+				Config: testConfig(nvaGatewayConfigWithAd()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			// Tests import
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Tests read
+			{
+				Config: testConfig(standardConfig()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccAzurePeeringConnectionStandardInternal is almost identical to the standard
+// TestAccAzurePeeringConnection test, but does not include the Azure Service Principal
+// components which allow permission for HCP to peer from the "Customer" account to HCP dataplane.
+// This modified test exists for HashiCorp internal contributors to adhere to on-demand
+// service principal creation via doormat.
+func TestAccAzurePeeringConnectionStandardInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
+
+	resourceName := "hcp_azure_peering_connection.peering"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckAzurePeeringDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Tests create
+				Config: testConfig(baseConfig("", "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			// Tests import
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Tests read
+			{
+				Config: testConfig(baseConfig("", "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzurePeeringConnectionNVAInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
+
+	resourceName := "hcp_azure_peering_connection.peering"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckAzurePeeringDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Tests create / Enables Hub/Spoke with NVA connectivity
+				Config: testConfig(baseConfig(peeringHubSpokeNVAConfig, "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			// Tests import
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Tests read
+			{
+				Config: testConfig(baseConfig("", "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
+
+	resourceName := "hcp_azure_peering_connection.peering"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckAzurePeeringDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Tests create - Enables Hub/Spoke with Gateway transit
+				Config: testConfig(baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig())),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+			// Tests import
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					peerID := rs.Primary.Attributes["peering_id"]
+					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Tests read
+			{
+				Config: testConfig(baseConfig("", "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAzurePeeringExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
+					testLink(resourceName, "hvn_link", uniqueAzurePeeringTestID, HvnResourceType, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
+					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testLink(resourceName, "self_link", uniqueAzurePeeringTestID, PeeringResourceType, "hcp_hvn.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzurePeeringConnectionNVAGatewayInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
+
+	resourceName := "hcp_azure_peering_connection.peering"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckAzurePeeringDestroy,
+		Steps: []resource.TestStep{
+			{
 				// Tests create - Enables Hub/Spoke with NVA and Gateway transit
-				PreConfig: outputServicePrincipalInstructions,
-				Config:    testConfig(baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig())),
+				Config: testConfig(baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig())),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAzurePeeringExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "peering_id", uniqueAzurePeeringTestID),
@@ -378,6 +635,8 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "peer_subscription_id", subscriptionID),
 					resource.TestCheckResourceAttr(resourceName, "peer_tenant_id", tenantID),
 					resource.TestCheckResourceAttr(resourceName, "peer_vnet_name", uniqueAzurePeeringTestID),
+					resource.TestCheckResourceAttr(resourceName, "allow_forwarded_traffic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_remote_gateways", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "peer_vnet_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_peering_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
@@ -473,16 +732,4 @@ func testAccCheckAzurePeeringDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func outputServicePrincipalInstructions() {
-	fmt.Printf(`
-NOTE:
-Once peering has entered the PENDING state the test will hang until an
-Azure Service Principal (and related role + role assignment) has been manually
-created.
-
-Internally, this is done by visiting the Azure subscription via Doormat and
-clicking the "HVN Peering SP" button.
-	`)
 }
