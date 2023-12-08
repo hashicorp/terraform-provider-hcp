@@ -83,7 +83,7 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"http_method": "POST",
 				"http_codec":  "SOME_VALUE",
 			},
-			expectedError: "http configuration is invalud: allowed values for http_codec are only \"JSON\" or \"NDJSON\"",
+			expectedError: "http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"",
 		},
 		"http provide bearer and basic auth": {
 			config: map[string]interface{}{
