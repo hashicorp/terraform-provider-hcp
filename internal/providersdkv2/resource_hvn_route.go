@@ -405,20 +405,19 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func getAzureConfig(propertyName string, d *schema.ResourceData) (*networkmodels.HashicorpCloudNetwork20200907AzureRoute, diag.Diagnostics) {
-	emptyConfig := networkmodels.HashicorpCloudNetwork20200907AzureRoute{}
-
-	// If we don't find the property we return the empty object to be updated and delete the configuration.
+	// If we don't find the property we return nil so azure config data is not
+	// included in the Create HVN Route request
 	configParam, ok := d.GetOk(propertyName)
 	if !ok {
-		return &emptyConfig, nil
+		return nil, nil
 	}
 	configIfaceArr, ok := configParam.([]interface{})
 	if !ok || len(configIfaceArr) == 0 {
-		return &emptyConfig, nil
+		return nil, nil
 	}
 	config, ok := configIfaceArr[0].(map[string]interface{})
 	if !ok {
-		return &emptyConfig, nil
+		return nil, nil
 	}
 
 	return getValidAzureRouteConfig(config)
