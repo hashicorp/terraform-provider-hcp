@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -37,10 +39,16 @@ type ProviderFrameworkConfiguration struct {
 }
 
 type ProviderFrameworkModel struct {
-	ClientSecret   types.String `tfsdk:"client_secret"`
-	ClientID       types.String `tfsdk:"client_id"`
-	CredentialFile types.String `tfsdk:"credential_file"`
-	ProjectID      types.String `tfsdk:"project_id"`
+	ClientSecret     types.String `tfsdk:"client_secret"`
+	ClientID         types.String `tfsdk:"client_id"`
+	CredentialFile   types.String `tfsdk:"credential_file"`
+	ProjectID        types.String `tfsdk:"project_id"`
+	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
+}
+
+type WorkloadIdentityFrameworkModel struct {
+	TokenFile    types.String `tfsdk:"token_file"`
+	ResourceName types.String `tfsdk:"resource_name"`
 }
 
 func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -57,6 +65,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(path.MatchRoot("client_secret")),
 					stringvalidator.ConflictsWith(path.MatchRoot("credential_file")),
+					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
 				},
 			},
 			"client_secret": schema.StringAttribute{
@@ -76,6 +85,41 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 					"You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. " +
 					"Using a credential file allows you to authenticate the provider as a service principal via client " +
 					"credentials or dynamically based on Workload Identity Federation.",
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			// TODO migrate to SingleNestedAttribute once the providersdkv2 is
+			// fully migrated.
+			"workload_identity": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"token_file": schema.StringAttribute{
+							Required:    true,
+							Description: "The path to a file containing an identity token.",
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
+						},
+						"resource_name": schema.StringAttribute{
+							Required:    true,
+							Description: "The resource_name of the Workload Identity Provider to exchange the token with.",
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(
+									regexp.MustCompile(`^iam/project/.+/service-principal/.+/workload-identity-provider/.+$`),
+									"must be a workload identity provider resource_name",
+								),
+							},
+						},
+					},
+				},
+				Description: "Allows authenticating the provider by exchanging the token specified in the `token_file` for " +
+					"a HCP service principal using Workload Identity Federation.",
+				Validators: []validator.List{
+					listvalidator.SizeBetween(1, 1),
+				},
 			},
 		},
 	}
@@ -135,27 +179,34 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	clientID := ""
-	if data.ClientID.ValueString() != "" {
-		clientID = data.ClientID.ValueString()
-	} else {
-		clientID = os.Getenv("HCP_CLIENT_ID")
-	}
-
-	clientSecret := ""
-	if data.ClientSecret.ValueString() != "" {
-		clientSecret = data.ClientSecret.ValueString()
-	} else {
-		clientSecret = os.Getenv("HCP_CLIENT_SECRET")
-	}
-
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:       clientID,
-		ClientSecret:   clientSecret,
+	clientConfig := clients.ClientConfig{
+		ClientID:       data.ClientID.ValueString(),
+		ClientSecret:   data.ClientSecret.ValueString(),
 		CredentialFile: data.CredentialFile.ValueString(),
 		SourceChannel:  "terraform-provider-hcp",
-	})
+	}
 
+	// Check the environment for an HCP Service Principal
+	if clientConfig.ClientID == "" {
+		clientConfig.ClientID = os.Getenv("HCP_CLIENT_ID")
+	}
+	if clientConfig.ClientSecret == "" {
+		clientConfig.ClientSecret = os.Getenv("HCP_CLIENT_SECRET")
+	}
+
+	// Read the workload_identity configuration.
+	if len(data.WorkloadIdentity.Elements()) == 1 {
+		elements := make([]WorkloadIdentityFrameworkModel, 0, 1)
+		resp.Diagnostics.Append(data.WorkloadIdentity.ElementsAs(ctx, &elements, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		clientConfig.WorloadIdentityTokenFile = elements[0].TokenFile.ValueString()
+		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
+	}
+
+	client, err := clients.NewClient(clientConfig)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("unable to create HCP api client: %v", err), "")
 		return

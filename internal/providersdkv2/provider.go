@@ -83,6 +83,26 @@ func New() func() *schema.Provider {
 						"Using a credential file allows you to authenticate the provider as a service principal via client " +
 						"credentials or dynamically based on Workload Identity Federation.",
 				},
+				"workload_identity": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Description: "Allows authenticating the provider by exchanging the token specified in the `token_file` for " +
+						"a HCP service principal using Workload Identity Federation.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"token_file": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The path to a file containing an identity token.",
+							},
+							"resource_name": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The resource_name of the Workload Identity Provider to exchange the token with.",
+							},
+						},
+					},
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -111,24 +131,33 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			diags = isHCPOperational()
 		}
 
-		// Sets up HCP SDK client.
-		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
-
-		clientID := d.Get("client_id").(string)
-		if clientID == "" {
-			clientID = os.Getenv("HCP_CLIENT_ID")
-		}
-		clientSecret := d.Get("client_secret").(string)
-		if clientSecret == "" {
-			clientSecret = os.Getenv("HCP_CLIENT_SECRET")
-		}
-
-		client, err := clients.NewClient(clients.ClientConfig{
-			ClientID:       clientID,
-			ClientSecret:   clientSecret,
+		clientConfig := clients.ClientConfig{
+			ClientID:       d.Get("client_id").(string),
+			ClientSecret:   d.Get("client_secret").(string),
 			CredentialFile: d.Get("credential_file").(string),
-			SourceChannel:  userAgent,
-		})
+			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
+		}
+
+		// Check the environment for an HCP Service Principal
+		if clientConfig.ClientID == "" {
+			clientConfig.ClientID = os.Getenv("HCP_CLIENT_ID")
+		}
+		if clientConfig.ClientSecret == "" {
+			clientConfig.ClientSecret = os.Getenv("HCP_CLIENT_SECRET")
+		}
+
+		// Read the workload_identity configuration
+		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
+			wi := v.([]interface{})[0].(map[string]interface{})
+			if tf, ok := wi["token_file"].(string); ok && tf != "" {
+				clientConfig.WorloadIdentityTokenFile = tf
+			}
+			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
+				clientConfig.WorkloadIdentityResourceName = rn
+			}
+		}
+
+		client, err := clients.NewClient(clientConfig)
 		if err != nil {
 			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
 			return nil, diags
