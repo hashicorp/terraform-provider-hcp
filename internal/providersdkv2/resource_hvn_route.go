@@ -69,6 +69,7 @@ func resourceHvnRoute() *schema.Resource {
 			"azure_config": {
 				Description: "The azure configuration for routing.",
 				Type:        schema.TypeList,
+				ForceNew:    true,
 				MaxItems:    1,
 				Optional:    true,
 				Elem: &schema.Resource{
