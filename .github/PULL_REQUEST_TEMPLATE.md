@@ -21,7 +21,7 @@ Replace TestAccXXX with a pattern that matches the tests affected by this PR. Mo
 
 For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
 -->
-```
+```sh
 $ make testacc TESTARGS='-run=TestAccXXX'
 
 ...
