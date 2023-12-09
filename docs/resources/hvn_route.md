@@ -83,8 +83,8 @@ resource "hcp_hvn_route" "example-peering-route" {
 
 Optional:
 
-- `next_hop_ip_address` (String) Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VirtualAppliance.
-- `next_hop_type` (String) The type of Azure hop the packet should be sent to.
+- `next_hop_ip_address` (String) Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VIRTUAL_APPLIANCE.
+- `next_hop_type` (String) The type of Azure hop the packet should be sent to. Valid options for Next Hop Type - `VIRTUAL_APPLIANCE` or `VIRTUAL_NETWORK_GATEWAY`
 
 
 <a id="nestedblock--timeouts"></a>

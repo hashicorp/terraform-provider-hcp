@@ -75,17 +75,17 @@ func resourceHvnRoute() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"next_hop_type": {
-							Description: "The type of Azure hop the packet should be sent to.",
+							Description: "The type of Azure hop the packet should be sent to. Valid options for Next Hop Type - `VIRTUAL_APPLIANCE` or `VIRTUAL_NETWORK_GATEWAY`",
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"VirtualAppliance",
-								"VirtualNetworkGateway",
+								"VIRTUAL_APPLIANCE",
+								"VIRTUAL_NETWORK_GATEWAY",
 							}, true),
 						},
 						"next_hop_ip_address": {
-							Description: "Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VirtualAppliance.",
+							Description: "Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VIRTUAL_APPLIANCE.",
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
@@ -428,8 +428,8 @@ func getValidAzureRouteConfig(config map[string]interface{}) (*networkmodels.Has
 	nextHopIPAddress, _ := config["next_hop_ip_address"].(string)
 
 	// Verify if next_hop_ip_address is set, next_hop_type is VirtualAppliance
-	if nextHopIPAddress != "" && strings.ToUpper(nextHopType) != "VIRTUALAPPLIANCE" {
-		return nil, diag.Errorf("azure configuration is invalid: Next hop values are only allowed in routes where next hp type is VirtualAppliance")
+	if nextHopIPAddress != "" && strings.ToUpper(nextHopType) != "VIRTUAL_APPLIANCE" {
+		return nil, diag.Errorf("azure configuration is invalid: Next hop values are only allowed in routes where next hop type is VIRTUAL_APPLIANCE")
 	}
 
 	return &networkmodels.HashicorpCloudNetwork20200907AzureRoute{
