@@ -79,7 +79,7 @@ var (
 )
 
 // Azure config
-func testAccHvnRouteConfigAzure(optConfig string) string {
+func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
@@ -120,9 +120,7 @@ func testAccHvnRouteConfigAzure(optConfig string) string {
 	  target_link      = data.hcp_azure_peering_connection.peering.self_link
 	  destination_cidr = "172.31.0.0/16"
 
-	  azure_config = {
-	    next_hop_type = "VIRTUAL_NETWORK_GATEWAY"
-	  }
+	  %[4]s
 	}
 
 	resource "azurerm_resource_group" "rg" {
@@ -141,7 +139,7 @@ func testAccHvnRouteConfigAzure(optConfig string) string {
 	}
 
 	resource "azurerm_subnet" "subnet" {
-	  name                 = "%[1]s"
+	  name                 = "GatewaySubnet"
 	  resource_group_name  = azurerm_resource_group.rg.name
 	  virtual_network_name = azurerm_virtual_network.vnet.name
 
@@ -173,8 +171,8 @@ func testAccHvnRouteConfigAzure(optConfig string) string {
 	  }
 	}
 
-	%[4]s
-	`, hvnRouteUniqueName, subscriptionID, tenantID, optConfig)
+	%[5]s
+	`, hvnRouteUniqueName, subscriptionID, tenantID, azConfig, optConfig)
 }
 
 // hvnRouteAzureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
@@ -207,6 +205,13 @@ var hvnRouteAzureAdConfig = `
 	}
 `
 
+var azConfigGateway = `
+	  azure_config {
+	    next_hop_type       = "VIRTUAL_NETWORK_GATEWAY"
+		next_hop_ip_address = ""
+	  }
+`
+
 func TestAccHvnRouteAws(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
@@ -227,6 +232,7 @@ func TestAccHvnRouteAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckNoResourceAttr(resourceName, "azure_config.0"),
 					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.test"),
 					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.test"),
 				),
@@ -256,6 +262,7 @@ func TestAccHvnRouteAws(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckNoResourceAttr(resourceName, "azure_config.0"),
 					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.test"),
 					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.test"),
 				),
@@ -279,9 +286,10 @@ func TestAccHvnRouteAzure(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteAzureAdConfig)),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, hvnRouteAzureAdConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
@@ -308,9 +316,70 @@ func TestAccHvnRouteAzure(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteAzureAdConfig)),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, hvnRouteAzureAdConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccHvnRouteAzureInternal(t *testing.T) {
+	resourceName := "hcp_hvn_route.route"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckHvnRouteDestroy,
+
+		Steps: []resource.TestStep{
+			// Testing that initial Apply created correct HVN route
+			{
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
+				),
+			},
+			// Testing that we can import HVN route created in the previous step and that the
+			// resource terraform state will be exactly the same
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.hvn"].Primary.Attributes["hvn_id"]
+					routeID := rs.Primary.Attributes["hvn_route_id"]
+					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Testing running Terraform Apply for already known resource
+			{
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, "")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
