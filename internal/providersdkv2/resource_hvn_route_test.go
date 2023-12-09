@@ -78,9 +78,132 @@ var (
 	  `, hvnRouteUniqueName)
 )
 
-var testAccHvnRouteConfigAzure = `
+// Azure config
+func testAccHvnRouteConfigAzure(optConfig string) string {
+	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
+	}
+
+	resource "hcp_hvn" "hvn" {
+	  hvn_id         = "%[1]s"
+	  cloud_provider = "azure"
+	  region         = "eastus"
+	  cidr_block     = "172.25.16.0/20"
+	}
+
+	// This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
+	resource "hcp_azure_peering_connection" "peering" {
+	  hvn_link                 = hcp_hvn.hvn.self_link
+	  peering_id               = "%[1]s"
+	  peer_subscription_id     = "%[2]s"
+	  peer_tenant_id           = "%[3]s"
+	  peer_resource_group_name = azurerm_resource_group.rg.name
+	  peer_vnet_name           = azurerm_virtual_network.vnet.name
+	  peer_vnet_region         = "eastus"
+
+	  allow_forwarded_traffic = true
+	  use_remote_gateways     = true
+	}
+
+	// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+	data "hcp_azure_peering_connection" "peering" {
+	  hvn_link              = hcp_hvn.hvn.self_link
+	  peering_id            = hcp_azure_peering_connection.peering.peering_id
+	  wait_for_active_state = true
+	}
+
+	// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
+	resource "hcp_hvn_route" "route" {
+	  hvn_route_id     = "%[1]s"
+	  hvn_link         = hcp_hvn.hvn.self_link
+	  target_link      = data.hcp_azure_peering_connection.peering.self_link
+	  destination_cidr = "172.31.0.0/16"
+
+	  azure_config = {
+	    next_hop_type = "VIRTUAL_NETWORK_GATEWAY"
+	  }
+	}
+
+	resource "azurerm_resource_group" "rg" {
+	  name     = "%[1]s"
+	  location = "East US"
+	}
+
+	resource "azurerm_virtual_network" "vnet" {
+	  name                = "%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  address_space = [
+		"10.0.0.0/16"
+	  ]
+	}
+
+	resource "azurerm_subnet" "subnet" {
+	  name                 = "%[1]s"
+	  resource_group_name  = azurerm_resource_group.rg.name
+	  virtual_network_name = azurerm_virtual_network.vnet.name
+
+	  address_prefixes = [
+		"10.0.1.0/24"
+	  ]
+	}
+
+	resource "azurerm_public_ip" "ip" {
+	  name                = "%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+	  allocation_method   = "Dynamic"
+	}
+
+	resource "azurerm_virtual_network_gateway" "gateway" {
+	  name                = "%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+	  type                = "Vpn"
+	  vpn_type            = "RouteBased"
+	  sku                 = "Basic"
+
+	  ip_configuration {
+		name                          = "%[1]s"
+		public_ip_address_id          = azurerm_public_ip.ip.id
+		private_ip_address_allocation = "Dynamic"
+		subnet_id                     = azurerm_subnet.subnet.id
+	  }
+	}
+
+	%[4]s
+	`, hvnRouteUniqueName, subscriptionID, tenantID, optConfig)
+}
+
+// hvnRouteAzureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
+var hvnRouteAzureAdConfig = `
+	resource "azuread_service_principal" "principal" {
+	  application_id = hcp_azure_peering_connection.peering.application_id
+	}
+
+	resource "azurerm_role_definition" "definition" {
+	  name  = "hcp-provider-test-role-def"
+	  scope = azurerm_virtual_network.vnet.id
+
+	  assignable_scopes = [
+		azurerm_virtual_network.vnet.id
+	  ]
+
+	  permissions {
+		actions = [
+		  "Microsoft.Network/virtualNetworks/peer/action",
+		  "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
+		  "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
+		]
+	  }
+	}
+
+	resource "azurerm_role_assignment" "assignment" {
+	  principal_id       = azuread_service_principal.principal.id
+	  scope              = azurerm_virtual_network.vnet.id
+	  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 	}
 `
 
@@ -156,14 +279,14 @@ func TestAccHvnRouteAzure(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteAzureAdConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.test"),
-					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
 				),
 			},
 			// Testing that we can import HVN route created in the previous step and that the
@@ -177,7 +300,7 @@ func TestAccHvnRouteAzure(t *testing.T) {
 						return "", fmt.Errorf("not found: %s", resourceName)
 					}
 
-					hvnID := s.RootModule().Resources["hcp_hvn.test"].Primary.Attributes["hvn_id"]
+					hvnID := s.RootModule().Resources["hcp_hvn.hvn"].Primary.Attributes["hvn_id"]
 					routeID := rs.Primary.Attributes["hvn_route_id"]
 					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
 				},
@@ -185,14 +308,14 @@ func TestAccHvnRouteAzure(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteAzureAdConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.test"),
-					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.test"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
 				),
 			},
 		},
