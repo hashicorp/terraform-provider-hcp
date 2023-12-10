@@ -77,7 +77,7 @@ func resourceHvnRoute() *schema.Resource {
 						"next_hop_type": {
 							Description: "The type of Azure hop the packet should be sent to. Valid options for Next Hop Type - `VIRTUAL_APPLIANCE` or `VIRTUAL_NETWORK_GATEWAY`",
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							ForceNew:    true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"VIRTUAL_APPLIANCE",
@@ -87,6 +87,7 @@ func resourceHvnRoute() *schema.Resource {
 						"next_hop_ip_address": {
 							Description: "Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VIRTUAL_APPLIANCE.",
 							Type:        schema.TypeString,
+							Computed:    true,
 							Optional:    true,
 							ForceNew:    true,
 						},

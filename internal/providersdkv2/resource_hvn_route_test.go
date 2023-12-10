@@ -207,8 +207,7 @@ var hvnRouteAzureAdConfig = `
 
 var azConfigGateway = `
 	  azure_config {
-	    next_hop_type       = "VIRTUAL_NETWORK_GATEWAY"
-		next_hop_ip_address = ""
+	    next_hop_type = "VIRTUAL_NETWORK_GATEWAY"
 	  }
 `
 
