@@ -176,7 +176,7 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	`, hvnRouteUniqueName, subscriptionID, tenantID, azConfig, optConfig)
 }
 
-func testAccHvnRouteConfigNVA() string {
+func testAccHvnRouteConfigNVA(optConfig string) string {
 	return fmt.Sprintf(`
 	resource "azurerm_subnet" "spoke" {
 	  name                 = "as-spoke-%[1]s"
@@ -301,7 +301,9 @@ func testAccHvnRouteConfigNVA() string {
 	  allow_gateway_transit        = false
 	  use_remote_gateways          = false
 	}
-	`, hvnRouteUniqueName)
+
+	%[2]s
+	`, hvnRouteUniqueName, optConfig)
 }
 
 // hvnRouteAzureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
@@ -413,69 +415,18 @@ func TestAccHvnRouteAws(t *testing.T) {
 	})
 }
 
-func TestAccHvnRouteAzure(t *testing.T) {
-	resourceName := "hcp_hvn_route.route"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"azurerm": {VersionConstraint: "~> 3.63"},
-			"azuread": {VersionConstraint: "~> 2.39"},
-		},
-		CheckDestroy: testAccCheckHvnRouteDestroy,
-
-		Steps: []resource.TestStep{
-			// Testing that initial Apply created correct HVN route
-			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, hvnRouteAzureAdConfig)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
-					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
-				),
-			},
-			// Testing that we can import HVN route created in the previous step and that the
-			// resource terraform state will be exactly the same
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					rs, ok := s.RootModule().Resources[resourceName]
-					if !ok {
-						return "", fmt.Errorf("not found: %s", resourceName)
-					}
-
-					hvnID := s.RootModule().Resources["hcp_hvn.hvn"].Primary.Attributes["hvn_id"]
-					routeID := rs.Primary.Attributes["hvn_route_id"]
-					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
-				},
-				ImportStateVerify: true,
-			},
-			// Testing running Terraform Apply for already known resource
-			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, hvnRouteAzureAdConfig)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
-					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
-					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
-				),
-			},
-		},
-	})
-}
-
 // Test Azure Route with Gateway architecture
+func TestAccHvnRouteAzureGateway(t *testing.T) {
+	testHvnRouteGateway(t, hvnRouteAzureAdConfig)
+}
+
 func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
-	t.Skip("This should not be run on CI, only locally.")
+	t.Skip("Internal test should not be run on CI.")
+
+	testHvnRouteGateway(t, "") // No AD SP; create manually via Doormat
+}
+
+func testHvnRouteGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -490,7 +441,7 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, "")),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, adConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
@@ -520,7 +471,7 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, "")),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, adConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
@@ -535,10 +486,18 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 	})
 }
 
-// Test Azure Config invalid Next Hop Type
-func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
-	t.Skip("This should not be run on CI, only locally.")
+// Test Azure Route with invalid config
+func TestAccHvnRouteAzureInvalidConfig(t *testing.T) {
+	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig)
+}
 
+func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
+	t.Skip("Internal test should not be run on CI.")
+
+	testHvnRouteInvalidConfig(t, "") // No AD SP; create manually via Doormat
+}
+
+func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -550,7 +509,7 @@ func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing invalide azure_config based on next_hop_type value
 			{
-				Config:      testConfig(testAccHvnRouteConfigAzure(azConfigInvalidNextHopType, "")),
+				Config:      testConfig(testAccHvnRouteConfigAzure(azConfigInvalidNextHopType, adConfig)),
 				ExpectError: regexp.MustCompile(`azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE`),
 			},
 		},
@@ -558,8 +517,17 @@ func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 }
 
 // Test Azure Route with NVA architecture
+func TestAccHvnRouteAzureNVA(t *testing.T) {
+	testHvnRouteNVA(t, hvnRouteAzureAdConfig)
+}
+
 func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
-	t.Skip("This should not be run on CI, only locally.")
+	t.Skip("Internal test should not be run on CI.")
+
+	testHvnRouteNVA(t, "") // No AD SP; create manually via Doormat
+}
+
+func testHvnRouteNVA(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -574,11 +542,11 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA())),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA(adConfig))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
@@ -605,11 +573,11 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA())),
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA(adConfig))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
