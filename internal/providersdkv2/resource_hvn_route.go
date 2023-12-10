@@ -430,7 +430,7 @@ func getValidAzureRouteConfig(config map[string]interface{}) (*networkmodels.Has
 
 	// Verify if next_hop_ip_address is set, next_hop_type is VirtualAppliance
 	if nextHopIPAddress != "" && strings.ToUpper(nextHopType) != "VIRTUAL_APPLIANCE" {
-		return nil, diag.Errorf("azure configuration is invalid: Next hop values are only allowed in routes where next hop type is VIRTUAL_APPLIANCE")
+		return nil, diag.Errorf("azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE")
 	}
 
 	return &networkmodels.HashicorpCloudNetwork20200907AzureRoute{

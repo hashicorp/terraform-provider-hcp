@@ -6,6 +6,7 @@ package providersdkv2
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -211,6 +212,13 @@ var azConfigGateway = `
 	  }
 `
 
+var azConfigInvalidNextHopType = `
+	  azure_config {
+	    next_hop_type        = "VIRTUAL_NETWORK_GATEWAY"
+		next_hop_ip_address  = "73.35.181.110"
+	  }
+`
+
 func TestAccHvnRouteAws(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
@@ -385,6 +393,26 @@ func TestAccHvnRouteAzureInternal(t *testing.T) {
 					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
 					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckHvnRouteDestroy,
+
+		Steps: []resource.TestStep{
+			// Testing invalide azure_config based on next_hop_type value
+			{
+				Config:      testConfig(testAccHvnRouteConfigAzure(azConfigInvalidNextHopType, "")),
+				ExpectError: regexp.MustCompile(`azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE`),
 			},
 		},
 	})
