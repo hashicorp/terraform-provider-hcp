@@ -130,7 +130,7 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	}
 
 	resource "azurerm_virtual_network" "vnet" {
-	  name                = "%[1]s"
+	  name                = "vnet-%[1]s"
 	  location            = azurerm_resource_group.rg.location
 	  resource_group_name = azurerm_resource_group.rg.name
 
@@ -139,7 +139,7 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	  ]
 	}
 
-	resource "azurerm_subnet" "subnet" {
+	resource "azurerm_subnet" "gateway" {
 	  name                 = "GatewaySubnet"
 	  resource_group_name  = azurerm_resource_group.rg.name
 	  virtual_network_name = azurerm_virtual_network.vnet.name
@@ -150,14 +150,14 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	}
 
 	resource "azurerm_public_ip" "ip" {
-	  name                = "%[1]s"
+	  name                = "ip-%[1]s"
 	  location            = azurerm_resource_group.rg.location
 	  resource_group_name = azurerm_resource_group.rg.name
 	  allocation_method   = "Dynamic"
 	}
 
 	resource "azurerm_virtual_network_gateway" "gateway" {
-	  name                = "%[1]s"
+	  name                = "gateway-%[1]s"
 	  location            = azurerm_resource_group.rg.location
 	  resource_group_name = azurerm_resource_group.rg.name
 	  type                = "Vpn"
@@ -165,15 +165,143 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	  sku                 = "Basic"
 
 	  ip_configuration {
-		name                          = "%[1]s"
+		name                          = "ipc-gateway-%[1]s"
 		public_ip_address_id          = azurerm_public_ip.ip.id
 		private_ip_address_allocation = "Dynamic"
-		subnet_id                     = azurerm_subnet.subnet.id
+		subnet_id                     = azurerm_subnet.gateway.id
 	  }
 	}
 
 	%[5]s
 	`, hvnRouteUniqueName, subscriptionID, tenantID, azConfig, optConfig)
+}
+
+func testAccHvnRouteConfigNVA() string {
+	return fmt.Sprintf(`
+	resource "azurerm_subnet" "spoke" {
+	  name                 = "as-spoke-%[1]s"
+	  resource_group_name  = azurerm_resource_group.rg.name
+	  virtual_network_name = azurerm_virtual_network.spoke.name
+
+	  address_prefixes = [
+		"10.1.0.0/24"
+	  ]
+	}
+
+	resource "azurerm_virtual_network" "spoke" {
+	  name                = "avn-spoke-%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  address_space = [
+		"10.1.0.0/16"
+	  ]
+	}
+
+	resource "azurerm_route_table" "spoke" {
+	  name                = "art-spoke-%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  disable_bgp_route_propagation = false
+	}
+
+	resource "azurerm_subnet_route_table_association" "spoke" {
+	  subnet_id      = azurerm_subnet.spoke.id
+	  route_table_id = azurerm_route_table.spoke.id
+	}
+
+	resource "azurerm_route" "spoke" {
+	  name                = "ar-spoke-%[1]s"
+	  resource_group_name = azurerm_resource_group.rg.name
+	  route_table_name    = azurerm_route_table.spoke.name
+
+	  address_prefix         = hcp_hvn.hvn.cidr_block
+	  next_hop_type          = "VirtualAppliance"
+	  next_hop_in_ip_address = azurerm_firewall.firewall.ip_configuration[0].private_ip_address
+	}
+
+	resource "azurerm_subnet" "firewall" {
+	  name                 = "AzureFirewallSubnet"
+	  resource_group_name  = azurerm_resource_group.rg.name
+	  virtual_network_name = azurerm_virtual_network.vnet.name
+
+	  address_prefixes = [
+		"10.0.255.0/24"
+	  ]
+	}
+
+	resource "azurerm_firewall" "firewall" {
+	  name                = "af-firewall-%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  sku_name = "AZFW_VNet"
+	  sku_tier = "Standard"
+
+	  ip_configuration {
+		name                 = "aff-ipconf-%[1]s"
+		subnet_id            = azurerm_subnet.firewall.id
+		public_ip_address_id = azurerm_public_ip.firewall.id
+	  }
+	}
+
+	resource "azurerm_public_ip" "firewall" {
+	  name                = "api-firewall-%[1]s"
+	  location            = azurerm_resource_group.rg.location
+	  resource_group_name = azurerm_resource_group.rg.name
+	  allocation_method   = "Static"
+	  sku                 = "Standard"
+	}
+
+	resource "azurerm_firewall_network_rule_collection" "firewall" {
+	  name                = "afnrc-firewall-%[1]s"
+	  resource_group_name = azurerm_resource_group.rg.name
+	  azure_firewall_name = azurerm_firewall.firewall.name
+	  priority            = 100
+	  action              = "Allow"
+
+	  rule {
+		name                  = "HNVtoSpoke"
+		protocols             = ["Any"]
+		source_addresses      = [hcp_hvn.hvn.cidr_block]
+		destination_addresses = azurerm_virtual_network.spoke.address_space
+		destination_ports     = ["*"]
+	  }
+
+	  rule {
+		name                  = "SpokeToHVN"
+		protocols             = ["Any"]
+		source_addresses      = azurerm_virtual_network.spoke.address_space
+		destination_addresses = [hcp_hvn.hvn.cidr_block]
+		destination_ports     = ["*"]
+	  }
+	}
+
+	resource "azurerm_virtual_network_peering" "firewall_spoketohub" {
+	  name                = "avnp-sth-%[1]s"
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  virtual_network_name         = azurerm_virtual_network.spoke.name
+	  remote_virtual_network_id    = azurerm_virtual_network.vnet.id
+	  allow_virtual_network_access = true
+	  allow_forwarded_traffic      = true
+	  allow_gateway_transit        = false
+	  use_remote_gateways          = false
+	}
+
+	resource "azurerm_virtual_network_peering" "firewall_hubtospoke" {
+	  name                = "avnp-hts-%[1]s"
+	  resource_group_name = azurerm_resource_group.rg.name
+
+	  virtual_network_name         = azurerm_virtual_network.vnet.name
+	  remote_virtual_network_id    = azurerm_virtual_network.spoke.id
+	  allow_virtual_network_access = true
+	  allow_forwarded_traffic      = false
+	  allow_gateway_transit        = false
+	  use_remote_gateways          = false
+	}
+	`, hvnRouteUniqueName)
 }
 
 // hvnRouteAzureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
@@ -216,6 +344,13 @@ var azConfigInvalidNextHopType = `
 	  azure_config {
 	    next_hop_type        = "VIRTUAL_NETWORK_GATEWAY"
 		next_hop_ip_address  = "73.35.181.110"
+	  }
+`
+
+var azConfigNVA = `
+	  azure_config {
+	    next_hop_type       = "VIRTUAL_APPLIANCE"
+	    next_hop_ip_address = azurerm_firewall.firewall.ip_configuration[0].private_ip_address
 	  }
 `
 
@@ -338,7 +473,7 @@ func TestAccHvnRouteAzure(t *testing.T) {
 	})
 }
 
-func TestAccHvnRouteAzureInternal(t *testing.T) {
+func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -398,6 +533,7 @@ func TestAccHvnRouteAzureInternal(t *testing.T) {
 	})
 }
 
+// Test Azure Config invalid Next Hop Type
 func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
@@ -413,6 +549,67 @@ func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 			{
 				Config:      testConfig(testAccHvnRouteConfigAzure(azConfigInvalidNextHopType, "")),
 				ExpectError: regexp.MustCompile(`azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE`),
+			},
+		},
+	})
+}
+
+// Test Azure Route with NVA architecture
+func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
+	resourceName := "hcp_hvn_route.route"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		CheckDestroy: testAccCheckHvnRouteDestroy,
+
+		Steps: []resource.TestStep{
+			// Testing that initial Apply created correct HVN route
+			{
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA())),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
+				),
+			},
+			// Testing that we can import HVN route created in the previous step and that the
+			// resource terraform state will be exactly the same
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := s.RootModule().Resources["hcp_hvn.hvn"].Primary.Attributes["hvn_id"]
+					routeID := rs.Primary.Attributes["hvn_route_id"]
+					return fmt.Sprintf("%s:%s", hvnID, routeID), nil
+				},
+				ImportStateVerify: true,
+			},
+			// Testing running Terraform Apply for already known resource
+			{
+				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA())),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHvnRouteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
+					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					testLink(resourceName, "self_link", hvnRouteUniqueName, HVNRouteResourceType, "hcp_hvn.hvn"),
+					testLink(resourceName, "target_link", hvnRouteUniqueName, PeeringResourceType, "hcp_hvn.hvn"),
+				),
 			},
 		},
 	})
