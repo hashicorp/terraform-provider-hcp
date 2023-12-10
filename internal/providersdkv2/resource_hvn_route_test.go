@@ -473,7 +473,9 @@ func TestAccHvnRouteAzure(t *testing.T) {
 	})
 }
 
+// Test Azure Route with Gateway architecture
 func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -535,6 +537,8 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 
 // Test Azure Config invalid Next Hop Type
 func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -543,7 +547,6 @@ func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 			"azuread": {VersionConstraint: "~> 2.39"},
 		},
 		CheckDestroy: testAccCheckHvnRouteDestroy,
-
 		Steps: []resource.TestStep{
 			// Testing invalide azure_config based on next_hop_type value
 			{
@@ -556,6 +559,7 @@ func TestAccHvnRouteAzureNextHopTypeValidInternal(t *testing.T) {
 
 // Test Azure Route with NVA architecture
 func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
+	t.Skip("This should not be run on CI, only locally.")
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -574,6 +578,7 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
@@ -604,6 +609,7 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_APPLIANCE"),
+					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr", "172.31.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
