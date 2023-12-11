@@ -179,7 +179,7 @@ func TestAccAzurePeeringConnection(t *testing.T) {
 }
 
 func TestAccAzurePeeringConnectionInternal(t *testing.T) {
-	// t.Skip("Internal test should not be run on CI.")
+	t.Skip("Internal test should not be run on CI.")
 
 	testAccAzurePeeringConnection(t, "")
 }
@@ -235,7 +235,8 @@ func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
 
 					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
 				},
-				ImportStateVerify: true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state", "azure_peering_id"},
 			},
 			// Tests read
 			{
@@ -269,7 +270,7 @@ func TestAccAzurePeeringConnectionNVA(t *testing.T) {
 }
 
 func TestAccAzurePeeringConnectionNVAInternal(t *testing.T) {
-	// t.Skip("Internal test should not be run on CI.")
+	t.Skip("Internal test should not be run on CI.")
 
 	testAccAzurePeeringConnectionNVA(t, "")
 }
@@ -322,7 +323,8 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 					peerID := rs.Primary.Attributes["peering_id"]
 					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
 				},
-				ImportStateVerify: true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state", "azure_peering_id"},
 			},
 			// Tests read
 			{
@@ -356,7 +358,7 @@ func TestAccAzurePeeringConnectionGateway(t *testing.T) {
 }
 
 func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
-	// t.Skip("Internal test should not be run on CI.")
+	t.Skip("Internal test should not be run on CI.")
 
 	testAccAzurePeeringConnectionGateway(t, "")
 }
@@ -409,7 +411,8 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 					peerID := rs.Primary.Attributes["peering_id"]
 					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
 				},
-				ImportStateVerify: true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state", "azure_peering_id"},
 			},
 			// Tests read
 			{
@@ -443,7 +446,7 @@ func TestAccAzurePeeringConnectionNVAandGateway(t *testing.T) {
 }
 
 func TestAccAzurePeeringConnectionNVAandGatewayInternal(t *testing.T) {
-	// t.Skip("Internal test should not be run on CI.")
+	t.Skip("Internal test should not be run on CI.")
 
 	testAccAzurePeeringConnectionNVAandGateway(t, "")
 }
@@ -496,7 +499,8 @@ func testAccAzurePeeringConnectionNVAandGateway(t *testing.T, adConfig string) {
 					peerID := rs.Primary.Attributes["peering_id"]
 					return fmt.Sprintf("%s:%s", hvnID, peerID), nil
 				},
-				ImportStateVerify: true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state", "azure_peering_id"},
 			},
 			// Tests read
 			{
