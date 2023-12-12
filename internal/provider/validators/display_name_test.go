@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package hcpvalidator_test
+package validators_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/validators"
 )
 
 func TestDisplayNameValidator(t *testing.T) {
@@ -46,7 +46,7 @@ func TestDisplayNameValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			hcpvalidator.DisplayName().ValidateString(context.TODO(), request, &response)
+			validators.DisplayName().ValidateString(context.TODO(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -79,7 +79,7 @@ func TestDisplayNameValidator_Good(t *testing.T) {
 				ConfigValue:    types.StringValue(test),
 			}
 			response := validator.StringResponse{}
-			hcpvalidator.DisplayName().ValidateString(context.TODO(), request, &response)
+			validators.DisplayName().ValidateString(context.TODO(), request, &response)
 			if response.Diagnostics.HasError() {
 				t.Fatalf("got unexpected error: %s", response.Diagnostics)
 			}
@@ -109,7 +109,7 @@ func TestDisplayNameValidator_Bad(t *testing.T) {
 				ConfigValue:    types.StringValue(test),
 			}
 			response := validator.StringResponse{}
-			hcpvalidator.DisplayName().ValidateString(context.TODO(), request, &response)
+			validators.DisplayName().ValidateString(context.TODO(), request, &response)
 			if !response.Diagnostics.HasError() {
 				t.Fatalf("expected error")
 			}

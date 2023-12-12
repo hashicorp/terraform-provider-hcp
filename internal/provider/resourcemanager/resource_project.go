@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/validators"
 )
 
 const (
@@ -68,7 +68,7 @@ The user or service account that is running Terraform when creating a %s resourc
 				Required:    true,
 				Description: "The project's name.",
 				Validators: []validator.String{
-					hcpvalidator.DisplayName(),
+					validators.DisplayName(),
 					stringvalidator.LengthBetween(3, 36),
 				},
 			},

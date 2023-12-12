@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package hcpvalidator_test
+package validators_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/validators"
 )
 
 func TestResourceNamePartValidator(t *testing.T) {
@@ -46,7 +46,7 @@ func TestResourceNamePartValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			hcpvalidator.ResourceNamePart().ValidateString(context.TODO(), request, &response)
+			validators.ResourceNamePart().ValidateString(context.TODO(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

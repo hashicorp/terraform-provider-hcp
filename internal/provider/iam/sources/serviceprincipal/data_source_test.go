@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam_test
+package serviceprincipal_test
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func TestAccServicePrincipalDataSource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckServicePrincipalConfig(name),
+				Config: newDataSourceTestConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckDataSourceStateMatchesResourceStateWithIgnores(
 						"data.hcp_service_principal.example",
@@ -34,7 +34,7 @@ func TestAccServicePrincipalDataSource(t *testing.T) {
 	})
 }
 
-func testAccCheckServicePrincipalConfig(name string) string {
+func newDataSourceTestConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_service_principal" "example" {
   name        = %q

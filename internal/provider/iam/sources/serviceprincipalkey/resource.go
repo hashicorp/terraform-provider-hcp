@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam
+package serviceprincipalkey
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,28 +19,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func NewServicePrincipalKeyResource() resource.Resource {
-	return &resourceServicePrincipalKey{}
+func NewResource() resource.Resource {
+	return &resourceConfig{}
 }
 
-type resourceServicePrincipalKey struct {
+type resourceConfig struct {
 	client *clients.Client
 }
 
-func (r *resourceServicePrincipalKey) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+var _ resource.Resource = &resourceConfig{}
+
+func (r *resourceConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_principal_key"
 }
 
-func (r *resourceServicePrincipalKey) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceConfig) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: fmt.Sprintf(`The service principal key resource manages a service principal key.
+		Description: `The service principal key resource manages an HCP Service Principal key.
 
-The user or service account that is running Terraform when creating a %s resource must have %s on the parent resource; either the project or organization.`,
-			"`hcp_service_principal_key`", "`roles/Admin`"),
-
+The user or service account that is running Terraform when creating an ` + "`hcp_service_principal_key` resource must have `roles/Admin`" + ` on the parent resource; either the project or organization.`,
 		Attributes: map[string]schema.Attribute{
 			"resource_name": schema.StringAttribute{
 				Computed:    true,
@@ -92,7 +91,7 @@ The user or service account that is running Terraform when creating a %s resourc
 	}
 }
 
-func (r *resourceServicePrincipalKey) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceConfig) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -107,7 +106,7 @@ func (r *resourceServicePrincipalKey) Configure(_ context.Context, req resource.
 	r.client = client
 }
 
-type ServicePrincipalKey struct {
+type resourceModel struct {
 	ResourceName     types.String `tfsdk:"resource_name"`
 	ClientID         types.String `tfsdk:"client_id"`
 	ClientSecret     types.String `tfsdk:"client_secret"`
@@ -115,9 +114,9 @@ type ServicePrincipalKey struct {
 	RotateTriggers   types.Map    `tfsdk:"rotate_triggers"`
 }
 
-func (r *resourceServicePrincipalKey) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
-	var plan ServicePrincipalKey
+	var plan resourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -138,8 +137,8 @@ func (r *resourceServicePrincipalKey) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceServicePrincipalKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ServicePrincipalKey
+func (r *resourceConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -174,12 +173,12 @@ func (r *resourceServicePrincipalKey) Read(ctx context.Context, req resource.Rea
 	}
 }
 
-func (r *resourceServicePrincipalKey) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// In-place update is not supported
 }
 
-func (r *resourceServicePrincipalKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ServicePrincipalKey
+func (r *resourceConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

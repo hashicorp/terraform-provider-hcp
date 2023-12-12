@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam
+package workloadidentityprovider
 
 import (
 	"context"
@@ -27,31 +27,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/validators"
 )
 
-func NewWorkloadIdentityProviderResource() resource.Resource {
-	return &resourceWorkloadIdentityProvider{}
+func NewResource() resource.Resource {
+	return &resourceConfig{}
 }
 
-type resourceWorkloadIdentityProvider struct {
+type resourceConfig struct {
 	client *clients.Client
 }
 
-func (r *resourceWorkloadIdentityProvider) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+var _ resource.Resource = &resourceConfig{}
+
+func (r *resourceConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_iam_workload_identity_provider"
 }
 
-func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceConfig) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The workload identity provider resource allows federating an external identity to a HCP Service Principal.",
+		Description: "The workload identity provider resource allows federating an external identity to an HCP Service Principal.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "The workload identity provider's name. Ideally, this should be descriptive of the workload being federated.",
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
+					validators.ResourceNamePart(),
 					stringvalidator.LengthBetween(3, 36),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -75,7 +77,7 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 				Optional:    true,
 				Description: "A description for the workload identity provider.",
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
+					validators.ResourceNamePart(),
 					stringvalidator.LengthBetween(0, 255),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -147,9 +149,8 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 				},
 			},
 			"resource_name": schema.StringAttribute{
-				Computed: true,
-				Description: fmt.Sprintf("The workload identity providers's resource name in the format `%s`",
-					"iam/project/<project_id>/service-principal/<sp_name>/workload-identity-provider/<name>"),
+				Computed:    true,
+				Description: "The workload identity providers's resource name in the format `iam/project/<project_id>/service-principal/<sp_name>/workload-identity-provider/<name>`",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -158,7 +159,7 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 	}
 }
 
-func (r *resourceWorkloadIdentityProvider) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceConfig) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -173,7 +174,7 @@ func (r *resourceWorkloadIdentityProvider) Configure(_ context.Context, req reso
 	r.client = client
 }
 
-type WorkloadIdentityProvider struct {
+type resourceModel struct {
 	Name              types.String `tfsdk:"name"`
 	ServicePrincipal  types.String `tfsdk:"service_principal"`
 	Description       types.String `tfsdk:"description"`
@@ -183,27 +184,27 @@ type WorkloadIdentityProvider struct {
 	ResourceID        types.String `tfsdk:"resource_id"`
 	ResourceName      types.String `tfsdk:"resource_name"`
 
-	aws  *AWSProvider  `tfsdk:"-"`
-	oidc *OIDCProvider `tfsdk:"-"`
+	aws  *awsProviderModel  `tfsdk:"-"`
+	oidc *oidcProviderModel `tfsdk:"-"`
 }
 
-type AWSProvider struct {
+type awsProviderModel struct {
 	AccountID types.String `tfsdk:"account_id"`
 }
 
-func (a AWSProvider) AttributeTypes() map[string]attr.Type {
+func (a awsProviderModel) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"account_id": types.StringType,
 	}
 }
 
-type OIDCProvider struct {
+type oidcProviderModel struct {
 	IssuerURL        types.String `tfsdk:"issuer_uri"`
 	AllowedAudiences types.Set    `tfsdk:"allowed_audiences"`
 	allowedAudiences []string     `tfsdk:"-"`
 }
 
-func (o OIDCProvider) AttributeTypes() map[string]attr.Type {
+func (o oidcProviderModel) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"issuer_uri":        types.StringType,
 		"allowed_audiences": types.SetType{ElemType: types.StringType},
@@ -211,13 +212,13 @@ func (o OIDCProvider) AttributeTypes() map[string]attr.Type {
 }
 
 // extract extracts the Go values form their Terraform wrapped values.
-func (w *WorkloadIdentityProvider) extract(ctx context.Context) diag.Diagnostics {
+func (w *resourceModel) extract(ctx context.Context) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if !w.AWS.IsNull() {
-		w.aws = &AWSProvider{}
+		w.aws = &awsProviderModel{}
 		diags = w.AWS.As(ctx, w.aws, basetypes.ObjectAsOptions{})
 	} else if !w.OIDC.IsNull() {
-		w.oidc = &OIDCProvider{}
+		w.oidc = &oidcProviderModel{}
 		diags = w.OIDC.As(ctx, w.oidc, basetypes.ObjectAsOptions{})
 
 		w.oidc.allowedAudiences = make([]string, 0, len(w.oidc.AllowedAudiences.Elements()))
@@ -230,7 +231,7 @@ func (w *WorkloadIdentityProvider) extract(ctx context.Context) diag.Diagnostics
 
 // fromModel encodes the values from a WorkloadIdentityProvider model into the
 // Terraform values, such that they can be saved to state.
-func (w *WorkloadIdentityProvider) fromModel(ctx context.Context, wip *models.HashicorpCloudIamWorkloadIdentityProvider) diag.Diagnostics {
+func (w *resourceModel) fromModel(ctx context.Context, wip *models.HashicorpCloudIamWorkloadIdentityProvider) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	parts := strings.SplitN(wip.ResourceName, "/", 8)
@@ -268,8 +269,8 @@ func (w *WorkloadIdentityProvider) fromModel(ctx context.Context, wip *models.Ha
 	return diags
 }
 
-func (r *resourceWorkloadIdentityProvider) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan WorkloadIdentityProvider
+func (r *resourceConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(plan.extract(ctx)...)
 	if resp.Diagnostics.HasError() {
@@ -308,8 +309,8 @@ func (r *resourceWorkloadIdentityProvider) Create(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceWorkloadIdentityProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state WorkloadIdentityProvider
+func (r *resourceConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -334,8 +335,8 @@ func (r *resourceWorkloadIdentityProvider) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceWorkloadIdentityProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan WorkloadIdentityProvider
+func (r *resourceConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan resourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(plan.extract(ctx)...)
 
@@ -368,8 +369,8 @@ func (r *resourceWorkloadIdentityProvider) Update(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceWorkloadIdentityProvider) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state WorkloadIdentityProvider
+func (r *resourceConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -390,6 +391,6 @@ func (r *resourceWorkloadIdentityProvider) Delete(ctx context.Context, req resou
 	}
 }
 
-func (r *resourceWorkloadIdentityProvider) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("resource_name"), req, resp)
 }

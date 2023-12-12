@@ -82,7 +82,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
+	return append([]func() resource.Resource{
 		// Resource Manager
 		resourcemanager.NewOrganizationIAMPolicyResource,
 		resourcemanager.NewOrganizationIAMBindingResource,
@@ -93,15 +93,11 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppResource,
 		vaultsecrets.NewVaultSecretsSecretResource,
-		// IAM
-		iam.NewServicePrincipalResource,
-		iam.NewServicePrincipalKeyResource,
-		iam.NewWorkloadIdentityProviderResource,
-	}
+	}, iam.RESOURCE_BUILDERS...)
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
+	return append([]func() datasource.DataSource{
 		// Resource Manager
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
@@ -109,9 +105,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppDataSource,
 		vaultsecrets.NewVaultSecretsSecretDataSource,
-		// IAM
-		iam.NewServicePrincipalDataSource,
-	}
+	}, iam.DATA_SOURCE_BUILDERS...)
 }
 
 func NewFrameworkProvider(version string) func() provider.Provider {

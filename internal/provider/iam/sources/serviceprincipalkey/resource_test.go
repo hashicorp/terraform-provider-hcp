@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam_test
+package serviceprincipalkey_test
 
 import (
 	"fmt"
@@ -16,6 +16,7 @@ import (
 
 func TestAccServicePrincipalKeyResource(t *testing.T) {
 	spName := acctest.RandString(16)
+	spTFName := "hcp_service_principal_key.example"
 	var spk, spk2, spk3 models.HashicorpCloudIamServicePrincipalKey
 
 	resource.Test(t, resource.TestCase{
@@ -23,54 +24,44 @@ func TestAccServicePrincipalKeyResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalKeyConfig(spName, "1"),
+				Config: newResourceTestConfig(spName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_service_principal_key.example", "resource_name"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal_key.example", "client_id"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal_key.example", "client_secret"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal_key.example", "service_principal"),
-					testAccServicePrincipalKeyResourceExists(t, "hcp_service_principal_key.example", &spk),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_name"),
+					resource.TestCheckResourceAttrSet(spTFName, "client_id"),
+					resource.TestCheckResourceAttrSet(spTFName, "client_secret"),
+					resource.TestCheckResourceAttrSet(spTFName, "service_principal"),
+					checkGetRemoteResource(t, spTFName, &spk),
 				),
 			},
 			{
 				// Update the trigger to force a new SPK
-				Config: testAccServicePrincipalKeyConfig(spName, "2"),
+				Config: newResourceTestConfig(spName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServicePrincipalKeyResourceExists(t, "hcp_service_principal_key.example", &spk2),
-					func(_ *terraform.State) error {
-						if spk.ClientID == spk2.ClientID {
-							return fmt.Errorf("client_ids match, indicating resource wasn't recreated")
-						}
-						return nil
-					},
+					checkGetRemoteResource(t, spTFName, &spk2),
+					checkHasDifferentClientID(&spk, &spk2),
 				),
 			},
 			{
 				// Delete the underlying SPK
-				Config: testAccServicePrincipalKeyConfig(spName, "2"),
+				Config: newResourceTestConfig(spName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDeleteServicePrincipalKey(t, &spk2),
+					checkDelete(t, &spk2),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				// Check it was recreated
-				Config: testAccServicePrincipalKeyConfig(spName, "2"),
+				Config: newResourceTestConfig(spName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServicePrincipalKeyResourceExists(t, "hcp_service_principal_key.example", &spk3),
-					func(_ *terraform.State) error {
-						if spk2.ClientID == spk3.ClientID {
-							return fmt.Errorf("client_ids match, indicating resource wasn't recreated")
-						}
-						return nil
-					},
+					checkGetRemoteResource(t, spTFName, &spk3),
+					checkHasDifferentClientID(&spk2, &spk3),
 				),
 			},
 		},
 	})
 }
 
-func testAccServicePrincipalKeyConfig(spName, triggerVal string) string {
+func newResourceTestConfig(spName, triggerVal string) string {
 	return fmt.Sprintf(`
 resource "hcp_service_principal" "sp" {
 	name = %q
@@ -85,9 +76,8 @@ resource "hcp_service_principal_key" "example" {
 `, spName, triggerVal)
 }
 
-// testAccCheckServicePrincipalKeyResourceExists queries the API and retrieves the matching
-// service principal key.
-func testAccServicePrincipalKeyResourceExists(t *testing.T, resourceName string, spk *models.HashicorpCloudIamServicePrincipalKey) resource.TestCheckFunc {
+// checkGetRemoteResource queries the API and retrieves the matching service principal key.
+func checkGetRemoteResource(t *testing.T, resourceName string, spk *models.HashicorpCloudIamServicePrincipalKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -124,9 +114,8 @@ func testAccServicePrincipalKeyResourceExists(t *testing.T, resourceName string,
 	}
 }
 
-// testAccDeleteServicePrincipalKey uses the API and deletes the
-// service principal key.
-func testAccDeleteServicePrincipalKey(t *testing.T, spk *models.HashicorpCloudIamServicePrincipalKey) resource.TestCheckFunc {
+// checkDelete uses the API and deletes the service principal key.
+func checkDelete(t *testing.T, spk *models.HashicorpCloudIamServicePrincipalKey) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		deleteParams := service_principals_service.NewServicePrincipalsServiceDeleteServicePrincipalKeyParams()
@@ -136,6 +125,15 @@ func testAccDeleteServicePrincipalKey(t *testing.T, spk *models.HashicorpCloudIa
 			return err
 		}
 
+		return nil
+	}
+}
+
+func checkHasDifferentClientID(spk1, spk2 *models.HashicorpCloudIamServicePrincipalKey) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		if spk1.ClientID == spk2.ClientID {
+			return fmt.Errorf("client_ids match, indicating resource wasn't recreated")
+		}
 		return nil
 	}
 }

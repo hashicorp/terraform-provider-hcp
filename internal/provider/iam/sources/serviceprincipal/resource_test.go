@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam_test
+package serviceprincipal_test
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ import (
 func TestAccServicePrincipalResource_Project(t *testing.T) {
 	spName := acctest.RandString(16)
 	spNameUpdated := acctest.RandString(16)
+	spTFName := "hcp_service_principal.example"
 	var sp models.HashicorpCloudIamServicePrincipal
 	var sp2 models.HashicorpCloudIamServicePrincipal
 
@@ -25,38 +26,33 @@ func TestAccServicePrincipalResource_Project(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalConfig(spName, false, false),
+				Config: newResourceTestConfig(spName, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_service_principal.example", "name", spName),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_name"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "parent"),
-					testAccServicePrincipalResourceExists(t, "hcp_service_principal.example", &sp),
-					testAccCheckServicePrincipalValues(&sp, spName, true),
+					resource.TestCheckResourceAttr(spTFName, "name", spName),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_name"),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_id"),
+					resource.TestCheckResourceAttrSet(spTFName, "parent"),
+					checkGetServicePrincipalResource(t, spTFName, &sp),
+					checkResourceValues(&sp, spName, true),
 				),
 			},
 			{
-				ResourceName:                         "hcp_service_principal.example",
+				ResourceName:                         spTFName,
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "resource_name",
-				ImportStateIdFunc:                    testAccServicePrincipalImportID,
+				ImportStateIdFunc:                    servicePrincipalImportID(spTFName),
 				ImportStateVerify:                    true,
 			},
 			{
 				// Update the name
-				Config: testAccServicePrincipalConfig(spNameUpdated, false, false),
+				Config: newResourceTestConfig(spNameUpdated, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_service_principal.example", "name", spNameUpdated),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_name"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_id"),
-					testAccServicePrincipalResourceExists(t, "hcp_service_principal.example", &sp2),
-					testAccCheckServicePrincipalValues(&sp2, spNameUpdated, true),
-					func(_ *terraform.State) error {
-						if sp.ID == sp2.ID {
-							return fmt.Errorf("resource_ids match, indicating resource wasn't recreated")
-						}
-						return nil
-					},
+					resource.TestCheckResourceAttr(spTFName, "name", spNameUpdated),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_name"),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_id"),
+					checkGetServicePrincipalResource(t, spTFName, &sp2),
+					checkResourceValues(&sp2, spNameUpdated, true),
+					checkHasDifferentResourceID(&sp, &sp2),
 				),
 			},
 		},
@@ -65,6 +61,7 @@ func TestAccServicePrincipalResource_Project(t *testing.T) {
 
 func TestAccServicePrincipalResource_ExplicitProject(t *testing.T) {
 	spName := acctest.RandString(16)
+	spTFName := "hcp_service_principal.example"
 	var sp models.HashicorpCloudIamServicePrincipal
 
 	resource.Test(t, resource.TestCase{
@@ -72,14 +69,14 @@ func TestAccServicePrincipalResource_ExplicitProject(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalConfig(spName, true, false),
+				Config: newResourceTestConfig(spName, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_service_principal.example", "name", spName),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_name"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "parent"),
-					testAccServicePrincipalResourceExists(t, "hcp_service_principal.example", &sp),
-					testAccCheckServicePrincipalValues(&sp, spName, true),
+					resource.TestCheckResourceAttr(spTFName, "name", spName),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_name"),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_id"),
+					resource.TestCheckResourceAttrSet(spTFName, "parent"),
+					checkGetServicePrincipalResource(t, spTFName, &sp),
+					checkResourceValues(&sp, spName, true),
 				),
 			},
 		},
@@ -88,6 +85,7 @@ func TestAccServicePrincipalResource_ExplicitProject(t *testing.T) {
 
 func TestAccServicePrincipalResource_Organization(t *testing.T) {
 	spName := acctest.RandString(16)
+	spTFName := "hcp_service_principal.example"
 	var sp models.HashicorpCloudIamServicePrincipal
 
 	resource.Test(t, resource.TestCase{
@@ -95,43 +93,45 @@ func TestAccServicePrincipalResource_Organization(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalConfig(spName, false, true),
+				Config: newResourceTestConfig(spName, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_service_principal.example", "name", spName),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_name"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_service_principal.example", "parent"),
-					testAccServicePrincipalResourceExists(t, "hcp_service_principal.example", &sp),
-					testAccCheckServicePrincipalValues(&sp, spName, false),
+					resource.TestCheckResourceAttr(spTFName, "name", spName),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_name"),
+					resource.TestCheckResourceAttrSet(spTFName, "resource_id"),
+					resource.TestCheckResourceAttrSet(spTFName, "parent"),
+					checkGetServicePrincipalResource(t, spTFName, &sp),
+					checkResourceValues(&sp, spName, false),
 				),
 			},
 			{
-				ResourceName:                         "hcp_service_principal.example",
+				ResourceName:                         spTFName,
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "resource_name",
-				ImportStateIdFunc:                    testAccServicePrincipalImportID,
+				ImportStateIdFunc:                    servicePrincipalImportID(spTFName),
 				ImportStateVerify:                    true,
 			},
 		},
 	})
 }
 
-// testAccServicePrincipalImportID retrieves the resource_name so that it can be imported.
-func testAccServicePrincipalImportID(s *terraform.State) (string, error) {
-	rs, ok := s.RootModule().Resources["hcp_service_principal.example"]
-	if !ok {
-		return "", fmt.Errorf("resource not found")
-	}
+// servicePrincipalImportID retrieves the resource_name so that it can be imported.
+func servicePrincipalImportID(tfResourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[tfResourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found")
+		}
 
-	id, ok := rs.Primary.Attributes["resource_name"]
-	if !ok {
-		return "", fmt.Errorf("resource_name not set")
-	}
+		id, ok := rs.Primary.Attributes["resource_name"]
+		if !ok {
+			return "", fmt.Errorf("resource_name not set")
+		}
 
-	return id, nil
+		return id, nil
+	}
 }
 
-func testAccServicePrincipalConfig(name string, explicitProject, explicitOrg bool) string {
+func newResourceTestConfig(name string, explicitProject, explicitOrg bool) string {
 	parentResource := ""
 	parentParam := ""
 	if explicitProject {
@@ -151,9 +151,8 @@ resource "hcp_service_principal" "example" {
 	return fmt.Sprintf("%s\n%s", parentResource, sp)
 }
 
-// testAccCheckServicePrincipalResourceExists queries the API and retrieves the matching
-// service principal.
-func testAccServicePrincipalResourceExists(t *testing.T, resourceName string, sp *models.HashicorpCloudIamServicePrincipal) resource.TestCheckFunc {
+// checkGetServicePrincipalResource queries the API and retrieves the matching service principal.
+func checkGetServicePrincipalResource(t *testing.T, resourceName string, sp *models.HashicorpCloudIamServicePrincipal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -183,7 +182,7 @@ func testAccServicePrincipalResourceExists(t *testing.T, resourceName string, sp
 	}
 }
 
-func testAccCheckServicePrincipalValues(sp *models.HashicorpCloudIamServicePrincipal, name string, projectScoped bool) resource.TestCheckFunc {
+func checkResourceValues(sp *models.HashicorpCloudIamServicePrincipal, name string, projectScoped bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if sp.Name != name {
 			return fmt.Errorf("bad name, expected \"%s\", got: %#v", name, sp.Name)
@@ -195,6 +194,15 @@ func testAccCheckServicePrincipalValues(sp *models.HashicorpCloudIamServicePrinc
 			return fmt.Errorf("unexpected project ID: %s", sp.ProjectID)
 		}
 
+		return nil
+	}
+}
+
+func checkHasDifferentResourceID(sp1, sp2 *models.HashicorpCloudIamServicePrincipal) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if sp1.ID == sp2.ID {
+			return fmt.Errorf("resource_ids match, indicating resource wasn't recreated")
+		}
 		return nil
 	}
 }

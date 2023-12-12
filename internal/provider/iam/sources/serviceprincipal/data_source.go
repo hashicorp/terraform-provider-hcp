@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam
+package serviceprincipal
 
 import (
 	"context"
@@ -13,39 +13,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-type DataSourceServicePrincipal struct {
+func NewDataSource() datasource.DataSource {
+	return &dataSourceConfig{}
+}
+
+type dataSourceConfig struct {
 	client *clients.Client
 }
 
-type DataSourceServicePrincipalModel struct {
+var _ datasource.DataSource = &dataSourceConfig{}
+
+type dataSourceModel struct {
 	Name         types.String `tfsdk:"name"`
 	ResourceName types.String `tfsdk:"resource_name"`
 	ResourceID   types.String `tfsdk:"resource_id"`
 }
 
-func NewServicePrincipalDataSource() datasource.DataSource {
-	return &DataSourceServicePrincipal{}
-}
-
-func (d *DataSourceServicePrincipal) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *dataSourceConfig) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_principal"
 }
 
-func (d *DataSourceServicePrincipal) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The service principal data source retrieves the given service principal.",
+		Description: "The service principal data source retrieves the given HCP Service Principal.",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Description: "The service principal's name",
 				Computed:    true,
 			},
 			"resource_name": schema.StringAttribute{
-				Description: fmt.Sprintf("The service principal's resource name in format `%s` or `%s`",
-					"iam/project/<project_id>/service-principal/<name>", "iam/organization/<organization_id>/service-principal/<name>"),
-				Required: true,
+				Description: "The service principal's resource name in the format `iam/project/<project_id>/service-principal/<name>` or `iam/organization/<organization_id>/service-principal/<name>`",
+				Required:    true,
 			},
 			"resource_id": schema.StringAttribute{
 				Description: "The service principal's unique identitier",
@@ -55,7 +56,7 @@ func (d *DataSourceServicePrincipal) Schema(ctx context.Context, req datasource.
 	}
 }
 
-func (d *DataSourceServicePrincipal) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *dataSourceConfig) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -71,8 +72,8 @@ func (d *DataSourceServicePrincipal) Configure(ctx context.Context, req datasour
 	d.client = client
 }
 
-func (d *DataSourceServicePrincipal) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DataSourceServicePrincipalModel
+func (d *dataSourceConfig) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data dataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	if d.client == nil {

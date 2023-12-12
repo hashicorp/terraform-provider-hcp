@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package iam
+package serviceprincipal
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -21,28 +20,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/validators"
 )
 
-func NewServicePrincipalResource() resource.Resource {
-	return &resourceServicePrincipal{}
+func NewResource() resource.Resource {
+	return &resourceConfig{}
 }
 
-type resourceServicePrincipal struct {
+type resourceConfig struct {
 	client *clients.Client
 }
 
-func (r *resourceServicePrincipal) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+var _ resource.Resource = &resourceConfig{}
+
+func (r *resourceConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_principal"
 }
 
-func (r *resourceServicePrincipal) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceConfig) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: fmt.Sprintf(`The service principal resource manages a HCP Service Principal.
+		Description: `
+The service principal resource manages an HCP Service Principal.
 
-The user or service account that is running Terraform when creating a %s resource must have %s on the parent resource; either the project or organization.`,
-			"`hcp_service_principal`", "`roles/Admin`"),
+The user or service account that is running Terraform when creating an ` + "`hcp_service_principal` resource must have `roles/Admin`" + ` on the parent resource; either the project or organization.`,
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
@@ -52,9 +53,8 @@ The user or service account that is running Terraform when creating a %s resourc
 				},
 			},
 			"resource_name": schema.StringAttribute{
-				Computed: true,
-				Description: fmt.Sprintf("The service principal's resource name in the format `%s` or `%s`",
-					"iam/project/<project_id>/service-principal/<name>", "iam/organization/<organization_id>/service-principal/<name>"),
+				Computed:    true,
+				Description: "The service principal's resource name in the format `iam/project/<project_id>/service-principal/<name>` or `iam/organization/<organization_id>/service-principal/<name>`",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -63,7 +63,7 @@ The user or service account that is running Terraform when creating a %s resourc
 				Required:    true,
 				Description: "The service principal's name.",
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
+					validators.ResourceNamePart(),
 					stringvalidator.LengthBetween(3, 36),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -71,9 +71,10 @@ The user or service account that is running Terraform when creating a %s resourc
 				},
 			},
 			"parent": schema.StringAttribute{
-				Description: "The parent location to create the service principal under. " +
-					"If unspecified, the service principal will be created in the project the provider is configured with. " +
-					"If specified, the accepted values are \"project/<project_id>\" or \"organization/<organization_id>\"",
+				Description: `
+The parent location to create the service principal under.
+If unspecified, the service principal will be created in the project the provider is configured with.
+If specified, the accepted values are ` + "`project/<project_id>` or `organization/<organization_id>`",
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -90,7 +91,7 @@ The user or service account that is running Terraform when creating a %s resourc
 	}
 }
 
-func (r *resourceServicePrincipal) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceConfig) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -105,15 +106,15 @@ func (r *resourceServicePrincipal) Configure(_ context.Context, req resource.Con
 	r.client = client
 }
 
-type ServicePrincipal struct {
+type resourceModel struct {
 	ResourceID   types.String `tfsdk:"resource_id"`
 	ResourceName types.String `tfsdk:"resource_name"`
 	Name         types.String `tfsdk:"name"`
 	Parent       types.String `tfsdk:"parent"`
 }
 
-func (r *resourceServicePrincipal) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ServicePrincipal
+func (r *resourceConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -164,8 +165,8 @@ func spParent(resourceName string) (string, error) {
 	return strings.Join(parts[1:3], "/"), nil
 }
 
-func (r *resourceServicePrincipal) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ServicePrincipal
+func (r *resourceConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -199,12 +200,12 @@ func (r *resourceServicePrincipal) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceServicePrincipal) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// In-place update is not supported
 }
 
-func (r *resourceServicePrincipal) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ServicePrincipal
+func (r *resourceConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -225,6 +226,6 @@ func (r *resourceServicePrincipal) Delete(ctx context.Context, req resource.Dele
 	}
 }
 
-func (r *resourceServicePrincipal) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("resource_name"), req, resp)
 }
