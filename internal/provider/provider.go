@@ -183,15 +183,8 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		ClientID:       data.ClientID.ValueString(),
 		ClientSecret:   data.ClientSecret.ValueString(),
 		CredentialFile: data.CredentialFile.ValueString(),
+		ProjectID:      data.ProjectID.ValueString(),
 		SourceChannel:  "terraform-provider-hcp",
-	}
-
-	// Check the environment for an HCP Service Principal
-	if clientConfig.ClientID == "" {
-		clientConfig.ClientID = os.Getenv("HCP_CLIENT_ID")
-	}
-	if clientConfig.ClientSecret == "" {
-		clientConfig.ClientSecret = os.Getenv("HCP_CLIENT_SECRET")
 	}
 
 	// Read the workload_identity configuration.
@@ -212,19 +205,17 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	projectID := ""
-	if data.ProjectID.ValueString() != "" {
-		projectID = data.ProjectID.ValueString()
-	} else {
-		projectID = os.Getenv("HCP_PROJECT_ID")
+	// Attempt to source from the environment if unset.
+	if clientConfig.ProjectID == "" {
+		clientConfig.ProjectID = os.Getenv("HCP_PROJECT_ID")
 	}
 
-	if projectID != "" {
+	if clientConfig.ProjectID != "" {
 		getProjParams := project_service.NewProjectServiceGetParams()
-		getProjParams.ID = projectID
+		getProjParams.ID = clientConfig.ProjectID
 		project, err := clients.RetryProjectServiceGet(client, getProjParams)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("unable to fetch project %q: %v", projectID, err), "")
+			resp.Diagnostics.AddError(fmt.Sprintf("unable to fetch project %q: %v", clientConfig.ProjectID, err), "")
 			return
 		}
 

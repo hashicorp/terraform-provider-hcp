@@ -135,15 +135,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			ClientID:       d.Get("client_id").(string),
 			ClientSecret:   d.Get("client_secret").(string),
 			CredentialFile: d.Get("credential_file").(string),
+			ProjectID:      d.Get("project_id").(string),
 			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
-		}
-
-		// Check the environment for an HCP Service Principal
-		if clientConfig.ClientID == "" {
-			clientConfig.ClientID = os.Getenv("HCP_CLIENT_ID")
-		}
-		if clientConfig.ClientSecret == "" {
-			clientConfig.ClientSecret = os.Getenv("HCP_CLIENT_SECRET")
 		}
 
 		// Read the workload_identity configuration
@@ -163,17 +156,17 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			return nil, diags
 		}
 
-		projectID := d.Get("project_id").(string)
-		if projectID == "" {
-			projectID = os.Getenv("HCP_PROJECT_ID")
+		// Attempt to source from the environment if unset.
+		if clientConfig.ProjectID == "" {
+			clientConfig.ProjectID = os.Getenv("HCP_PROJECT_ID")
 		}
 
-		if projectID != "" {
+		if clientConfig.ProjectID != "" {
 			getProjParams := project_service.NewProjectServiceGetParams()
-			getProjParams.ID = projectID
+			getProjParams.ID = clientConfig.ProjectID
 			project, err := clients.RetryProjectServiceGet(client, getProjParams)
 			if err != nil {
-				diags = append(diags, diag.Errorf("unable to fetch project %q: %v", projectID, err)...)
+				diags = append(diags, diag.Errorf("unable to fetch project %q: %v", clientConfig.ProjectID, err)...)
 				return nil, diags
 			}
 
