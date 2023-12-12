@@ -98,7 +98,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 					Attributes: map[string]schema.Attribute{
 						"token_file": schema.StringAttribute{
 							Required:    true,
-							Description: "The path to a file containing an identity token.",
+							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 							},
@@ -115,8 +115,8 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 						},
 					},
 				},
-				Description: "Allows authenticating the provider by exchanging the token specified in the `token_file` for " +
-					"a HCP service principal using Workload Identity Federation.",
+				Description: "Allows authenticating the provider by exchanging the OAuth 2.0 access token or OpenID Connect " +
+					"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 1),
 				},

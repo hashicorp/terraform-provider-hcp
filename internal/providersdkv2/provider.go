@@ -86,14 +86,14 @@ func New() func() *schema.Provider {
 				"workload_identity": {
 					Type:     schema.TypeList,
 					Optional: true,
-					Description: "Allows authenticating the provider by exchanging the token specified in the `token_file` for " +
-						"a HCP service principal using Workload Identity Federation.",
+					Description: "Allows authenticating the provider by exchanging the OAuth 2.0 access token or OpenID Connect " +
+						"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"token_file": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The path to a file containing an identity token.",
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
