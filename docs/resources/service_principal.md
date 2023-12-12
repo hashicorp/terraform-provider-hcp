@@ -2,15 +2,15 @@
 page_title: "Resource hcp_service_principal - terraform-provider-hcp"
 subcategory: "Cloud Platform"
 description: |-
-  The service principal resource manages a HCP Service Principal.
-  The user or service account that is running Terraform when creating a hcp_service_principal resource must have roles/Admin on the parent resource; either the project or organization.
+  The service principal resource manages an HCP Service Principal.
+  The user or service account that is running Terraform when creating an hcp_service_principal resource must have roles/Admin on the parent resource; either the project or organization.
 ---
 
 # hcp_service_principal (Resource)
 
-The service principal resource manages a HCP Service Principal.
+The service principal resource manages an HCP Service Principal.
 
-The user or service account that is running Terraform when creating a `hcp_service_principal` resource must have `roles/Admin` on the parent resource; either the project or organization.
+The user or service account that is running Terraform when creating an `hcp_service_principal` resource must have `roles/Admin` on the parent resource; either the project or organization.
 
 ## Example Usage: Create in provider configured project
 
@@ -54,7 +54,9 @@ resource "hcp_service_principal" "example" {
 
 ### Optional
 
-- `parent` (String) The parent location to create the service principal under. If unspecified, the service principal will be created in the project the provider is configured with. If specified, the accepted values are "project/<project_id>" or "organization/<organization_id>"
+- `parent` (String) The parent location to create the service principal under.
+If unspecified, the service principal will be created in the project the provider is configured with.
+If specified, the accepted values are `project/<project_id>` or `organization/<organization_id>`
 
 ### Read-Only
 

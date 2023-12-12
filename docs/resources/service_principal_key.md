@@ -2,15 +2,15 @@
 page_title: "Resource hcp_service_principal_key - terraform-provider-hcp"
 subcategory: "Cloud Platform"
 description: |-
-  The service principal key resource manages a service principal key.
-  The user or service account that is running Terraform when creating a hcp_service_principal_key resource must have roles/Admin on the parent resource; either the project or organization.
+  The service principal key resource manages an HCP Service Principal key.
+  The user or service account that is running Terraform when creating an hcp_service_principal_key resource must have roles/Admin on the parent resource; either the project or organization.
 ---
 
 # hcp_service_principal_key (Resource)
 
-The service principal key resource manages a service principal key.
+The service principal key resource manages an HCP Service Principal key.
 
-The user or service account that is running Terraform when creating a `hcp_service_principal_key` resource must have `roles/Admin` on the parent resource; either the project or organization.
+The user or service account that is running Terraform when creating an `hcp_service_principal_key` resource must have `roles/Admin` on the parent resource; either the project or organization.
 
 ## Example Usage: Creating a new key
 

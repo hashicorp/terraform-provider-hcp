@@ -40,7 +40,7 @@ func (r *resourceConfig) Metadata(_ context.Context, req resource.MetadataReques
 
 func (r *resourceConfig) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `
+		MarkdownDescription: `
 The service principal resource manages an HCP Service Principal.
 
 The user or service account that is running Terraform when creating an ` + "`hcp_service_principal` resource must have `roles/Admin`" + ` on the parent resource; either the project or organization.`,

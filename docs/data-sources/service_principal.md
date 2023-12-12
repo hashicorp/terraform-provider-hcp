@@ -2,12 +2,12 @@
 page_title: "hcp_service_principal Data Source - terraform-provider-hcp"
 subcategory: "Cloud Platform"
 description: |-
-  The service principal data source retrieves the given service principal.
+  The service principal data source retrieves the given HCP Service Principal.
 ---
 
 # hcp_service_principal (Data Source)
 
-The service principal data source retrieves the given service principal.
+The service principal data source retrieves the given HCP Service Principal.
 
 ## Example Usage
 
@@ -22,7 +22,7 @@ data "hcp_service_principal" "example" {
 
 ### Required
 
-- `resource_name` (String) The service principal's resource name in format `iam/project/<project_id>/service-principal/<name>` or `iam/organization/<organization_id>/service-principal/<name>`
+- `resource_name` (String) The service principal's resource name in the format `iam/project/<project_id>/service-principal/<name>` or `iam/organization/<organization_id>/service-principal/<name>`
 
 ### Read-Only
 
