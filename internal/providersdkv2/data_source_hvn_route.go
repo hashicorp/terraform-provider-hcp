@@ -63,6 +63,7 @@ Remove this attribute from the configuration for any affected resources.
 				Type:        schema.TypeList,
 				Computed:    true,
 				Optional:    true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"next_hop_type": {

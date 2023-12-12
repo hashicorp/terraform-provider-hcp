@@ -163,7 +163,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	targetLink.Location.OrganizationID = hvnLink.Location.OrganizationID
 
 	// Get azure config
-	azureConfig, diagErr := getAzureConfig("azure_config", d)
+	azureConfig, diagErr := getAzureConfig(d)
 	if diagErr != nil {
 		return diagErr
 	}
@@ -405,10 +405,10 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func getAzureConfig(propertyName string, d *schema.ResourceData) (*networkmodels.HashicorpCloudNetwork20200907AzureRoute, diag.Diagnostics) {
+func getAzureConfig(d *schema.ResourceData) (*networkmodels.HashicorpCloudNetwork20200907AzureRoute, diag.Diagnostics) {
 	// If we don't find the property we return nil so azure config data is not
 	// included in the Create HVN Route request
-	configParam, ok := d.GetOk(propertyName)
+	configParam, ok := d.GetOk("azure_config")
 	if !ok {
 		return nil, nil
 	}
@@ -421,10 +421,6 @@ func getAzureConfig(propertyName string, d *schema.ResourceData) (*networkmodels
 		return nil, nil
 	}
 
-	return getValidAzureRouteConfig(config)
-}
-
-func getValidAzureRouteConfig(config map[string]interface{}) (*networkmodels.HashicorpCloudNetwork20200907AzureRoute, diag.Diagnostics) {
 	nextHopType, _ := config["next_hop_type"].(string)
 	nextHopIPAddress, _ := config["next_hop_ip_address"].(string)
 
