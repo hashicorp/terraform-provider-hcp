@@ -496,3 +496,22 @@ func validateVaultPluginType(v interface{}, path cty.Path) diag.Diagnostics {
 
 	return diagnostics
 }
+
+func validateHvnRouteAzureConfig(v interface{}, path cty.Path) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	conf := v.(map[string]string)
+	nextHopType := conf["next_hop_type"]
+	nextHopIPAddress := conf["next_hop_ip_address"]
+
+	if nextHopIPAddress != "" && nextHopType != "VIRTUAL_APPLIANCE" {
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "invalid azure_config next_hop_ip_address.",
+			Detail:        "next_hop_ip_address should only be set when next_hop_type is VIRTUAL_APPLIANCE.",
+			AttributePath: cty.IndexStringPath("azure_config"),
+		})
+	}
+
+	return diagnostics
+}

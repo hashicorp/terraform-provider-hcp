@@ -67,7 +67,7 @@ resource "hcp_hvn_route" "example-peering-route" {
 
 ### Optional
 
-- `azure_config` (Block List, Max: 1) The Azure configuration for routing. (see [below for nested schema](#nestedblock--azure_config))
+- `azure_config` (Map of String) The Azure configuration for routing.
 - `project_id` (String, Deprecated) The ID of the HCP project where the HVN route is located. Always matches the project ID in `hvn_link`. Setting this attribute is deprecated, but it will remain usable in read-only form.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
@@ -77,18 +77,6 @@ resource "hcp_hvn_route" "example-peering-route" {
 - `id` (String) The ID of this resource.
 - `self_link` (String) A unique URL identifying the HVN route.
 - `state` (String) The state of the HVN route.
-
-<a id="nestedblock--azure_config"></a>
-### Nested Schema for `azure_config`
-
-Required:
-
-- `next_hop_type` (String) The type of Azure hop the packet should be sent to. Valid options for Next Hop Type - `VIRTUAL_APPLIANCE` or `VIRTUAL_NETWORK_GATEWAY`
-
-Optional:
-
-- `next_hop_ip_address` (String) Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VIRTUAL_APPLIANCE.
-
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

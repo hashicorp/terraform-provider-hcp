@@ -8,6 +8,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/stretchr/testify/require"
 )
@@ -1068,6 +1069,78 @@ func Test_validateCIDRBlockHVNRoute(t *testing.T) {
 			t.Run(n, func(t *testing.T) {
 				r := require.New(t)
 				result := validateCIDRBlockHVN(tc.input, nil)
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+}
+
+func Test_validateHvnRouteAzureConfig(t *testing.T) {
+	type testCase struct {
+		input    map[string]string
+		expected diag.Diagnostics
+	}
+
+	t.Run("Valid", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"next hop type VIRTUAL_APPLIANCE": {
+				input: map[string]string{
+					"next_hop_type":       "VIRTUAL_APPLIANCE",
+					"next_hop_ip_address": "73.35.181.109",
+				},
+				expected: diag.Diagnostics(nil),
+			},
+			"next hop type VIRTUAL_APPLIANCE with no IP Address": {
+				input: map[string]string{
+					"next_hop_type":       "VIRTUAL_APPLIANCE",
+					"next_hop_ip_address": "",
+				},
+				expected: diag.Diagnostics(nil),
+			},
+			"next hop type VIRTUAL_NETWORK_GATEWAY": {
+				input: map[string]string{
+					"next_hop_type":       "VIRTUAL_NETWORK_GATEWAY",
+					"next_hop_ip_address": "",
+				},
+				expected: diag.Diagnostics(nil),
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+
+				result := validateHvnRouteAzureConfig(tc.input, nil)
+
+				r.Equal(tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("Invalid", func(t *testing.T) {
+		tcs := map[string]testCase{
+			"next hop type VIRTUAL_NETWORK_GATEWAY can't have an IP Address set": {
+				input: map[string]string{
+					"next_hop_type":       "VIRTUAL_NETWORK_GATEWAY",
+					"next_hop_ip_address": "73.35.181.109",
+				},
+				expected: diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       "invalid azure_config next_hop_ip_address.",
+						Detail:        "next_hop_ip_address should only be set when next_hop_type is VIRTUAL_APPLIANCE.",
+						AttributePath: cty.IndexStringPath("azure_config"),
+					},
+				},
+			},
+		}
+
+		for n, tc := range tcs {
+			t.Run(n, func(t *testing.T) {
+				r := require.New(t)
+
+				result := validateHvnRouteAzureConfig(tc.input, nil)
+
 				r.Equal(tc.expected, result)
 			})
 		}

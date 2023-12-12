@@ -67,11 +67,12 @@ func resourceHvnRoute() *schema.Resource {
 			},
 			// Optional inputs
 			"azure_config": {
-				Description: "The Azure configuration for routing.",
-				Type:        schema.TypeList,
-				ForceNew:    true,
-				MaxItems:    1,
-				Optional:    true,
+				Description:      "The Azure configuration for routing.",
+				Type:             schema.TypeList,
+				ForceNew:         true,
+				MaxItems:         1,
+				Optional:         true,
+				ValidateDiagFunc: validateHvnRouteAzureConfig,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"next_hop_type": {
