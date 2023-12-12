@@ -1,3 +1,0 @@
-```release-note:bug
-Remove `paths_filter` tests from `TestAccPerformanceReplication_ValidationsAws` due to Vault 1.15.4 constraint that requires mount to exist before using it in the field.
-```
