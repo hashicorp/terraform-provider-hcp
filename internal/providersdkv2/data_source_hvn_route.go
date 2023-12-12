@@ -58,6 +58,25 @@ Remove this attribute from the configuration for any affected resources.
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"azure_config": {
+				Description: "The azure configuration for routing.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"next_hop_type": {
+							Description: "The type of Azure hop the packet should be sent to.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"next_hop_ip_address": {
+							Description: "Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VirtualAppliance.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 			"state": {
 				Description: "The state of the HVN route.",
 				Type:        schema.TypeString,

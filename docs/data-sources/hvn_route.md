@@ -33,6 +33,7 @@ data "hcp_hvn_route" "example" {
 
 ### Read-Only
 
+- `azure_config` (List of Object) The azure configuration for routing. (see [below for nested schema](#nestedatt--azure_config))
 - `created_at` (String) The time that the HVN route was created.
 - `destination_cidr` (String) The destination CIDR of the HVN route.
 - `id` (String) The ID of this resource.
@@ -46,3 +47,12 @@ data "hcp_hvn_route" "example" {
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedatt--azure_config"></a>
+### Nested Schema for `azure_config`
+
+Read-Only:
+
+- `next_hop_ip_address` (String)
+- `next_hop_type` (String)
