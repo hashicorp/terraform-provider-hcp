@@ -1,0 +1,9 @@
+```release-note:feature
+ Add optional Azure config block for hvn_route resource to support hub and spoke architectures, `azure_config`.
+
+ Add optional `next_hop_type` parameter.
+ Add optional `next_hop_ip_address` parameter.
+
+ Please see the Microsoft learn guide docs for futher info:
+ https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke
+ ```

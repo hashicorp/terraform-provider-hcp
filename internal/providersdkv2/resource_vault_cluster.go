@@ -66,7 +66,7 @@ func resourceVaultCluster() *schema.Resource {
 			// Optional fields
 			"project_id": {
 				Description: `
-The ID of the HCP project where the Vault cluster is located. 
+The ID of the HCP project where the Vault cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
 				Type:         schema.TypeString,
@@ -1523,11 +1523,11 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 
 	if httpURI != "" || httpMethod != "" || httpCodec != "" {
 		if strings.ToUpper(httpMethod) != "POST" && strings.ToUpper(httpMethod) != "PUT" && strings.ToUpper(httpMethod) != "PATCH" {
-			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
 
 		if strings.ToUpper(httpMethod) != "JSON" && strings.ToUpper(httpMethod) != "NDJSON" {
-			invalidProviderConfigError = diag.Errorf("http configuration is invalud: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
 		}
 
 		if httpURI == "" || httpMethod == "" || httpCodec == "" {
