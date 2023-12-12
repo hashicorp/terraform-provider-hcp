@@ -33,7 +33,7 @@ data "hcp_hvn_route" "example" {
 
 ### Read-Only
 
-- `azure_config` (Block List) The azure configuration for routing. (see [below for nested schema](#nestedblock--azure_config))
+- `azure_config` (List of Object) The azure configuration for routing. (see [below for nested schema](#nestedatt--azure_config))
 - `created_at` (String) The time that the HVN route was created.
 - `destination_cidr` (String) The destination CIDR of the HVN route.
 - `id` (String) The ID of this resource.
@@ -49,10 +49,10 @@ Optional:
 - `default` (String)
 
 
-<a id="nestedblock--azure_config"></a>
+<a id="nestedatt--azure_config"></a>
 ### Nested Schema for `azure_config`
 
 Read-Only:
 
-- `next_hop_ip_address` (String) Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VirtualAppliance.
-- `next_hop_type` (String) The type of Azure hop the packet should be sent to.
+- `next_hop_ip_address` (String)
+- `next_hop_type` (String)

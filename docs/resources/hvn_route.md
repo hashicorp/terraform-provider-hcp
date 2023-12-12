@@ -67,7 +67,7 @@ resource "hcp_hvn_route" "example-peering-route" {
 
 ### Optional
 
-- `azure_config` (Block List, Max: 1) The azure configuration for routing. (see [below for nested schema](#nestedblock--azure_config))
+- `azure_config` (Block List, Max: 1) The Azure configuration for routing. (see [below for nested schema](#nestedblock--azure_config))
 - `project_id` (String, Deprecated) The ID of the HCP project where the HVN route is located. Always matches the project ID in `hvn_link`. Setting this attribute is deprecated, but it will remain usable in read-only form.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

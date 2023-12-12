@@ -62,7 +62,6 @@ Remove this attribute from the configuration for any affected resources.
 				Description: "The azure configuration for routing.",
 				Type:        schema.TypeList,
 				Computed:    true,
-				Optional:    true,
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
