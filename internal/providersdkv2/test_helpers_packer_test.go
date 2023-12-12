@@ -203,7 +203,7 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.Hashi
 	return nil
 }
 
-func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string, options *buildOptions) (*models.HashicorpCloudPackerIteration, *models.HashicorpCloudPackerBuild) {
+func upsertCompleteVersion(t *testing.T, bucketSlug, fingerprint string, options *buildOptions) (*models.HashicorpCloudPackerIteration, *models.HashicorpCloudPackerBuild) {
 	iteration := upsertIteration(t, bucketSlug, fingerprint)
 	if t.Failed() || iteration == nil {
 		return nil, nil

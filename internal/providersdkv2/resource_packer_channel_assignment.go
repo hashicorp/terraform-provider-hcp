@@ -17,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// This string is used to represent an unassigned (or "null") channel
-// assignment for iteration identifiers of the String type
+// This string is used as the version fingerprint to represent an unassigned
+// (or "null") channel assignment
 const unassignString string = "none"
 
 func resourcePackerChannelAssignment() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.",
+		Description:   "The Packer Channel Assignment resource allows you to manage the version assigned to a channel in an active HCP Packer Registry.",
 		CreateContext: resourcePackerChannelAssignmentCreate,
 		DeleteContext: resourcePackerChannelAssignmentDelete,
 		ReadContext:   resourcePackerChannelAssignmentRead,
 		UpdateContext: resourcePackerChannelAssignmentUpdate,
+		CustomizeDiff: resourcePackerChannelAssignmentCustomizeDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create:  &defaultPackerTimeout,
 			Default: &defaultPackerTimeout,
@@ -47,27 +48,39 @@ func resourcePackerChannelAssignment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"bucket_name": {
-				Description:      "The slug of the HCP Packer Registry bucket where the channel is located.",
+				Description:      "The slug of the HCP Packer bucket where the channel is located.",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
+			// Optional inputs
 			"iteration_fingerprint": {
-				Description:  "The fingerprint of the iteration assigned to the channel.",
+				Description:  "The fingerprint of the version assigned to the channel.",
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"iteration_fingerprint", "version_fingerprint"},
+				ValidateFunc: validation.StringIsNotEmpty,
+				Deprecated: "This attribute has been renamed to 'version_fingerprint`. The `iteration_fingerprint` attribute is deprecated and will be removed in a future release. " +
+					"The `iteration_fingerprint` attribute will act as an alias for `version_fingerprint` during the deprecation period.",
+			},
+			"version_fingerprint": {
+				Description:  "The fingerprint of the version assigned to the channel.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"iteration_fingerprint", "version_fingerprint"},
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			// Optional inputs
 			"project_id": {
 				Description: `
 The ID of the HCP project where the channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsUUID,
 			},
@@ -104,7 +117,7 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 		}}
 	}
 
-	if err := setPackerChannelAssignmentIterationData(d, channel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, channel.Iteration); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -132,28 +145,31 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	} else if channel.Managed {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have an iteration assigned by Terraform.", channelName, bucketName, loc.ProjectID),
+			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have a version assigned by Terraform.", channelName, bucketName, loc.ProjectID),
 		}}
-	} else if iteration := channel.Iteration; iteration != nil && (iteration.IncrementalVersion > 0 || iteration.ID != "" || iteration.Fingerprint != "") {
+	} else if version := channel.Iteration; version != nil && (version.IncrementalVersion > 0 || version.ID != "" || version.Fingerprint != "") {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) already has an assigned iteration.", channelName, bucketName, loc.ProjectID),
-			Detail:   "To adopt this resource into Terraform, use `terraform import`, or remove the channel's assigned iteration using the HCP Packer GUI/API.",
+			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) already has an assigned version.", channelName, bucketName, loc.ProjectID),
+			Detail:   "To adopt this resource into Terraform, use `terraform import`, or remove the channel's assigned version using the HCP Packer GUI/API.",
 		}}
 	}
 
-	iterFingerprint := d.Get("iteration_fingerprint").(string)
-	if iterFingerprint == unassignString {
-		iterFingerprint = ""
+	versionFingerprint := d.Get("version_fingerprint").(string)
+	if versionFingerprint == "" {
+		versionFingerprint = d.Get("iteration_fingerprint").(string)
+	}
+	if versionFingerprint == unassignString {
+		versionFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iterFingerprint)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(updatedChannel.ID)
 
-	if err := setPackerChannelAssignmentIterationData(d, updatedChannel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Iteration); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -170,17 +186,20 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	iterFingerpint := d.Get("iteration_fingerprint").(string)
-	if iterFingerpint == unassignString {
-		iterFingerpint = ""
+	versionFingerprint := d.Get("version_fingerprint").(string)
+	if versionFingerprint == "" {
+		versionFingerprint = d.Get("iteration_fingerprint").(string)
+	}
+	if versionFingerprint == unassignString {
+		versionFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, iterFingerpint)
+	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := setPackerChannelAssignmentIterationData(d, updatedChannel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Iteration); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -266,35 +285,52 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 	} else if channel == nil || channel.Slug == "" {
 		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) not found", channelName, bucketName, loc.ProjectID)
 	} else if channel.Managed {
-		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have an iteration assigned by Terraform", channelName, bucketName, loc.ProjectID)
+		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have a version assigned by Terraform", channelName, bucketName, loc.ProjectID)
 	}
 
 	d.SetId(channel.ID)
 
-	if err := setPackerChannelAssignmentIterationData(d, channel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, channel.Iteration); err != nil {
 		return nil, err
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func setPackerChannelAssignmentIterationData(d *schema.ResourceData, i *packermodels.HashicorpCloudPackerIteration) error {
-	var iteration packermodels.HashicorpCloudPackerIteration
+func setPackerChannelAssignmentVersionData(d *schema.ResourceData, i *packermodels.HashicorpCloudPackerIteration) error {
+	var version packermodels.HashicorpCloudPackerIteration
 
 	if i == nil {
-		iteration = packermodels.HashicorpCloudPackerIteration{
+		version = packermodels.HashicorpCloudPackerIteration{
 			Fingerprint: "",
 		}
 	} else {
-		iteration = *i
+		version = *i
 	}
 
-	fingerprint := iteration.Fingerprint
+	fingerprint := version.Fingerprint
 	if fingerprint == "" {
 		fingerprint = unassignString
 	}
+	if err := d.Set("version_fingerprint", fingerprint); err != nil {
+		return err
+	}
 	if err := d.Set("iteration_fingerprint", fingerprint); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if rawFingerprint, ok := d.GetOk("version_fingerprint"); ok && d.HasChange("version_fingerprint") && d.NewValueKnown("version_fingerprint") {
+		if err := d.SetNew("iteration_fingerprint", rawFingerprint.(string)); err != nil {
+			return err
+		}
+	} else if rawFingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("iteration_fingerprint") && d.NewValueKnown("iteration_fingerprint") {
+		if err := d.SetNew("version_fingerprint", rawFingerprint.(string)); err != nil {
+			return err
+		}
 	}
 
 	return nil

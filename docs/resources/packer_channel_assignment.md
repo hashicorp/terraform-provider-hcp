@@ -2,12 +2,12 @@
 page_title: "hcp_packer_channel_assignment Resource - terraform-provider-hcp"
 subcategory: "HCP Packer"
 description: |-
-  The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.
+  The Packer Channel Assignment resource allows you to manage the version assigned to a channel in an active HCP Packer Registry.
 ---
 
 # hcp_packer_channel_assignment (Resource)
 
-The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.
+The Packer Channel Assignment resource allows you to manage the version assigned to a channel in an active HCP Packer Registry.
 
 ## Example Usage
 
@@ -39,16 +39,17 @@ resource "hcp_packer_channel_assignment" "staging" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry bucket where the channel is located.
+- `bucket_name` (String) The slug of the HCP Packer bucket where the channel is located.
 - `channel_name` (String) The name of the HCP Packer channel being managed.
-- `iteration_fingerprint` (String) The fingerprint of the iteration assigned to the channel.
 
 ### Optional
 
+- `iteration_fingerprint` (String, Deprecated) The fingerprint of the version assigned to the channel.
 - `project_id` (String) The ID of the HCP project where the channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `version_fingerprint` (String) The fingerprint of the version assigned to the channel.
 
 ### Read-Only
 

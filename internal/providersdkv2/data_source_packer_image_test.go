@@ -60,7 +60,7 @@ func TestAcc_dataSourcePackerImage_Simple(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			iteration, build = upsertCompleteVersion(t, bucketSlug, "1234", &buildOptions)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -121,7 +121,7 @@ func TestAcc_dataSourcePackerImage_IterationID(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			iteration, build = upsertCompleteVersion(t, bucketSlug, "1234", &buildOptions)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -166,7 +166,7 @@ func TestAcc_dataSourcePackerImage_revokedIteration(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration, build = upsertCompleteIteration(t, bucketSlug, "1234", &buildOptions)
+			iteration, build = upsertCompleteVersion(t, bucketSlug, "1234", &buildOptions)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 			revokeIteration(t, iteration.ID, bucketSlug, revokeAt)
 		},
