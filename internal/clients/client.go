@@ -74,7 +74,7 @@ type ClientConfig struct {
 	CredentialFile string
 
 	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
-	// indicate that authentication should occure by using workload identity
+	// indicate that authentication should occur by using workload identity
 	// federation. WorloadIdentityTokenFile indicates a file containing the
 	// token content and WorkloadIdentityResourceName is the workload identity
 	// provider resource name to authenticate against.
