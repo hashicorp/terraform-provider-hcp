@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/hashicorp/hcp-sdk-go/auth"
+	"github.com/hashicorp/hcp-sdk-go/auth/workload"
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 
@@ -71,6 +73,14 @@ type ClientConfig struct {
 	ClientSecret   string
 	CredentialFile string
 
+	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
+	// indicate that authentication should occur by using workload identity
+	// federation. WorloadIdentityTokenFile indicates a file containing the
+	// token content and WorkloadIdentityResourceName is the workload identity
+	// provider resource name to authenticate against.
+	WorloadIdentityTokenFile     string
+	WorkloadIdentityResourceName string
+
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
 	OrganizationID string
 
@@ -90,6 +100,18 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
+	} else if config.WorloadIdentityTokenFile != "" && config.WorkloadIdentityResourceName != "" {
+		// Build a credential file that points at the passed token file
+		cf := &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				File: &workload.FileCredentialSource{
+					Path: config.WorloadIdentityTokenFile,
+				},
+			},
+		}
+		opts = append(opts, hcpConfig.WithCredentialFile(cf))
 	}
 
 	// Create the HCP Config
