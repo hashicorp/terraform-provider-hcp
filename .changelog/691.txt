@@ -1,0 +1,4 @@
+```release-note:feature
+Allow authenticating the provider using Workload Identity Federation via a
+token_file in the provider configuration.
+```
