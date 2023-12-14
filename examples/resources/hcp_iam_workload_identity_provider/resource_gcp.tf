@@ -3,6 +3,7 @@ resource "hcp_service_principal" "workload_sp" {
 }
 
 resource "hcp_iam_workload_identity_provider" "example" {
+  name              = "gcp-example"
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on GCP to act as my-app-runtime service principal"
 
