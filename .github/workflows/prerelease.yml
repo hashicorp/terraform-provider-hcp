@@ -139,7 +139,9 @@ jobs:
         run: |
           CHANGELOG_URL="https://github.com/hashicorp/terraform-provider-hcp/blob/${NEW_VERSION}/CHANGELOG.md"
           git tag -a -m "${NEW_VERSION}" -m "See changelog: ${CHANGELOG_URL}" "${NEW_VERSION}"
-          echo "Pushing new tag to remote"
+          echo "Git configuration:"
           git config -l
-          git push --tags
+          echo "Pushing new commits to remote"
           git push
+          echo "Pushing new tag to remote, which will trigger the Release workflow"
+          git push --tags
