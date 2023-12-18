@@ -40,7 +40,7 @@ func (r *resourceServicePrincipalKey) Schema(_ context.Context, _ resource.Schem
 		MarkdownDescription: fmt.Sprintf(`The service principal key resource manages a service principal key.
 
 The user or service account that is running Terraform when creating a %s resource must have %s on the parent resource; either the project or organization.`,
-			"`hcp_service_principal_key`", "`roles/Admin`"),
+			"`hcp_service_principal_key`", "`roles/admin`"),
 
 		Attributes: map[string]schema.Attribute{
 			"resource_name": schema.StringAttribute{

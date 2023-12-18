@@ -75,7 +75,6 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 				Optional:    true,
 				Description: "A description for the workload identity provider.",
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
 					stringvalidator.LengthBetween(0, 255),
 				},
 				PlanModifiers: []planmodifier.String{
