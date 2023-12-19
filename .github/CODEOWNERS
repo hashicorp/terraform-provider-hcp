@@ -1,9 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-# *
-
-# all resource-manager resources and clients are owned by the cloud-foundations team
-*resourcemanager* @hashicorp/cloud-foundations
+* @hashicorp/cloud-foundations
 
 # all iam resources and clients are owned by the cloud-identity team
 *iam* @hashicorp/cloud-identity
