@@ -16,6 +16,15 @@ This is accomplished by using the `hcp_azure_peering_connection` resource to cre
 
 {{ tffile "examples/guides/peering_azure/main.tf" }}
 
+## Peer an Azure VNet to an HVN - Gateway support
+
+The following example shows how to connect Azure workloads to HCP HVNs which require [Hub-spoke network topology](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli) utilizing an Azure VPN Gateway.
+
+Notable aspects of this configuration:
+* When the `use_remote_gatways` parameter of the `hcp_azure_peering_connection` resource is set to `true`, the peering link from customer VNet to HVN is set with `AllowGatewayTransit` to `true`.
+
+{{ tffile "examples/guides/peering_azure_gateway/main.tf" }}
+
 ## Tutorials
 
 Refer to the following tutorials for additional usage examples:
