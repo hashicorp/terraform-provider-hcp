@@ -1,3 +1,20 @@
+---
+subcategory: ""
+page_title: "Peer an Azure VNet to a HashiCorp Virtual Network (HVN)"
+description: |-
+    An example of peering an Azure VNet to a HashiCorp Virtual Network (HVN).
+---
+
+# Peer an Azure VNet to a HashiCorp Virtual Network (HVN)
+
+In order to connect Azure workloads to an HCP services, you must peer the VNet in which the workloads reside to the HVN in which the HCP service resides.
+This is accomplished by using the `hcp_azure_peering_connection` resource to create a network peering between the HVN's VNet and your own VNet.
+
+-> **Note:** The CIDR blocks of the HVN and the peer VNet cannot overlap.
+
+-> **Note:** Azure Hub/Spoke architecture support is in private beta. Please contact [HashiCorp support](https://support.hashicorp.com/hc/en-us) for details.
+
+```terraform
 provider "azurerm" {
   features {}
 }
@@ -83,3 +100,10 @@ resource "azurerm_role_assignment" "assignment" {
   scope              = azurerm_virtual_network.vnet.id
   role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 }
+```
+
+## Tutorials
+
+Refer to the following tutorials for additional usage examples:
+
+- [Configure Azure VM for HCP](https://developer.hashicorp.com/consul/tutorials/cloud-production/consul-client-azure-virtual-machines)

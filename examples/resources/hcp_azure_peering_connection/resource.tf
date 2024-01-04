@@ -71,6 +71,7 @@ resource "azurerm_role_definition" "definition" {
   permissions {
     actions = [
       "Microsoft.Network/virtualNetworks/peer/action",
+      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
       "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
     ]
   }
