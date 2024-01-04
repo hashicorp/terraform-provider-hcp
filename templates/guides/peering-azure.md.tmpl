@@ -25,6 +25,16 @@ Notable aspects of this configuration:
 
 {{ tffile "examples/guides/peering_azure_gateway/main.tf" }}
 
+## Peer an Azure VNet to an HVN - Network Virtual Appliance (NVA) support
+
+The following example shows how to connect Azure workloads to HCP HVNs which require [Hub-spoke network topology](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli) utilizing an Azure Network Virtual Appliance.
+
+Notable aspects of this configuration:
+* An Azure Firewall is used as the Network Virtual Appliance (NVA).
+* A "Spoke" Virtual Network is included and peered to the "Hub" Virtual Network.
+
+{{ tffile "examples/guides/peering_azure_nva/main.tf" }}
+
 ## Tutorials
 
 Refer to the following tutorials for additional usage examples:
