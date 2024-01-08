@@ -14,13 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
-var client *clients.Client
-
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time.
 func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	resourceName := "hcp_log_streaming_destination.test_splunk_cloud"
-	client = acctest.HCPClients(t)
 	spName := "splunk-resource-name-1"
 	spNameUpdated := "splunk-resource-name-2"
 	var sp models.LogService20210330Destination
@@ -29,13 +26,19 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccHCPLogStreamingDestinationDestroy,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccHCPLogStreamingDestinationDestroy(t, s)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
 		Steps: []resource.TestStep{
 			// Tests create
 			{
 				Config: testAccSplunkConfig(spName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccHCPLogStreamingDestinationExists(resourceName, &sp),
+					testAccHCPLogStreamingDestinationExists(t, resourceName, &sp),
 					resource.TestCheckResourceAttr(resourceName, "name", spName),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.token"),
@@ -47,7 +50,7 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 				// Update the name
 				Config: testAccSplunkConfig(spNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccHCPLogStreamingDestinationExists(resourceName, &sp2),
+					testAccHCPLogStreamingDestinationExists(t, resourceName, &sp2),
 					resource.TestCheckResourceAttr(resourceName, "name", spNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.token"),
@@ -77,7 +80,7 @@ func testAccSplunkConfig(name string) string {
   		`, name)
 }
 
-func testAccHCPLogStreamingDestinationExists(name string, destination *models.LogService20210330Destination) resource.TestCheckFunc {
+func testAccHCPLogStreamingDestinationExists(t *testing.T, name string, destination *models.LogService20210330Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -89,6 +92,7 @@ func testAccHCPLogStreamingDestinationExists(name string, destination *models.Lo
 			return fmt.Errorf("no ID is set")
 		}
 
+		client := acctest.HCPClients(t)
 		loc := &sharedmodels.HashicorpCloudLocationLocation{
 			OrganizationID: client.Config.OrganizationID,
 			ProjectID:      client.Config.ProjectID,
@@ -109,7 +113,8 @@ func testAccHCPLogStreamingDestinationExists(name string, destination *models.Lo
 	}
 }
 
-func testAccHCPLogStreamingDestinationDestroy(s *terraform.State) error {
+func testAccHCPLogStreamingDestinationDestroy(t *testing.T, s *terraform.State) error {
+	client := acctest.HCPClients(t)
 	for _, rs := range s.RootModule().Resources {
 		switch rs.Type {
 		case "hcp_log_streaming_destination":
