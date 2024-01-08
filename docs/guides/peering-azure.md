@@ -12,7 +12,7 @@ This is accomplished by using the `hcp_azure_peering_connection` resource to cre
 
 -> **Note:** The CIDR blocks of the HVN and the peer VNet cannot overlap.
 
--> **Note:** Azure Hub/Spoke architecture support is in private beta. Please contact [HashiCorp support](https://support.hashicorp.com/hc/en-us) for details.
+-> **Note:** The Azure peering must be accepted by adding the HCP-supplied Application/Service Principal ID and associated custom role and role assignment in your Azure tenant. These must be completed by a User or Service Principal with the Azure AD API Permissions described [here](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) and an AzureRM `_Owner_` or `_User Access Administrator_` role assignment over an appropriate scope where your Virtual Network resides. If the peering is not accepted in time or the AzureAD/AzureRM provider principals used with the Terraform config below do not have the appropriate permissions, this deployment will hang until the Terraform Run times out due to the `hcp_azure_peering_connection` data source that waits for the peering to be accepted.
 
 ```terraform
 provider "azurerm" {
@@ -74,6 +74,11 @@ resource "azurerm_virtual_network" "vnet" {
   ]
 }
 
+// The principal deploying the ``azuread_service_principal`` resource below requires
+// API Permissions as described here: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal.
+// The principal deploying the ``azurerm_role_definition`` and ``azurerm_role_assigment``
+// resources must have Owner or User Access Administrator permissions over an appropriate
+// scope that includes your Virtual Network.
 resource "azuread_service_principal" "principal" {
   application_id = hcp_azure_peering_connection.peer.application_id
 }
@@ -105,6 +110,8 @@ resource "azurerm_role_assignment" "assignment" {
 ## Peer an Azure VNet to an HVN - Gateway support
 
 The following example shows how to connect Azure workloads to HCP HVNs which require [Hub-spoke network topology](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli) utilizing an Azure VPN Gateway.
+
+-> **Note:** Azure Hub/Spoke architecture support is in private beta. Please contact [HashiCorp support](https://support.hashicorp.com/hc/en-us) for details.
 
 Notable aspects of this configuration:
 * When the `use_remote_gatways` parameter of the `hcp_azure_peering_connection` resource is set to `true`, the peering link from customer VNet to HVN is set with `AllowGatewayTransit` to `true`.
@@ -236,6 +243,11 @@ resource "azurerm_virtual_network_gateway" "gateway" {
   }
 }
 
+// The principal deploying the ``azuread_service_principal`` resource below requires
+// API Permissions as described here: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal.
+// The principal deploying the ``azurerm_role_definition`` and ``azurerm_role_assigment``
+// resources must have Owner or User Access Administrator permissions over an appropriate
+// scope that includes your Virtual Network.
 resource "azuread_service_principal" "principal" {
   application_id = hcp_azure_peering_connection.peering.application_id
 }
@@ -267,6 +279,8 @@ resource "azurerm_role_assignment" "assignment" {
 ## Peer an Azure VNet to an HVN - Network Virtual Appliance (NVA) support
 
 The following example shows how to connect Azure workloads to HCP HVNs which require [Hub-spoke network topology](https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli) utilizing an Azure Network Virtual Appliance.
+
+-> **Note:** Azure Hub/Spoke architecture support is in private beta. Please contact [HashiCorp support](https://support.hashicorp.com/hc/en-us) for details.
 
 Notable aspects of this configuration:
 * An Azure Firewall is used as the Network Virtual Appliance (NVA).
@@ -492,6 +506,11 @@ resource "azurerm_virtual_network_peering" "firewall_hubtospoke" {
   use_remote_gateways          = false
 }
 
+// The principal deploying the ``azuread_service_principal`` resource below requires
+// API Permissions as described here: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal.
+// The principal deploying the ``azurerm_role_definition`` and ``azurerm_role_assigment``
+// resources must have Owner or User Access Administrator permissions over an appropriate
+// scope that includes your Virtual Network.
 resource "azuread_service_principal" "principal" {
   application_id = hcp_azure_peering_connection.peering.application_id
 }

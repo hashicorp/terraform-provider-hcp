@@ -57,6 +57,11 @@ resource "azurerm_virtual_network" "vnet" {
   ]
 }
 
+// The principal deploying the ``azuread_service_principal`` resource below requires
+// API Permissions as described here: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal.
+// The principal deploying the ``azurerm_role_definition`` and ``azurerm_role_assigment``
+// resources must have Owner or User Access Administrator permissions over an appropriate
+// scope that includes your Virtual Network.
 resource "azuread_service_principal" "principal" {
   application_id = hcp_azure_peering_connection.peer.application_id
 }
