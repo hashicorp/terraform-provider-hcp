@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
 )
@@ -43,7 +42,7 @@ func (r *resourceWebhook) Metadata(_ context.Context, req resource.MetadataReque
 	resp.TypeName = req.ProviderTypeName + "_webhook"
 }
 
-func (r *resourceWebhook) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceWebhook) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "The webhook resource manages a HCP webhook, used to notify external systems about a " +
 			"project resource's lifecycle events",
@@ -58,8 +57,6 @@ func (r *resourceWebhook) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 
 			"config": schema.SingleNestedAttribute{
-				// TODO Requires custom type
-				CustomType:  nil,
 				Required:    true,
 				Description: "The webhook configuration used to deliver event payloads.",
 				Attributes: map[string]schema.Attribute{
@@ -75,6 +72,7 @@ The destination must be able to use the HCP webhook
 					"hmac_key": schema.StringAttribute{
 						Optional:    true,
 						Description: "The arbitrary secret that HCP uses to sign all its webhook requests",
+						Sensitive:   true,
 					},
 				},
 			},
@@ -110,12 +108,9 @@ The destination must be able to use the HCP webhook
 			},
 
 			"subscriptions": schema.SetNestedAttribute{
-				// TODO Requires custom type
-				CustomType:  nil,
 				Optional:    true,
 				Description: "Set of events to subscribe the webhook to all resources or a specific resource in the project.",
 				NestedObject: schema.NestedAttributeObject{
-					CustomType: nil,
 					Attributes: map[string]schema.Attribute{
 						"resource_id": schema.StringAttribute{
 							Optional: true,
@@ -124,7 +119,7 @@ The destination must be able to use the HCP webhook
 								"any resource in the webhook's project.",
 							Validators: nil,
 						},
-						"events": schema.ListNestedAttribute{
+						"events": schema.SetNestedAttribute{
 							Required: true,
 							Description: "The information about the events of a webhook subscription. " +
 								"The service that owns the resource is responsible for maintaining events. " +
@@ -193,35 +188,36 @@ func (r *resourceWebhook) Configure(_ context.Context, req resource.ConfigureReq
 	r.client = client
 }
 
-type Webhook struct {
-	ProjectID     types.String     `tfsdk:"project_id"`
-	Name          types.String     `tfsdk:"name"`
-	Config        types.ObjectType `tfsdk:"config"`
-	Description   types.String     `tfsdk:"description"`
-	Enabled       types.Bool       `tfsdk:"enabled"`
-	Subscriptions types.SetType    `tfsdk:"subscriptions"`
-	ResourceID    types.String     `tfsdk:"resource_id"`
-	ResourceName  types.String     `tfsdk:"resource_name"`
+type webhook struct {
+	ProjectID     types.String          `tfsdk:"project_id"`
+	Name          types.String          `tfsdk:"name"`
+	Config        webhookConfig         `tfsdk:"config"`
+	Description   types.String          `tfsdk:"description"`
+	Enabled       types.Bool            `tfsdk:"enabled"`
+	Subscriptions []webhookSubscription `tfsdk:"subscriptions"`
+	ResourceID    types.String          `tfsdk:"resource_id"`
+	ResourceName  types.String          `tfsdk:"resource_name"`
 }
 
-type WebhookConfig struct {
+type webhookConfig struct {
 	Url     types.String `tfsdk:"url"`
 	HmacKey types.String `tfsdk:"hmac_key"`
 }
 
-type WebhookSubscription struct {
-	ResourceId types.String   `tfsdk:"resource_id"`
-	Events     types.ListType `tfsdk:"events"`
+type webhookSubscription struct {
+	ResourceId types.String               `tfsdk:"resource_id"`
+	Events     []webhookSubscriptionEvent `tfsdk:"events"`
 }
 
-type WebhookSubscriptionEvent struct {
+type webhookSubscriptionEvent struct {
 	Action types.String `tfsdk:"action"`
 	Source types.String `tfsdk:"source"`
 }
 
-// Create TODO finish implementation
+// TODO open questions:
+//   - Do we store sensitive data in state like any other data?
 func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan Webhook
+	var plan webhook
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -237,17 +233,35 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 	createParams := webhookservice.NewWebhookServiceCreateWebhookParams()
 	createParams.ParentResourceName = projectID
 	createParams.Body = &webhookmodels.HashicorpCloudWebhookCreateWebhookRequestBody{
-		// TODO add configuration
 		Config: &webhookmodels.HashicorpCloudWebhookWebhookConfig{
-			HmacKey: "",
-			URL:     plan.Config.String(),
+			HmacKey: plan.Config.HmacKey.ValueString(),
+			URL:     plan.Config.Url.ValueString(),
 		},
 		Description: plan.Description.ValueString(),
 		Enabled:     plan.Enabled.ValueBoolPointer(),
 		Name:        plan.Name.ValueString(),
 	}
 
-	// TODO add subscriptions
+	subscriptions := make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscription, len(plan.Subscriptions))
+	for i, subscription := range plan.Subscriptions {
+		newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
+			Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, len(subscription.Events)),
+			ResourceID: subscription.ResourceId.ValueString(),
+		}
+
+		for j, event := range subscription.Events {
+			newSubscription.Events[j] = &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
+				Action: event.Action.ValueString(),
+				Source: event.Source.ValueString(),
+			}
+		}
+
+		subscriptions[i] = newSubscription
+	}
+
+	if len(subscriptions) > 0 {
+		createParams.Body.Subscriptions = subscriptions
+	}
 
 	res, err := r.client.Webhook.WebhookServiceCreateWebhook(createParams, nil)
 	if err != nil {
@@ -255,8 +269,16 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	// Get parent from created webhook
+	// Get project id from created webhook
 	webhook := res.GetPayload().Webhook
+	if webhook == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected service response",
+			"The Create webhook request didn't fail but returned a nil webhook object. "+
+				"Report this issue to the provider developers.")
+		return
+	}
+
 	projectID, err = webhookProjectID(webhook.ResourceName)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving service principal parent", err.Error())
@@ -267,10 +289,6 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 	plan.Enabled = types.BoolValue(webhook.Enabled)
 	plan.ProjectID = types.StringValue(projectID)
 
-	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "HCP Webhook created")
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -278,17 +296,15 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 // webhookProjectID extracts the parent resource name from the webhook resource name
 func webhookProjectID(resourceName string) (string, error) {
 	err := fmt.Errorf("unexpected format for webhook resource_name: %q", resourceName)
-	parts := strings.SplitN(resourceName, "/", 7)
-	if len(parts) != 7 || parts[0] != "webhook" || parts[1] != "project" ||
-		parts[3] != "geo" || parts[5] != "webhook" {
+	parts := strings.SplitN(resourceName, "/", -1)
+	if parts[1] != "project" {
 		return "", err
 	}
-
 	return strings.Join(parts[1:3], "/"), nil
 }
 
 func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state Webhook
+	var state webhook
 
 	// Read Terraform prior state into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -328,7 +344,7 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 
 // Update TODO needs implementation
 func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan Webhook
+	var plan webhook
 
 	// Read Terraform plan plan into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -350,7 +366,7 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *resourceWebhook) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state Webhook
+	var state webhook
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
