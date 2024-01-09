@@ -42,7 +42,7 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", spName),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.token"),
-					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.endpoint", "https://tenant.splunkcloud.com:8088/services/collector/event"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.endpoint", "https://http-inputs-hcptest.splunkcloud.com:443/services/collector/event"),
 					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.token", "splunk-authentication-token"),
 				),
 			},
@@ -54,7 +54,7 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", spNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "splunk_cloud.token"),
-					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.endpoint", "https://tenant.splunkcloud.com:8088/services/collector/event"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.endpoint", "https://http-inputs-hcptest.splunkcloud.com:443/services/collector/event"),
 					resource.TestCheckResourceAttr(resourceName, "splunk_cloud.token", "splunk-authentication-token"),
 					func(_ *terraform.State) error {
 						if sp.Resource.ID == sp2.Resource.ID {
@@ -73,7 +73,7 @@ func testAccSplunkConfig(name string) string {
   		resource "hcp_log_streaming_destination" "test_splunk_cloud" {
   			name = "%[1]s"
   			splunk_cloud = {
-  				endpoint = "https://tenant.splunkcloud.com:8088/services/collector/event"
+  				endpoint = "https://http-inputs-hcptest.splunkcloud.com:443/services/collector/event"
   				token = "splunk-authentication-token"
   			}
   		}
