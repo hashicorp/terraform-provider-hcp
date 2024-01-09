@@ -48,6 +48,9 @@ import (
 	cloud_log_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
 
+	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client/webhook_service"
+
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
@@ -68,6 +71,7 @@ type Client struct {
 	ServicePrincipals service_principals_service.ClientService
 	Vault             vault_service.ClientService
 	VaultSecrets      secret_service.ClientService
+	Webhook           webhook_service.ClientService
 	LogService        log_service.ClientService
 }
 
@@ -157,6 +161,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Vault:             cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
 		LogService:        cloud_log_service.New(httpClient, nil).LogService,
+		Webhook:           cloud_webhook.New(httpClient, nil).WebhookService,
 	}
 
 	return client, nil
