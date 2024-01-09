@@ -140,7 +140,7 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 			},
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The workload identity providers's unique identitier",
+				Description: "The workload identity provider's unique identifier",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
