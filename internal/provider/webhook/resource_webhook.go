@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -92,6 +93,7 @@ The destination must be able to use the HCP webhook
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 
@@ -344,22 +346,83 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 
 // Update TODO needs implementation
 func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan webhook
+	var plan, state webhook
 
-	// Read Terraform plan plan into the model
+	// Read Terraform plan ans state into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client plan and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
-	//     return
-	// }
+	if !plan.Name.Equal(state.Name) {
+		updateNameParams := webhookservice.NewWebhookServiceUpdateWebhookNameParams()
+		updateNameParams.ResourceName = plan.ResourceName.ValueString()
+		updateNameParams.Body = &webhookmodels.HashicorpCloudWebhookUpdateWebhookNameRequestBody{
+			Name: plan.Name.ValueString(),
+		}
+
+		_, err := r.client.Webhook.WebhookServiceUpdateWebhookName(updateNameParams, nil)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating webhook name", err.Error())
+			return
+		}
+	}
+
+	var updateMaks []string
+	if !plan.Config.Url.Equal(state.Config.Url) ||
+		!plan.Config.HmacKey.Equal(state.Config.HmacKey) {
+		updateMaks = append(updateMaks, "config")
+	}
+	if !plan.Description.Equal(state.Description) {
+		updateMaks = append(updateMaks, "description")
+	}
+	if !plan.Enabled.Equal(state.Enabled) {
+		updateMaks = append(updateMaks, "enabled")
+	}
+
+	subscriptions := make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscription, 0)
+	if !reflect.DeepEqual(plan.Subscriptions, state.Subscriptions) {
+		for _, subscription := range plan.Subscriptions {
+			newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
+				Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, len(subscription.Events)),
+				ResourceID: subscription.ResourceId.ValueString(),
+			}
+
+			for j, event := range subscription.Events {
+				newSubscription.Events[j] = &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
+					Action: event.Action.ValueString(),
+					Source: event.Source.ValueString(),
+				}
+			}
+
+			subscriptions = append(subscriptions, newSubscription)
+		}
+		updateMaks = append(updateMaks, "subscriptions")
+	}
+
+	if len(updateMaks) > 0 {
+		updateParams := webhookservice.NewWebhookServiceUpdateWebhookParams()
+		updateParams.ResourceName = plan.ResourceName.ValueString()
+		updateParams.Body = &webhookmodels.HashicorpCloudWebhookUpdateWebhookRequestBody{
+			UpdateMask: strings.Join(updateMaks, ","),
+			Webhook: &webhookmodels.HashicorpCloudWebhookWebhook{
+				Config: &webhookmodels.HashicorpCloudWebhookWebhookConfig{
+					HmacKey: plan.Config.HmacKey.ValueString(),
+					URL:     plan.Config.Url.ValueString(),
+				},
+				Description:   plan.Description.ValueString(),
+				Enabled:       plan.Enabled.ValueBool(),
+				Subscriptions: subscriptions,
+			},
+		}
+
+		_, err := r.client.Webhook.WebhookServiceUpdateWebhook(updateParams, nil)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating webhook", err.Error())
+			return
+		}
+	}
 
 	// Save updated plan into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
