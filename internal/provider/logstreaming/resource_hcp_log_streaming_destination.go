@@ -66,6 +66,7 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 					"token": schema.StringAttribute{
 						Description: "The authentication token that will be used by the platform to access Splunk Cloud.",
 						Required:    true,
+						Sensitive:   true,
 					},
 				},
 				Required: true,
