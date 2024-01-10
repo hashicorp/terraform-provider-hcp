@@ -71,9 +71,10 @@ The destination must be able to use the HCP webhook
 						},
 					},
 					"hmac_key": schema.StringAttribute{
-						Optional:    true,
-						Description: "The arbitrary secret that HCP uses to sign all its webhook requests",
-						Sensitive:   true,
+						Optional: true,
+						Description: "The arbitrary secret that HCP uses to sign all its webhook requests. This is a" +
+							"write-only field.",
+						Sensitive: true,
 					},
 				},
 			},
@@ -109,7 +110,7 @@ The destination must be able to use the HCP webhook
 				Default:             booldefault.StaticBool(true),
 			},
 
-			"subscriptions": schema.SetNestedAttribute{
+			"subscriptions": schema.ListNestedAttribute{
 				Optional:    true,
 				Description: "Set of events to subscribe the webhook to all resources or a specific resource in the project.",
 				NestedObject: schema.NestedAttributeObject{
@@ -121,15 +122,16 @@ The destination must be able to use the HCP webhook
 								"any resource in the webhook's project.",
 							Validators: nil,
 						},
-						"events": schema.SetNestedAttribute{
+						"events": schema.ListNestedAttribute{
 							Required: true,
 							Description: "The information about the events of a webhook subscription. " +
 								"The service that owns the resource is responsible for maintaining events. " +
 								"Refer to the service's webhook documentation for more information.",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
-									"action": schema.StringAttribute{
-										Required: true,
+									"actions": schema.ListAttribute{
+										ElementType: types.StringType,
+										Required:    true,
 										Description: "The type of action of this event. For example, `create`. " +
 											"When the action is '*', it means that the webhook is subscribed to all event actions for the event source. ",
 									},
@@ -212,12 +214,10 @@ type webhookSubscription struct {
 }
 
 type webhookSubscriptionEvent struct {
-	Action types.String `tfsdk:"action"`
-	Source types.String `tfsdk:"source"`
+	Actions []types.String `tfsdk:"actions"`
+	Source  types.String   `tfsdk:"source"`
 }
 
-// TODO open questions:
-//   - Do we store sensitive data in state like any other data?
 func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan webhook
 
@@ -247,17 +247,18 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 	subscriptions := make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscription, len(plan.Subscriptions))
 	for i, subscription := range plan.Subscriptions {
 		newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
-			Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, len(subscription.Events)),
+			Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, 0),
 			ResourceID: subscription.ResourceId.ValueString(),
 		}
 
-		for j, event := range subscription.Events {
-			newSubscription.Events[j] = &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
-				Action: event.Action.ValueString(),
-				Source: event.Source.ValueString(),
+		for _, event := range subscription.Events {
+			for _, action := range event.Actions {
+				newSubscription.Events = append(newSubscription.Events, &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
+					Action: action.ValueString(),
+					Source: event.Source.ValueString(),
+				})
 			}
 		}
-
 		subscriptions[i] = newSubscription
 	}
 
@@ -340,15 +341,44 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 	state.ResourceName = types.StringValue(webhook.ResourceName)
 	state.Enabled = types.BoolValue(webhook.Enabled)
 	state.ProjectID = types.StringValue(projectID)
+	state.Description = types.StringValue(webhook.Description)
+	state.Config.Url = types.StringValue(webhook.Config.URL)
+
+	planSubscriptions := make([]webhookSubscription, len(webhook.Subscriptions))
+	for i, subscription := range webhook.Subscriptions {
+		newSubscription := webhookSubscription{
+			Events: make([]webhookSubscriptionEvent, 0),
+		}
+
+		if subscription.ResourceID != "" {
+			newSubscription.ResourceId = types.StringValue(subscription.ResourceID)
+		}
+
+		eventsMap := make(map[types.String][]types.String)
+		for _, event := range subscription.Events {
+			eventsMap[types.StringValue(event.Source)] = append(eventsMap[types.StringValue(event.Source)],
+				types.StringValue(event.Action))
+		}
+
+		for source, actions := range eventsMap {
+			newSubscription.Events = append(newSubscription.Events, webhookSubscriptionEvent{
+				Actions: actions,
+				Source:  source,
+			})
+		}
+
+		planSubscriptions[i] = newSubscription
+	}
+	state.Subscriptions = planSubscriptions
+
 	// Save updated state into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// Update TODO needs implementation
 func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state webhook
 
-	// Read Terraform plan ans state into the model
+	// Read Terraform plan and state into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -385,14 +415,16 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 	if !reflect.DeepEqual(plan.Subscriptions, state.Subscriptions) {
 		for _, subscription := range plan.Subscriptions {
 			newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
-				Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, len(subscription.Events)),
+				Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, 0),
 				ResourceID: subscription.ResourceId.ValueString(),
 			}
 
-			for j, event := range subscription.Events {
-				newSubscription.Events[j] = &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
-					Action: event.Action.ValueString(),
-					Source: event.Source.ValueString(),
+			for _, event := range subscription.Events {
+				for _, action := range event.Actions {
+					newSubscription.Events = append(newSubscription.Events, &webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
+						Action: action.ValueString(),
+						Source: event.Source.ValueString(),
+					})
 				}
 			}
 
