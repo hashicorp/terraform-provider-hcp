@@ -17,7 +17,7 @@ The Streaming Destination resource allows users to configure an external log sys
 resource "hcp_log_streaming_destination" "example_splunk_cloud" {
   name = "example_splunk_cloud"
   splunk_cloud = {
-    endpoint = "https://tenant.splunkcloud.com:8088/services/collector/event"
+    endpoint = "https://http-inputs-tenant.splunkcloud.com:443/services/collector/event"
     token    = "someSuperSecretToken"
   }
 }
@@ -41,4 +41,4 @@ resource "hcp_log_streaming_destination" "example_splunk_cloud" {
 Required:
 
 - `endpoint` (String) The Splunk Cloud endpoint to send logs to.
-- `token` (String) The authentication token that will be used by the platform to access Splunk Cloud.
+- `token` (String, Sensitive) The authentication token that will be used by the platform to access Splunk Cloud.
