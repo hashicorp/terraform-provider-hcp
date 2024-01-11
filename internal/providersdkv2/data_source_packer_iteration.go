@@ -71,6 +71,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Description: "Incremental version of this iteration",
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Deprecated:  "This attribute will be removed in a future version. Use `fingerprint` to reference iterations instead.",
 			},
 			"created_at": {
 				Description: "Creation time of this iteration",

@@ -14,7 +14,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -64,6 +64,35 @@ func resourceHvnRoute() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+			},
+			// Optional inputs
+			"azure_config": {
+				Description: "The Azure configuration for routing.",
+				Type:        schema.TypeList,
+				ForceNew:    true,
+				MaxItems:    1,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"next_hop_type": {
+							Description: "The type of Azure hop the packet should be sent to. Valid options for Next Hop Type - `VIRTUAL_APPLIANCE` or `VIRTUAL_NETWORK_GATEWAY`",
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"VIRTUAL_APPLIANCE",
+								"VIRTUAL_NETWORK_GATEWAY",
+							}, true),
+						},
+						"next_hop_ip_address": {
+							Description: "Contains the IP address packets should be forwarded to. Next hop values are only allowed in routes where the next hop type is VIRTUAL_APPLIANCE.",
+							Type:        schema.TypeString,
+							Computed:    true,
+							Optional:    true,
+							ForceNew:    true,
+						},
+					},
+				},
 			},
 			// Computed outputs
 			"project_id": {
@@ -133,6 +162,12 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	targetLink.Location.OrganizationID = hvnLink.Location.OrganizationID
 
+	// Get azure config
+	azureConfig, diagErr := getAzureConfig(d)
+	if diagErr != nil {
+		return diagErr
+	}
+
 	// Check for an existing HVN.
 	retrievedHvn, err := clients.GetHvnByID(ctx, client, hvnLink.Location, hvnLink.ID)
 	if err != nil {
@@ -148,7 +183,7 @@ func resourceHvnRouteCreate(ctx context.Context, d *schema.ResourceData, meta in
 	targetLink.Location.Region = retrievedHvn.Location.Region
 
 	// Create HVN route
-	hvnRouteResp, err := clients.CreateHVNRoute(ctx, client, hvnRouteID, hvnLink, destination, targetLink, hvnLink.Location)
+	hvnRouteResp, err := clients.CreateHVNRoute(ctx, client, hvnRouteID, hvnLink, destination, targetLink, hvnLink.Location, azureConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -285,6 +320,10 @@ func setHVNRouteResourceData(d *schema.ResourceData, route *networkmodels.Hashic
 		return err
 	}
 
+	if err := d.Set("azure_config", flattenAzureConfig(route.AzureRoute, d)); err != nil {
+		return err
+	}
+
 	if err := d.Set("destination_cidr", route.Destination); err != nil {
 		return err
 	}
@@ -364,4 +403,47 @@ func resourceHVNRouteImport(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func getAzureConfig(d *schema.ResourceData) (*networkmodels.HashicorpCloudNetwork20200907AzureRoute, diag.Diagnostics) {
+	// If we don't find the property we return nil so azure config data is not
+	// included in the Create HVN Route request
+	configParam, ok := d.GetOk("azure_config")
+	if !ok {
+		return nil, nil
+	}
+	configIfaceArr, ok := configParam.([]interface{})
+	if !ok || len(configIfaceArr) == 0 {
+		return nil, nil
+	}
+	config, ok := configIfaceArr[0].(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	nextHopType, _ := config["next_hop_type"].(string)
+	nextHopIPAddress, _ := config["next_hop_ip_address"].(string)
+
+	// Verify if next_hop_ip_address is set, next_hop_type is VirtualAppliance
+	if nextHopIPAddress != "" && strings.ToUpper(nextHopType) != "VIRTUAL_APPLIANCE" {
+		return nil, diag.Errorf("azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE")
+	}
+
+	return &networkmodels.HashicorpCloudNetwork20200907AzureRoute{
+		NextHopIPAddress: nextHopIPAddress,
+		NextHopType:      (*networkmodels.HashicorpCloudNetwork20200907AzureHopType)(&nextHopType),
+	}, nil
+}
+
+func flattenAzureConfig(config *networkmodels.HashicorpCloudNetwork20200907AzureRoute, d *schema.ResourceData) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"next_hop_type":       config.NextHopType,
+			"next_hop_ip_address": config.NextHopIPAddress,
+		},
+	}
 }

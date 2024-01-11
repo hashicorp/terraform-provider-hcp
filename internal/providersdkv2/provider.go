@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
@@ -76,6 +75,34 @@ func New() func() *schema.Provider {
 					ValidateFunc: validation.IsUUID,
 					Description:  "The default project in which resources should be created.",
 				},
+				"credential_file": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: "The path to an HCP credential file to use to authenticate the provider to HCP. " +
+						"You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. " +
+						"Using a credential file allows you to authenticate the provider as a service principal via client " +
+						"credentials or dynamically based on Workload Identity Federation.",
+				},
+				"workload_identity": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Description: "Allows authenticating the provider by exchanging the OAuth 2.0 access token or OpenID Connect " +
+						"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"token_file": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							},
+							"resource_name": {
+								Type:        schema.TypeString,
+								Required:    true,
+								Description: "The resource_name of the Workload Identity Provider to exchange the token with.",
+							},
+						},
+					},
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -104,39 +131,42 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			diags = isHCPOperational()
 		}
 
-		// Sets up HCP SDK client.
-		userAgent := p.UserAgent("terraform-provider-hcp", version.ProviderVersion)
-
-		clientID := d.Get("client_id").(string)
-		if clientID == "" {
-			clientID = os.Getenv("HCP_CLIENT_ID")
-		}
-		clientSecret := d.Get("client_secret").(string)
-		if clientSecret == "" {
-			clientSecret = os.Getenv("HCP_CLIENT_SECRET")
+		clientConfig := clients.ClientConfig{
+			ClientID:       d.Get("client_id").(string),
+			ClientSecret:   d.Get("client_secret").(string),
+			CredentialFile: d.Get("credential_file").(string),
+			ProjectID:      d.Get("project_id").(string),
+			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
 		}
 
-		client, err := clients.NewClient(clients.ClientConfig{
-			ClientID:      clientID,
-			ClientSecret:  clientSecret,
-			SourceChannel: userAgent,
-		})
+		// Read the workload_identity configuration
+		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
+			wi := v.([]interface{})[0].(map[string]interface{})
+			if tf, ok := wi["token_file"].(string); ok && tf != "" {
+				clientConfig.WorloadIdentityTokenFile = tf
+			}
+			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
+				clientConfig.WorkloadIdentityResourceName = rn
+			}
+		}
+
+		client, err := clients.NewClient(clientConfig)
 		if err != nil {
 			diags = append(diags, diag.Errorf("unable to create HCP api client: %v", err)...)
 			return nil, diags
 		}
 
-		projectID := d.Get("project_id").(string)
-		if projectID == "" {
-			projectID = os.Getenv("HCP_PROJECT_ID")
+		// Attempt to source from the environment if unset.
+		if clientConfig.ProjectID == "" {
+			clientConfig.ProjectID = os.Getenv("HCP_PROJECT_ID")
 		}
 
-		if projectID != "" {
+		if clientConfig.ProjectID != "" {
 			getProjParams := project_service.NewProjectServiceGetParams()
-			getProjParams.ID = projectID
+			getProjParams.ID = clientConfig.ProjectID
 			project, err := clients.RetryProjectServiceGet(client, getProjParams)
 			if err != nil {
-				diags = append(diags, diag.Errorf("unable to fetch project %q: %v", projectID, err)...)
+				diags = append(diags, diag.Errorf("unable to fetch project %q: %v", clientConfig.ProjectID, err)...)
 				return nil, diags
 			}
 

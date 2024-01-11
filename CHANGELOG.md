@@ -1,3 +1,93 @@
+## v0.79.0 (December 27, 2023)
+
+FEATURES:
+
+* Allow authenticating the provider using Workload Identity Federation via a
+token_file in the provider configuration. [[GH-691](https://github.com/hashicorp/terraform-provider-hcp/pull/691)]
+## v0.78.0 (December 13, 2023)
+
+FEATURES:
+
+* Add optional Azure config block for hvn_route resource to support hub and spoke architectures, `azure_config`.
+
+ Add optional `next_hop_type` parameter.
+ Add optional `next_hop_ip_address` parameter.
+
+ Please see the Microsoft learn guide docs for futher info:
+ https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke [[GH-685](https://github.com/hashicorp/terraform-provider-hcp/pull/685)]
+* Add optional attribute `allow_forwarded_traffic` to `hcp_azure_peering_connection` resource. [[GH-681](https://github.com/hashicorp/terraform-provider-hcp/pull/681)]
+* Add optional attribute `use_remote_gateways` to `hcp_azure_peering_connection` resource. [[GH-681](https://github.com/hashicorp/terraform-provider-hcp/pull/681)]
+
+IMPROVEMENTS:
+
+* Add custom http endpoints as an observability provider for streaming audit logs and metrics from HCP Vault clusters. [[GH-671](https://github.com/hashicorp/terraform-provider-hcp/pull/671)]
+
+DEPRECATIONS:
+
+* The `data.hcp_packer_iteration.incremental_version` attribute is now deprecated and will be removed in a future release. Use the `fingerprint`, `id` or `uuid` attributes to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
+* The `hcp_packer_channel_assignment.iteration_id` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
+* The `hcp_packer_channel_assignment.iteration_version` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
+## v0.77.0 (November 14, 2023)
+
+FEATURES:
+
+* Add `hcp_organization_iam_binding` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_organization_iam_policy` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_project_iam_binding` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add `hcp_project_iam_policy` resource. [[GH-661](https://github.com/hashicorp/terraform-provider-hcp/pull/661)]
+* Add support to authenticate the provider using credential files. [[GH-672](https://github.com/hashicorp/terraform-provider-hcp/pull/672)]
+
+IMPROVEMENTS:
+
+* Add NewRelic as an observability provider for streaming audit logs and metrics from HCP Vault clusters. [[GH-653](https://github.com/hashicorp/terraform-provider-hcp/pull/653)]
+* The change introduces the ability to provide configuration via environment variables, which will allow credentials to be provided via environment variable (either directly or via a creds file). [[GH-666](https://github.com/hashicorp/terraform-provider-hcp/pull/666)]
+## v0.76.0 (November 01, 2023)
+
+BUG FIXES:
+
+* Fix some documentation mistakes in examples for the `hcp_iam_workload_identity_provider` resource. [[GH-657](https://github.com/hashicorp/terraform-provider-hcp/pull/657)]
+* Removed unnecessary validation of a trailing slash on the `oidc.issuer_uri`
+field for the `hcp_iam_workload_identity_provider` resource. [[GH-656](https://github.com/hashicorp/terraform-provider-hcp/pull/656)]
+## v0.75.0 (October 25, 2023)
+BREAKING CHANGES:
+
+* Drops support for Terraform CLI versions prior to v1.1.5, previously deprecated in provider release v0.74.1 [[GH-637](https://github.com/hashicorp/terraform-provider-hcp/pull/637)]
+
+FEATURES:
+
+* Add `hcp_iam_workload_identity_provider` resource. [[GH-647](https://github.com/hashicorp/terraform-provider-hcp/pull/647)]
+
+IMPROVEMENTS:
+
+* Upgrade to Terraform Provider Protocol 6 [[GH-637](https://github.com/hashicorp/terraform-provider-hcp/pull/637)]
+## v0.74.1 (October 19, 2023)
+
+DEPRECATIONS:
+
+* An upcoming release will deprecate support for Terraform versions before 1.1.5.
+Please upgrade to be able to use the latest releases of the provider. [[GH-644](https://github.com/hashicorp/terraform-provider-hcp/pull/644)]
+## v0.74.0 (October 19, 2023)
+
+FEATURES:
+
+* Add `hcp_service_principal_key` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` data source. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+* Add `hcp_service_principal` resource. [[GH-636](https://github.com/hashicorp/terraform-provider-hcp/pull/636)]
+
+BUG FIXES:
+
+* Fix hcp_project import [[GH-642](https://github.com/hashicorp/terraform-provider-hcp/pull/642)]
+## v0.73.0 (October 12, 2023)
+
+FEATURES:
+
+* Add `hcp_organization` data source. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+* Add `hcp_project` data source. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+* Add `hcp_project` resource. [[GH-629](https://github.com/hashicorp/terraform-provider-hcp/pull/629)]
+
+BUG FIXES:
+
+* Prevent crash when a vault_secrets_app resource no longer exists. [[GH-619](https://github.com/hashicorp/terraform-provider-hcp/pull/619)]
 ## v0.72.2 (October 06, 2023)
 
 BUG FIXES:

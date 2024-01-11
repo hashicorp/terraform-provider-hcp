@@ -1,0 +1,7 @@
+ ```release-note:improvement
+ The new version of the hcp-sdk-go did remove the implicit login on initialization. This change re-introduce the login by explicitly fetching credentials during the client initialization.
+```
+
+```release-note:improvement
+ The change introduces the ability to provide configuration via environment variables, which will allow credentials to be provided via environment variable (either directly or via a creds file).
+ ```

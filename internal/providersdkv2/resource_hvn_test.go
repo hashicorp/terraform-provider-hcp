@@ -10,9 +10,8 @@ import (
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -53,7 +52,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
 			// Tests create
@@ -130,7 +129,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckHvnDestroy,
 		Steps: []resource.TestStep{
 			// Tests create

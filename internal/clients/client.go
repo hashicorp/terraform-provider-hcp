@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/hashicorp/hcp-sdk-go/auth"
+	"github.com/hashicorp/hcp-sdk-go/auth/workload"
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 
@@ -19,6 +21,10 @@ import (
 
 	cloud_consul "github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client/consul_service"
+
+	cloud_iam "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/iam_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
@@ -36,9 +42,13 @@ import (
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
-	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-06-13/client/secret_service"
+	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
 
+	cloud_log_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
+
+	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
 
@@ -46,22 +56,34 @@ import (
 type Client struct {
 	Config ClientConfig
 
-	Billing      billing_account_service.ClientService
-	Boundary     boundary_service.ClientService
-	Consul       consul_service.ClientService
-	Network      network_service.ClientService
-	Operation    operation_service.ClientService
-	Organization organization_service.ClientService
-	Packer       packer_service.ClientService
-	Project      project_service.ClientService
-	Vault        vault_service.ClientService
-	VaultSecrets secret_service.ClientService
+	Billing           billing_account_service.ClientService
+	Boundary          boundary_service.ClientService
+	Consul            consul_service.ClientService
+	IAM               iam_service.ClientService
+	Network           network_service.ClientService
+	Operation         operation_service.ClientService
+	Organization      organization_service.ClientService
+	Packer            packer_service.ClientService
+	Project           project_service.ClientService
+	ServicePrincipals service_principals_service.ClientService
+	Vault             vault_service.ClientService
+	VaultSecrets      secret_service.ClientService
+	LogService        log_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
 type ClientConfig struct {
-	ClientID     string
-	ClientSecret string
+	ClientID       string
+	ClientSecret   string
+	CredentialFile string
+
+	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
+	// indicate that authentication should occur by using workload identity
+	// federation. WorloadIdentityTokenFile indicates a file containing the
+	// token content and WorkloadIdentityResourceName is the workload identity
+	// provider resource name to authenticate against.
+	WorloadIdentityTokenFile     string
+	WorkloadIdentityResourceName string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
 	OrganizationID string
@@ -76,9 +98,39 @@ type ClientConfig struct {
 
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
+	// Build the HCP Config options
+	opts := []hcpConfig.HCPConfigOption{hcpConfig.FromEnv()}
+	if config.ClientID != "" && config.ClientSecret != "" {
+		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
+	} else if config.CredentialFile != "" {
+		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
+	} else if config.WorloadIdentityTokenFile != "" && config.WorkloadIdentityResourceName != "" {
+		// Build a credential file that points at the passed token file
+		cf := &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				File: &workload.FileCredentialSource{
+					Path: config.WorloadIdentityTokenFile,
+				},
+			},
+		}
+		opts = append(opts, hcpConfig.WithCredentialFile(cf))
+	}
+
+	// Create the HCP Config
+	hcp, err := hcpConfig.NewHCPConfig(opts...)
+	if err != nil {
+		return nil, fmt.Errorf("invalid HCP config: %w", err)
+	}
+
+	// Fetch a token to verify that we have valid credentials
+	if _, err := hcp.Token(); err != nil {
+		return nil, fmt.Errorf("no valid credentials available: %w", err)
+	}
+
 	httpClient, err := sdk.New(sdk.Config{
-		ClientID:      config.ClientID,
-		ClientSecret:  config.ClientSecret,
+		HCPConfig:     hcp,
 		SourceChannel: config.SourceChannel,
 	})
 	if err != nil {
@@ -86,24 +138,25 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	httpClient.SetLogger(logger{})
-
 	if ShouldLog() {
 		httpClient.Debug = true
 	}
 
 	client := &Client{
-		Config: config,
-
-		Billing:      cloud_billing.New(httpClient, nil).BillingAccountService,
-		Boundary:     cloud_boundary.New(httpClient, nil).BoundaryService,
-		Consul:       cloud_consul.New(httpClient, nil).ConsulService,
-		Network:      cloud_network.New(httpClient, nil).NetworkService,
-		Operation:    cloud_operation.New(httpClient, nil).OperationService,
-		Organization: cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Packer:       cloud_packer.New(httpClient, nil).PackerService,
-		Project:      cloud_resource_manager.New(httpClient, nil).ProjectService,
-		Vault:        cloud_vault.New(httpClient, nil).VaultService,
-		VaultSecrets: cloud_vault_secrets.New(httpClient, nil).SecretService,
+		Config:            config,
+		Billing:           cloud_billing.New(httpClient, nil).BillingAccountService,
+		Boundary:          cloud_boundary.New(httpClient, nil).BoundaryService,
+		Consul:            cloud_consul.New(httpClient, nil).ConsulService,
+		IAM:               cloud_iam.New(httpClient, nil).IamService,
+		Network:           cloud_network.New(httpClient, nil).NetworkService,
+		Operation:         cloud_operation.New(httpClient, nil).OperationService,
+		Organization:      cloud_resource_manager.New(httpClient, nil).OrganizationService,
+		Packer:            cloud_packer.New(httpClient, nil).PackerService,
+		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
+		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
+		Vault:             cloud_vault.New(httpClient, nil).VaultService,
+		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
+		LogService:        cloud_log_service.New(httpClient, nil).LogService,
 	}
 
 	return client, nil

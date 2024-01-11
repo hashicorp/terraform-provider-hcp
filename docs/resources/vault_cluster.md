@@ -56,7 +56,7 @@ resource "hcp_vault_cluster" "example" {
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
-- `project_id` (String) The ID of the HCP project where the Vault cluster is located. 
+- `project_id` (String) The ID of the HCP project where the Vault cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `proxy_endpoint` (String) Denotes that the cluster has a proxy endpoint. Valid options are `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
@@ -95,6 +95,19 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_password` (String, Sensitive) Grafana password for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `http_basic_password` (String, Sensitive) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided
+- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming audit logs, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming audit logs
+- `http_headers` (Map of String) HTTP headers for streaming audit logs
+- `http_method` (String) HTTP payload method for streaming audit logs, , allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming audit logs
+- `http_payload_suffix` (String) HTTP payload suffix for streaming audit logs
+- `http_uri` (String) HTTP URI for streaming audit logs
+- `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming audit logs
+- `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
 - `splunk_token` (String, Sensitive) Splunk token for streaming audit logs
 
@@ -146,6 +159,19 @@ Optional:
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_password` (String, Sensitive) Grafana password for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `http_basic_password` (String) HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also specified
+- `http_basic_user` (String) HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also specified
+- `http_bearer_token` (String, Sensitive) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming metrics, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming metrics
+- `http_headers` (Map of String) HTTP headers for streaming metrics
+- `http_method` (String) HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming metrics
+- `http_payload_suffix` (String) HTTP payload suffix for streaming metrics
+- `http_uri` (String) HTTP URI for streaming metrics
+- `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
+- `newrelic_license_key` (String, Sensitive) NewRelic license key for streaming metrics
+- `newrelic_region` (String) NewRelic region for streaming metrics, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming metrics
 - `splunk_token` (String, Sensitive) Splunk token for streaming metrics
 

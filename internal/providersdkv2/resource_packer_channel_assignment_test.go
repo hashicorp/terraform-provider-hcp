@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -32,7 +32,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, "")
 			iteration, _ = upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			if err := testAccCheckAssignmentDestroyed(baseAssignment.BlockName())(state); err != nil {
 				t.Error(err)
@@ -140,7 +140,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			iteration, _ = upsertCompleteIteration(t, bucketSlug, "abc", nil)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -178,7 +178,7 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			upsertChannel(t, bucketSlug, channelSlug, "")
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -244,7 +244,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 			upsertBucket(t, bucketSlug)
 			upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -285,7 +285,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -376,7 +376,7 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 			iteration1, _ = upsertCompleteIteration(t, bucketSlug, "1", nil)
 			iteration2, _ = upsertCompleteIteration(t, bucketSlug, "2", nil)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

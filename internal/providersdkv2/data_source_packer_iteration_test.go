@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
@@ -30,7 +30,7 @@ func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
 			iteration, _ = upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -76,7 +76,7 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 			upsertChannel(t, bucketSlug, channelSlug, unrevokedIteration.ID)
 			revokedIteration = revokeIteration(t, unrevokedIteration.ID, bucketSlug, revokeAt)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

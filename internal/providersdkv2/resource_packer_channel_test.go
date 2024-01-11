@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPackerChannel(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAccPackerChannel(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -77,7 +77,7 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -130,7 +130,7 @@ func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil
@@ -176,7 +176,7 @@ func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
 		},
-		ProtoV5ProviderFactories: testProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
 			deleteBucket(t, bucketSlug, true)
 			return nil

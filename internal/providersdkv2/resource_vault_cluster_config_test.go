@@ -27,6 +27,9 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"elasticsearch_user":     "test",
 				"elasticsearch_password": "test_elasticsearch",
 				"elasticsearch_endpoint": "https://elasticsearch",
+				"newrelic_account_id":    "123456",
+				"newrelic_license_key":   "abcdefg",
+				"newrelic_region":        "US",
 			},
 			expectedError: "multiple configurations found: must contain configuration for only one provider",
 		},
@@ -59,6 +62,57 @@ func TestGetValidObservabilityConfig(t *testing.T) {
 				"elasticsearch_user": "test",
 			},
 			expectedError: "elasticsearch configuration is invalid: configuration information missing",
+		},
+		"newrelic missing params": {
+			config: map[string]interface{}{
+				"newrelic_account_id": "123456",
+			},
+			expectedError: "newrelic configuration is invalid: configuration information missing",
+		},
+		"http missing params": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_basic_user":     "user",
+				"http_basic_password": "pass",
+			},
+			expectedError: "http configuration is invalid: configuration information missing",
+		},
+		"http invalid codec": {
+			config: map[string]interface{}{
+				"http_uri":    "https://localhost:3000",
+				"http_method": "POST",
+				"http_codec":  "SOME_VALUE",
+			},
+			expectedError: "http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"",
+		},
+		"http provide bearer and basic auth": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_method":         "POST",
+				"http_codec":          "JSON",
+				"http_basic_user":     "test",
+				"http_basic_password": "pass",
+				"http_bearer_token":   "111111111",
+			},
+			expectedError: "http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both",
+		},
+		"http basic auth without username": {
+			config: map[string]interface{}{
+				"http_uri":            "https://localhost:3000",
+				"http_method":         "POST",
+				"http_codec":          "JSON",
+				"http_basic_password": "pass",
+			},
+			expectedError: "http configuration is invalid: basic authentication requires username and password",
+		},
+		"http basic auth without password": {
+			config: map[string]interface{}{
+				"http_uri":        "https://localhost:3000",
+				"http_method":     "POST",
+				"http_codec":      "JSON",
+				"http_basic_user": "test",
+			},
+			expectedError: "http configuration is invalid: basic authentication requires username and password",
 		},
 		"too many providers takes precedence over missing params": {
 			config: map[string]interface{}{

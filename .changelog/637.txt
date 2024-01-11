@@ -1,0 +1,8 @@
+```release-note:improvement
+Upgrade to Terraform Provider Protocol 6
+```
+
+```release-note:breaking-change
+Drops support for Terraform CLI versions prior to v1.1.5, previously deprecated in provider release v0.74.1
+```
+

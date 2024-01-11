@@ -7,21 +7,25 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
+	"regexp"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
 
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 )
 
 // This is an implementation using the Provider framework
@@ -37,9 +41,16 @@ type ProviderFrameworkConfiguration struct {
 }
 
 type ProviderFrameworkModel struct {
-	ClientSecret types.String `tfsdk:"client_secret"`
-	ClientID     types.String `tfsdk:"client_id"`
-	ProjectID    types.String `tfsdk:"project_id"`
+	ClientSecret     types.String `tfsdk:"client_secret"`
+	ClientID         types.String `tfsdk:"client_id"`
+	CredentialFile   types.String `tfsdk:"credential_file"`
+	ProjectID        types.String `tfsdk:"project_id"`
+	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
+}
+
+type WorkloadIdentityFrameworkModel struct {
+	TokenFile    types.String `tfsdk:"token_file"`
+	ResourceName types.String `tfsdk:"resource_name"`
 }
 
 func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -53,14 +64,64 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"client_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client ID for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_secret")),
+					stringvalidator.ConflictsWith(path.MatchRoot("credential_file")),
+					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
+				},
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
 				Description: "The OAuth2 Client Secret for API operations.",
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRoot("client_id")),
+				},
 			},
 			"project_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "The default project in which resources should be created.",
+			},
+			"credential_file": schema.StringAttribute{
+				Optional: true,
+				Description: "The path to an HCP credential file to use to authenticate the provider to HCP. " +
+					"You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. " +
+					"Using a credential file allows you to authenticate the provider as a service principal via client " +
+					"credentials or dynamically based on Workload Identity Federation.",
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			// TODO migrate to SingleNestedAttribute once the providersdkv2 is
+			// fully migrated.
+			"workload_identity": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"token_file": schema.StringAttribute{
+							Required:    true,
+							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
+						},
+						"resource_name": schema.StringAttribute{
+							Required:    true,
+							Description: "The resource_name of the Workload Identity Provider to exchange the token with.",
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(
+									regexp.MustCompile(`^iam/project/.+/service-principal/.+/workload-identity-provider/.+$`),
+									"must be a workload identity provider resource_name",
+								),
+							},
+						},
+					},
+				},
+				Description: "Allows authenticating the provider by exchanging the OAuth 2.0 access token or OpenID Connect " +
+					"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
+				Validators: []validator.List{
+					listvalidator.SizeBetween(1, 1),
+				},
 			},
 		},
 	}
@@ -68,18 +129,36 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewVaultSecretsAppResource,
-		NewVaultSecretsSecretResource,
+		// Resource Manager
+		resourcemanager.NewOrganizationIAMPolicyResource,
+		resourcemanager.NewOrganizationIAMBindingResource,
+
 		resourcemanager.NewProjectResource,
+		resourcemanager.NewProjectIAMPolicyResource,
+		resourcemanager.NewProjectIAMBindingResource,
+		// Vault Secrets
+		vaultsecrets.NewVaultSecretsAppResource,
+		vaultsecrets.NewVaultSecretsSecretResource,
+		// IAM
+		iam.NewServicePrincipalResource,
+		iam.NewServicePrincipalKeyResource,
+		iam.NewWorkloadIdentityProviderResource,
+		// Log Streaming
+		logstreaming.NewHCPLogStreamingDestinationResource,
 	}
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewVaultSecretsAppDataSource,
-		NewVaultSecretsSecretDataSource,
+		// Resource Manager
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
+		resourcemanager.NewIAMPolicyDataSource,
+		// Vault Secrets
+		vaultsecrets.NewVaultSecretsAppDataSource,
+		vaultsecrets.NewVaultSecretsSecretDataSource,
+		// IAM
+		iam.NewServicePrincipalDataSource,
 	}
 }
 
@@ -104,44 +183,43 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	clientID := ""
-	if data.ClientID.ValueString() != "" {
-		clientID = data.ClientID.ValueString()
-	} else {
-		clientID = os.Getenv("HCP_CLIENT_ID")
+	clientConfig := clients.ClientConfig{
+		ClientID:       data.ClientID.ValueString(),
+		ClientSecret:   data.ClientSecret.ValueString(),
+		CredentialFile: data.CredentialFile.ValueString(),
+		ProjectID:      data.ProjectID.ValueString(),
+		SourceChannel:  "terraform-provider-hcp",
 	}
 
-	clientSecret := ""
-	if data.ClientSecret.ValueString() != "" {
-		clientSecret = data.ClientSecret.ValueString()
-	} else {
-		clientSecret = os.Getenv("HCP_CLIENT_SECRET")
+	// Read the workload_identity configuration.
+	if len(data.WorkloadIdentity.Elements()) == 1 {
+		elements := make([]WorkloadIdentityFrameworkModel, 0, 1)
+		resp.Diagnostics.Append(data.WorkloadIdentity.ElementsAs(ctx, &elements, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		clientConfig.WorloadIdentityTokenFile = elements[0].TokenFile.ValueString()
+		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
 	}
 
-	client, err := clients.NewClient(clients.ClientConfig{
-		ClientID:      clientID,
-		ClientSecret:  clientSecret,
-		SourceChannel: "terraform-provider-hcp",
-	})
-
+	client, err := clients.NewClient(clientConfig)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("unable to create HCP api client: %v", err), "")
 		return
 	}
 
-	projectID := ""
-	if data.ProjectID.ValueString() != "" {
-		projectID = data.ProjectID.ValueString()
-	} else {
-		projectID = os.Getenv("HCP_PROJECT_ID")
+	// Attempt to source from the environment if unset.
+	if clientConfig.ProjectID == "" {
+		clientConfig.ProjectID = os.Getenv("HCP_PROJECT_ID")
 	}
 
-	if projectID != "" {
+	if clientConfig.ProjectID != "" {
 		getProjParams := project_service.NewProjectServiceGetParams()
-		getProjParams.ID = projectID
+		getProjParams.ID = clientConfig.ProjectID
 		project, err := clients.RetryProjectServiceGet(client, getProjParams)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("unable to fetch project %q: %v", projectID, err), "")
+			resp.Diagnostics.AddError(fmt.Sprintf("unable to fetch project %q: %v", clientConfig.ProjectID, err), "")
 			return
 		}
 
@@ -172,58 +250,4 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	config.Client = client
 	resp.DataSourceData = client
 	resp.ResourceData = client
-}
-
-// getProjectFromCredentials uses the configured client credentials to
-// fetch the associated organization and returns that organization's
-// single project.
-// This differs from the provider.go implementation due to the diagnostics used
-// by the plugin framework.
-func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Client) (project *models.HashicorpCloudResourcemanagerProject, diags diagnostic.Diagnostics) {
-	// Get the organization ID.
-	listOrgParams := organization_service.NewOrganizationServiceListParams()
-	listOrgResp, err := clients.RetryOrganizationServiceList(client, listOrgParams)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("unable to fetch organization list: %v", err), "")
-
-		return nil, diags
-	}
-	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags.AddError(fmt.Sprintf("unexpected number of organizations: expected 1, actual: %v", orgLen), "")
-		return nil, diags
-	}
-	orgID := listOrgResp.Payload.Organizations[0].ID
-
-	// Get the project using the organization ID.
-	listProjParams := project_service.NewProjectServiceListParams()
-	listProjParams.ScopeID = &orgID
-	scopeType := string(models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION)
-	listProjParams.ScopeType = &scopeType
-	listProjResp, err := clients.RetryProjectServiceList(client, listProjParams)
-	if err != nil {
-		diags.AddError(fmt.Sprintf("unable to fetch project id: %v", err), "")
-		return nil, diags
-	}
-	if len(listProjResp.Payload.Projects) > 1 {
-		diags.AddWarning("There is more than one project associated with the organization of the configured credentials.", `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`)
-
-		return getOldestProject(listProjResp.Payload.Projects), diags
-	}
-	project = listProjResp.Payload.Projects[0]
-	return project, diags
-}
-
-// getOldestProject retrieves the oldest project from a list based on its created_at time.
-func getOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
-	oldestTime := time.Now()
-
-	for _, proj := range projects {
-		projTime := time.Time(proj.CreatedAt)
-		if projTime.Before(oldestTime) {
-			oldestProj = proj
-			oldestTime = projTime
-		}
-	}
-	return oldestProj
 }
