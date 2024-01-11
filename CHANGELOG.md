@@ -1,3 +1,8 @@
+## v0.80.0 (January 11, 2023)
+
+FEATURES:
+
+* Add `hcp_log_streaming_destination` resource. [[GH-713](https://github.com/hashicorp/terraform-provider-hcp/pull/713)]
 ## v0.79.0 (December 27, 2023)
 
 FEATURES:
