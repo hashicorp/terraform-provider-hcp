@@ -43,7 +43,7 @@ func (r *resourceWebhook) Metadata(_ context.Context, req resource.MetadataReque
 	resp.TypeName = req.ProviderTypeName + "_webhook"
 }
 
-func (r *resourceWebhook) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceWebhook) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "The webhook resource manages a HCP webhook, used to notify external systems about a " +
 			"project resource's lifecycle events",
@@ -73,7 +73,7 @@ The destination must be able to use the HCP webhook
 					"hmac_key": schema.StringAttribute{
 						Optional: true,
 						Description: "The arbitrary secret that HCP uses to sign all its webhook requests. This is a" +
-							"write-only field.",
+							"write-only field, it is written once and not visible thereafter.",
 						Sensitive: true,
 					},
 				},
@@ -132,14 +132,15 @@ The destination must be able to use the HCP webhook
 									"actions": schema.ListAttribute{
 										ElementType: types.StringType,
 										Required:    true,
-										Description: "The type of action of this event. For example, `create`. " +
+										Description: "The list of event actions subscribed for the resource type set as the [source](#source). " +
+											"For example, `[\"create\", \"update\"]`. " +
 											"When the action is '*', it means that the webhook is subscribed to all event actions for the event source. ",
 									},
 									"source": schema.StringAttribute{
 										Required: true,
 										Description: "The resource type of the source of the event. For example, `hashicorp.packer.version`. " +
-											"Event source might not be the same type as the resource that the webhook is subscribed to " +
-											"if the event is from a descendant resource. " +
+											"Event source might not be the same type as the resource that the webhook is " +
+											"subscribed to ([resource_id](#resource_id)) if the event is from a descendant resource. " +
 											"For example, webhooks are subscribed to a `hashicorp.packer.registry` and " +
 											"receive events for descendent resources such as a `hashicorp.packer.version`.",
 										Validators: []validator.String{

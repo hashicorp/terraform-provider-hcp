@@ -58,7 +58,7 @@ resource "hcp_service_principal" "example" {
 
 ### Read-Only
 
-- `resource_id` (String) The service principal's unique identitier
+- `resource_id` (String) The service principal's unique identifier
 - `resource_name` (String) The service principal's resource name in the format `iam/project/<project_id>/service-principal/<name>` or `iam/organization/<organization_id>/service-principal/<name>`
 
 ## Import
