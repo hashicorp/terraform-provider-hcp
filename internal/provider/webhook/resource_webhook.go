@@ -331,8 +331,16 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	// Get parent from created webhook
 	webhook := res.GetPayload().Webhook
+	if webhook == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected service response",
+			"The get webhook request didn't fail but returned a nil webhook object. "+
+				"Report this issue to the provider developers.")
+		return
+	}
+
+	// Get parent from created webhook
 	projectID, err := webhookProjectID(webhook.ResourceName)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving service principal parent", err.Error())
@@ -379,7 +387,7 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state webhook
 
-	// Read Terraform plan and state into the model
+	// Read Terraform plan and state into the models
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -393,11 +401,32 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 			Name: plan.Name.ValueString(),
 		}
 
-		_, err := r.client.Webhook.WebhookServiceUpdateWebhookName(updateNameParams, nil)
+		res, err := r.client.Webhook.WebhookServiceUpdateWebhookName(updateNameParams, nil)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating webhook name", err.Error())
 			return
 		}
+
+		webhook := res.GetPayload().Webhook
+		if webhook == nil {
+			resp.Diagnostics.AddError(
+				"Unexpected service response",
+				"The update webhook name request didn't fail but returned a nil webhook object. "+
+					"Report this issue to the provider developers.")
+			return
+		}
+		plan.ResourceName = types.StringValue(webhook.ResourceName)
+
+		defer func() {
+			if resp.Diagnostics.HasError() {
+				// If it failed to update the resource but the name still got successfully updated,
+				// we update the name and resource name in the state.
+				// The next apply the new name will no longer be an update.
+				state.Name = plan.Name
+				state.ResourceName = plan.ResourceName
+				resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+			}
+		}()
 	}
 
 	var updateMaks []string
