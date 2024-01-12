@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
@@ -141,6 +143,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
 		iam.NewWorkloadIdentityProviderResource,
+		// Log Streaming
+		logstreaming.NewHCPLogStreamingDestinationResource,
 	}
 }
 
