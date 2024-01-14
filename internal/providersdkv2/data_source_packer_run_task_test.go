@@ -10,6 +10,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func TestAcc_dataSourcePackerRunTask(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 					}
-					_, err := clients.RegenerateHMAC(context.Background(), client, loc)
+					_, err := packerv1.RegenerateHMAC(context.Background(), client, loc)
 					if err != nil {
 						t.Errorf("error while regenerating HMAC key: %v", err)
 						return

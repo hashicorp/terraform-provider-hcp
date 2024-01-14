@@ -127,7 +127,6 @@ type testAccConfigBuilderInterface interface {
 	// Unquoted unique name for resources/data sources/inputs/outputs.
 	// Panics if HasUniqueName is false.
 	UniqueName() string
-	HasUniqueName() bool
 
 	Attributes() map[string]string
 	// Should return `BlockName()+"."+attributeName` for blocks that can be

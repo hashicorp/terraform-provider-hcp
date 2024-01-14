@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func dataSourcePackerBucketNames() *schema.Resource {
@@ -57,7 +58,7 @@ func dataSourcePackerBucketsRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Reading HCP Packer registry buckets [project_id=%s, organization_id=%s]", loc.ProjectID, loc.OrganizationID)
 
-	bucketData, err := clients.ListBuckets(ctx, client, loc)
+	bucketData, err := packerv1.ListBuckets(ctx, client, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 	"google.golang.org/grpc/codes"
 )
 
@@ -113,7 +114,7 @@ func resourcePackerChannelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Reading HCP Packer channel (%s) [bucket_name=%s, project_id=%s, organization_id=%s]", channelName, bucketName, loc.ProjectID, loc.OrganizationID)
 
-	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -150,7 +151,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	newChannel, err := clients.CreatePackerChannel(ctx, client, loc, bucketName, channelName, createRestriction)
+	newChannel, err := packerv1.CreatePackerChannel(ctx, client, loc, bucketName, channelName, createRestriction)
 	if err == nil {
 		if newChannel == nil {
 			return diag.Errorf("expected a non-nil channel from CreateChannel, but got nil")
@@ -170,7 +171,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Channel already exists
-	existingChannel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	existingChannel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.Errorf("channel already exists. GetChannel failed unexpectedly: %v", err)
 	}
@@ -195,7 +196,7 @@ func resourcePackerChannelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if restrictedSet {
-		updatedChannel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
+		updatedChannel, err := packerv1.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
 		if err != nil {
 			diags := append(diags, diag.Errorf("UpdateChannel failed unexpectedly: %v", err)...)
 			return diags
@@ -229,7 +230,7 @@ func resourcePackerChannelUpdate(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	}
 
-	channel, err := clients.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
+	channel, err := packerv1.UpdatePackerChannel(ctx, client, loc, bucketName, channelName, restrictedRaw.(bool))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -255,7 +256,7 @@ func resourcePackerChannelDelete(ctx context.Context, d *schema.ResourceData, me
 		}}
 	}
 
-	_, err = clients.DeletePackerChannel(ctx, client, loc, bucketName, channelName)
+	_, err = packerv1.DeletePackerChannel(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -312,7 +313,7 @@ func resourcePackerChannelImport(ctx context.Context, d *schema.ResourceData, me
 
 	}
 
-	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return nil, err
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 // This string is used as the version fingerprint to represent an unassigned
@@ -104,7 +105,7 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -134,7 +135,7 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	} else if channel == nil || channel.Slug == "" {
@@ -163,7 +164,7 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 		versionFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
+	updatedChannel, err := packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -194,7 +195,7 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 		versionFingerprint = ""
 	}
 
-	updatedChannel, err := clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
+	updatedChannel, err := packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -216,7 +217,7 @@ func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = clients.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, "")
+	_, err = packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, "")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -279,7 +280,7 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 		return nil, err
 	}
 
-	channel, err := clients.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return nil, err
 	} else if channel == nil || channel.Slug == "" {

@@ -2,6 +2,35 @@ module github.com/hashicorp/terraform-provider-hcp
 
 go 1.21
 
+// TODO: FOR_EXTERNAL: Remove this replace directive once the HCP Packer v2 API is
+// in the public SDK. Look for other `TODO: FOR_EXTERNAL:` comments in the code
+// for a non-exhaustive list of other places that need to be updated for some
+// reason.
+//
+// This replace directive assumes that this `terraform-provider-hcp` directory
+// is a sibling of the `hcp-sdk-go` directory, containing your local clone of
+// the HCP SDK. If you have the SDK cloned elsewhere, you'll need to adjust it
+// to be in this location for the other import changes to work, or update those
+// as well. Ideally, both packages will be located in `~/go/src/github.com/hashicorp/`
+// as `~/go/src/github.com/hashicorp/hcp-sdk-go` and `~/go/src/github.com/hashicorp/terraform-provider-hcp`.
+//
+// If you are using a branch from the `hcp-sdk-go-internal` repo, you'll need
+// to add it as another remote of `hcp-sdk-go` in `~/go/src/github.com/hashicorp/hcp-sdk-go`
+// and then checkout the branch/commit you want to use.
+// For example:
+// ```
+// cd ~/go/src/github.com/hashicorp/hcp-sdk-go
+// git remote add internal git@github.com:hashicorp/hcp-sdk-go-internal.git
+// git fetch --all
+// git checkout internal/main
+// ```
+// Just be careful not to leak the internal repo history to the public repo as
+// the `hcp-sdk-go-internal` repo git tree is not the same as the `hcp-sdk-go`
+// repo git tree, but some branches on `hcp-sdk-go-internal` may have been
+// branched from `hcp-sdk-go` branches instead. You might want to check the
+// commit history to see which remote your branch is based on.
+replace github.com/hashicorp/hcp-sdk-go => ../hcp-sdk-go-internal
+
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/go-openapi/runtime v0.27.0
@@ -29,7 +58,7 @@ require (
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
@@ -87,7 +116,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/oklog/ulid v1.3.1
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/posener/complete v1.2.3 // indirect

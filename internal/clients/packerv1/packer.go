@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package clients
+package packerv1
 
 import (
 	"context"
@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
 // GetPackerChannelBySlug queries the HCP Packer registry for the channel
 // associated with the given channel name.
-func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func GetPackerChannelBySlug(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketName string, channelName string) (*packermodels.HashicorpCloudPackerChannel, error) {
 
 	getParams := packer_service.NewPackerServiceGetChannelParamsWithContext(ctx)
@@ -38,7 +39,7 @@ func GetPackerChannelBySlug(ctx context.Context, client *Client, loc *sharedmode
 
 // GetPackerChannelBySlugFromList queries the HCP Packer registry for the
 // channel associated with the given channel name, using ListBucketChannels
-func GetPackerChannelBySlugFromList(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func GetPackerChannelBySlugFromList(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketName string, channelName string) (*packermodels.HashicorpCloudPackerChannel, error) {
 	resp, err := ListPackerChannels(ctx, client, loc, bucketName)
 	if err != nil {
@@ -55,7 +56,7 @@ func GetPackerChannelBySlugFromList(ctx context.Context, client *Client, loc *sh
 }
 
 // GetIterationFromID queries the HCP Packer registry for an existing bucket iteration using its ULID.
-func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func GetIterationFromID(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketSlug string, iterationID string) (*packermodels.HashicorpCloudPackerIteration, error) {
 	params := newGetIterationParams(ctx, loc, bucketSlug)
 	params.IterationID = &iterationID
@@ -63,7 +64,7 @@ func GetIterationFromID(ctx context.Context, client *Client, loc *sharedmodels.H
 }
 
 // GetIterationFromVersion queries the HCP Packer registry for an existing bucket iteration using its incremental version.
-func GetIterationFromVersion(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func GetIterationFromVersion(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketSlug string, iterationIncrementalVersion int32) (*packermodels.HashicorpCloudPackerIteration, error) {
 	params := newGetIterationParams(ctx, loc, bucketSlug)
 	params.IncrementalVersion = &iterationIncrementalVersion
@@ -71,7 +72,7 @@ func GetIterationFromVersion(ctx context.Context, client *Client, loc *sharedmod
 }
 
 // GetIterationFromFingerprint queries the HCP Packer registry for an existing bucket iteration using its fingerprint.
-func GetIterationFromFingerprint(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation,
+func GetIterationFromFingerprint(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketSlug string, iterationFingerprint string) (*packermodels.HashicorpCloudPackerIteration, error) {
 	params := newGetIterationParams(ctx, loc, bucketSlug)
 	params.Fingerprint = &iterationFingerprint
@@ -87,7 +88,7 @@ func newGetIterationParams(ctx context.Context, loc *sharedmodels.HashicorpCloud
 	return params
 }
 
-func getIteration(client *Client, params *packer_service.PackerServiceGetIterationParams) (*packermodels.HashicorpCloudPackerIteration, error) {
+func getIteration(client *clients.Client, params *packer_service.PackerServiceGetIterationParams) (*packermodels.HashicorpCloudPackerIteration, error) {
 	it, err := client.Packer.PackerServiceGetIteration(params, nil)
 	if err != nil {
 		if err, ok := err.(*packer_service.PackerServiceGetIterationDefault); ok {
@@ -100,7 +101,7 @@ func getIteration(client *Client, params *packer_service.PackerServiceGetIterati
 }
 
 // CreatePackerChannel creates a channel on the named bucket.
-func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+func CreatePackerChannel(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
 	restriction *packermodels.HashicorpCloudPackerCreateChannelRequestRestriction) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceCreateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
@@ -121,7 +122,7 @@ func CreatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 }
 
 // UpdatePackerChannel updates the named channel.
-func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
+func UpdatePackerChannel(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string, channelSlug string,
 	restricted bool) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceUpdateChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
@@ -148,7 +149,7 @@ func UpdatePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 }
 
 func UpdatePackerChannelAssignment(
-	ctx context.Context, client *Client,
+	ctx context.Context, client *clients.Client,
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	bucketSlug string, channelSlug string,
 	iterationFingerprint string,
@@ -183,7 +184,7 @@ func UpdatePackerChannelAssignment(
 }
 
 // DeletePackerChannel deletes a channel from the named bucket.
-func DeletePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
+func DeletePackerChannel(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug, channelSlug string) (*packermodels.HashicorpCloudPackerChannel, error) {
 	params := packer_service.NewPackerServiceDeleteChannelParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -206,7 +207,7 @@ func DeletePackerChannel(ctx context.Context, client *Client, loc *sharedmodels.
 }
 
 // ListPackerChannels queries the HCP Packer registry for channels associated to the specified bucket.
-func ListPackerChannels(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
+func ListPackerChannels(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation, bucketSlug string) (*packermodels.HashicorpCloudPackerListChannelsResponse, error) {
 	params := packer_service.NewPackerServiceListChannelsParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -224,7 +225,7 @@ func ListPackerChannels(ctx context.Context, client *Client, loc *sharedmodels.H
 }
 
 // ListBuckets queries the HCP Packer registry for all associated buckets.
-func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*packermodels.HashicorpCloudPackerBucket, error) {
+func ListBuckets(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*packermodels.HashicorpCloudPackerBucket, error) {
 	nextPage := ""
 	var buckets []*packermodels.HashicorpCloudPackerBucket
 
@@ -257,7 +258,7 @@ func ListBuckets(ctx context.Context, client *Client, loc *sharedmodels.Hashicor
 }
 
 // GetRunTask queries the HCP Packer Registry for the API information needed to configure a run task
-func GetRunTask(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse, error) {
+func GetRunTask(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse, error) {
 	params := packer_service.NewPackerServiceGetRegistryTFCRunTaskAPIParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID
@@ -275,7 +276,7 @@ func GetRunTask(ctx context.Context, client *Client, loc *sharedmodels.Hashicorp
 }
 
 // RegenerateHMAC triggers the HCP Packer Registry's run task HMAC Key to be regenerated
-func RegenerateHMAC(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerRegenerateTFCRunTaskHmacKeyResponse, error) {
+func RegenerateHMAC(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*packermodels.HashicorpCloudPackerRegenerateTFCRunTaskHmacKeyResponse, error) {
 	params := packer_service.NewPackerServiceRegenerateTFCRunTaskHmacKeyParamsWithContext(ctx)
 	params.LocationOrganizationID = loc.OrganizationID
 	params.LocationProjectID = loc.ProjectID

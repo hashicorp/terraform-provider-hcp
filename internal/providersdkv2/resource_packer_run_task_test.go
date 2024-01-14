@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func TestAccPackerRunTask(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccPackerRunTask(t *testing.T) {
 				OrganizationID: client.Config.OrganizationID,
 				ProjectID:      client.Config.ProjectID,
 			}
-			resp, err := clients.GetRunTask(context.Background(), client, loc)
+			resp, err := packerv1.GetRunTask(context.Background(), client, loc)
 			if err != nil {
 				t.Errorf("failed to get run task before test step, received error: %v", err)
 				return
@@ -104,7 +105,7 @@ func testAccPullPackerRunTaskFromAPIWithRunTaskState(resourceName string, state 
 
 	loc, _ := testAccGetLocationFromState(resourceName, state)
 
-	resp, err := clients.GetRunTask(context.Background(), client, loc)
+	resp, err := packerv1.GetRunTask(context.Background(), client, loc)
 	if err != nil {
 		return nil, err
 	}

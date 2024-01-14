@@ -13,11 +13,15 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
+
+	// TODO: FOR_EXTERNAL: Replace this import with the commented version
+	// "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 	"google.golang.org/grpc/codes"
 )
 
@@ -218,7 +222,7 @@ func upsertCompleteVersion(t *testing.T, bucketSlug, fingerprint string, options
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      client.Config.ProjectID,
 	}
-	iteration, err := clients.GetIterationFromFingerprint(context.Background(), client, loc, bucketSlug, iteration.Fingerprint)
+	iteration, err := packerv1.GetIterationFromFingerprint(context.Background(), client, loc, bucketSlug, iteration.Fingerprint)
 	if err != nil {
 		t.Errorf("Complete iteration not found after upserting, received unexpected error. Got %v", err)
 		return nil, nil

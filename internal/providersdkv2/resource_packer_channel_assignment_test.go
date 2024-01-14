@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
@@ -553,7 +554,7 @@ func testAccPullVersionFromAPIWithAssignmentState(resourceName string, state *te
 		return nil, err
 	}
 
-	channel, err := clients.GetPackerChannelBySlug(context.Background(), client, loc, *bucketName, *channelName)
+	channel, err := packerv1.GetPackerChannelBySlug(context.Background(), client, loc, *bucketName, *channelName)
 	if err != nil {
 		return nil, err
 	}

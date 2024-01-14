@@ -29,11 +29,19 @@ import (
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 
-	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
+	// TODO: FOR_EXTERNAL: Replace these two imports with the commented versions
+	// cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
+	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
+	// "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
 
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+	packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+
+	// TODO: FOR_EXTERNAL: Replace these two imports with the correct import
+	// when the HCP Packer V2 API is released to stable on the external repo.
+	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/client"
+	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/client/packer_service"
 
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
@@ -64,6 +72,7 @@ type Client struct {
 	Operation         operation_service.ClientService
 	Organization      organization_service.ClientService
 	Packer            packer_service.ClientService
+	PackerV2          packer_service_v2.ClientService
 	Project           project_service.ClientService
 	ServicePrincipals service_principals_service.ClientService
 	Vault             vault_service.ClientService
@@ -152,6 +161,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Operation:         cloud_operation.New(httpClient, nil).OperationService,
 		Organization:      cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Packer:            cloud_packer.New(httpClient, nil).PackerService,
+		PackerV2:          cloud_packer_v2.New(httpClient, nil).PackerService,
 		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
 		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
 		Vault:             cloud_vault.New(httpClient, nil).VaultService,
@@ -190,4 +200,18 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 	}
 
 	return cl, nil
+}
+
+func (cl *Client) GetOrganizationID() string {
+	if cl == nil {
+		return ""
+	}
+	return cl.Config.OrganizationID
+}
+
+func (cl *Client) GetProjectID() string {
+	if cl == nil {
+		return ""
+	}
+	return cl.Config.ProjectID
 }

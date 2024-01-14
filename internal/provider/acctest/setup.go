@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
@@ -37,6 +38,8 @@ var ProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, erro
 // This PreCheck function should be present in every acceptance test. It ensures
 // credentials and other test environment settings are configured.
 func PreCheck(t *testing.T) {
+	t.Helper()
+
 	if os.Getenv("HCP_CLIENT_ID") == "" {
 		t.Fatal("HCP_CLIENT_ID must be set for acceptance tests")
 	}
@@ -45,6 +48,7 @@ func PreCheck(t *testing.T) {
 		t.Fatal("HCP_CLIENT_SECRET must be set for acceptance tests")
 	}
 
+	// TODO: Add support for project ID to be set at the source level
 	if os.Getenv("HCP_PROJECT_ID") == "" {
 		t.Fatal("HCP_PROJECT_ID must be set for acceptance tests")
 	}
@@ -68,4 +72,8 @@ func HCPClients(t *testing.T) *clients.Client {
 	}
 
 	return client
+}
+
+func DefaultProjectLocation(t *testing.T) location.Location {
+	return HCPClients(t)
 }

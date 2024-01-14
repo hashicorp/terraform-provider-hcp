@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func dataSourcePackerRunTask() *schema.Resource {
@@ -62,7 +63,7 @@ func dataSourcePackerRunTaskRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(loc.ProjectID)
 
-	resp, err := clients.GetRunTask(ctx, client, loc)
+	resp, err := packerv1.GetRunTask(ctx, client, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
