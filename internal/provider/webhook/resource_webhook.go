@@ -9,12 +9,10 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"regexp"
 	"strings"
 
 	webhookservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client/webhook_service"
 	webhookmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/models"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -81,17 +79,10 @@ The destination must be able to use the HCP webhook
 
 			// Optional fields
 			"project_id": schema.StringAttribute{
-				Description: "The project to create the webhook under. " +
-					"If unspecified, the webhook will be created in the project the provider is configured with. " +
-					"If specified, the accepted value is \"project/<project_id>\"",
+				Description: "The ID of the project to create the webhook under. " +
+					"If unspecified, the webhook will be created in the project the provider is configured with. ",
 				Optional: true,
 				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^(project)/.+$`),
-						"must reference a project resource_name",
-					),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -225,13 +216,13 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	projectID := plan.ProjectID.ValueString()
-	if projectID == "" {
-		projectID = fmt.Sprintf("project/%s", r.client.Config.ProjectID)
+	projectName := fmt.Sprintf("project/%s", r.client.Config.ProjectID)
+	if plan.ProjectID.ValueString() != "" {
+		projectName = fmt.Sprintf("project/%s", plan.ProjectID.ValueString())
 	}
 
 	createParams := webhookservice.NewWebhookServiceCreateWebhookParams()
-	createParams.ParentResourceName = projectID
+	createParams.ParentResourceName = projectName
 	createParams.Body = &webhookmodels.HashicorpCloudWebhookCreateWebhookRequestBody{
 		Config: &webhookmodels.HashicorpCloudWebhookWebhookConfig{
 			HmacKey: plan.Config.HmacKey.ValueString(),
@@ -280,7 +271,7 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	projectID, err = webhookProjectID(webhook.ResourceName)
+	projectID, err := webhookProjectID(webhook.ResourceName)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving service principal parent", err.Error())
 	}
@@ -298,17 +289,17 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 func webhookProjectID(resourceName string) (string, error) {
 	err := fmt.Errorf("unexpected format for webhook resource_name: %q", resourceName)
 	parts := strings.Split(resourceName, "/")
-	if parts[1] != "project" {
+	if parts[1] != "project" && len(parts) < 3 {
 		return "", err
 	}
-	return strings.Join(parts[1:3], "/"), nil
+	return parts[2], nil
 }
 
 // webhookName extracts the webhook name from the webhook resource name
 func webhookName(resourceName string) (string, error) {
 	err := fmt.Errorf("unexpected format for webhook resource_name: %q", resourceName)
 	parts := strings.Split(resourceName, "/")
-	if parts[5] != "webhook" {
+	if parts[5] != "webhook" && len(parts) < 7 {
 		return "", err
 	}
 	return parts[6], nil
