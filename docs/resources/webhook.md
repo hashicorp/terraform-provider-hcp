@@ -46,7 +46,7 @@ resource "hcp_webhook" "example" {
 
 - `description` (String) The webhook's description. Descriptions are useful for helping others understand the purpose of the webhook.
 - `enabled` (Boolean) Indicates if the webhook should receive payloads for the subscribed events.
-- `project_id` (String) The project to create the webhook under. If unspecified, the webhook will be created in the project the provider is configured with. If specified, the accepted value is "project/<project_id>"
+- `project_id` (String) The ID of the project to create the webhook under. If unspecified, the webhook will be created in the project the provider is configured with.
 - `subscriptions` (Attributes List) Set of events to subscribe the webhook to all resources or a specific resource in the project. (see [below for nested schema](#nestedatt--subscriptions))
 
 ### Read-Only
