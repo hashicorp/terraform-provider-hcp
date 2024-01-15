@@ -370,7 +370,7 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 	state.Config.URL = types.StringValue(webhook.Config.URL)
 
-	planSubscriptions := make([]webhookSubscription, len(webhook.Subscriptions))
+	webhookSubscriptions := make([]webhookSubscription, len(webhook.Subscriptions))
 	for i, subscription := range webhook.Subscriptions {
 		newSubscription := webhookSubscription{
 			Events: make([]webhookSubscriptionEvent, 0),
@@ -393,10 +393,11 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 			})
 		}
 
-		planSubscriptions[i] = newSubscription
+		webhookSubscriptions[i] = newSubscription
 	}
-	if len(planSubscriptions) > 0 {
-		state.Subscriptions = planSubscriptions
+	if len(webhook.Subscriptions) > 0 ||
+		len(webhook.Subscriptions) != len(state.Subscriptions) {
+		state.Subscriptions = webhookSubscriptions
 	}
 
 	// Save updated state into Terraform state
