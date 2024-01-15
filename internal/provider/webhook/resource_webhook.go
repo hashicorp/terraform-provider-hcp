@@ -166,9 +166,6 @@ The destination must be able to use the HCP webhook
 				Computed: true,
 				Description: fmt.Sprintf("The webhooks's resource name in the format `%s`.",
 					"webhook/project/<project_id>/geo/us/webhook/<name>"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
@@ -196,7 +193,7 @@ func (r *resourceWebhook) Configure(_ context.Context, req resource.ConfigureReq
 type webhook struct {
 	ProjectID     types.String          `tfsdk:"project_id"`
 	Name          types.String          `tfsdk:"name"`
-	Config        webhookConfig         `tfsdk:"config"`
+	Config        *webhookConfig        `tfsdk:"config"`
 	Description   types.String          `tfsdk:"description"`
 	Enabled       types.Bool            `tfsdk:"enabled"`
 	Subscriptions []webhookSubscription `tfsdk:"subscriptions"`
@@ -205,12 +202,12 @@ type webhook struct {
 }
 
 type webhookConfig struct {
-	Url     types.String `tfsdk:"url"`
+	URL     types.String `tfsdk:"url"`
 	HmacKey types.String `tfsdk:"hmac_key"`
 }
 
 type webhookSubscription struct {
-	ResourceId types.String               `tfsdk:"resource_id"`
+	ResourceID types.String               `tfsdk:"resource_id"`
 	Events     []webhookSubscriptionEvent `tfsdk:"events"`
 }
 
@@ -238,7 +235,7 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 	createParams.Body = &webhookmodels.HashicorpCloudWebhookCreateWebhookRequestBody{
 		Config: &webhookmodels.HashicorpCloudWebhookWebhookConfig{
 			HmacKey: plan.Config.HmacKey.ValueString(),
-			URL:     plan.Config.Url.ValueString(),
+			URL:     plan.Config.URL.ValueString(),
 		},
 		Description: plan.Description.ValueString(),
 		Enabled:     plan.Enabled.ValueBoolPointer(),
@@ -249,7 +246,7 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 	for i, subscription := range plan.Subscriptions {
 		newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
 			Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, 0),
-			ResourceID: subscription.ResourceId.ValueString(),
+			ResourceID: subscription.ResourceID.ValueString(),
 		}
 
 		for _, event := range subscription.Events {
@@ -300,11 +297,21 @@ func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest
 // webhookProjectID extracts the parent resource name from the webhook resource name
 func webhookProjectID(resourceName string) (string, error) {
 	err := fmt.Errorf("unexpected format for webhook resource_name: %q", resourceName)
-	parts := strings.SplitN(resourceName, "/", -1)
+	parts := strings.Split(resourceName, "/")
 	if parts[1] != "project" {
 		return "", err
 	}
 	return strings.Join(parts[1:3], "/"), nil
+}
+
+// webhookName extracts the webhook name from the webhook resource name
+func webhookName(resourceName string) (string, error) {
+	err := fmt.Errorf("unexpected format for webhook resource_name: %q", resourceName)
+	parts := strings.Split(resourceName, "/")
+	if parts[5] != "webhook" {
+		return "", err
+	}
+	return parts[6], nil
 }
 
 func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -343,15 +350,25 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 	// Get parent from created webhook
 	projectID, err := webhookProjectID(webhook.ResourceName)
 	if err != nil {
-		resp.Diagnostics.AddError("Error retrieving service principal parent", err.Error())
+		resp.Diagnostics.AddError("Error retrieving webhook project id", err.Error())
 	}
 
+	// Extract webhook name
+	webhookName, err := webhookName(webhook.ResourceName)
+	if err != nil {
+		resp.Diagnostics.AddError("Error retrieving webhook name", err.Error())
+	}
+
+	state.Name = types.StringValue(webhookName)
 	state.ResourceID = types.StringValue(webhook.ResourceID)
 	state.ResourceName = types.StringValue(webhook.ResourceName)
 	state.Enabled = types.BoolValue(webhook.Enabled)
 	state.ProjectID = types.StringValue(projectID)
 	state.Description = types.StringValue(webhook.Description)
-	state.Config.Url = types.StringValue(webhook.Config.URL)
+	if state.Config == nil {
+		state.Config = &webhookConfig{}
+	}
+	state.Config.URL = types.StringValue(webhook.Config.URL)
 
 	planSubscriptions := make([]webhookSubscription, len(webhook.Subscriptions))
 	for i, subscription := range webhook.Subscriptions {
@@ -360,7 +377,7 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 		}
 
 		if subscription.ResourceID != "" {
-			newSubscription.ResourceId = types.StringValue(subscription.ResourceID)
+			newSubscription.ResourceID = types.StringValue(subscription.ResourceID)
 		}
 
 		eventsMap := make(map[types.String][]types.String)
@@ -378,7 +395,9 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 
 		planSubscriptions[i] = newSubscription
 	}
-	state.Subscriptions = planSubscriptions
+	if len(planSubscriptions) > 0 {
+		state.Subscriptions = planSubscriptions
+	}
 
 	// Save updated state into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -396,7 +415,7 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 
 	if !plan.Name.Equal(state.Name) {
 		updateNameParams := webhookservice.NewWebhookServiceUpdateWebhookNameParams()
-		updateNameParams.ResourceName = plan.ResourceName.ValueString()
+		updateNameParams.ResourceName = state.ResourceName.ValueString()
 		updateNameParams.Body = &webhookmodels.HashicorpCloudWebhookUpdateWebhookNameRequestBody{
 			Name: plan.Name.ValueString(),
 		}
@@ -415,7 +434,7 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 					"Report this issue to the provider developers.")
 			return
 		}
-		plan.ResourceName = types.StringValue(webhook.ResourceName)
+		state.ResourceName = types.StringValue(webhook.ResourceName)
 
 		defer func() {
 			if resp.Diagnostics.HasError() {
@@ -423,14 +442,13 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 				// we update the name and resource name in the state.
 				// The next apply the new name will no longer be an update.
 				state.Name = plan.Name
-				state.ResourceName = plan.ResourceName
 				resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 			}
 		}()
 	}
 
 	var updateMaks []string
-	if !plan.Config.Url.Equal(state.Config.Url) ||
+	if !plan.Config.URL.Equal(state.Config.URL) ||
 		!plan.Config.HmacKey.Equal(state.Config.HmacKey) {
 		updateMaks = append(updateMaks, "config")
 	}
@@ -446,7 +464,7 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 		for _, subscription := range plan.Subscriptions {
 			newSubscription := &webhookmodels.HashicorpCloudWebhookWebhookSubscription{
 				Events:     make([]*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent, 0),
-				ResourceID: subscription.ResourceId.ValueString(),
+				ResourceID: subscription.ResourceID.ValueString(),
 			}
 
 			for _, event := range subscription.Events {
@@ -465,13 +483,13 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 
 	if len(updateMaks) > 0 {
 		updateParams := webhookservice.NewWebhookServiceUpdateWebhookParams()
-		updateParams.ResourceName = plan.ResourceName.ValueString()
+		updateParams.ResourceName = state.ResourceName.ValueString()
 		updateParams.Body = &webhookmodels.HashicorpCloudWebhookUpdateWebhookRequestBody{
 			UpdateMask: strings.Join(updateMaks, ","),
 			Webhook: &webhookmodels.HashicorpCloudWebhookWebhook{
 				Config: &webhookmodels.HashicorpCloudWebhookWebhookConfig{
 					HmacKey: plan.Config.HmacKey.ValueString(),
-					URL:     plan.Config.Url.ValueString(),
+					URL:     plan.Config.URL.ValueString(),
 				},
 				Description:   plan.Description.ValueString(),
 				Enabled:       plan.Enabled.ValueBool(),
@@ -488,6 +506,9 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 
 	// Save updated plan into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Update computed resource name
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx,
+		path.Root("resource_name"), state.ResourceName)...)
 }
 
 func (r *resourceWebhook) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
