@@ -1,6 +1,6 @@
 ---
 subcategory: ""
-page_title: "Using the Vault Secrets Datasources - HCP Provider"
+page_title: "Using the Vault Secrets Datasources"
 description: |-
     Fetch your secrets from Vault Secrets
 ---

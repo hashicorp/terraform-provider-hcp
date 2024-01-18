@@ -1,6 +1,6 @@
 ---
 subcategory: ""
-page_title: "Create a new ACL root token - HCP Provider"
+page_title: "Create a new ACL root token"
 description: |-
     An example of creating a new ACL root token.
 ---
