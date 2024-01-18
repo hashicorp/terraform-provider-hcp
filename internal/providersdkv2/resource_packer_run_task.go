@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
 
 func resourcePackerRunTask() *schema.Resource {
@@ -78,7 +78,7 @@ func resourcePackerRunTaskCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	resp, err := packerv1.GetRunTask(ctx, client, loc)
+	resp, err := packerv2.GetRunTask(ctx, client, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -92,7 +92,7 @@ func resourcePackerRunTaskCreate(ctx context.Context, d *schema.ResourceData, me
 
 	regenerateHmac, ok := d.GetOk("regenerate_hmac")
 	if ok && regenerateHmac.(bool) {
-		resp, err := packerv1.RegenerateHMAC(ctx, client, loc)
+		resp, err := packerv2.RegenerateHMAC(ctx, client, loc)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -117,7 +117,7 @@ func resourcePackerRunTaskRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(loc.ProjectID)
 
-	resp, err := packerv1.GetRunTask(ctx, client, loc)
+	resp, err := packerv2.GetRunTask(ctx, client, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -142,7 +142,7 @@ func resourcePackerRunTaskUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	regenerateHmac, ok := d.GetOk("regenerate_hmac")
 	if ok && regenerateHmac.(bool) {
-		resp, err := packerv1.RegenerateHMAC(ctx, client, loc)
+		resp, err := packerv2.RegenerateHMAC(ctx, client, loc)
 		if err != nil {
 			return diag.FromErr(err)
 		}
