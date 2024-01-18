@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider/diff"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -185,7 +185,7 @@ func (r *resourceWebhook) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 func (r *resourceWebhook) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	diff.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
+	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
 }
 
 type webhook struct {

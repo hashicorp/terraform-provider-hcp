@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package diff
+package modifiers
 
 import (
 	"context"
@@ -28,16 +28,16 @@ func ModifyPlanForDefaultProjectChange(ctx context.Context, providerDefaultProje
 		return
 	}
 
-	orgPath := path.Root("project_id")
+	projectIDPath := path.Root("project_id")
 
 	var configProject, plannedProject types.String
-	resp.Diagnostics.Append(configAttributes.GetAttribute(ctx, orgPath, &configProject)...)
-	resp.Diagnostics.Append(planAttributes.GetAttribute(ctx, orgPath, &plannedProject)...)
+	resp.Diagnostics.Append(configAttributes.GetAttribute(ctx, projectIDPath, &configProject)...)
+	resp.Diagnostics.Append(planAttributes.GetAttribute(ctx, projectIDPath, &plannedProject)...)
 
 	if configProject.IsNull() && !plannedProject.IsNull() && providerDefaultProject != plannedProject.ValueString() {
 		// There is no project configured on the resource, yet the provider project is different from
 		// the planned project value. We must conclude that the provider default project changed.
-		resp.Plan.SetAttribute(ctx, orgPath, types.StringValue(providerDefaultProject))
-		resp.RequiresReplace.Append(orgPath)
+		resp.Plan.SetAttribute(ctx, projectIDPath, types.StringValue(providerDefaultProject))
+		resp.RequiresReplace.Append(projectIDPath)
 	}
 }
