@@ -16,10 +16,8 @@ const (
 	invalidResourceTypeErr = "a Resource Type must have format hashicorp.<service>.<resource> and consist only of lowercase alphabetic characters, dashes, and dots"
 )
 
-var (
-	resourceTypeRegex                  = regexp.MustCompile(validResourceTypeRegex)
-	_                 validator.String = resourceTypeValidator{}
-)
+var _ validator.String = resourceTypeValidator{}
+var resourceTypeRegex = regexp.MustCompile(validResourceTypeRegex)
 
 // resourceNamePartValidator validates that a string Attribute's value is a valid
 // resource type.
