@@ -1,6 +1,6 @@
 ---
 subcategory: ""
-page_title: "Peer an AWS VPC to a HashiCorp Virtual Network (HVN) - HCP Provider"
+page_title: "Peer an AWS VPC to a HashiCorp Virtual Network (HVN)"
 description: |-
     An example of peering an AWS VPC to a HashiCorp Virtual Network (HVN).
 ---

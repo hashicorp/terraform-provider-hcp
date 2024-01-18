@@ -7,8 +7,6 @@ description: |-
 
 # hcp_azure_peering_connection (Resource)
 
--> **Note:** This data source is currently in public beta.
-
 The Azure peering connection resource allows you to manage a peering connection between an HVN and a peer Azure VNet.
 
 ## Example Usage
@@ -87,6 +85,7 @@ resource "azurerm_role_definition" "definition" {
   permissions {
     actions = [
       "Microsoft.Network/virtualNetworks/peer/action",
+      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
       "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
     ]
   }
