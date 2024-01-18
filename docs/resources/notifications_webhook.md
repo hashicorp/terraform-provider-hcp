@@ -1,18 +1,18 @@
 ---
-page_title: "Resource hcp_webhook - terraform-provider-hcp"
+page_title: "Resource hcp_notifications_webhook - terraform-provider-hcp"
 subcategory: "Cloud Platform"
 description: |-
   The webhook resource manages a HCP webhook, used to notify external systems about a project resource's lifecycle events
 ---
 
-# hcp_webhook (Resource)
+# hcp_notifications_webhook (Resource)
 
 The webhook resource manages a HCP webhook, used to notify external systems about a project resource's lifecycle events
 
 ## Example Usage
 
 ```terraform
-resource "hcp_webhook" "example" {
+resource "hcp_notifications_webhook" "example" {
   name        = "example-webhook"
   description = "Notify for all of the events for all Packer artifact versions existing in the project."
   enabled     = true
@@ -93,5 +93,5 @@ Import is supported using the following syntax:
 
 ```shell
 # HCP Webhook can be imported by specifying the webhook resource name
-terraform import hcp_webhook.example webhook/project/840e3701-55b6-4f86-8c17-b1fe397303c5/geo/us/webhook/example-webhook
+terraform import hcp_notifications_webhook.example webhook/project/840e3701-55b6-4f86-8c17-b1fe397303c5/geo/us/webhook/example-webhook
 ```

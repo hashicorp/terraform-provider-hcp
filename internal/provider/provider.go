@@ -146,7 +146,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
-		webhook.NewWebhookResource,
+		webhook.NewNotificationsWebhookResource,
 	}
 }
 

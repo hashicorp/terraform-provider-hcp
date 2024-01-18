@@ -27,24 +27,24 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &resourceWebhook{}
-var _ resource.ResourceWithImportState = &resourceWebhook{}
-var _ resource.ResourceWithConfigure = &resourceWebhook{}
-var _ resource.ResourceWithModifyPlan = &resourceWebhook{}
+var _ resource.Resource = &resourceNotificationsWebhook{}
+var _ resource.ResourceWithImportState = &resourceNotificationsWebhook{}
+var _ resource.ResourceWithConfigure = &resourceNotificationsWebhook{}
+var _ resource.ResourceWithModifyPlan = &resourceNotificationsWebhook{}
 
-func NewWebhookResource() resource.Resource {
-	return &resourceWebhook{}
+func NewNotificationsWebhookResource() resource.Resource {
+	return &resourceNotificationsWebhook{}
 }
 
-type resourceWebhook struct {
+type resourceNotificationsWebhook struct {
 	client *clients.Client
 }
 
-func (r *resourceWebhook) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_webhook"
+func (r *resourceNotificationsWebhook) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_notifications_webhook"
 }
 
-func (r *resourceWebhook) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceNotificationsWebhook) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "The webhook resource manages a HCP webhook, used to notify external systems about a " +
 			"project resource's lifecycle events",
@@ -165,7 +165,7 @@ The destination must be able to use the HCP webhook
 	}
 }
 
-func (r *resourceWebhook) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceNotificationsWebhook) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -184,7 +184,7 @@ func (r *resourceWebhook) Configure(_ context.Context, req resource.ConfigureReq
 	r.client = client
 }
 
-func (r *resourceWebhook) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *resourceNotificationsWebhook) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
 }
 
@@ -214,7 +214,7 @@ type webhookSubscriptionEvent struct {
 	Source  types.String   `tfsdk:"source"`
 }
 
-func (r *resourceWebhook) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceNotificationsWebhook) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan webhook
 
 	// Read Terraform plan data into the model
@@ -312,7 +312,7 @@ func webhookName(resourceName string) (string, error) {
 	return parts[6], nil
 }
 
-func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceNotificationsWebhook) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state webhook
 
 	// Read Terraform prior state into the model
@@ -402,7 +402,7 @@ func (r *resourceWebhook) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceNotificationsWebhook) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state webhook
 
 	// Read Terraform plan and state into the models
@@ -510,7 +510,7 @@ func (r *resourceWebhook) Update(ctx context.Context, req resource.UpdateRequest
 		path.Root("resource_name"), state.ResourceName)...)
 }
 
-func (r *resourceWebhook) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceNotificationsWebhook) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state webhook
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -532,6 +532,6 @@ func (r *resourceWebhook) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceWebhook) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceNotificationsWebhook) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("resource_name"), req, resp)
 }

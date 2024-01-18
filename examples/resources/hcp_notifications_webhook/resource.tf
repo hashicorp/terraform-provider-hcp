@@ -1,4 +1,4 @@
-resource "hcp_webhook" "example" {
+resource "hcp_notifications_webhook" "example" {
   name        = "example-webhook"
   description = "Notify for all of the events for all Packer artifact versions existing in the project."
   enabled     = true

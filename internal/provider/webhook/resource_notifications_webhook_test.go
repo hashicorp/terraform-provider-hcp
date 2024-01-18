@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
-func TestAccWebhookResource(t *testing.T) {
+func TestAccNotificationsWebhookResource(t *testing.T) {
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	webhookName := acctest.RandString(16)
 	updatedWebhookName := acctest.RandString(16)
@@ -38,17 +38,17 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 			},
 			{
 				// Test that webhook can be imported into state
-				ResourceName:                         "hcp_webhook.example",
+				ResourceName:                         "hcp_notifications_webhook.example",
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "resource_name",
 				ImportStateIdFunc:                    testAccWebhookImportID,
@@ -75,16 +75,16 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "description", webhookDescription),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.resource_id", "some_resource_id"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.events.0.actions.0", "update"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.events.0.source", "hashicorp.packer.version"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "description", webhookDescription),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.0.resource_id", "some_resource_id"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.0.events.0.actions.0", "update"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.0.events.0.source", "hashicorp.packer.version"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 			},
 			{
@@ -97,13 +97,13 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.hmac_key", hmac),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.hmac_key", hmac),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 			},
 			{
@@ -116,13 +116,13 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.hmac_key", updatedHmac),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.hmac_key", updatedHmac),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 			},
 			{
@@ -134,13 +134,13 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", updatedWebhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.#", "0"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", updatedWebhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.#", "0"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, updatedWebhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 			},
 			{
@@ -172,13 +172,13 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(false).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.#", "0"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.#", "0"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 				ExpectError: regexp.MustCompile(`.*duplicated resource subscription found.*`),
 			},
@@ -190,13 +190,13 @@ func TestAccWebhookResource(t *testing.T) {
 					WithEnabled(true).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.#", "0"),
-					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "subscriptions.#", "0"),
+					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
-					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
 				ExpectError: regexp.MustCompile(`.*Error verifying webhook configuration.*`),
 			},
@@ -206,7 +206,7 @@ func TestAccWebhookResource(t *testing.T) {
 
 // testAccWebhookImportID retrieves the resource_name so that it can be imported.
 func testAccWebhookImportID(s *terraform.State) (string, error) {
-	rs, ok := s.RootModule().Resources["hcp_webhook.example"]
+	rs, ok := s.RootModule().Resources["hcp_notifications_webhook.example"]
 	if !ok {
 		return "", fmt.Errorf("resource not found")
 	}
@@ -362,7 +362,7 @@ func (b WebhookResourceConfigBuilder) Build() string {
 	webhookConfig = fmt.Sprintf("%s }", webhookConfig)
 
 	config := fmt.Sprintf(`
-resource "hcp_webhook" "%s" {
+resource "hcp_notifications_webhook" "%s" {
 	name = %q
 	description = %q
 	
