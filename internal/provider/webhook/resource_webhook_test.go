@@ -16,8 +16,11 @@ func TestAccWebhookResource(t *testing.T) {
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	webhookName := acctest.RandString(16)
 	updatedWebhookName := acctest.RandString(16)
-	webhookURL := "https://url.com"
+	webhookURL := "https://" + acctest.RandString(10) + ".com"
 	webhookDescription := acctest.RandString(200)
+
+	hmac := acctest.RandString(16)
+	updatedHmac := acctest.RandString(16)
 
 	fmt.Println("webhook name " + webhookName)
 	fmt.Println("webhook update name " + updatedWebhookName)
@@ -79,6 +82,44 @@ func TestAccWebhookResource(t *testing.T) {
 					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.resource_id", "some_resource_id"),
 					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.events.0.actions.0", "update"),
 					resource.TestCheckResourceAttr("hcp_webhook.example", "subscriptions.0.events.0.source", "hashicorp.packer.version"),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
+					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+				),
+			},
+			{
+				// Test that webhook hmac key can be updated
+				Config: NewWebhookResourceConfigBuilder("example").
+					WithName(webhookName).
+					WithURL(webhookURL).
+					WithHmac(hmac).
+					// If enabled it will fail to create the webhook since we don't have a valid url to provide
+					WithEnabled(false).
+					Build(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "config.hmac_key", hmac),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
+						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
+					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
+				),
+			},
+			{
+				// Test that webhook hmac key can be updated to another hmac key
+				Config: NewWebhookResourceConfigBuilder("example").
+					WithName(webhookName).
+					WithURL(webhookURL).
+					WithHmac(updatedHmac).
+					// If enabled it will fail to create the webhook since we don't have a valid url to provide
+					WithEnabled(false).
+					Build(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_webhook.example", "name", webhookName),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "config.url", webhookURL),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "config.hmac_key", updatedHmac),
+					resource.TestCheckResourceAttr("hcp_webhook.example", "enabled", "false"),
 					resource.TestCheckResourceAttr("hcp_webhook.example", "resource_name",
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
 					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
@@ -157,7 +198,7 @@ func TestAccWebhookResource(t *testing.T) {
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
 					resource.TestCheckResourceAttrSet("hcp_webhook.example", "resource_id"),
 				),
-				ExpectError: regexp.MustCompile(`.*destination service responded with an unexpected code.*`),
+				ExpectError: regexp.MustCompile(`.*Error verifying webhook configuration.*`),
 			},
 		},
 	})
@@ -308,25 +349,32 @@ func (b WebhookResourceConfigBuilder) Build() string {
 		subscriptions = fmt.Sprintf(`%s ]`, subscriptions)
 	}
 
+	webhookConfig := fmt.Sprintf(`
+	config = {
+		url = %q
+`, b.url)
+	if b.hmac != "" {
+		webhookConfig = fmt.Sprintf(`
+		%s
+		hmac_key = %q
+`, webhookConfig, b.hmac)
+	}
+	webhookConfig = fmt.Sprintf("%s }", webhookConfig)
+
 	config := fmt.Sprintf(`
 resource "hcp_webhook" "%s" {
 	name = %q
 	description = %q
 	
 	%s
-	config = {
-		url = %q
-		hmac = %q
-	}
-
+	%s
 	%s
 }`,
 		b.resourceName,
 		b.name,
 		b.description,
 		enabled,
-		b.url,
-		b.hmac,
+		webhookConfig,
 		subscriptions)
 	return config
 }
