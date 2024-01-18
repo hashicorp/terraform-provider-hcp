@@ -28,6 +28,7 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &resourceWebhook{}
 var _ resource.ResourceWithImportState = &resourceWebhook{}
+var _ resource.ResourceWithConfigure = &resourceWebhook{}
 
 func NewWebhookResource() resource.Resource {
 	return &resourceWebhook{}
