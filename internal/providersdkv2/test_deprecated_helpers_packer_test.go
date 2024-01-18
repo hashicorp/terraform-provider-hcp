@@ -135,36 +135,6 @@ func waitForOperation(
 	}
 }
 
-func upsertBucket(t *testing.T, bucketSlug string) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	createBktParams := packer_service.NewPackerServiceCreateBucketParams()
-	createBktParams.LocationOrganizationID = loc.OrganizationID
-	createBktParams.LocationProjectID = loc.ProjectID
-	createBktParams.Body = packer_service.PackerServiceCreateBucketBody{
-		BucketSlug: bucketSlug,
-	}
-	_, err := client.Packer.PackerServiceCreateBucket(createBktParams, nil)
-	if err == nil {
-		return
-	}
-	if err, ok := err.(*packer_service.PackerServiceCreateBucketDefault); ok {
-		switch err.Code() {
-		case int(codes.AlreadyExists), http.StatusConflict:
-			// all good here !
-			return
-		}
-	}
-
-	t.Errorf("unexpected CreateBucket error, expected nil or 409. Got %v", err)
-}
-
 func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.HashicorpCloudPackerIteration {
 	t.Helper()
 
@@ -455,27 +425,4 @@ func updateChannelRestriction(t *testing.T, bucketSlug string, channelSlug strin
 		return
 	}
 	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
-}
-
-func deleteBucket(t *testing.T, bucketSlug string, logOnError bool) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	deleteBktParams := packer_service.NewPackerServiceDeleteBucketParams()
-	deleteBktParams.LocationOrganizationID = loc.OrganizationID
-	deleteBktParams.LocationProjectID = loc.ProjectID
-	deleteBktParams.BucketSlug = bucketSlug
-
-	_, err := client.Packer.PackerServiceDeleteBucket(deleteBktParams, nil)
-	if err == nil {
-		return
-	}
-	if logOnError {
-		t.Logf("unexpected DeleteBucket error, expected nil. Got %v", err)
-	}
 }
