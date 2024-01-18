@@ -19,7 +19,7 @@ var (
 	_ validator.String = urlValidator{}
 )
 
-// resourceNamePartValidator validates that a string Attribute's value is a valid URL.
+// urlValidator validates that a string Attribute's value is a valid URL.
 type urlValidator struct {
 }
 

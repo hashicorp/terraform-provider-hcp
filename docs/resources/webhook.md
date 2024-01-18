@@ -14,7 +14,7 @@ The webhook resource manages a HCP webhook, used to notify external systems abou
 ```terraform
 resource "hcp_webhook" "example" {
   name        = "example-webhook"
-  description = "My new webhook!"
+  description = "Notify for all of the events for all Packer artifact versions existing in the project."
   enabled     = true
 
   config = {
@@ -93,5 +93,5 @@ Import is supported using the following syntax:
 
 ```shell
 # HCP Webhook can be imported by specifying the webhook resource name
-terraform import hcp_webhook.example webhook/prokect/840e3701-55b6-4f86-8c17-b1fe397303c5/geo/us/webhook/example-webhook
+terraform import hcp_webhook.example webhook/project/840e3701-55b6-4f86-8c17-b1fe397303c5/geo/us/webhook/example-webhook
 ```
