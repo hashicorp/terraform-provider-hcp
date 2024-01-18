@@ -166,8 +166,8 @@ func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 		tfApply(t, in),
 		testTFDataSources(t, in),
 		updateClusterTier(t, in),
-		updatePublicProxyObservabilityAndMVU(t, in),
-		updateTierPublicProxyAndRemoveObservability(t, in),
+		updateNetworkObservabilityAndMVU(t, in),
+		updateTierNetworkAndRemoveObservability(t, in),
 	}
 }
 
@@ -299,7 +299,7 @@ func updateClusterTier(t *testing.T, in *inputT) resource.TestStep {
 }
 
 // This step verifies the successful update of "public_endpoint", "proxy_endpoint", "ip_allowlist", "audit_log", "metrics" and MVU config.
-func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.TestStep {
+func updateNetworkObservabilityAndMVU(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "true"
 	newIn.ProxyEndpoint = "ENABLED"
@@ -335,7 +335,7 @@ func updatePublicProxyObservabilityAndMVU(t *testing.T, in *inputT) resource.Tes
 }
 
 // This step verifies the successful update of "tier", "public_endpoint", "proxy_endpoint", "ip_allowlist" and removal of "metrics" and "audit_log"
-func updateTierPublicProxyAndRemoveObservability(t *testing.T, in *inputT) resource.TestStep {
+func updateTierNetworkAndRemoveObservability(t *testing.T, in *inputT) resource.TestStep {
 	newIn := *in
 	newIn.PublicEndpoint = "false"
 	newIn.ProxyEndpoint = "DISABLED"
