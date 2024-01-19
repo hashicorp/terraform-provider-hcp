@@ -29,19 +29,14 @@ import (
 	cloud_network "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 
-	// TODO: FOR_EXTERNAL: Replace these two imports with the commented versions
-	// cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
-	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client"
-	// "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
+	cloud_operation "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
 
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
 	packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 
-	// TODO: FOR_EXTERNAL: Replace these two imports with the correct import
-	// when the HCP Packer V2 API is released to stable on the external repo.
-	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/client"
-	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/client/packer_service"
+	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client"
+	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
