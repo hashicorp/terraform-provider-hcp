@@ -67,7 +67,7 @@ output "packer-registry-ubuntu-west-1" {
 ### Required
 
 - `bucket_name` (String) The name of the HCP Packer Bucket where the Artifact is located.
-- `platform` (String) Name of the platform where the HCP Packer Artifact is stored. (i.e. aws, gce, azure) 
+- `platform` (String) Name of the platform where the HCP Packer Artifact is stored.
 - `region` (String) The Region where the HCP Packer Artifact is stored, if any.
 
 ### Optional

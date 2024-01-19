@@ -1,7 +1,0 @@
-```release-note:deprecation
-`data.hcp_packer_iteration`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_version`
-```
-
-```release-note:feature
-`data.hcp_packer_version`: Added the `hcp_packer_version` data source, which replaces `data.hcp_packer_iteration`
-```

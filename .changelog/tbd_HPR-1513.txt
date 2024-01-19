@@ -1,5 +1,33 @@
+```release-note:breaking-change
+`data.hcp_packer_iteration`: Removed the `incremental_version` attribute. Use the `fingerprint`, `id` or `uuid` attributes instead.
+```
+
+```release-note:breaking-change
+`hcp_packer_channel_assignment`: Removed the `iteration_version` attribute. Use the `version_fingerprint` attribute instead.
+```
+
+```release-note:breaking-change
+`hcp_packer_channel_assignment`: Removed the `iteration_id` attribute. Use the `version_fingerprint` attribute instead.
+```
+
 ```release-note:deprecation
 `hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute is now deprecated and will be removed in a future release. 
 Refer to the `version_fingerprint` attribute release notes for more information.
+```
+
+```release-note:deprecation
+`data.hcp_packer_image`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_artifact`
+```
+
+```release-note:deprecation
+`data.hcp_packer_iteration`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_version`
+```
+
+```release-note:feature
+`data.hcp_packer_artifact`: Added the `hcp_packer_artifact` data source, which replaces `data.hcp_packer_image`
+```
+
+```release-note:feature
+`data.hcp_packer_version`: Added the `hcp_packer_version` data source, which replaces `data.hcp_packer_iteration`
 ```
 
