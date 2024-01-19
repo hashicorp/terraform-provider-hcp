@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"

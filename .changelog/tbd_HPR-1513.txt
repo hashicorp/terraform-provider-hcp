@@ -3,7 +3,3 @@
 Refer to the `version_fingerprint` attribute release notes for more information.
 ```
 
-```release-note:improvement
-`hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute has been renamed to `version_fingerprint`. The attribute functionality has not changed. 
-During the deprecation period for `iteration_fingerprint`, either attribute may be used.
-```

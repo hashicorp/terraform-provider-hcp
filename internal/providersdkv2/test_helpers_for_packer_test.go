@@ -8,7 +8,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/google/uuid"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
 	packerservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -39,6 +39,7 @@ func upsertRegistry(t *testing.T) {
 
 	if err == nil {
 		waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
+		return
 	}
 
 	if err, ok := err.(*packerservice.PackerServiceCreateRegistryDefault); ok {
@@ -60,6 +61,7 @@ func upsertRegistry(t *testing.T) {
 				featureTier := packermodels.HashicorpCloudPacker20230101RegistryConfigTierPLUS
 				params.Body = &packermodels.HashicorpCloudPacker20230101UpdateRegistryBody{
 					FeatureTier: &featureTier,
+					UpdateMask:  "featureTier",
 				}
 				resp, err := client.PackerV2.PackerServiceUpdateRegistry(params, nil)
 				if err != nil {

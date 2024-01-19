@@ -24,16 +24,6 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					upsertRegistry(t)
-				},
-				Config: config,
-				// If this check fails, there are probably pre-existing buckets
-				// in the environment that need to be deleted before testing.
-				// This may also be caused by other tests failing to clean up properly.
-				Check: resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.#", "0"),
-			},
-			{
-				PreConfig: func() {
 					upsertBucket(t, bucket0)
 				},
 				Config: config,

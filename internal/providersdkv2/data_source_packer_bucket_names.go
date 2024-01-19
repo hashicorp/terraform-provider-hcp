@@ -7,12 +7,11 @@ import (
 	"context"
 	"log"
 
-	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
 
 func dataSourcePackerBucketNames() *schema.Resource {
@@ -58,7 +57,7 @@ func dataSourcePackerBucketsRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[INFO] Reading HCP Packer registry buckets [project_id=%s, organization_id=%s]", loc.ProjectID, loc.OrganizationID)
 
-	bucketData, err := packerv1.ListBuckets(ctx, client, loc)
+	bucketData, err := packerv2.ListBuckets(ctx, client, loc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -72,12 +71,12 @@ func dataSourcePackerBucketsRead(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func flattenPackerBucketsList(buckets []*packermodels.HashicorpCloudPackerBucket) []string {
+func flattenPackerBucketsList(buckets []*packerv2.Bucket) []string {
 	var names []string
 
 	for _, bucket := range buckets {
 
-		names = append(names, bucket.Slug)
+		names = append(names, bucket.Name)
 	}
 	return names
 }
