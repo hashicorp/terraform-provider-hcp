@@ -13,6 +13,7 @@ import (
 
 	webhookservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client/webhook_service"
 	webhookmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
+	webhookvalidator "github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook/validator"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -129,6 +131,9 @@ The destination must be able to use the HCP webhook
 										Description: "The list of event actions subscribed for the resource type set as the [source](#source). " +
 											"For example, `[\"create\", \"update\"]`. " +
 											"When the action is '*', it means that the webhook is subscribed to all event actions for the event source. ",
+										Validators: []validator.List{
+											listvalidator.UniqueValues(),
+										},
 									},
 									"source": schema.StringAttribute{
 										Required: true,
@@ -145,6 +150,9 @@ The destination must be able to use the HCP webhook
 							},
 						},
 					},
+				},
+				Validators: []validator.List{
+					webhookvalidator.UniqueSubscriptions(),
 				},
 			},
 

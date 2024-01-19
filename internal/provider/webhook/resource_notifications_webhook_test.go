@@ -22,9 +22,6 @@ func TestAccNotificationsWebhookResource(t *testing.T) {
 	hmac := acctest.RandString(16)
 	updatedHmac := acctest.RandString(16)
 
-	fmt.Println("webhook name " + webhookName)
-	fmt.Println("webhook update name " + updatedWebhookName)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -148,28 +145,8 @@ func TestAccNotificationsWebhookResource(t *testing.T) {
 				Config: NewWebhookResourceConfigBuilder("example").
 					WithName(webhookName).
 					WithURL(webhookURL).
-					WithSubscriptions([]webhookmodels.HashicorpCloudWebhookWebhookSubscription{
-						{
-							ResourceID: "some_resource_id",
-							Events: []*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
-								{
-									Action: "revoke",
-									Source: "hashicorp.packer.version",
-								},
-							},
-						},
-						{
-							ResourceID: "some_resource_id", // same resource id should fail to update
-							Events: []*webhookmodels.HashicorpCloudWebhookWebhookSubscriptionEvent{
-								{
-									Action: "revoke",
-									Source: "hashicorp.packer.version",
-								},
-							},
-						},
-					}).
-					// If enabled it will fail to create the webhook since we don't have a valid url to provide
-					WithEnabled(false).
+					// Will fail to create the webhook since we don't have a valid url to provide
+					WithEnabled(true).
 					Build(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_notifications_webhook.example", "name", webhookName),
@@ -180,7 +157,7 @@ func TestAccNotificationsWebhookResource(t *testing.T) {
 						fmt.Sprintf("webhook/project/%s/geo/us/webhook/%s", projectID, webhookName)),
 					resource.TestCheckResourceAttrSet("hcp_notifications_webhook.example", "resource_id"),
 				),
-				ExpectError: regexp.MustCompile(`.*duplicated resource subscription found.*`),
+				ExpectError: regexp.MustCompile(`.*Error verifying webhook configuration.*`),
 			},
 			{
 				// Test that trying to enable webhook with invalid url fails creation
