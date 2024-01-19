@@ -20,7 +20,7 @@ func TestAccIAMPolicyDataSource(t *testing.T) {
 	role1, role2 := "roles/viewer", "roles/admin"
 	var p1, p2 models.HashicorpCloudResourcemanagerPolicy
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccIAMPolicyDataSource_Validation(t *testing.T) {
 		principals[i] = fmt.Sprintf("%d", i)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

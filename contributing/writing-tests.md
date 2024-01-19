@@ -75,7 +75,7 @@ export TF_LOG=...
 
 Terraform has a framework for writing acceptance tests which minimizes the
 amount of boilerplate code necessary to use common testing patterns. The entry
-point to the framework is the `resource.Test()` function.
+point to the framework is the `resource.ParallelTest()` function.
 
 Tests are divided into `TestStep`s. Each `TestStep` proceeds by applying some
 Terraform configuration using the provider under test, and then verifying that
@@ -88,7 +88,7 @@ to a single resource. Most tests follow a similar structure.
    to running acceptance tests. This is common to all tests exercising a single
    provider.
 
-Each `TestStep` is defined in the call to `resource.Test()`. Most assertion
+Each `TestStep` is defined in the call to `resource.ParallelTest()`. Most assertion
 functions are defined out of band with the tests. This keeps the tests
 readable, and allows reuse of assertion functions across different tests of the
 same type of resource. The definition of a complete test looks like this:
@@ -97,7 +97,7 @@ same type of resource. The definition of a complete test looks like this:
 func TestAccConsulCluster(t *testing.T) {
     resourceName := "hcp_consul_cluster.test"
 
-    resource.Test(t, resource.TestCase{
+    resource.ParallelTest(t, resource.TestCase{
         PreCheck:          func() { testAccPreCheck(t) },
         ProviderFactories: providerFactories,
         CheckDestroy:      testAccCheckConsulClusterDestroy,

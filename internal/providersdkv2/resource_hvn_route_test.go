@@ -359,7 +359,7 @@ var azConfigNVA = `
 func TestAccHvnRouteAws(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -429,7 +429,7 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 func testHvnRouteGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -498,7 +498,7 @@ func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
 }
 
 func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -530,7 +530,7 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 func testHvnRouteNVA(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

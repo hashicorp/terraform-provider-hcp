@@ -13,7 +13,7 @@ import (
 
 func TestAccVaultSecretsResourceApp(t *testing.T) {
 	testAppName := generateRandomSlug()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

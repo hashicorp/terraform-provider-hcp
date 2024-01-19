@@ -51,7 +51,7 @@ func TestAccVaultPlugin(t *testing.T) {
 	resourceName := "hcp_vault_plugin.venafi_plugin"
 	dataSourceName := "data.hcp_vault_plugin.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckVaultPluginDestroy,

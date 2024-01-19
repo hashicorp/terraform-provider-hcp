@@ -188,7 +188,7 @@ func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig("", adConfig)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -279,7 +279,7 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeNVAConfig, adConfig)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -367,7 +367,7 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig(adConfig))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -455,7 +455,7 @@ func testAccAzurePeeringConnectionNVAandGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig(adConfig))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

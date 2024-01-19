@@ -26,7 +26,7 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	var sp models.LogService20210330Destination
 	var sp2 models.LogService20210330Destination
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {

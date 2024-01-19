@@ -50,7 +50,7 @@ func TestAccAwsHvnOnly(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckHvnDestroy,
@@ -127,7 +127,7 @@ func TestAccAzureHvnOnly(t *testing.T) {
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckHvnDestroy,

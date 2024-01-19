@@ -38,7 +38,7 @@ resource "hcp_consul_snapshot" "test" {
 func TestAccConsulSnapshot(t *testing.T) {
 	resourceName := "hcp_consul_snapshot.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckConsulSnapshotDestroy,

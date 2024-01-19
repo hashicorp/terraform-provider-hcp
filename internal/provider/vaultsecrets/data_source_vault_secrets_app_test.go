@@ -26,7 +26,7 @@ func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
 	firstSecretValue := "hey, this is version 1!"
 	secondSecretValue := "hey, this is version 2!"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			// Create two secrets, one with an additional version and check the latest secrets from data source
@@ -82,7 +82,7 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	firstSecretValue := "hey, this is version 1!"
 	secondSecretValue := "hey, this is version 2!"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

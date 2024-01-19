@@ -52,7 +52,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 	boundaryClusterResourceName := "hcp_boundary_cluster.test"
 	boundaryClusterDataSourceName := "data.hcp_boundary_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckBoundaryClusterDestroy,
