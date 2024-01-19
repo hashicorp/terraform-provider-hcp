@@ -5,18 +5,12 @@ package providersdkv2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/cenkalti/backoff"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 
-	// TODO: FOR_EXTERNAL: Replace this import with the commented version
-	// "github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/preview/2020-05-05/client/operation_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -24,116 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 	"google.golang.org/grpc/codes"
 )
-
-func upsertRegistry(t *testing.T) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	params := packer_service.NewPackerServiceCreateRegistryParams()
-	params.LocationOrganizationID = loc.OrganizationID
-	params.LocationProjectID = loc.ProjectID
-	featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
-	params.Body = packer_service.PackerServiceCreateRegistryBody{
-		FeatureTier: &featureTier,
-	}
-
-	resp, err := client.Packer.PackerServiceCreateRegistry(params, nil)
-
-	if err == nil {
-		waitForOperation(t, loc, "Create Registry", resp.Payload.Operation.ID, client)
-	}
-
-	if err, ok := err.(*packer_service.PackerServiceCreateRegistryDefault); ok {
-		switch err.Code() {
-		case int(codes.AlreadyExists), http.StatusConflict:
-			getParams := packer_service.NewPackerServiceGetRegistryParams()
-			getParams.LocationOrganizationID = loc.OrganizationID
-			getParams.LocationProjectID = loc.ProjectID
-			getResp, err := client.Packer.PackerServiceGetRegistry(getParams, nil)
-			if err != nil {
-				t.Errorf("unexpected GetRegistry error: %v", err)
-				return
-			}
-			if *getResp.Payload.Registry.Config.FeatureTier != models.HashicorpCloudPackerRegistryConfigTierPLUS {
-				// Make sure is a plus registry
-				params := packer_service.NewPackerServiceUpdateRegistryParams()
-				params.LocationOrganizationID = loc.OrganizationID
-				params.LocationProjectID = loc.ProjectID
-				featureTier := models.HashicorpCloudPackerRegistryConfigTierPLUS
-				params.Body = packer_service.PackerServiceUpdateRegistryBody{
-					FeatureTier: &featureTier,
-				}
-				resp, err := client.Packer.PackerServiceUpdateRegistry(params, nil)
-				if err != nil {
-					t.Errorf("unexpected UpdateRegistry error: %v", err)
-					return
-				}
-				waitForOperation(t, loc, "Reactivate Registry", resp.Payload.Operation.ID, client)
-			}
-			return
-		default:
-			t.Errorf("unexpected CreateRegistry error code, expected nil or 409. Got code: %d err: %v", err.Code(), err)
-			return
-		}
-	}
-
-	t.Errorf("unexpected CreateRegistry error, expected nil. Got: %v", err)
-}
-
-func waitForOperation(
-	t *testing.T,
-	loc *sharedmodels.HashicorpCloudLocationLocation,
-	operationName string,
-	operationID string,
-	client *clients.Client,
-) {
-	timeout := "5s"
-	params := operation_service.NewWaitParams()
-	params.ID = operationID
-	params.Timeout = &timeout
-	params.LocationOrganizationID = loc.OrganizationID
-	params.LocationProjectID = loc.ProjectID
-
-	operation := func() error {
-		resp, err := client.Operation.Wait(params, nil)
-		if err != nil {
-			t.Errorf("unexpected error %#v", err)
-		}
-
-		if resp.Payload.Operation.Error != nil {
-			t.Errorf("Operation failed: %s", resp.Payload.Operation.Error.Message)
-		}
-
-		switch *resp.Payload.Operation.State {
-		case sharedmodels.HashicorpCloudOperationOperationStatePENDING:
-			msg := fmt.Sprintf("==> Operation \"%s\" pending...", operationName)
-			return fmt.Errorf(msg)
-		case sharedmodels.HashicorpCloudOperationOperationStateRUNNING:
-			msg := fmt.Sprintf("==> Operation \"%s\" running...", operationName)
-			return fmt.Errorf(msg)
-		case sharedmodels.HashicorpCloudOperationOperationStateDONE:
-		default:
-			t.Errorf("Operation returned unknown state: %s", *resp.Payload.Operation.State)
-		}
-		return nil
-	}
-
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 10 * time.Second
-	bo.RandomizationFactor = 0.5
-	bo.Multiplier = 1.5
-	bo.MaxInterval = 30 * time.Second
-	bo.MaxElapsedTime = 40 * time.Minute
-	err := backoff.Retry(operation, bo)
-	if err != nil {
-		t.Errorf("unexpected error: %#v", err)
-	}
-}
 
 func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.HashicorpCloudPackerIteration {
 	t.Helper()
@@ -177,12 +61,12 @@ func upsertIteration(t *testing.T, bucketSlug, fingerprint string) *models.Hashi
 	return nil
 }
 
-func upsertCompleteVersion(t *testing.T, bucketSlug, fingerprint string, options *buildOptions) (*models.HashicorpCloudPackerIteration, *models.HashicorpCloudPackerBuild) {
+func upsertCompleteIteration(t *testing.T, bucketSlug, fingerprint string, options *buildOptions) (*models.HashicorpCloudPackerIteration, *models.HashicorpCloudPackerBuild) {
 	iteration := upsertIteration(t, bucketSlug, fingerprint)
 	if t.Failed() || iteration == nil {
 		return nil, nil
 	}
-	build := upsertCompleteBuild(t, bucketSlug, iteration.Fingerprint, iteration.ID, options)
+	build := upsertCompleteBuildDeprecated(t, bucketSlug, iteration.Fingerprint, iteration.ID, options)
 	if t.Failed() {
 		return nil, nil
 	}
@@ -250,7 +134,7 @@ var defaultBuildOptions = buildOptions{
 	},
 }
 
-func upsertCompleteBuild(t *testing.T, bucketSlug, fingerprint, iterationID string, optionsPtr *buildOptions) *models.HashicorpCloudPackerBuild {
+func upsertCompleteBuildDeprecated(t *testing.T, bucketSlug, fingerprint, iterationID string, optionsPtr *buildOptions) *models.HashicorpCloudPackerBuild {
 	var options = defaultBuildOptions
 	if optionsPtr != nil {
 		options = *optionsPtr
@@ -358,14 +242,14 @@ func upsertChannel(t *testing.T, bucketSlug, channelSlug, iterationID string) {
 		switch err.Code() {
 		case int(codes.AlreadyExists), http.StatusConflict:
 			// all good here !
-			updateChannelAssignment(t, bucketSlug, channelSlug, &models.HashicorpCloudPackerIteration{ID: iterationID})
+			updateChannelAssignmentDeprecated(t, bucketSlug, channelSlug, &models.HashicorpCloudPackerIteration{ID: iterationID})
 			return
 		}
 	}
 	t.Errorf("unexpected CreateChannel error, expected nil. Got %v", err)
 }
 
-func updateChannelAssignment(t *testing.T, bucketSlug string, channelSlug string, iteration *models.HashicorpCloudPackerIteration) {
+func updateChannelAssignmentDeprecated(t *testing.T, bucketSlug string, channelSlug string, iteration *models.HashicorpCloudPackerIteration) {
 	t.Helper()
 
 	client := testAccProvider.Meta().(*clients.Client)
@@ -389,35 +273,6 @@ func updateChannelAssignment(t *testing.T, bucketSlug string, channelSlug string
 		case iteration.IncrementalVersion > 0:
 			params.Body.IncrementalVersion = iteration.IncrementalVersion
 		}
-	}
-
-	_, err := client.Packer.PackerServiceUpdateChannel(params, nil)
-	if err == nil {
-		return
-	}
-	t.Errorf("unexpected UpdateChannel error, expected nil. Got %v", err)
-}
-
-func updateChannelRestriction(t *testing.T, bucketSlug string, channelSlug string, restricted bool) {
-	t.Helper()
-
-	client := testAccProvider.Meta().(*clients.Client)
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      client.Config.ProjectID,
-	}
-
-	params := packer_service.NewPackerServiceUpdateChannelParams()
-	params.LocationOrganizationID = loc.OrganizationID
-	params.LocationProjectID = loc.ProjectID
-	params.BucketSlug = bucketSlug
-	params.Slug = channelSlug
-	params.Body.Mask = "restriction"
-
-	if restricted {
-		params.Body.Restriction = models.HashicorpCloudPackerUpdateChannelRequestRestrictionRESTRICTED.Pointer()
-	} else {
-		params.Body.Restriction = models.HashicorpCloudPackerUpdateChannelRequestRestrictionUNRESTRICTED.Pointer()
 	}
 
 	_, err := client.Packer.PackerServiceUpdateChannel(params, nil)

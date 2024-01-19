@@ -340,6 +340,7 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 
 func getVersionNumber(versionName string) int {
 	// Remove 'v' from the beginning of the string
+	versionName = strings.ToLower(versionName)
 	strippedInput := strings.TrimPrefix(versionName, "v")
 
 	// Parse the remaining string as an integer

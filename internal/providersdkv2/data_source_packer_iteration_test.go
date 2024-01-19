@@ -27,7 +27,7 @@ func TestAcc_dataSourcePackerIteration_Simple(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration, _ = upsertCompleteVersion(t, bucketSlug, "1234", nil)
+			iteration, _ = upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, iteration.ID)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -72,7 +72,7 @@ func TestAcc_dataSourcePackerIteration_revokedIteration(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			unrevokedIteration, _ := upsertCompleteVersion(t, bucketSlug, "1234", nil)
+			unrevokedIteration, _ := upsertCompleteIteration(t, bucketSlug, "1234", nil)
 			upsertChannel(t, bucketSlug, channelSlug, unrevokedIteration.ID)
 			revokedIteration = revokeIteration(t, unrevokedIteration.ID, bucketSlug, revokeAt)
 		},
