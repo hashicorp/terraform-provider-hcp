@@ -7,15 +7,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
-	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
+	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
 
 // This string is used as the version fingerprint to represent an unassigned
@@ -105,12 +106,12 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv2.GetPackerChannelByNameFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if channel == nil || channel.Slug == "" {
+	if channel == nil || channel.Name == "" {
 		d.SetId("")
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
@@ -118,7 +119,7 @@ func resourcePackerChannelAssignmentRead(ctx context.Context, d *schema.Resource
 		}}
 	}
 
-	if err := setPackerChannelAssignmentVersionData(d, channel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, channel.Version); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -135,10 +136,10 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv2.GetPackerChannelByNameFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return diag.FromErr(err)
-	} else if channel == nil || channel.Slug == "" {
+	} else if channel == nil || channel.Name == "" {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) not found.", channelName, bucketName, loc.ProjectID),
@@ -148,7 +149,7 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 			Severity: diag.Error,
 			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have a version assigned by Terraform.", channelName, bucketName, loc.ProjectID),
 		}}
-	} else if version := channel.Iteration; version != nil && (version.IncrementalVersion > 0 || version.ID != "" || version.Fingerprint != "") {
+	} else if version := channel.Version; version != nil && (getVersionNumber(version.Name) > 0 || version.ID != "" || version.Fingerprint != "") {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  fmt.Sprintf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) already has an assigned version.", channelName, bucketName, loc.ProjectID),
@@ -164,13 +165,13 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 		versionFingerprint = ""
 	}
 
-	updatedChannel, err := packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
+	updatedChannel, err := packerv2.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(updatedChannel.ID)
 
-	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Version); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -195,12 +196,12 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 		versionFingerprint = ""
 	}
 
-	updatedChannel, err := packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
+	updatedChannel, err := packerv2.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, versionFingerprint)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, updatedChannel.Version); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -217,7 +218,7 @@ func resourcePackerChannelAssignmentDelete(ctx context.Context, d *schema.Resour
 	bucketName := d.Get("bucket_name").(string)
 	channelName := d.Get("channel_name").(string)
 
-	_, err = packerv1.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, "")
+	_, err = packerv2.UpdatePackerChannelAssignment(ctx, client, loc, bucketName, channelName, "")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -280,10 +281,10 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 		return nil, err
 	}
 
-	channel, err := packerv1.GetPackerChannelBySlugFromList(ctx, client, loc, bucketName, channelName)
+	channel, err := packerv2.GetPackerChannelByNameFromList(ctx, client, loc, bucketName, channelName)
 	if err != nil {
 		return nil, err
-	} else if channel == nil || channel.Slug == "" {
+	} else if channel == nil || channel.Name == "" {
 		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) not found", channelName, bucketName, loc.ProjectID)
 	} else if channel.Managed {
 		return nil, fmt.Errorf("HCP Packer channel with (channel_name %q) (bucket_name %q) (project_id %q) is managed by HCP Packer and cannot have a version assigned by Terraform", channelName, bucketName, loc.ProjectID)
@@ -291,22 +292,22 @@ func resourcePackerChannelAssignmentImport(ctx context.Context, d *schema.Resour
 
 	d.SetId(channel.ID)
 
-	if err := setPackerChannelAssignmentVersionData(d, channel.Iteration); err != nil {
+	if err := setPackerChannelAssignmentVersionData(d, channel.Version); err != nil {
 		return nil, err
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func setPackerChannelAssignmentVersionData(d *schema.ResourceData, i *packermodels.HashicorpCloudPackerIteration) error {
-	var version packermodels.HashicorpCloudPackerIteration
+func setPackerChannelAssignmentVersionData(d *schema.ResourceData, v *packermodels.HashicorpCloudPacker20230101Version) error {
+	var version packermodels.HashicorpCloudPacker20230101Version
 
-	if i == nil {
-		version = packermodels.HashicorpCloudPackerIteration{
+	if v == nil {
+		version = packermodels.HashicorpCloudPacker20230101Version{
 			Fingerprint: "",
 		}
 	} else {
-		version = *i
+		version = *v
 	}
 
 	fingerprint := version.Fingerprint
@@ -335,4 +336,17 @@ func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema
 	}
 
 	return nil
+}
+
+func getVersionNumber(versionName string) int {
+	// Remove 'v' from the beginning of the string
+	strippedInput := strings.TrimPrefix(versionName, "v")
+
+	// Parse the remaining string as an integer
+	number, err := strconv.Atoi(strippedInput)
+	if err != nil {
+		return 0
+	}
+
+	return number
 }

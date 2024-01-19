@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	packerservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/client/packer_service"
 	packermodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/preview/2023-01-01/models"
@@ -139,4 +140,31 @@ func DeletePackerChannel(
 	}
 
 	return nil, nil
+}
+
+func UpdatePackerChannelAssignment(
+	ctx context.Context, client *clients.Client, location *sharedmodels.HashicorpCloudLocationLocation,
+	bucketName, channelName, versionFingerprint string,
+) (*Channel, error) {
+	params := packerservice.NewPackerServiceUpdateChannelParamsWithContext(ctx)
+	params.LocationOrganizationID = location.OrganizationID
+	params.LocationProjectID = location.ProjectID
+	params.BucketName = bucketName
+	params.ChannelName = channelName
+	params.Body = &packermodels.HashicorpCloudPacker20230101UpdateChannelBody{}
+
+	maskPaths := []string{}
+	params.Body.VersionFingerprint = versionFingerprint
+	maskPaths = append(maskPaths, "versionFingerprint")
+	params.Body.UpdateMask = strings.Join(maskPaths, ",")
+
+	channel, err := client.PackerV2.PackerServiceUpdateChannel(params, nil)
+	if err != nil {
+		if err, ok := err.(*packerservice.PackerServiceUpdateChannelDefault); ok {
+			return nil, errors.New(err.Payload.Message)
+		}
+		return nil, fmt.Errorf("unexpected error format received by UpdatePackerChannelAssignment. Got: %v", err)
+	}
+
+	return channel.GetPayload().Channel, nil
 }
