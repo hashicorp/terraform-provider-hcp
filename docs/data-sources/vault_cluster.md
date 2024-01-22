@@ -38,6 +38,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
+- `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
 - `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
@@ -95,6 +96,15 @@ Read-Only:
 - `newrelic_license_key` (String) NewRelic license key for streaming audit logs
 - `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
+
+
+<a id="nestedatt--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Read-Only:
+
+- `address` (String)
+- `description` (String)
 
 
 <a id="nestedatt--major_version_upgrade_config"></a>

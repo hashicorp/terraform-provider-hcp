@@ -50,6 +50,7 @@ resource "hcp_vault_cluster" "example" {
 ### Optional
 
 - `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `ip_allowlist` (Block List, Max: 50) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `major_version_upgrade_config` (Block List, Max: 1) The Major Version Upgrade configuration. (see [below for nested schema](#nestedblock--major_version_upgrade_config))
 - `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
@@ -115,6 +116,18 @@ Read-Only:
 - `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
 - `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 - `elasticsearch_dataset` (String) ElasticSearch dataset for streaming audit logs
+
+
+<a id="nestedblock--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Required:
+
+- `address` (String) IP address range in CIDR notation.
+
+Optional:
+
+- `description` (String) Description to help identify source (maximum 255 chars).
 
 
 <a id="nestedblock--major_version_upgrade_config"></a>
