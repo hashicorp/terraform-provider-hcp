@@ -1,3 +1,37 @@
+## v0.80.0 (January 11, 2023)
+
+FEATURES:
+
+* Add `hcp_log_streaming_destination` resource. [[GH-713](https://github.com/hashicorp/terraform-provider-hcp/pull/713)]
+## v0.79.0 (December 27, 2023)
+
+FEATURES:
+
+* Allow authenticating the provider using Workload Identity Federation via a
+token_file in the provider configuration. [[GH-691](https://github.com/hashicorp/terraform-provider-hcp/pull/691)]
+## v0.78.0 (December 13, 2023)
+
+FEATURES:
+
+* Add optional Azure config block for hvn_route resource to support hub and spoke architectures, `azure_config`.
+
+ Add optional `next_hop_type` parameter.
+ Add optional `next_hop_ip_address` parameter.
+
+ Please see the Microsoft learn guide docs for futher info:
+ https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke [[GH-685](https://github.com/hashicorp/terraform-provider-hcp/pull/685)]
+* Add optional attribute `allow_forwarded_traffic` to `hcp_azure_peering_connection` resource. [[GH-681](https://github.com/hashicorp/terraform-provider-hcp/pull/681)]
+* Add optional attribute `use_remote_gateways` to `hcp_azure_peering_connection` resource. [[GH-681](https://github.com/hashicorp/terraform-provider-hcp/pull/681)]
+
+IMPROVEMENTS:
+
+* Add custom http endpoints as an observability provider for streaming audit logs and metrics from HCP Vault clusters. [[GH-671](https://github.com/hashicorp/terraform-provider-hcp/pull/671)]
+
+DEPRECATIONS:
+
+* The `data.hcp_packer_iteration.incremental_version` attribute is now deprecated and will be removed in a future release. Use the `fingerprint`, `id` or `uuid` attributes to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
+* The `hcp_packer_channel_assignment.iteration_id` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
+* The `hcp_packer_channel_assignment.iteration_version` attribute is now deprecated and will be removed in a future release. Use the `iteration_fingerprint` attribute to reference iterations instead. [[GH-678](https://github.com/hashicorp/terraform-provider-hcp/pull/678)]
 ## v0.77.0 (November 14, 2023)
 
 FEATURES:

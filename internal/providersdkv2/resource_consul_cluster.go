@@ -226,13 +226,13 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Description:      "IP address range in CIDR notation.",
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validateConsulClusterCIDR,
+							ValidateDiagFunc: validateCIDRRange,
 						},
 						"description": {
 							Description:      "Description to help identify source (maximum 255 chars).",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validateConsulClusterCIDRDescription,
+							ValidateDiagFunc: validateCIDRRangeDescription,
 						},
 					},
 				},
@@ -367,7 +367,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	// Convert ip_allowlist to consul model.
 	cidrs := d.Get("ip_allowlist").([]interface{})
-	ipAllowlist, err := buildIPAllowlist(cidrs)
+	ipAllowlist, err := buildIPAllowlistConsulCluster(cidrs)
 	if err != nil {
 		return diag.Errorf("Invalid ip_allowlist for Consul cluster (%s): %v", clusterID, err)
 	}
@@ -745,7 +745,7 @@ func resourceConsulClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if ipAllowlistChanged {
 		cidrs := d.Get("ip_allowlist").([]interface{})
-		ipAllowlist, err := buildIPAllowlist(cidrs)
+		ipAllowlist, err := buildIPAllowlistConsulCluster(cidrs)
 		if err != nil {
 			return diag.Errorf("Invalid ip_allowlist for Consul cluster (%s): %v", clusterID, err)
 		}
@@ -868,8 +868,8 @@ func resourceConsulClusterImport(ctx context.Context, d *schema.ResourceData, me
 	return []*schema.ResourceData{d}, nil
 }
 
-// buildIPAllowlist returns a consul model for the IP allowlist.
-func buildIPAllowlist(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul20210204CidrRange, error) {
+// buildIPAllowlistConsulCluster returns a consul model for the IP allowlist.
+func buildIPAllowlistConsulCluster(cidrs []interface{}) ([]*consulmodels.HashicorpCloudConsul20210204CidrRange, error) {
 	ipAllowList := make([]*consulmodels.HashicorpCloudConsul20210204CidrRange, len(cidrs))
 
 	for i, cidr := range cidrs {

@@ -212,7 +212,7 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
+func validateCIDRRange(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	addr := v.(string)
@@ -232,7 +232,7 @@ func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateConsulClusterCIDRDescription(v interface{}, path cty.Path) diag.Diagnostics {
+func validateCIDRRangeDescription(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 	description := v.(string)
 	if len(description) > 255 {

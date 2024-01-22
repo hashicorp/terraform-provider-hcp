@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/hashicorp/hcp-sdk-go/auth"
+	"github.com/hashicorp/hcp-sdk-go/auth/workload"
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 
@@ -43,6 +45,9 @@ import (
 	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
 
+	cloud_log_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
+
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
@@ -63,6 +68,7 @@ type Client struct {
 	ServicePrincipals service_principals_service.ClientService
 	Vault             vault_service.ClientService
 	VaultSecrets      secret_service.ClientService
+	LogService        log_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -70,6 +76,14 @@ type ClientConfig struct {
 	ClientID       string
 	ClientSecret   string
 	CredentialFile string
+
+	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
+	// indicate that authentication should occur by using workload identity
+	// federation. WorloadIdentityTokenFile indicates a file containing the
+	// token content and WorkloadIdentityResourceName is the workload identity
+	// provider resource name to authenticate against.
+	WorloadIdentityTokenFile     string
+	WorkloadIdentityResourceName string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
 	OrganizationID string
@@ -90,6 +104,18 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
+	} else if config.WorloadIdentityTokenFile != "" && config.WorkloadIdentityResourceName != "" {
+		// Build a credential file that points at the passed token file
+		cf := &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				File: &workload.FileCredentialSource{
+					Path: config.WorloadIdentityTokenFile,
+				},
+			},
+		}
+		opts = append(opts, hcpConfig.WithCredentialFile(cf))
 	}
 
 	// Create the HCP Config
@@ -130,6 +156,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
 		Vault:             cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
+		LogService:        cloud_log_service.New(httpClient, nil).LogService,
 	}
 
 	return client, nil
