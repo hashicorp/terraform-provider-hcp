@@ -2,6 +2,7 @@ package artifact_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -20,6 +21,15 @@ import (
 )
 
 func TestAcc_Packer_Data_Artifact(t *testing.T) {
+	// This is also checked further inside resource.ParallelTest, but we need to
+	// check it here because the next like DefaultProjectLocation tries to create the provider
+	// client, which it doesn't work in all evirnoments.
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		t.Skipf("Acceptance tests skipped unless env '%s' set",
+			resource.EnvTfAcc)
+		return
+	}
+
 	loc := acctest.DefaultProjectLocation(t)
 
 	bucketName := testutils.CreateTestSlug("ArtifactSimple")
