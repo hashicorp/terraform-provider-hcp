@@ -1,6 +1,6 @@
 ---
 subcategory: ""
-page_title: "Authenticate with HCP - HCP Provider"
+page_title: "Authenticate with HCP"
 description: |-
     A guide to obtaining HCP credentials and adding them to provider configuration.
 ---

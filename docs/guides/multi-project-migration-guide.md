@@ -1,6 +1,6 @@
 ---
 subcategory: ""
-page_title: "Multi-Project Migration Guide - HCP Provider"
+page_title: "Multi-Project Migration Guide"
 description: |-
     A guide to migrating HCP resources to multiple projects.
 ---
@@ -43,7 +43,7 @@ resource "hcp_hvn" "test" {
 
 ## 3. Configure projects on resource
 
-The HVN will be created in its configured project, while the HCP Consul cluster will be created in its different configured project. 
+The HVN will be created in its configured project, while the HCP Consul cluster will be created in its different configured project.
 Since no project is configured on the provider, the default project will be the oldest project.
 
 ```terraform
