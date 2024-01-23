@@ -10,12 +10,17 @@ on:
         description: "Patch Release (default: Minor)"
         type: boolean
         default: false
+      skip-tests:
+        description: "Skip the E2E test suite for break-glass scenarios"
+        type: boolean
+        default: false
 
 permissions: write-all
 
 jobs:
   run-tests:
     name: Run Tests
+    if: ${{ !inputs.skip-tests }}
     uses: ./.github/workflows/test.yml
     secrets: inherit
     permissions:
@@ -23,6 +28,7 @@ jobs:
 
   prerelease:
     name: Prerelease
+    if: always()
     needs: [run-tests]
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +60,7 @@ jobs:
         run: |
           go install github.com/hashicorp/go-changelog/cmd/changelog-build@522d403eacf1dca87cacec6dbc37fdfcda262d26
           go mod tidy
-      
+
       - name: Check For Changes
         id: changes
         run: |
@@ -64,7 +70,7 @@ jobs:
             echo "There were no changes since the last release."
             echo "There were no changes since the last release." >> $GITHUB_STEP_SUMMARY
             echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
-          else 
+          else
             echo "There were changes since the last release."
             echo "HAS_CHANGES=true" >> $GITHUB_OUTPUT
             echo "CURRENT_VERSION=$CURRENT_VERSION" >> "$GITHUB_ENV"
@@ -81,26 +87,26 @@ jobs:
           MAJOR=${CURRENT_VERSION_PARTS[0]}
           MINOR=${CURRENT_VERSION_PARTS[1]}
           PATCH=${CURRENT_VERSION_PARTS[2]}
-          
-          if [[ $IS_PATCH == "true" ]] 
+
+          if [[ $IS_PATCH == "true" ]]
           then
             PATCH=$((PATCH+1))
           else
             MINOR=$((MINOR+1))
             PATCH=0
           fi
-          
+
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
-          
+
           echo "Current Version is: $CURRENT_VERSION"
           echo "New Version will be: $NEW_VERSION"
           echo "## Updating ${CURRENT_VERSION} to ${NEW_VERSION}" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "Generating CHANGELOG"
           GIT_COMMIT_SHA=$(git rev-parse HEAD)
           CHANGELOG=$(changelog-build -changelog-template .changelog/changelog.tmpl -note-template .changelog/note.tmpl -entries-dir .changelog/ -last-release ${CURRENT_VERSION} -this-release ${GIT_COMMIT_SHA})
-          
+
           echo "## ${NEW_VERSION} Changelog" >> $GITHUB_STEP_SUMMARY
           if [[ $CHANGELOG == "" ]]; then
             echo "Changelog was empty. Add at least one changelog entry to \`.changelog/\`." >> $GITHUB_STEP_SUMMARY
@@ -116,7 +122,7 @@ jobs:
           rm -f OLD-CHANGELOG.md
           git add CHANGELOG.md
           git commit -m 'updated CHANGELOG.md'
-          
+
           echo "Updating Documentation"
           CURRENT_VERSION_NUM="${CURRENT_VERSION:1}"
           NEW_VERSION_NUM="${NEW_VERSION:1}"
@@ -124,7 +130,7 @@ jobs:
           go generate
           git add examples/provider/provider.tf docs/index.md
           git commit -m 'updated documentation'
-          
+
           echo "## Diff from Prerelease tasks" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
           git diff @{upstream} @ >> $GITHUB_STEP_SUMMARY
