@@ -65,7 +65,7 @@ The destination must be able to use the HCP webhook
 
 Optional:
 
-- `hmac_key` (String, Sensitive) The arbitrary secret that HCP uses to sign all its webhook requests. This is awrite-only field, it is written once and not visible thereafter.
+- `hmac_key` (String, Sensitive) The arbitrary secret that HCP uses to sign all its webhook requests. This is a write-only field, it is written once and not visible thereafter.
 
 
 <a id="nestedatt--subscriptions"></a>
