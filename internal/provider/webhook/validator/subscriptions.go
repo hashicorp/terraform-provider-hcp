@@ -184,7 +184,7 @@ func validateEvents(ctx context.Context, events attr.Value, req validator.ListRe
 			if _, ok := sourceMap[source]; ok {
 				resp.Diagnostics.Append(validatordiag.InvalidAttributeValueMatchDiagnostic(
 					req.Path,
-					"duplicated subscription event source found."+
+					"duplicated subscription event source found. "+
 						"The event source should be unique per subscription",
 					elementValue.ValueString(),
 				))

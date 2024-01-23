@@ -75,7 +75,7 @@ The destination must be able to use the HCP webhook
 					},
 					"hmac_key": schema.StringAttribute{
 						Optional: true,
-						Description: "The arbitrary secret that HCP uses to sign all its webhook requests. This is a" +
+						Description: "The arbitrary secret that HCP uses to sign all its webhook requests. This is a " +
 							"write-only field, it is written once and not visible thereafter.",
 						Sensitive: true,
 					},
@@ -85,7 +85,7 @@ The destination must be able to use the HCP webhook
 			// Optional fields
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the project to create the webhook under. " +
-					"If unspecified, the webhook will be created in the project the provider is configured with. ",
+					"If unspecified, the webhook will be created in the project the provider is configured with.",
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
