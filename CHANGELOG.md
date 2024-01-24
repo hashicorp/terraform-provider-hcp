@@ -1,3 +1,8 @@
+## v0.81.0 (January 24, 2024)
+
+FEATURES:
+
+* Add `ip_allowlist` field for HCP Vault clusters to create or update allowed IP address ranges (CIDRs) for inbound traffic. [[GH-625](https://github.com/hashicorp/terraform-provider-hcp/pull/625)]
 ## v0.80.0 (January 11, 2023)
 
 FEATURES:
