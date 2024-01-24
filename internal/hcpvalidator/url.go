@@ -5,6 +5,7 @@ package hcpvalidator
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
@@ -12,7 +13,8 @@ import (
 )
 
 const (
-	invalidURLErr = "must be a valid URL"
+	invalidURLErr      = "must be a valid URL"
+	invalidHTTPSURLErr = "must be a valid HTTPS URL"
 )
 
 var (
@@ -21,10 +23,14 @@ var (
 
 // urlValidator validates that a string Attribute's value is a valid URL.
 type urlValidator struct {
+	httpsOnly bool
 }
 
 // Description describes the validation in plain text formatting.
 func (v urlValidator) Description(_ context.Context) string {
+	if v.httpsOnly {
+		return invalidHTTPSURLErr
+	}
 	return invalidURLErr
 }
 
@@ -47,6 +53,18 @@ func (v urlValidator) ValidateString(ctx context.Context, request validator.Stri
 			v.Description(ctx),
 			value,
 		))
+		return
+	}
+
+	if v.httpsOnly {
+		urlValue, err := url.ParseRequestURI(value)
+		if err != nil || urlValue.Scheme != "https" {
+			response.Diagnostics.Append(validatordiag.InvalidAttributeValueMatchDiagnostic(
+				request.Path,
+				v.Description(ctx),
+				value,
+			))
+		}
 	}
 }
 
@@ -55,4 +73,13 @@ func (v urlValidator) ValidateString(ctx context.Context, request validator.Stri
 // Null (unconfigured) and unknown (known after apply) values are skipped.
 func URL() validator.String {
 	return urlValidator{}
+}
+
+// HTTPSUrl returns an AttributeValidator which ensures that any configured
+// attribute value satisfies requirements of a valid HTTPS URL.
+// Null (unconfigured) and unknown (known after apply) values are skipped.
+func HTTPSUrl() validator.String {
+	return urlValidator{
+		httpsOnly: true,
+	}
 }

@@ -15,7 +15,6 @@ The webhook resource manages a HCP webhook, used to notify external systems abou
 resource "hcp_notifications_webhook" "example" {
   name        = "example-webhook"
   description = "Notify for all of the events for all Packer artifact versions existing in the project."
-  enabled     = true
 
   config = {
     url = "https://example.com"
@@ -45,7 +44,7 @@ resource "hcp_notifications_webhook" "example" {
 ### Optional
 
 - `description` (String) The webhook's description. Descriptions are useful for helping others understand the purpose of the webhook.
-- `enabled` (Boolean) Indicates if the webhook should receive payloads for the subscribed events.
+- `enabled` (Boolean) Indicates if the webhook should receive payloads for the subscribed events. Defaults to `true`.
 - `project_id` (String) The ID of the project to create the webhook under. If unspecified, the webhook will be created in the project the provider is configured with.
 - `subscriptions` (Attributes List) Set of events to subscribe the webhook to all resources or a specific resource in the project. (see [below for nested schema](#nestedatt--subscriptions))
 

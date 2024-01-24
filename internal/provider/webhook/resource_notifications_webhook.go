@@ -102,7 +102,7 @@ The destination must be able to use the HCP webhook
 			"enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "Indicates if the webhook should receive payloads for the subscribed events.",
+				MarkdownDescription: "Indicates if the webhook should receive payloads for the subscribed events. Defaults to `true`.",
 				Default:             booldefault.StaticBool(true),
 			},
 

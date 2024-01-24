@@ -61,3 +61,53 @@ func TestURLValidator(t *testing.T) {
 		})
 	}
 }
+
+func TestHTTPSUrlValidator(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val         types.String
+		expectError bool
+	}
+	tests := map[string]testCase{
+		"unknown String": {
+			val: types.StringUnknown(),
+		},
+		"null String": {
+			val: types.StringNull(),
+		},
+		"valid http url": {
+			val:         types.StringValue("http://url.com"),
+			expectError: true,
+		},
+		"valid https url": {
+			val: types.StringValue("https://url.com"),
+		},
+		"invalid url": {
+			val:         types.StringValue("invalid"),
+			expectError: true,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			request := validator.StringRequest{
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
+				ConfigValue:    test.val,
+			}
+			response := validator.StringResponse{}
+			hcpvalidator.HTTPSUrl().ValidateString(context.TODO(), request, &response)
+
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			}
+		})
+	}
+}
