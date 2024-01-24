@@ -7,11 +7,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
 
 func TestAccPackerRunTask(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccPackerRunTask(t *testing.T) {
 				OrganizationID: client.Config.OrganizationID,
 				ProjectID:      client.Config.ProjectID,
 			}
-			resp, err := clients.GetRunTask(context.Background(), client, loc)
+			resp, err := packerv2.GetRunTask(context.Background(), client, loc)
 			if err != nil {
 				t.Errorf("failed to get run task before test step, received error: %v", err)
 				return
@@ -99,12 +100,12 @@ func testAccPackerRunTaskBuilderFromRunTask(oldRT testAccConfigBuilderInterface,
 	)
 }
 
-func testAccPullPackerRunTaskFromAPIWithRunTaskState(resourceName string, state *terraform.State) (*models.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse, error) {
+func testAccPullPackerRunTaskFromAPIWithRunTaskState(resourceName string, state *terraform.State) (*models.HashicorpCloudPacker20230101GetRegistryTFCRunTaskAPIResponse, error) {
 	client := testAccProvider.Meta().(*clients.Client)
 
 	loc, _ := testAccGetLocationFromState(resourceName, state)
 
-	resp, err := clients.GetRunTask(context.Background(), client, loc)
+	resp, err := packerv2.GetRunTask(context.Background(), client, loc)
 	if err != nil {
 		return nil, err
 	}
@@ -112,14 +113,14 @@ func testAccPullPackerRunTaskFromAPIWithRunTaskState(resourceName string, state 
 	return resp, nil
 }
 
-func testAccCheckPackerRunTaskStateMatchesRunTask(resourceName string, runTaskPtr **models.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse) resource.TestCheckFunc {
+func testAccCheckPackerRunTaskStateMatchesRunTask(resourceName string, runTaskPtr **models.HashicorpCloudPacker20230101GetRegistryTFCRunTaskAPIResponse) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		var runTask *models.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse
+		var runTask *models.HashicorpCloudPacker20230101GetRegistryTFCRunTaskAPIResponse
 		if runTaskPtr != nil {
 			runTask = *runTaskPtr
 		}
 		if runTask == nil {
-			runTask = &models.HashicorpCloudPackerGetRegistryTFCRunTaskAPIResponse{}
+			runTask = &models.HashicorpCloudPacker20230101GetRegistryTFCRunTaskAPIResponse{}
 		}
 
 		return resource.ComposeAggregateTestCheckFunc(

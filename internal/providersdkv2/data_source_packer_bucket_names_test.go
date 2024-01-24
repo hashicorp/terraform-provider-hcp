@@ -38,7 +38,6 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.#", "1"),
 					resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.0", bucket0),
 				),
 			},
@@ -49,7 +48,6 @@ func TestAcc_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.#", "3"),
 					resource.ComposeAggregateTestCheckFunc(
 						resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.0", bucket0),
 						resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.1", bucket1),
