@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/go-openapi/runtime v0.26.2
+	github.com/go-openapi/runtime v0.27.0
 	github.com/go-openapi/strfmt v0.22.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
@@ -28,6 +28,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 
