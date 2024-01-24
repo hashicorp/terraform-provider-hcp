@@ -19,11 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
-
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 )
@@ -128,7 +127,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 }
 
 func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
+	return append([]func() resource.Resource{
 		// Resource Manager
 		resourcemanager.NewOrganizationIAMPolicyResource,
 		resourcemanager.NewOrganizationIAMBindingResource,
@@ -145,11 +144,11 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewWorkloadIdentityProviderResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
-	}
+	}, packer.ResourceSchemaBuilders...)
 }
 
 func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
+	return append([]func() datasource.DataSource{
 		// Resource Manager
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
@@ -159,7 +158,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
-	}
+	}, packer.DataSourceSchemaBuilders...)
 }
 
 func NewFrameworkProvider(version string) func() provider.Provider {

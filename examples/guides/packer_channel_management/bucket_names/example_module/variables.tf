@@ -46,9 +46,9 @@ variable "errorIfNotSet" {
 variable "channelLinks" {
   type        = map(string)
   description = <<EOD
-    A map FROM bucket name TO channel name (of the channel to fetch the iteration 
+    A map FROM bucket name TO channel name (of the channel to fetch the version
     identifier from)
-    Automatically assigns the iteration from another channel in the bucket to 
+    Automatically assigns the version from another channel in the bucket to
     the bucket's channel in `channels`.
   EOD
   default     = {}
@@ -58,8 +58,8 @@ variable "channelLinks" {
 variable "explicitAssignments" {
   type        = map(string)
   description = <<EOD
-    A map FROM bucket name TO iteration id
-    Explicit iteration ID assignments for buckets. If a bucket is present in
+    A map FROM bucket name TO version fingerprint
+    Explicit version fingerprint assignments for buckets. If a bucket is present in
     this map and in `channelLinks`, the value provided here will be used instead.
   EOD
   default     = {}

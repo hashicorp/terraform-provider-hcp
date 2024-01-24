@@ -12,9 +12,9 @@ import (
 )
 
 func TestAccPackerChannel(t *testing.T) {
-	bucketSlug := testAccCreateSlug("ChannelSimple")
-	channelSlug := bucketSlug // No need for a different slug
-	channelConfig := testAccPackerChannelBuilderBase("SimpleChannel", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug))
+	bucketName := testAccCreateSlug("ChannelSimple")
+	channelName := bucketName // No need for a different name
+	channelConfig := testAccPackerChannelBuilderBase("SimpleChannel", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
 	unrestrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "false")
 	restrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "true")
 
@@ -22,42 +22,42 @@ func TestAccPackerChannel(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
-			upsertBucket(t, bucketSlug)
+			upsertBucket(t, bucketName)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, bucketSlug, true)
+			deleteBucket(t, bucketName, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelConfig)),
-				Check:  testAccCheckPackerChannel(channelConfig.BlockName(), channelSlug, bucketSlug, ""),
+				Check:  testAccCheckPackerChannel(channelConfig.BlockName(), channelName, bucketName, ""),
 			},
 			{
 				ResourceName:      channelConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 			{ // Unrestrict channel (likely a no-op)
 				Config: testConfig(testAccConfigBuildersToString(unrestrictedChannelConfig)),
-				Check:  testAccCheckPackerChannel(unrestrictedChannelConfig.BlockName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(unrestrictedChannelConfig.BlockName(), channelName, bucketName, "false"),
 			},
 			{ // Validate importing explicitly unrestricted channel
 				ResourceName:      unrestrictedChannelConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 			{ // Restrict channel
 				Config: testConfig(testAccConfigBuildersToString(restrictedChannelConfig)),
-				Check:  testAccCheckPackerChannel(restrictedChannelConfig.BlockName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(restrictedChannelConfig.BlockName(), channelName, bucketName, "true"),
 			},
 			{ // Validate importing explicitly restricted channel
 				ResourceName:      restrictedChannelConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 		},
@@ -65,9 +65,9 @@ func TestAccPackerChannel(t *testing.T) {
 }
 
 func TestAccPackerChannel_HCPManaged(t *testing.T) {
-	bucketSlug := testAccCreateSlug("ChannelHCPManaged")
-	channelSlug := "latest"
-	latestConfig := testAccPackerChannelBuilderBase("latest", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug))
+	bucketName := testAccCreateSlug("ChannelHCPManaged")
+	channelName := "latest"
+	latestConfig := testAccPackerChannelBuilderBase("latest", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
 	unrestrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "false")
 	restrictedLatestConfig := testAccPackerChannelBuilderFromChannel(latestConfig, "true")
 
@@ -75,42 +75,42 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
-			upsertBucket(t, bucketSlug)
+			upsertBucket(t, bucketName)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, bucketSlug, true)
+			deleteBucket(t, bucketName, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{ // Validate "creating" (automatically adopting) a managed channel
 				Config: testConfig(testAccConfigBuildersToString(latestConfig)),
-				Check:  testAccCheckPackerChannel(latestConfig.BlockName(), channelSlug, bucketSlug, ""),
+				Check:  testAccCheckPackerChannel(latestConfig.BlockName(), channelName, bucketName, ""),
 			},
 			{
 				ResourceName:      latestConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 			{ // Unrestrict managed channel
 				Config: testConfig(testAccConfigBuildersToString(unrestrictedLatestConfig)),
-				Check:  testAccCheckPackerChannel(unrestrictedLatestConfig.BlockName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(unrestrictedLatestConfig.BlockName(), channelName, bucketName, "false"),
 			},
 			{ // Validate importing explicitly unrestricted managed channel
 				ResourceName:      unrestrictedLatestConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 			{ // Restrict managed channel
 				Config: testConfig(testAccConfigBuildersToString(restrictedLatestConfig)),
-				Check:  testAccCheckPackerChannel(restrictedLatestConfig.BlockName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(restrictedLatestConfig.BlockName(), channelName, bucketName, "true"),
 			},
 			{ // Validate importing explicitly restricted managed channel
 				ResourceName:      restrictedLatestConfig.BlockName(),
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("%s:%s", bucketSlug, channelSlug),
+				ImportStateId:     fmt.Sprintf("%s:%s", bucketName, channelName),
 				ImportStateVerify: true,
 			},
 		},
@@ -118,91 +118,91 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 }
 
 func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
-	bucketSlug := testAccCreateSlug("RestrictionDrift")
-	channelSlug := bucketSlug // No need for a different slug
+	bucketName := testAccCreateSlug("RestrictionDrift")
+	channelName := bucketName // No need for a different name
 
-	channelUnrestrictedConfig := testAccPackerChannelBuilder("Drift", fmt.Sprintf("%q", channelSlug), fmt.Sprintf("%q", bucketSlug), "false")
+	channelUnrestrictedConfig := testAccPackerChannelBuilder("Drift", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName), "false")
 	channelRestrictedConfig := testAccPackerChannelBuilderFromChannel(channelUnrestrictedConfig, "true")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
-			upsertBucket(t, bucketSlug)
+			upsertBucket(t, bucketName)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, bucketSlug, true)
+			deleteBucket(t, bucketName, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			// Normal channels
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelName, bucketName, "false"),
 			},
 			{ // Check drift mitigation for normal channel from false->true
 				PreConfig: func() {
-					updateChannelRestriction(t, bucketSlug, channelSlug, true)
+					updateChannelRestriction(t, bucketName, channelName, true)
 				},
 				Config: testConfig(testAccConfigBuildersToString(channelUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(channelUnrestrictedConfig.BlockName(), channelName, bucketName, "false"),
 			},
 			{
 				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelName, bucketName, "true"),
 			},
 			{ // Check drift mitigation for normal channel from true->false
 				PreConfig: func() {
-					updateChannelRestriction(t, bucketSlug, channelSlug, false)
+					updateChannelRestriction(t, bucketName, channelName, false)
 				},
 				Config: testConfig(testAccConfigBuildersToString(channelRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(channelRestrictedConfig.BlockName(), channelName, bucketName, "true"),
 			},
 		},
 	})
 }
 
 func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
-	bucketSlug := testAccCreateSlug("RestrictionDriftHCPManaged")
-	latestSlug := "latest"
+	bucketName := testAccCreateSlug("RestrictionDriftHCPManaged")
+	latestName := "latest"
 
-	latestUnrestrictedConfig := testAccPackerChannelBuilder("DriftHCPManaged", fmt.Sprintf("%q", latestSlug), fmt.Sprintf("%q", bucketSlug), "false")
+	latestUnrestrictedConfig := testAccPackerChannelBuilder("DriftHCPManaged", fmt.Sprintf("%q", latestName), fmt.Sprintf("%q", bucketName), "false")
 	latestRestrictedConfig := testAccPackerChannelBuilderFromChannel(latestUnrestrictedConfig, "true")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
-			upsertBucket(t, bucketSlug)
+			upsertBucket(t, bucketName)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(*terraform.State) error {
-			deleteBucket(t, bucketSlug, true)
+			deleteBucket(t, bucketName, true)
 			return nil
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestName, bucketName, "false"),
 			},
 			{ // Check drift mitigation for HCP managed channel from false->true
 				PreConfig: func() {
-					updateChannelRestriction(t, bucketSlug, latestSlug, true)
+					updateChannelRestriction(t, bucketName, latestName, true)
 				},
 				Config: testConfig(testAccConfigBuildersToString(latestUnrestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestSlug, bucketSlug, "false"),
+				Check:  testAccCheckPackerChannel(latestUnrestrictedConfig.BlockName(), latestName, bucketName, "false"),
 			},
 			{
 				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestName, bucketName, "true"),
 			},
 			{ // Check drift mitigation for HCP managed channel from true->false
 				PreConfig: func() {
-					updateChannelRestriction(t, bucketSlug, latestSlug, false)
+					updateChannelRestriction(t, bucketName, latestName, false)
 				},
 				Config: testConfig(testAccConfigBuildersToString(latestRestrictedConfig)),
-				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestSlug, bucketSlug, "true"),
+				Check:  testAccCheckPackerChannel(latestRestrictedConfig.BlockName(), latestName, bucketName, "true"),
 			},
 		},
 	})

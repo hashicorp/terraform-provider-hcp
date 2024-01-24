@@ -9,18 +9,6 @@ description: |-
 
 {{ .Description | trimspace }}
 
-## Example Usage
-
-### Single image sourcing
-
-{{ tffile "examples/data-sources/hcp_packer_image/data-source-alt.tf" }}
-
-~> **Note:** The `channel` attribute in this data source may incur a billable request to HCP Packer. This attribute is intended for convenience when using a single image. When sourcing multiple images from a single iteration, the `hcp_packer_iteration` data source is the alternative for querying a channel just once.
-
-### Multiple image sourcing from a single iteration
-
-{{ tffile "examples/data-sources/hcp_packer_image/data-source.tf" }}
-
-~> **Note:** This data source only returns the first found image's metadata filtered by the given arguments, from the returned list of images associated with the specified iteration. Therefore, if multiple images exist in the same region, it will only pick one of them. In this case, you can filter images by a source build name (Ex: `amazon-ebs.example`) using the `component_type` optional argument.
+~> **Deprecated:** This data source is deprecated and will be removed in a future release. Please use the [`hcp_packer_artifact`](./packer_artifact) data source instead.
 
 {{ .SchemaMarkdown | trimspace }}

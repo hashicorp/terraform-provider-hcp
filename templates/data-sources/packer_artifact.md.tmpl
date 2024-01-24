@@ -1,0 +1,26 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: "HCP Packer"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+### Single artifact sourcing
+
+{{ tffile "examples/data-sources/hcp_packer_artifact/data-source-alt.tf" }}
+
+~> **Note:** The `channel` attribute in this data source may incur a billable request to HCP Packer. This attribute is intended for convenience when using a single artifact. When sourcing multiple artifacts from a single version, the `hcp_packer_version` data source is the alternative for querying a channel just once.
+
+### Multiple artifact sourcing from a single version
+
+{{ tffile "examples/data-sources/hcp_packer_artifact/data-source.tf" }}
+
+~> **Note:** This data source only returns the first found artifact's metadata filtered by the given arguments, from the returned list of artifacts associated with the specified version. Therefore, if multiple artifacts exist in the same region, it will only pick one of them. In this case, you can filter artifacts by a source build name (Ex: `amazon-ebs.example`) using the `component_type` optional argument.
+
+{{ .SchemaMarkdown | trimspace }}

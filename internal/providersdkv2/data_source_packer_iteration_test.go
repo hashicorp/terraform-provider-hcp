@@ -129,7 +129,6 @@ func testAccCheckIterationStateMatchesIteration(resourceName string, iterationPt
 			resource.TestCheckResourceAttr(resourceName, "bucket_name", iteration.BucketSlug),
 			resource.TestCheckResourceAttr(resourceName, "ulid", iteration.ID),
 			resource.TestCheckResourceAttr(resourceName, "fingerprint", iteration.Fingerprint),
-			resource.TestCheckResourceAttr(resourceName, "incremental_version", fmt.Sprintf("%d", iteration.IncrementalVersion)),
 			resource.TestCheckResourceAttr(resourceName, "author_id", iteration.AuthorID),
 			resource.TestCheckResourceAttr(resourceName, "created_at", iteration.CreatedAt.String()),
 			resource.TestCheckResourceAttr(resourceName, "updated_at", iteration.UpdatedAt.String()),

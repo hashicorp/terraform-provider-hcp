@@ -23,18 +23,18 @@ locals {
   }
 }
 
-data "hcp_packer_iteration" "channel_links" {
+data "hcp_packer_version" "channel_links" {
   for_each = local.channelLinksMinimized
 
-  bucket_name = each.key
-  channel     = each.value
+  bucket_name  = each.key
+  channel_name = each.value
 }
 
 locals {
-  # Map FROM bucket name TO iteration id
+  # Map FROM bucket name TO version id
   channelLinkAssignments = {
     for bucketName in keys(local.channelLinksMinimized) :
-    bucketName => data.hcp_packer_iteration.channel_links[bucketName].id
+    bucketName => data.hcp_packer_version.channel_links[bucketName].fingerprint
   }
 
   unfilteredAssignments = merge(
@@ -45,8 +45,8 @@ locals {
   )
 
   assignments = var.errorOnInvalidBucket ? local.unfilteredAssignments : {
-    for bucketName, iterationID in local.unfilteredAssignments :
-    bucketName => iterationID
+    for bucketName, versionFingerprint in local.unfilteredAssignments :
+    bucketName => versionFingerprint
     if contains(keys(var.channels), bucketName)
   }
 }
@@ -57,5 +57,5 @@ resource "hcp_packer_channel_assignment" "release" {
   bucket_name  = each.key
   channel_name = var.channels[each.key].name
 
-  iteration_id = each.value
+  version_fingerprint = each.value
 }
