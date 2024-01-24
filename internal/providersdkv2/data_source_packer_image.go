@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 	"golang.org/x/exp/slices"
 )
 
@@ -132,7 +133,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	var iteration *models.HashicorpCloudPackerIteration
 
 	if iterationID != "" {
-		iteration, err = clients.GetIterationFromID(
+		iteration, err = packerv1.GetIterationFromID(
 			ctx,
 			client,
 			loc,
@@ -145,7 +146,7 @@ func dataSourcePackerImageRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if channelSlug != "" {
-		channel, err := clients.GetPackerChannelBySlug(
+		channel, err := packerv1.GetPackerChannelBySlug(
 			ctx,
 			client,
 			loc,

@@ -29,7 +29,7 @@ require (
 	github.com/yuin/goldmark v1.6.0 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
@@ -87,7 +87,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/oklog/ulid v1.3.1
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/posener/complete v1.2.3 // indirect

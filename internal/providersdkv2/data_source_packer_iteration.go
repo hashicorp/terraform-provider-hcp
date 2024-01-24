@@ -12,12 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv1"
 )
 
 func dataSourcePackerIteration() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.",
-		ReadContext: dataSourcePackerIterationRead,
+		DeprecationMessage: "This data source has been deprecated. Use the new `hcp_packer_version` data source instead.",
+		Description:        "The Packer Image data source iteration gets the most recent iteration (or build) of an image, given a channel.",
+		ReadContext:        dataSourcePackerIterationRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
 		},
@@ -67,12 +69,6 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"incremental_version": {
-				Description: "Incremental version of this iteration",
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Deprecated:  "This attribute will be removed in a future version. Use `fingerprint` to reference iterations instead.",
-			},
 			"created_at": {
 				Description: "Creation time of this iteration",
 				Type:        schema.TypeString,
@@ -104,7 +100,7 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[INFO] Reading HCP Packer registry (%s) [project_id=%s, organization_id=%s, channel=%s]", bucketName, loc.ProjectID, loc.OrganizationID, channelSlug)
 
-	channel, err := clients.GetPackerChannelBySlug(ctx, client, loc, bucketName, channelSlug)
+	channel, err := packerv1.GetPackerChannelBySlug(ctx, client, loc, bucketName, channelSlug)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -130,9 +126,6 @@ func dataSourcePackerIterationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ulid", iteration.ID); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("incremental_version", iteration.IncrementalVersion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("updated_at", iteration.UpdatedAt.String()); err != nil {
