@@ -22,5 +22,5 @@ data "hcp_organization" "example" {
 ### Read-Only
 
 - `name` (String) The organization's name.
-- `resource_id` (String) The organization's unique identitier
+- `resource_id` (String) The organization's unique identifier
 - `resource_name` (String) The organization's resource name in format "organization/<resource_id>"

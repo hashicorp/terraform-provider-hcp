@@ -28,5 +28,5 @@ data "hcp_project" "example" {
 
 - `description` (String) The project's description
 - `name` (String) The project's name.
-- `resource_id` (String) The project's unique identitier
+- `resource_id` (String) The project's unique identifier
 - `resource_name` (String) The project's resource name in format "project/<resource_id>"

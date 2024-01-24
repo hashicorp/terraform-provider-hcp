@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
 )
 
 // This is an implementation using the Provider framework
@@ -144,6 +145,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewWorkloadIdentityProviderResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
+		// Webhook
+		webhook.NewNotificationsWebhookResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
