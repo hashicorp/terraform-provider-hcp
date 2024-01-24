@@ -58,7 +58,7 @@ func (d *DataSourceProject) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 			},
 			"resource_id": schema.StringAttribute{
-				Description: "The project's unique identitier",
+				Description: "The project's unique identifier",
 				Computed:    true,
 			},
 		},

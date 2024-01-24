@@ -27,4 +27,4 @@ data "hcp_service_principal" "example" {
 ### Read-Only
 
 - `name` (String) The service principal's name
-- `resource_id` (String) The service principal's unique identitier
+- `resource_id` (String) The service principal's unique identifier

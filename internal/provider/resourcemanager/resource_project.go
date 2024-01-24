@@ -52,7 +52,7 @@ The user or service account that is running Terraform when creating a %s resourc
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The project's unique identitier",
+				Description: "The project's unique identifier",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

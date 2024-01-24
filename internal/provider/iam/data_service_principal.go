@@ -48,7 +48,7 @@ func (d *DataSourceServicePrincipal) Schema(ctx context.Context, req datasource.
 				Required: true,
 			},
 			"resource_id": schema.StringAttribute{
-				Description: "The service principal's unique identitier",
+				Description: "The service principal's unique identifier",
 				Computed:    true,
 			},
 		},
