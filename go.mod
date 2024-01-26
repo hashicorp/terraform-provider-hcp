@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/go-openapi/runtime v0.27.0
+	github.com/go-openapi/runtime v0.27.1
 	github.com/go-openapi/strfmt v0.22.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
