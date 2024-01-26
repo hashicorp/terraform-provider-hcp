@@ -101,7 +101,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
 
 ### Read-Only
 
-- `resource_id` (String) The workload identity providers's unique identitier
+- `resource_id` (String) The workload identity provider's unique identifier
 - `resource_name` (String) The workload identity providers's resource name in the format `iam/project/<project_id>/service-principal/<sp_name>/workload-identity-provider/<name>`
 
 <a id="nestedatt--aws"></a>
