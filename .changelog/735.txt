@@ -1,0 +1,3 @@
+```release-note:deprecation
+`data.hcp_packer_image`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_artifact`
+```
