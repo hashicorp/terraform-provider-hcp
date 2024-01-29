@@ -21,8 +21,9 @@ var defaultPackerTimeout = time.Minute
 
 func dataSourcePackerImage() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.",
-		ReadContext: dataSourcePackerImageRead,
+		DeprecationMessage: "This data source has been deprecated. Use the new `hcp_packer_artifact` data source instead.",
+		Description:        "The Packer Image data source gets an image associated with an iteration, either from a specific iteration or from the iteration assigned to a given Channel.",
+		ReadContext:        dataSourcePackerImageRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultPackerTimeout,
 		},
