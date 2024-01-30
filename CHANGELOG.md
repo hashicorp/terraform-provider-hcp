@@ -1,3 +1,22 @@
+## v0.82.0 (January 30, 2024)
+BREAKING CHANGES:
+
+* `data.hcp_packer_iteration`: Removed the `incremental_version` attribute. Use the `fingerprint`, `id` or `uuid` attributes instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: Removed the `iteration_id` attribute. Use the `version_fingerprint` attribute instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: Removed the `iteration_version` attribute. Use the `version_fingerprint` attribute instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+
+FEATURES:
+
+* Add `hcp_notifications_webhook` resource. [[GH-723](https://github.com/hashicorp/terraform-provider-hcp/pull/723)]
+* `data.hcp_packer_artifact`: Added the `hcp_packer_artifact` data source, which replaces `data.hcp_packer_image` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `data.hcp_packer_version`: Added the `hcp_packer_version` data source, which replaces `data.hcp_packer_iteration` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+
+DEPRECATIONS:
+
+* `data.hcp_packer_image`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_artifact` [[GH-735](https://github.com/hashicorp/terraform-provider-hcp/pull/735)]
+* `data.hcp_packer_iteration`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_version` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute is now deprecated and will be removed in a future release. 
+Refer to the `version_fingerprint` attribute release notes for more information. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
 ## v0.81.0 (January 24, 2024)
 
 FEATURES:
