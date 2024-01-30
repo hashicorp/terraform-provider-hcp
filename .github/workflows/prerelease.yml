@@ -28,6 +28,7 @@ jobs:
 
   prerelease:
     name: Prerelease
+    if: always()
     needs: [run-tests]
     runs-on: ubuntu-latest
     steps:
