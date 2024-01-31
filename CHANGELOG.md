@@ -1,4 +1,4 @@
-## v0.81.1 (January 30, 2024)
+## v0.82.0 (January 30, 2024)
 BREAKING CHANGES:
 
 * `data.hcp_packer_iteration`: Removed the `incremental_version` attribute. Use the `fingerprint`, `id` or `uuid` attributes instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
