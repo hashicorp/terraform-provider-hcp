@@ -1,0 +1,3 @@
+```release-note:bug
+Do not panic if provider is configured with credentials with no project access.
+```
