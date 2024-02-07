@@ -1,0 +1,3 @@
+```release-note:improvement
+Update example for `hcp_packer_channel_assignment` resource
+```
