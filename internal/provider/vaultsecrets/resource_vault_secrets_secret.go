@@ -114,7 +114,7 @@ func (r *resourceVaultsecretsSecret) Create(ctx context.Context, req resource.Cr
 
 	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.ValueString(), plan.SecretName.ValueString(), plan.SecretValue.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating Vault Secrets Secret", err.Error())
+		resp.Diagnostics.AddError("Error creating secret", err.Error())
 		return
 	}
 
@@ -141,7 +141,8 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 
 	res, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, state.AppName.ValueString(), state.SecretName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Unable to get secret")
+		resp.Diagnostics.AddError(err.Error(), "Error reading secret")
+		return
 	}
 
 	state.SecretValue = types.StringValue(res.Version.Value)
@@ -163,7 +164,6 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 	}
 
 	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.ValueString(), plan.SecretName.ValueString(), plan.SecretValue.ValueString())
-
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating secret", err.Error())
 		return
