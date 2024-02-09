@@ -46,9 +46,12 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 		diags.AddError(fmt.Sprintf("unable to fetch project id: %v", err), "")
 		return nil, diags
 	}
+	if len(listProjResp.Payload.Projects) == 0 {
+		diags.AddError("The configured credentials does not have access to any project.", "Please assign at least one project to the configured credentials to use this provider.")
+		return nil, diags
+	}
 	if len(listProjResp.Payload.Projects) > 1 {
 		diags.AddWarning("There is more than one project associated with the organization of the configured credentials.", `The oldest project has been selected as the default. To configure which project is used as default, set a project in the HCP provider config block. Resources may also be configured with different projects.`)
-
 		return getOldestProject(listProjResp.Payload.Projects), diags
 	}
 	project = listProjResp.Payload.Projects[0]
