@@ -1,0 +1,4 @@
+```release-note:bug
+Fixing the validation rules for HCP Vault Secrets app and secret names to match
+what we have on the server side.
+```
