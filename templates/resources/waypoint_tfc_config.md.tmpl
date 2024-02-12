@@ -1,0 +1,47 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "HCP Waypoint"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} `{{.Type}}`
+
+-> **Note:** This feature is currently in public beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```terraform
+resource "hcp_waypoint_tfc_config" "test" {
+  token        = "token value"
+  tfc_org_name = "example-tfc-org"
+}
+```
+
+This resource can in conjunction with resources from the TFE provider to create
+an appropriate Team level API token for use with configuring Waypoint:
+
+```terraform
+provider "tfe" {
+  # see https://registry.terraform.io/providers/hashicorp/tfe/latest/docs
+  # for more information on how to configure the TFE provider
+}
+
+data "tfe_team" "test" {
+  name         = "example-team"
+  organization = "example-tfc-org"
+}
+
+resource "tfe_team_token" "test" {
+  team_id = data.tfe_team.test.id
+}
+
+resource "hcp_waypoint_tfc_config" "test" {
+  token        = tfe_team_token.test.token
+  tfc_org_name = data.tfe_team.test.organization
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
