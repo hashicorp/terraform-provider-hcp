@@ -50,9 +50,11 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 				Description: "The name of the application the secret can be found in",
 				Required:    true,
 				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(3),
+					stringvalidator.LengthAtMost(36),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
-						"must contain only letters, numbers or hyphens",
+						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9\-]+[a-zA-Z0-9]$`),
+						"must contain only ASCII letters, numbers, and hyphens; must not start or end with a hyphen",
 					),
 				},
 			},
@@ -60,9 +62,11 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 				Description: "The name of the secret",
 				Required:    true,
 				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.LengthAtMost(64),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[_\da-zA-Z]{3,36}$`),
-						"must contain only letters, numbers or underscores",
+						regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`),
+						"must contain only ASCII letters, numbers, and underscores; must not start with a number",
 					),
 				},
 			},
@@ -163,7 +167,6 @@ func (r *resourceVaultsecretsSecret) Update(ctx context.Context, req resource.Up
 	}
 
 	res, err := clients.CreateVaultSecretsAppSecret(ctx, r.client, loc, plan.AppName.ValueString(), plan.SecretName.ValueString(), plan.SecretValue.ValueString())
-
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating secret", err.Error())
 		return
