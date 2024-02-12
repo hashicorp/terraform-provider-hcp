@@ -28,7 +28,7 @@ func TestAccVaultSecretsResourceSecret(t *testing.T) {
 				}`, testAppName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "app_name", testAppName),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "secret_name", "test_secret"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "secret_name", "a_long_and_complicated_secret_name_but_less_than_64_characters"),
 					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "secret_value", "super secret"),
 				),
 			},
