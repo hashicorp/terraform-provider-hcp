@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,7 +15,7 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	uniqueAzurePeeringTestID = uniqueName()
 	subscriptionID           = os.Getenv("ARM_SUBSCRIPTION_ID")
 	tenantID                 = os.Getenv("ARM_TENANT_ID")
 )

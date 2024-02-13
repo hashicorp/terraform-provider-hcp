@@ -44,8 +44,8 @@ func (in *inputT) GetHvnCidr() string {
 // to shorten testing time.
 func TestAccVaultClusterAzure(t *testing.T) {
 	azureTestInput := inputT{
-		VaultClusterName:           addTimestampSuffix("test-vault-azure-"),
-		HvnName:                    addTimestampSuffix("test-hvn-azure-"),
+		VaultClusterName:           uniqueName(),
+		HvnName:                    uniqueName(),
 		VaultClusterResourceName:   vaultClusterResourceName,
 		VaultClusterDataSourceName: vaultClusterDataSourceName,
 		AdminTokenResourceName:     adminTokenResourceName,
@@ -72,8 +72,8 @@ func TestAccVaultClusterAzure(t *testing.T) {
 // to shorten testing time.
 func TestAccVaultClusterAWS(t *testing.T) {
 	awsTestInput := inputT{
-		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
-		HvnName:                    addTimestampSuffix("test-hvn-aws-"),
+		VaultClusterName:           uniqueName(),
+		HvnName:                    uniqueName(),
 		VaultClusterResourceName:   vaultClusterResourceName,
 		VaultClusterDataSourceName: vaultClusterDataSourceName,
 		AdminTokenResourceName:     adminTokenResourceName,

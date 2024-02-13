@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,8 +14,8 @@ import (
 )
 
 var (
-	hvn1UniqueID = fmt.Sprintf("hcp-provider-test-%s-1", time.Now().Format("200601021504"))
-	hvn2UniqueID = fmt.Sprintf("hcp-provider-test-%s-2", time.Now().Format("200601021504"))
+	hvn1UniqueID = uniqueName()
+	hvn2UniqueID = uniqueName()
 )
 
 var testAccHvnPeeringConnectionConfig = fmt.Sprintf(`

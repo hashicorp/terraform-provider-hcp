@@ -7,14 +7,13 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var boundaryUniqueID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+var boundaryUniqueID = uniqueName()
 
 var boundaryClusterResourceTemplate = fmt.Sprintf(`
 resource hcp_boundary_cluster "test" {
