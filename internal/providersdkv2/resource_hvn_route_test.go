@@ -6,6 +6,7 @@ package providersdkv2
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -80,6 +81,9 @@ var (
 
 // Azure config
 func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
+	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+	tenantID := os.Getenv("ARM_TENANT_ID")
+
 	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
