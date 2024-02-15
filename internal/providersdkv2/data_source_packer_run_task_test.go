@@ -17,7 +17,7 @@ func TestAcc_dataSourcePackerRunTask(t *testing.T) {
 	config := testConfig(testAccConfigBuildersToString(runTask))
 
 	// Must not be Parallel, conflicts with test for the equivalent resource
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)

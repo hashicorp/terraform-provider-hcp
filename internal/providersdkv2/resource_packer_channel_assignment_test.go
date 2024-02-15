@@ -24,7 +24,7 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 
 	baseAssignment := testAccPackerAssignmentBuilderBase("SimpleSetUnset", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)

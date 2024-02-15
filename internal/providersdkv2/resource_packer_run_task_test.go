@@ -41,7 +41,7 @@ func TestAccPackerRunTask(t *testing.T) {
 	var preStep4HmacKey string
 
 	// Must not be Parallel, conflicts with test for the equivalent data source
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)

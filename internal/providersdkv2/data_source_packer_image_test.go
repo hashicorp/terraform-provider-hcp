@@ -55,7 +55,7 @@ func TestAcc_dataSourcePackerImage_Simple(t *testing.T) {
 	var iteration *models.HashicorpCloudPackerIteration
 	var build *models.HashicorpCloudPackerBuild
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
