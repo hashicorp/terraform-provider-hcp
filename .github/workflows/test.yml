@@ -6,11 +6,19 @@ on:
       acc-test-pattern:
         type: string
         default: 'Test.*'
+      skip-e2e-tests:
+        description: "Skip the E2E test suite"
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       acc-test-pattern:
         type: string
         default: 'Test.*'
+      skip-e2e-tests:
+        description: "Skip the E2E test suite"
+        type: boolean
+        default: false
 
 concurrency: acceptance-testing-environment
 
@@ -60,6 +68,7 @@ jobs:
           echo "The default acceptance test pattern is \`Test.*\`, but it was overridden with \`${{ inputs.acc-test-pattern }}\`." >> $GITHUB_STEP_SUMMARY
 
       - name: Run E2E Tests
+        if: ${{ !inputs.skip-e2e-tests }}
         env:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
