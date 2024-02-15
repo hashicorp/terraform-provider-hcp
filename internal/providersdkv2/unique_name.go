@@ -1,3 +1,5 @@
+//go:build slow_tests
+
 package providersdkv2
 
 import (
