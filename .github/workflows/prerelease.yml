@@ -20,8 +20,9 @@ permissions: write-all
 jobs:
   run-tests:
     name: Run Tests
-    if: ${{ !inputs.skip-tests }}
     uses: ./.github/workflows/test.yml
+    with:
+      skip-e2e-tests: ${{ inputs.skip-tests }}
     secrets: inherit
     permissions:
       contents: read
