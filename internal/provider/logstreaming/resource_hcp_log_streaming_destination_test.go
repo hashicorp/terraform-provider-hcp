@@ -125,7 +125,7 @@ func TestAccHCPLogStreamingDestinationCloudWatch(t *testing.T) {
 			},
 			{
 				// test with a log group name
-				Config: testAccCloudWatchLogsConfig_LogGroupName(cwNameLogGroup),
+				Config: testAccCloudWatchLogsConfigLogGroupName(cwNameLogGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccHCPLogStreamingDestinationExists(t, resourceName, &cw3),
 					resource.TestCheckResourceAttr(resourceName, "name", cwNameLogGroup),
@@ -168,7 +168,7 @@ func testAccCloudWatchLogsConfig(name string) string {
   		`, name)
 }
 
-func testAccCloudWatchLogsConfig_LogGroupName(name string) string {
+func testAccCloudWatchLogsConfigLogGroupName(name string) string {
 	return fmt.Sprintf(`
   		resource "hcp_log_streaming_destination" "test_cloudwatch" {
   			name = "%[1]s"
