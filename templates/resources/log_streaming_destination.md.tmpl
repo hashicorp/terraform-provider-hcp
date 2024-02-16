@@ -11,8 +11,12 @@ description: |-
 
 {{ .Description | trimspace }}
 
-## Example Usage
+## Example Usage: SplunkCloud
 
-{{ tffile "examples/resources/hcp_log_streaming_destination/resource.tf" }}
+{{ tffile "examples/resources/hcp_log_streaming_destination/resource_splunk_cloud.tf" }}
+
+## Example Usage: CloudWatch
+
+{{ tffile "examples/resources/hcp_log_streaming_destination/resource_cloudwatch.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
