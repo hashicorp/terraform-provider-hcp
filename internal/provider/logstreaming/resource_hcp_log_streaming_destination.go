@@ -12,9 +12,11 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/models"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
@@ -26,6 +28,8 @@ import (
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
+
+const TFProviderSourceChannel = "TERRAFORM"
 
 func NewHCPLogStreamingDestinationResource() resource.Resource {
 	return &resourceHCPLogStreamingDestination{}
@@ -72,9 +76,47 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 						Sensitive:   true,
 					},
 				},
-				Required: true,
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
+				},
+				Optional: true,
+				Validators: []validator.Object{
+					// Validate only this attribute or cloudwatch is configured.
+					objectvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("cloudwatch"),
+					}...),
+				},
+			},
+			"cloudwatch": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"external_id": schema.StringAttribute{
+						Description: "The external_id to provide when assuming the aws IAM role.",
+						Sensitive:   true,
+						Required:    true,
+					},
+					"role_arn": schema.StringAttribute{
+						Description: "The role_arn that will be assumed to stream logs.",
+						Required:    true,
+					},
+					"region": schema.StringAttribute{
+						Description: "The region the CloudWatch destination is set up to stream to.",
+						Required:    true,
+					},
+					"log_group_name": schema.StringAttribute{
+						Description: "The log_group_name of the CloudWatch destination.",
+						Optional:    true,
+						Computed:    true,
+					},
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
+				Optional: true,
+				Validators: []validator.Object{
+					// Validate only this attribute or splunk_cloud is configured.
+					objectvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("splunk_cloud"),
+					}...),
 				},
 			},
 		},
@@ -100,8 +142,10 @@ type HCPLogStreamingDestination struct {
 	Name                   types.String `tfsdk:"name"`
 	StreamingDestinationID types.String `tfsdk:"streaming_destination_id"`
 	SplunkCloud            types.Object `tfsdk:"splunk_cloud"`
+	CloudWatch             types.Object `tfsdk:"cloudwatch"`
 
 	splunkCloud *SplunkCloudProvider `tfsdk:"-"`
+	cloudwatch  *CloudWatchProvider  `tfsdk:"-"`
 }
 
 type SplunkCloudProvider struct {
@@ -116,11 +160,36 @@ func (s SplunkCloudProvider) AttributeTypes() map[string]attr.Type {
 	}
 }
 
+type CloudWatchProvider struct {
+	Region       types.String `tfsdk:"region"`
+	ExternalID   types.String `tfsdk:"external_id"`
+	RoleArn      types.String `tfsdk:"role_arn"`
+	LogGroupName types.String `tfsdk:"log_group_name"`
+}
+
+func (s CloudWatchProvider) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region":         types.StringType,
+		"external_id":    types.StringType,
+		"role_arn":       types.StringType,
+		"log_group_name": types.StringType,
+	}
+}
+
 // extract extracts the Go values from their Terraform wrapped values.
 func (h *HCPLogStreamingDestination) extract(ctx context.Context) diag.Diagnostics {
 	var diags diag.Diagnostics
-	h.splunkCloud = &SplunkCloudProvider{}
-	diags = h.SplunkCloud.As(ctx, h.splunkCloud, basetypes.ObjectAsOptions{})
+
+	if !h.SplunkCloud.IsNull() {
+		h.splunkCloud = &SplunkCloudProvider{}
+		diags = h.SplunkCloud.As(ctx, h.splunkCloud, basetypes.ObjectAsOptions{})
+	}
+
+	if !h.CloudWatch.IsNull() {
+		h.cloudwatch = &CloudWatchProvider{}
+		diags = h.CloudWatch.As(ctx, h.cloudwatch, basetypes.ObjectAsOptions{})
+	}
+
 	return diags
 }
 
@@ -130,10 +199,22 @@ func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *model
 	var diags diag.Diagnostics
 	h.Name = types.StringValue(logSD.Name)
 	h.StreamingDestinationID = types.StringValue(logSD.Resource.ID)
-	h.SplunkCloud = types.ObjectValueMust(h.SplunkCloud.AttributeTypes(ctx), map[string]attr.Value{
-		"endpoint": types.StringValue(logSD.SplunkCloudProvider.HecEndpoint),
-		"token":    types.StringValue(logSD.SplunkCloudProvider.Token),
-	})
+	if logSD.CloudwatchlogsProvider != nil {
+		h.CloudWatch = types.ObjectValueMust(h.CloudWatch.AttributeTypes(ctx), map[string]attr.Value{
+			"external_id":    types.StringValue(logSD.CloudwatchlogsProvider.ExternalID),
+			"region":         types.StringValue(logSD.CloudwatchlogsProvider.Region),
+			"role_arn":       types.StringValue(logSD.CloudwatchlogsProvider.RoleArn),
+			"log_group_name": types.StringValue(logSD.CloudwatchlogsProvider.LogGroupName),
+		})
+	}
+
+	if logSD.SplunkCloudProvider != nil {
+		h.SplunkCloud = types.ObjectValueMust(h.SplunkCloud.AttributeTypes(ctx), map[string]attr.Value{
+			"endpoint": types.StringValue(logSD.SplunkCloudProvider.HecEndpoint),
+			"token":    types.StringValue(logSD.SplunkCloudProvider.Token),
+		})
+	}
+
 	return diags
 }
 
@@ -154,13 +235,29 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 	createParams.Context = ctx
 	createParams.LocationOrganizationID = loc.OrganizationID
 	createParams.LocationProjectID = loc.ProjectID
-	createParams.Body = &models.LogService20210330CreateStreamingDestinationRequest{
+
+	createRequestBody := &models.LogService20210330CreateStreamingDestinationRequest{
 		DestinationName: plan.Name.ValueString(),
-		SplunkCloudProvider: &models.LogService20210330SplunkCloudProvider{
+		SourceChannel:   TFProviderSourceChannel,
+	}
+
+	if plan.splunkCloud != nil {
+		createRequestBody.SplunkCloudProvider = &models.LogService20210330SplunkCloudProvider{
 			HecEndpoint: plan.splunkCloud.HecEndpoint.ValueString(),
 			Token:       plan.splunkCloud.Token.ValueString(),
-		},
+		}
 	}
+
+	if plan.cloudwatch != nil {
+		createRequestBody.CloudwatchlogsProvider = &models.LogService20210330CloudwatchLogsProvider{
+			ExternalID:   plan.cloudwatch.ExternalID.ValueString(),
+			Region:       plan.cloudwatch.Region.ValueString(),
+			RoleArn:      plan.cloudwatch.RoleArn.ValueString(),
+			LogGroupName: plan.cloudwatch.LogGroupName.ValueString(),
+		}
+	}
+
+	createParams.Body = createRequestBody
 
 	res, err := r.client.LogService.LogServiceCreateStreamingDestination(createParams, nil)
 	if err != nil {

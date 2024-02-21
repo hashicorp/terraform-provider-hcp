@@ -5,13 +5,27 @@ description: |-
   The Streaming Destination resource allows users to configure an external log system to stream HCP logs to.
 ---
 
-# hcp_log_streaming_destination `Resource`
+# hcp_log_streaming_destination (Resource)
 
 -> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
 
 The Streaming Destination resource allows users to configure an external log system to stream HCP logs to.
 
-## Example Usage
+## Example Usage: CloudWatch
+
+```terraform
+resource "hcp_log_streaming_destination" "example_cloudwatch" {
+  name = "example_cloudwatch"
+  cloudwatch = {
+    external_id    = "an-external-id"
+    region         = "us-east-1"
+    role_arn       = "arn:aws:iam::111111111:role/hcp-log-streaming"
+    log_group_name = "a-log-group-name"
+  }
+}
+```
+
+## Example Usage: SplunkCloud
 
 ```terraform
 resource "hcp_log_streaming_destination" "example_splunk_cloud" {
@@ -29,11 +43,29 @@ resource "hcp_log_streaming_destination" "example_splunk_cloud" {
 ### Required
 
 - `name` (String) The HCP Log Streaming Destination’s name.
+
+### Optional
+
+- `cloudwatch` (Attributes) (see [below for nested schema](#nestedatt--cloudwatch))
 - `splunk_cloud` (Attributes) (see [below for nested schema](#nestedatt--splunk_cloud))
 
 ### Read-Only
 
 - `streaming_destination_id` (String) The ID of the HCP Log Streaming Destination
+
+<a id="nestedatt--cloudwatch"></a>
+### Nested Schema for `cloudwatch`
+
+Required:
+
+- `external_id` (String, Sensitive) The external_id to provide when assuming the aws IAM role.
+- `region` (String) The region the CloudWatch destination is set up to stream to.
+- `role_arn` (String) The role_arn that will be assumed to stream logs.
+
+Optional:
+
+- `log_group_name` (String) The log_group_name of the CloudWatch destination.
+
 
 <a id="nestedatt--splunk_cloud"></a>
 ### Nested Schema for `splunk_cloud`
