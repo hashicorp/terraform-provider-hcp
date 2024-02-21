@@ -16,7 +16,7 @@ func TestAccGroupDataSource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig("jolisa-group-test-2"),
+				Config: testAccGroupConfig("int-tooling-e2e-test-group"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "resource_id"),
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "description"),
@@ -34,7 +34,7 @@ func TestAccGroupDataSourceFullResourceName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig("iam/organization/07151b8a-4081-4602-abe4-288e78636831/group/jolisa-group-test-2"),
+				Config: testAccGroupConfig("iam/organization/d11d7309-5072-44f9-aaea-c8f37c09a8b5/group/int-tooling-e2e-test-group"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "resource_id"),
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "description"),
