@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
-// This includes tests against both the resource and the corresponding datasource
-// to shorten testing time.
 func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	resourceName := "hcp_log_streaming_destination.test_splunk_cloud"
 	spName := "splunk-resource-name-1"
@@ -71,6 +69,80 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	})
 }
 
+func TestAccHCPLogStreamingDestinationCloudWatch(t *testing.T) {
+	resourceName := "hcp_log_streaming_destination.test_cloudwatch"
+	cwName := "cloudwatch-resource-name-1"
+	cwNameUpdated := "cloudwatch-resource-name-2"
+	cwNameLogGroup := "cloudwatch-resource-name-3"
+	var cw models.LogService20210330Destination
+	var cw2 models.LogService20210330Destination
+	var cw3 models.LogService20210330Destination
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccHCPLogStreamingDestinationDestroy(t, s)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			// Tests create
+			{
+				Config: testAccCloudWatchLogsConfig(cwName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccHCPLogStreamingDestinationExists(t, resourceName, &cw),
+					resource.TestCheckResourceAttr(resourceName, "name", cwName),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.region"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.external_id"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.external_id", "superSecretExternalID"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.role_arn", "arn:aws:iam::000000000000:role/cloud_watch_role"),
+				),
+			},
+			{
+				// Update the name
+				Config: testAccCloudWatchLogsConfig(cwNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccHCPLogStreamingDestinationExists(t, resourceName, &cw2),
+					resource.TestCheckResourceAttr(resourceName, "name", cwNameUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.region"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.external_id"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.external_id", "superSecretExternalID"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.role_arn", "arn:aws:iam::000000000000:role/cloud_watch_role"),
+					func(_ *terraform.State) error {
+						if cw.Resource.ID == cw2.Resource.ID {
+							return fmt.Errorf("resource_ids match, indicating resource wasn't recreated")
+						}
+						return nil
+					},
+				),
+			},
+			{
+				// test with a log group name
+				Config: testAccCloudWatchLogsConfigLogGroupName(cwNameLogGroup),
+				Check: resource.ComposeTestCheckFunc(
+					testAccHCPLogStreamingDestinationExists(t, resourceName, &cw3),
+					resource.TestCheckResourceAttr(resourceName, "name", cwNameLogGroup),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.region"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch.log_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.external_id", "superSecretExternalID"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.role_arn", "arn:aws:iam::000000000000:role/cloud_watch_role"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch.log_group_name", "a-log-group-name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSplunkConfig(name string) string {
 	return fmt.Sprintf(`
   		resource "hcp_log_streaming_destination" "test_splunk_cloud" {
@@ -78,6 +150,33 @@ func testAccSplunkConfig(name string) string {
   			splunk_cloud = {
   				endpoint = "https://http-inputs-hcptest.splunkcloud.com/services/collector/event"
   				token = "splunk-authentication-token"
+  			}
+  		}
+  		`, name)
+}
+
+func testAccCloudWatchLogsConfig(name string) string {
+	return fmt.Sprintf(`
+  		resource "hcp_log_streaming_destination" "test_cloudwatch" {
+  			name = "%[1]s"
+  			cloudwatch = {
+  				region = "us-west-2"
+  				role_arn = "arn:aws:iam::000000000000:role/cloud_watch_role"
+				external_id = "superSecretExternalID"
+  			}
+  		}
+  		`, name)
+}
+
+func testAccCloudWatchLogsConfigLogGroupName(name string) string {
+	return fmt.Sprintf(`
+  		resource "hcp_log_streaming_destination" "test_cloudwatch" {
+  			name = "%[1]s"
+  			cloudwatch = {
+  				region = "us-west-2"
+  				role_arn = "arn:aws:iam::000000000000:role/cloud_watch_role"
+				external_id = "superSecretExternalID"
+				log_group_name = "a-log-group-name"
   			}
   		}
   		`, name)
