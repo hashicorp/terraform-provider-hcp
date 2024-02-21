@@ -165,6 +165,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
+		iam.NewGroupDataSource,
 		// Waypoint
 		waypoint.NewApplicationTemplateDataSource,
 	}, packer.DataSourceSchemaBuilders...)
