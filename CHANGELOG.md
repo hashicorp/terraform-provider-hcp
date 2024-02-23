@@ -1,19 +1,3 @@
-## v0.83.0 (February 21, 2024)
-
-FEATURES:
-
-* Add CloudWatch config option for hcp_log_streaming_destination resource. [[GH-757](https://github.com/hashicorp/terraform-provider-hcp/pull/757)]
-
-IMPROVEMENTS:
-
-* Update example for `hcp_packer_channel_assignment` resource [[GH-749](https://github.com/hashicorp/terraform-provider-hcp/pull/749)]
-
-BUG FIXES:
-
-* Do not panic if provider is configured with credentials with no project access. [[GH-748](https://github.com/hashicorp/terraform-provider-hcp/pull/748)]
-* Fixing a panic on errors when opening secrets from HCP Vault Secrets. [[GH-751](https://github.com/hashicorp/terraform-provider-hcp/pull/751)]
-* Fixing the validation rules for HCP Vault Secrets app and secret names to match
-what we have on the server side. [[GH-750](https://github.com/hashicorp/terraform-provider-hcp/pull/750)]
 ## v0.82.0 (January 30, 2024)
 BREAKING CHANGES:
 
