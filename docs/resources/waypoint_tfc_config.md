@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_tfc_config `Resource`
 
--> **Note:** This feature is currently in public beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+-> **Note:** HCP Waypoint is currently in public beta.
 
 TFC Configuration used by Waypoint to administer TFC workspaces and applications.
 
