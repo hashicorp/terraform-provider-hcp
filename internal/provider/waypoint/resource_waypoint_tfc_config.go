@@ -10,7 +10,6 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,7 +19,6 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TfcConfigResource{}
-var _ resource.ResourceWithImportState = &TfcConfigResource{}
 
 func NewTfcConfigResource() resource.Resource {
 	return &TfcConfigResource{}
@@ -68,7 +66,7 @@ func (r *TfcConfigResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"tfc_org_name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "The TFC Organization with which the token is associated.",
+				MarkdownDescription: "The Terraform Cloud Organization with which the token is associated.",
 			},
 		},
 	}
@@ -150,6 +148,7 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
+
 	params := &waypoint_service.WaypointServiceGetTFCConfigParams{
 		NamespaceID: ns.ID,
 	}
@@ -163,6 +162,7 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
 		return
 	}
+
 	if config.Payload == nil || config.Payload.TfcConfig == nil {
 		resp.Diagnostics.AddError("Error reading TFC Config", "empty payload")
 		return
@@ -288,14 +288,10 @@ func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *TfcConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-// TODO:(clint) consolidate this either in the wrapper or something
 // getNamespaceByLocation will retrieve a namespace by location information
 // provided by HCP
 func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointNamespace, error) {
+	// TODO:(clint) consolidate this either in the wrapper or something
 	namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
 		LocationOrganizationID: loc.OrganizationID,
 		LocationProjectID:      loc.ProjectID,
