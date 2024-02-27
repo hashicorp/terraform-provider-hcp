@@ -134,8 +134,9 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		projectID = data.ProjectID.ValueString()
 	}
 
+	orgID := r.client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
+		OrganizationID: orgID,
 		ProjectID:      projectID,
 	}
 
@@ -169,6 +170,15 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	data.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
+
+	// Generate the unique ID for the resource
+	uID := fmt.Sprintf("/project/%s/%s/%s",
+		loc.ProjectID,
+		"waypoint_tfc_config",
+		config.Payload.TfcConfig.OrganizationName)
+
+	data.ID = types.StringValue(uID)
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -234,7 +244,13 @@ func (r *TfcConfigResource) upsert(ctx context.Context, plan TfcConfigResourceMo
 		return plan, err
 	}
 
-	plan.ID = types.StringValue(config.Payload.TfcConfig.OrganizationName)
+	// Generate the unique ID for the resource
+	uID := fmt.Sprintf("/project/%s/%s/%s",
+		loc.ProjectID,
+		"waypoint_tfc_config",
+		config.Payload.TfcConfig.OrganizationName)
+
+	plan.ID = types.StringValue(uID)
 	plan.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
 	plan.ProjectID = types.StringValue(projectID)
 	return plan, nil
