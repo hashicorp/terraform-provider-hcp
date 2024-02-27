@@ -49,7 +49,7 @@ resource "hcp_waypoint_tfc_config" "test" {
 
 ### Required
 
-- `tfc_org_name` (String) The TFC Organization with which the token is associated.
+- `tfc_org_name` (String) The Terraform Cloud Organization with which the token is associated.
 - `token` (String, Sensitive) Terraform Cloud team token. The token must include permissions to manage workspaces and applications.
 
 ### Optional
