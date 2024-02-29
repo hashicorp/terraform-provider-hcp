@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
 )
 
@@ -147,6 +148,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
 		webhook.NewNotificationsWebhookResource,
+		// Waypoint
+		waypoint.NewTfcConfigResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
