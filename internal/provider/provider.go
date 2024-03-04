@@ -149,6 +149,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Webhook
 		webhook.NewNotificationsWebhookResource,
 		// Waypoint
+		waypoint.NewApplicationTemplateResource,
 		waypoint.NewTfcConfigResource,
 	}, packer.ResourceSchemaBuilders...)
 }
@@ -164,6 +165,8 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
+		// // Waypoint
+		// waypoint.NewApplicationTemplateDataSource,
 	}, packer.DataSourceSchemaBuilders...)
 }
 
