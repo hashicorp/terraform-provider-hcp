@@ -37,7 +37,7 @@ func (r *resourceGroup) Schema(_ context.Context, _ resource.SchemaRequest, resp
 	resp.Schema = schema.Schema{
 		MarkdownDescription: fmt.Sprintf(`The group resource manages a HCP Group.
 
-The user or service account that is running Terraform when creating a %s resource must have %s on the parent resource; either the project or organization.`,
+The user or service account that is running Terraform when creating an %s resource must have %s on the parent resource; either the project or organization.`,
 			"`hcp_group`", "`roles/admin`"),
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
@@ -50,7 +50,7 @@ The user or service account that is running Terraform when creating a %s resourc
 			"resource_name": schema.StringAttribute{
 				Computed: true,
 				Description: fmt.Sprintf("The group's resource name in the format `%s` or `%s`",
-					"iam/organization/<organization_id>/service-principal/<name>", "<name>"),
+					"iam/organization/<organization_id>/group/<name>", "<name>"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -60,13 +60,16 @@ The user or service account that is running Terraform when creating a %s resourc
 				Description: "The group's display_name.",
 				Validators: []validator.String{
 					hcpvalidator.ResourceNamePart(),
-					// TODO: we don't enforce a list for the display name in the portal, do we care here?
-					stringvalidator.LengthBetween(3, 36),
+					stringvalidator.LengthBetween(3, 90),
 				},
 			},
 			"description": schema.StringAttribute{
 				Description: "The group's description ",
 				Optional:    true,
+				Validators: []validator.String{
+					hcpvalidator.ResourceNamePart(),
+					stringvalidator.LengthBetween(0, 300),
+				},
 			},
 		},
 	}
