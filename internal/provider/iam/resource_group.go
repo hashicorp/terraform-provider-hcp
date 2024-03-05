@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
-	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
 )
 
 func NewGroupResource() resource.Resource {
@@ -49,25 +48,23 @@ The user or service account that is running Terraform when creating an %s resour
 			},
 			"resource_name": schema.StringAttribute{
 				Computed: true,
-				Description: fmt.Sprintf("The group's resource name in the format `%s` or `%s`",
-					"iam/organization/<organization_id>/group/<name>", "<name>"),
+				Description: fmt.Sprintf("The group's resource name in the format `%s`",
+					"iam/organization/<organization_id>/group/<name>"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"display_name": schema.StringAttribute{
 				Required:    true,
-				Description: "The group's display_name.",
+				Description: "The group's display_name - maximum length of 50 characters",
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
-					stringvalidator.LengthBetween(3, 90),
+					stringvalidator.LengthBetween(1, 50),
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "The group's description ",
+				Description: "The group's description - maximum length of 300 characters",
 				Optional:    true,
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
 					stringvalidator.LengthBetween(0, 300),
 				},
 			},
