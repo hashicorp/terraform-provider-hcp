@@ -103,8 +103,18 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	var err error
-	plan, err = r.upsert(ctx, plan)
+	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: r.client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
+
+	client := r.client
+	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating TFC Config",
@@ -112,6 +122,37 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
+
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateTFCConfigBody{
+		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
+			OrganizationName: plan.TfcOrgName.ValueString(),
+			Token:            plan.Token.ValueString(),
+		},
+	}
+
+	params := &waypoint_service.WaypointServiceCreateTFCConfigParams{
+		NamespaceID: ns.ID,
+		Body:        modelBody,
+	}
+
+	config, err := r.client.Waypoint.WaypointServiceCreateTFCConfig(params, nil)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating TFC Config",
+			err.Error(),
+		)
+		return
+	}
+
+	// Generate the unique ID for the resource
+	uID := fmt.Sprintf("/project/%s/%s/%s",
+		loc.ProjectID,
+		"waypoint_tfc_config",
+		config.Payload.TfcConfig.OrganizationName)
+
+	plan.ID = types.StringValue(uID)
+	plan.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
+	plan.ProjectID = types.StringValue(projectID)
 
 	tflog.Trace(ctx, "Created TFC Config resource")
 
@@ -194,23 +235,6 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	var err error
-	plan, err = r.upsert(ctx, plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
-	tflog.Trace(ctx, "Updated TFC Config resource")
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *TfcConfigResource) upsert(ctx context.Context, plan TfcConfigResourceModel) (TfcConfigResourceModel, error) {
 	projectID := r.client.Config.ProjectID
 	if !plan.ProjectID.IsUnknown() {
 		projectID = plan.ProjectID.ValueString()
@@ -224,24 +248,32 @@ func (r *TfcConfigResource) upsert(ctx context.Context, plan TfcConfigResourceMo
 	client := r.client
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
-		return plan, err
+		resp.Diagnostics.AddError(
+			"Error updating TFC Config",
+			err.Error(),
+		)
+		return
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateTFCConfigBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateTFCConfigBody{
 		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
 		},
 	}
 
-	params := &waypoint_service.WaypointServiceCreateTFCConfigParams{
+	params := &waypoint_service.WaypointServiceUpdateTFCConfigParams{
 		NamespaceID: ns.ID,
 		Body:        modelBody,
 	}
 
-	config, err := r.client.Waypoint.WaypointServiceCreateTFCConfig(params, nil)
+	config, err := r.client.Waypoint.WaypointServiceUpdateTFCConfig(params, nil)
 	if err != nil {
-		return plan, err
+		resp.Diagnostics.AddError(
+			"Error updating TFC Config",
+			err.Error(),
+		)
+		return
 	}
 
 	// Generate the unique ID for the resource
@@ -253,7 +285,11 @@ func (r *TfcConfigResource) upsert(ctx context.Context, plan TfcConfigResourceMo
 	plan.ID = types.StringValue(uID)
 	plan.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
 	plan.ProjectID = types.StringValue(projectID)
-	return plan, nil
+
+	tflog.Trace(ctx, "Updated TFC Config resource")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
