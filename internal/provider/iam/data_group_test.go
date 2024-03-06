@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
-// TODO : update the below tests to use a created group resource via Terraform
 func TestAccGroupDataSource(t *testing.T) {
 	dataSourceAddress := "data.hcp_group.test"
 	resource.Test(t, resource.TestCase{

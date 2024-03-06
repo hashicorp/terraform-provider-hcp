@@ -26,16 +26,16 @@ resource "hcp_project" "example" {
 
 ### Required
 
-- `display_name` (String) The group's display_name.
+- `display_name` (String) The group's display_name - maximum length of 50 characters
 
 ### Optional
 
-- `description` (String) The group's description
+- `description` (String) The group's description - maximum length of 300 characters
 
 ### Read-Only
 
 - `resource_id` (String) The group's unique identifier
-- `resource_name` (String) The group's resource name in the format `iam/organization/<organization_id>/group/<name>` or `<name>`
+- `resource_name` (String) The group's resource name in the format `iam/organization/<organization_id>/group/<name>`
 
 ## Import
 
