@@ -162,6 +162,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// IAM
 		iam.NewServicePrincipalDataSource,
 		iam.NewGroupDataSource,
+		iam.NewUserPrincipalDataSource,
 	}, packer.DataSourceSchemaBuilders...)
 }
 
