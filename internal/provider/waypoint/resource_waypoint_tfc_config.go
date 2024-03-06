@@ -12,6 +12,8 @@ import (
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -53,11 +55,23 @@ func (r *TfcConfigResource) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "Internal identifier",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"project_id": schema.StringAttribute{
 				Computed:            true,
 				Optional:            true,
 				MarkdownDescription: "Waypoint Project ID to associate with the TFC config",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					// project_id is used in the ID, so if it changes we signal
+					// that we must replace this resource. This will force the
+					// deletion of the old TFC config for the old project_id,
+					// which makes sense because we'll no longer be managing it
+					// here.
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"token": schema.StringAttribute{
 				Required:            true,
@@ -67,6 +81,12 @@ func (r *TfcConfigResource) Schema(ctx context.Context, req resource.SchemaReque
 			"tfc_org_name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The Terraform Cloud Organization with which the token is associated.",
+				PlanModifiers: []planmodifier.String{
+					// tfc_org_name is used in the ID, so if it changes we signal
+					// that we must replace this resource. This will force the
+					// deletion of the old TFC config.
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
@@ -144,11 +164,7 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Generate the unique ID for the resource
-	uID := fmt.Sprintf("/project/%s/%s/%s",
-		loc.ProjectID,
-		"waypoint_tfc_config",
-		config.Payload.TfcConfig.OrganizationName)
+	uID := generateUID(projectID)
 
 	plan.ID = types.StringValue(uID)
 	plan.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
@@ -210,15 +226,11 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	data.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
-
-	// Generate the unique ID for the resource
-	uID := fmt.Sprintf("/project/%s/%s/%s",
-		loc.ProjectID,
-		"waypoint_tfc_config",
-		config.Payload.TfcConfig.OrganizationName)
+	uID := generateUID(projectID)
 
 	data.ID = types.StringValue(uID)
+	data.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
+	data.ProjectID = types.StringValue(projectID)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -276,11 +288,7 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	// Generate the unique ID for the resource
-	uID := fmt.Sprintf("/project/%s/%s/%s",
-		loc.ProjectID,
-		"waypoint_tfc_config",
-		config.Payload.TfcConfig.OrganizationName)
+	uID := generateUID(projectID)
 
 	plan.ID = types.StringValue(uID)
 	plan.TfcOrgName = types.StringValue(config.Payload.TfcConfig.OrganizationName)
@@ -354,4 +362,9 @@ func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *shar
 		return nil, err
 	}
 	return ns.GetPayload().Namespace, nil
+}
+
+// Generate the unique ID for the resource
+func generateUID(projectID string) string {
+	return fmt.Sprintf("/project/%s/%s", projectID, "waypoint_tfc_config")
 }
