@@ -63,3 +63,41 @@ func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *shared
 	}
 	return getResp.GetPayload().ApplicationTemplate, nil
 }
+
+// GetAddOnDefinitionByName will retrieve an add-on definition by name
+func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetAddOnDefinition2Params{
+		AddOnDefinitionName: defName,
+		NamespaceID:         ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetAddOnDefinition2(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().AddOnDefinition, nil
+}
+
+// GetAddOnDefinitionByID will retrieve an add-on definition by ID
+func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetAddOnDefinitionParams{
+		AddOnDefinitionID: defID,
+		NamespaceID:       ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetAddOnDefinition(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().AddOnDefinition, nil
+}
