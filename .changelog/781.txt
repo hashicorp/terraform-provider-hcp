@@ -1,0 +1,4 @@
+```release-note:bug
+Whenever an http provider was added for audit logs, httpMethod was being checked to see if it was "JSON" or "NDJSON",
+when it should have been httpCodec.
+```
