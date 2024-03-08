@@ -48,9 +48,17 @@ type ApplicationTemplateResourceModel struct {
 
 	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+}
 
-	// questionable
-	// Namespace types.String `tfsdk:"namespace_id"`
+type tfcWorkspace struct {
+	Name types.String `tfsdk:"name"`
+	// this refers to the project ID found in Terraform Cloud
+	TerraformProjectID types.String `tfsdk:"terraform_project_id"`
+}
+
+type tfcNoCodeModule struct {
+	Source  types.String `tfsdk:"source"`
+	Version types.String `tfsdk:"version"`
 }
 
 func (r *ApplicationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

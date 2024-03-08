@@ -34,26 +34,17 @@ type DataSourceApplicationTemplate struct {
 }
 
 type DataSourceApplicationTemplateModel struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	ProjectID types.String `tfsdk:"project_id"`
-	OrgID     types.String `tfsdk:"organization_id"`
-	Summary   types.String `tfsdk:"summary"`
-	Labels    types.List   `tfsdk:"labels"`
+	ID                     types.String `tfsdk:"id"`
+	Name                   types.String `tfsdk:"name"`
+	ProjectID              types.String `tfsdk:"project_id"`
+	OrgID                  types.String `tfsdk:"organization_id"`
+	Summary                types.String `tfsdk:"summary"`
+	Labels                 types.List   `tfsdk:"labels"`
+	Description            types.String `tfsdk:"description"`
+	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
 	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
-}
-
-type tfcWorkspace struct {
-	Name types.String `tfsdk:"name"`
-	// this refers to the project ID found in Terraform Cloud
-	TerraformProjectID types.String `tfsdk:"terraform_project_id"`
-}
-
-type tfcNoCodeModule struct {
-	Source  types.String `tfsdk:"source"`
-	Version types.String `tfsdk:"version"`
 }
 
 func NewApplicationTemplateDataSource() datasource.DataSource {
@@ -90,6 +81,14 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 			"summary": schema.StringAttribute{
 				Description: "The ID of the HCP project where the Waypoint Application Template is located.",
 				Computed:    true,
+			},
+			"description": schema.StringAttribute{
+				Optional:    true,
+				Description: "A description of the template, along with when and why it should be used, up to 500 characters",
+			},
+			"readme_markdown_template": schema.StringAttribute{
+				Optional:    true,
+				Description: "Instructions for using the template (markdown format supported",
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
@@ -167,45 +166,61 @@ func (d *DataSourceApplicationTemplate) Read(ctx context.Context, req datasource
 		ProjectID:      projectID,
 	}
 
-	var template *waypoint_models.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
 	var err error
 
 	if data.ID.IsNull() {
-		template, err = clients.GetApplicationTemplateByName(ctx, client, loc, data.Name.ValueString())
+		appTemplate, err = clients.GetApplicationTemplateByName(ctx, client, loc, data.Name.ValueString())
 	} else if data.Name.IsNull() {
-		template, err = clients.GetApplicationTemplateByID(ctx, client, loc, data.ID.ValueString())
+		appTemplate, err = clients.GetApplicationTemplateByID(ctx, client, loc, data.ID.ValueString())
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	data.ID = types.StringValue(template.ID)
+	data.ID = types.StringValue(appTemplate.ID)
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
-	data.Summary = types.StringValue(template.Summary)
+	data.Summary = types.StringValue(appTemplate.Summary)
 
-	labels, diags := types.ListValueFrom(ctx, types.StringType, template.Labels)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.Labels = labels
-
-	if template.TerraformCloudWorkspaceDetails != nil {
+	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(template.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(template.TerraformCloudWorkspaceDetails.ProjectID),
+			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
+			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		data.TerraformCloudWorkspace = tfcWorkspace
 	}
 
-	if template.TerraformNocodeModule != nil {
+	if appTemplate.TerraformNocodeModule != nil {
 		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(template.TerraformNocodeModule.Source),
-			Version: types.StringValue(template.TerraformNocodeModule.Version),
+			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
+			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
 		}
 		data.TerraformNoCodeModule = tfcNoCode
+	}
+
+	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(labels.Elements()) == 0 {
+		labels = types.ListNull(types.StringType)
+	}
+	data.Labels = labels
+
+	// set data.description if it's not null or appTemplate.description is not
+	// empty
+	data.Description = types.StringValue(appTemplate.Description)
+	if appTemplate.Description == "" {
+		data.Description = types.StringNull()
+	}
+	// set data.readme if it's not null or appTemplate.readme is not
+	// empty
+	data.ReadmeMarkdownTemplate = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
+	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
+		data.ReadmeMarkdownTemplate = types.StringNull()
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

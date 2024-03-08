@@ -88,9 +88,11 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 
 		// at this time we're only verifing existence and not checking all the
 		// values, so only set name,id, and project id for now
-		appTemplateModel.Name = types.StringValue(template.Name)
-		appTemplateModel.ID = types.StringValue(template.ID)
-		appTemplateModel.ProjectID = types.StringValue(projectID)
+		if appTemplateModel != nil {
+			appTemplateModel.Name = types.StringValue(template.Name)
+			appTemplateModel.ID = types.StringValue(template.ID)
+			appTemplateModel.ProjectID = types.StringValue(projectID)
+		}
 
 		return nil
 	}
