@@ -27,7 +27,7 @@ The Waypoint Template data source retrieves information on a given Application T
 
 - `labels` (List of String) List of labels attached to this Application Template.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application Template is located.
-- `summary` (String) The ID of the HCP project where the Waypoint Application Template is located.
+- `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud No Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
 

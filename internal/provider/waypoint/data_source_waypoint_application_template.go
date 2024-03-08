@@ -79,7 +79,7 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 				Computed:    true,
 			},
 			"summary": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Application Template is located.",
+				Description: "A brief description of the template, up to 110 characters",
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
