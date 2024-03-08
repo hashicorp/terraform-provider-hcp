@@ -17,5 +17,5 @@ The user principal data source retrieves the given user principal.
 
 ### Optional
 
-- `email` (String) The user's email
-- `user_id` (String) The user's unique identifier
+- `email` (String) The user's email. Can not be combined with user_id.
+- `user_id` (String) The user's unique identifier. Can not be combined with email.

@@ -39,12 +39,12 @@ func (d *DataSourceUserPrincipal) Schema(ctx context.Context, req datasource.Sch
 		MarkdownDescription: "The user principal data source retrieves the given user principal.",
 		Attributes: map[string]schema.Attribute{
 			"user_id": schema.StringAttribute{
-				Description: "The user's unique identifier",
+				Description: "The user's unique identifier. Can not be combined with email.",
 				Computed:    true,
 				Optional:    true,
 			},
 			"email": schema.StringAttribute{
-				Description: "The user's email",
+				Description: "The user's email. Can not be combined with user_id.",
 				Computed:    true,
 				Optional:    true,
 			},
@@ -79,8 +79,13 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		)
 		return
 	}
-
-	if !data.UserID.IsNull() && !data.Email.IsNull() {
+	if data.UserID.IsNull() && data.Email.IsNull() {
+		// Both user_id and email were not provided which is not allowed.
+		resp.Diagnostics.AddError(
+			"Invalid input",
+			"Either user_id or email must be set in your input.",
+		)
+	} else if !data.UserID.IsNull() && !data.Email.IsNull() {
 		// Both user_id and email were provided which is not allowed.
 		resp.Diagnostics.AddError(
 			"Invalid input",

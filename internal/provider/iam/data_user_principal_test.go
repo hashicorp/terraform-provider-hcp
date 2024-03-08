@@ -39,6 +39,10 @@ func TestAccUserPrincipalDataSource(t *testing.T) {
 				),
 				ExpectError: regexp.MustCompile(regexp.QuoteMeta("Both email and user_id can not be set at the same time.")),
 			},
+			{
+				Config:      testAccUserPrincipalConfigNoInputs(),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("Either user_id or email must be set in your input.")),
+			},
 		},
 	})
 }
@@ -66,4 +70,11 @@ func testAccUserPrincipalConfigBothInputs(userID string, email string) string {
 		email = %q
 	}
 `, userID, email)
+}
+
+func testAccUserPrincipalConfigNoInputs() string {
+	return `
+	data "hcp_user_principal" "test" { 
+	}
+	`
 }
