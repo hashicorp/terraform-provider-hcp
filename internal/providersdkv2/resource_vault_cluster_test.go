@@ -4,15 +4,18 @@
 package providersdkv2
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
+	"text/template"
 	"time"
 
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/stretchr/testify/require"
 )
 
 type inputT struct {
@@ -97,6 +100,44 @@ func TestAccVaultClusterAWS(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps:                    awsTestSteps(t, awsTestInput),
 	})
+}
+
+// This test was added to ensure that http audit logs can be added properly since
+// there was a bug that did not validate http_codec correctly.
+func TestAddingHTTPAuditLogs(t *testing.T) {
+	tfTemplate := fmt.Sprintf(`
+		resource "hcp_vault_cluster" "test" {
+			cluster_id         = "%s"
+			hvn_id             = hcp_hvn.test.hvn_id
+			tier               = "DEV"
+			cloud_provider     = "AWS"
+			region             = "us-west-2"
+			public_endpoint    = false
+			proxy_endpoint     = "DISABLED"
+			audit_log_config {
+				http_endpoint = "https://http-input-splunkcloud.com"
+				http_codec		= "JSON"
+				http_method		= "POST"
+			}
+		}
+		`, addTimestampSuffix("test-vault-aws-"))
+
+	tmpl, err := template.New("tf_resources").Parse(tfTemplate)
+	require.NoError(t, err)
+
+	tfResources := &bytes.Buffer{}
+	err = tmpl.Execute(tfResources, struct {
+		ClusterID      string
+		HvnID          string
+		HvnCidr        string
+		CloudProvider  string
+		Region         string
+		Tier           string
+		PublicEndpoint string
+		ProxyEndpoint  string
+		IPAllowlist    string
+	}{})
+	require.NoError(t, err)
 }
 
 func testAccCheckVaultClusterExists(name string) resource.TestCheckFunc {
