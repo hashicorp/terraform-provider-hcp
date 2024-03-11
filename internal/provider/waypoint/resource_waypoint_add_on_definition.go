@@ -5,6 +5,7 @@ package waypoint
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/go-openapi/strfmt"
 
@@ -95,7 +96,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"description": schema.StringAttribute{
 				Description: "A longer description of the Add-on Definition.",
-				Computed:    true,
+				Required:    true,
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
@@ -162,18 +163,18 @@ func (r *AddOnDefinitionResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data *AddOnDefinitionResourceModel
+	var plan *AddOnDefinitionResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
-		projectID = data.ProjectID.ValueString()
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
@@ -193,29 +194,38 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	// TODO: (Henry) Follow up, is this the best way to type convert here?
-	jsonLabels := []string{}
-	diagnostics := data.Labels.ElementsAs(ctx, &jsonLabels, false)
-	if diagnostics.HasError() {
+	stringLabels := []string{}
+	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
+		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
+		if diagnostics.HasError() {
+			resp.Diagnostics.AddError(
+				"error converting labels",
+				"Failed to convert labels from types.List to string list",
+			)
+			return
+		}
+	}
+	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"error converting labels",
-			"Failed to convert labels from types.List to string list",
+			"error decoding base64 readme markdown template",
+			err.Error(),
 		)
-		return
 	}
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
-		Name:                   data.Name.ValueString(),
-		Summary:                data.Summary.ValueString(),
-		Description:            data.Description.ValueString(),
-		ReadmeMarkdownTemplate: strfmt.Base64(data.ReadmeMarkdownTemplate.ValueString()),
-		Labels:                 jsonLabels,
+		Name:                   plan.Name.ValueString(),
+		Summary:                plan.Summary.ValueString(),
+		Description:            plan.Description.ValueString(),
+		ReadmeMarkdownTemplate: readmeBytes,
+		Labels:                 stringLabels,
 		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
-			Source:  data.TerraformNoCodeModule.Source.ValueString(),
-			Version: data.TerraformNoCodeModule.Version.ValueString(),
+			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
+			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
 		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-			Name:      data.TerraformCloudWorkspace.Name.ValueString(),
-			ProjectID: data.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
+			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
+			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
 	}
 
@@ -238,26 +248,26 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	data.ID = types.StringValue(addOnDefinition.ID)
-	data.ProjectID = types.StringValue(projectID)
-	data.Name = types.StringValue(addOnDefinition.Name)
-	data.OrgID = types.StringValue(orgID)
-	data.Summary = types.StringValue(addOnDefinition.Summary)
-	data.Description = types.StringValue(addOnDefinition.Description)
-	data.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
+	plan.ID = types.StringValue(addOnDefinition.ID)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.Name = types.StringValue(addOnDefinition.Name)
+	plan.OrgID = types.StringValue(orgID)
+	plan.Summary = types.StringValue(addOnDefinition.Summary)
+	plan.Description = types.StringValue(addOnDefinition.Description)
+	plan.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.Labels = labels
+	plan.Labels = labels
 
 	if addOnDefinition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		data.TerraformCloudWorkspace = tfcWorkspace
+		plan.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	if addOnDefinition.TerraformNocodeModule != nil {
@@ -265,15 +275,15 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			Source:  types.StringValue(addOnDefinition.TerraformNocodeModule.Source),
 			Version: types.StringValue(addOnDefinition.TerraformNocodeModule.Version),
 		}
-		data.TerraformNoCodeModule = tfcNoCode
+		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "created add-on definition resource")
 
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Save plan into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -375,6 +385,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// TODO: (Henry) add support for Labels and Tags
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
 		Name:                   data.Name.ValueString(),
 		Summary:                data.Summary.ValueString(),
