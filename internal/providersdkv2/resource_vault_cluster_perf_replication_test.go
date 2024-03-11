@@ -154,6 +154,43 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				public_endpoint = true
 				audit_log_config {
 					http_endpoint = "https://http-input-splunkcloud.com"
+					http_codec		= "INVALID"
+					http_method		= "POST"
+				}
+			}
+			`, in)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckVaultClusterExists(primaryVaultResourceName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", in.VaultClusterName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "hvn_id", in.HvnName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", in.Tier),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cloud_provider", in.CloudProvider),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "region", in.Region),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "public_endpoint", "true"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "namespace", "admin"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_version"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "organization_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "project_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_public_endpoint_url"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "self_link"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
+				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_endpoint"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
+			),
+			ExpectError: regexp.MustCompile(`http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"`),
+		},
+		{
+			// add an http audit log provider
+			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+			resource "hcp_vault_cluster" "c1" {
+				cluster_id      = "{{ .VaultClusterName }}"
+				hvn_id          = hcp_hvn.hvn1.hvn_id
+				tier            = "{{ .Tier }}"
+				public_endpoint = true
+				audit_log_config {
+					http_endpoint = "https://http-input-splunkcloud.com"
 					http_codec		= "JSON"
 					http_method		= "POST"
 				}
