@@ -134,15 +134,15 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Required:    true,
-				Description: "Terraform Cloud No Code Module details",
+				Description: "Terraform Cloud No-Code Module details",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
 						Required:    true,
-						Description: "No Code Module Source",
+						Description: "No-Code Module Source",
 					},
 					"version": &schema.StringAttribute{
 						Required:    true,
-						Description: "No Code Module Version",
+						Description: "No-Code Module Version",
 					},
 				},
 			},
