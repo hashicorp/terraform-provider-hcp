@@ -20,7 +20,7 @@ Waypoint Application Template resource
 - `name` (String) The name of the Application Template.
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 ### Optional
 
@@ -48,5 +48,5 @@ Required:
 
 Required:
 
-- `source` (String) No Code Module Source
-- `version` (String) No Code Module Version
+- `source` (String) No-Code Module Source
+- `version` (String) No-Code Module Version

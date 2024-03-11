@@ -29,7 +29,7 @@ The Waypoint Template data source retrieves information on a given Application T
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application Template is located.
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
@@ -37,7 +37,7 @@ The Waypoint Template data source retrieves information on a given Application T
 Read-Only:
 
 - `name` (String) Name of the Terraform Cloud Workspace
-- `terraform_project_id` (String) Tetraform Cloud Project ID
+- `terraform_project_id` (String) Terraform Cloud Project ID
 
 
 <a id="nestedatt--terraform_no_code_module"></a>
@@ -45,5 +45,5 @@ Read-Only:
 
 Read-Only:
 
-- `source` (String) No Code Module Source
-- `version` (String) No Code Module Version
+- `source` (String) No-Code Module Source
+- `version` (String) No-Code Module Version
