@@ -111,15 +111,15 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud No Code Module details",
+				Description: "Terraform Cloud No-Code Module details",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
 						Computed:    true,
-						Description: "No Code Module Source",
+						Description: "No-Code Module Source",
 					},
 					"version": &schema.StringAttribute{
 						Computed:    true,
-						Description: "No Code Module Version",
+						Description: "No-Code Module Version",
 					},
 				},
 			},
