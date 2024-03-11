@@ -105,7 +105,7 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Computed:    true,
-						Description: "Tetraform Cloud Project ID",
+						Description: "Terraform Cloud Project ID",
 					},
 				},
 			},
