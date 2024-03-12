@@ -287,18 +287,18 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *AddOnDefinitionResourceModel
+	var state *AddOnDefinitionResourceModel
 
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
-		projectID = data.ProjectID.ValueString()
+	if !state.ProjectID.IsUnknown() {
+		projectID = state.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
@@ -309,7 +309,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 
 	client := r.client
 
-	definition, err := clients.GetAddOnDefinitionByID(ctx, client, loc, data.ID.ValueString())
+	definition, err := clients.GetAddOnDefinitionByID(ctx, client, loc, state.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
@@ -320,27 +320,27 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	data.ID = types.StringValue(definition.ID)
-	data.Name = types.StringValue(definition.Name)
-	data.OrgID = types.StringValue(client.Config.OrganizationID)
-	data.ProjectID = types.StringValue(client.Config.ProjectID)
-	data.Summary = types.StringValue(definition.Summary)
-	data.Description = types.StringValue(definition.Description)
-	data.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
+	state.ID = types.StringValue(definition.ID)
+	state.Name = types.StringValue(definition.Name)
+	state.OrgID = types.StringValue(client.Config.OrganizationID)
+	state.ProjectID = types.StringValue(client.Config.ProjectID)
+	state.Summary = types.StringValue(definition.Summary)
+	state.Description = types.StringValue(definition.Description)
+	state.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.Labels = labels
+	state.Labels = labels
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
 			Name:               types.StringValue(definition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		data.TerraformCloudWorkspace = tfcWorkspace
+		state.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	if definition.TerraformNocodeModule != nil {
@@ -348,25 +348,25 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 			Source:  types.StringValue(definition.TerraformNocodeModule.Source),
 			Version: types.StringValue(definition.TerraformNocodeModule.Version),
 		}
-		data.TerraformNoCodeModule = tfcNoCode
+		state.TerraformNoCodeModule = tfcNoCode
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data *AddOnDefinitionResourceModel
+	var plan *AddOnDefinitionResourceModel
 
 	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
-		projectID = data.ProjectID.ValueString()
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
@@ -387,25 +387,25 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 
 	// TODO: (Henry) add support for Labels and Tags
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
-		Name:                   data.Name.ValueString(),
-		Summary:                data.Summary.ValueString(),
-		Description:            data.Description.ValueString(),
-		ReadmeMarkdownTemplate: strfmt.Base64(data.ReadmeMarkdownTemplate.ValueString()),
+		Name:                   plan.Name.ValueString(),
+		Summary:                plan.Summary.ValueString(),
+		Description:            plan.Description.ValueString(),
+		ReadmeMarkdownTemplate: strfmt.Base64(plan.ReadmeMarkdownTemplate.ValueString()),
 		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
-			Source:  data.TerraformNoCodeModule.Source.ValueString(),
-			Version: data.TerraformNoCodeModule.Version.ValueString(),
+			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
+			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
 		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-			Name:      data.TerraformCloudWorkspace.Name.ValueString(),
-			ProjectID: data.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
+			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
+			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{
 		NamespaceID:               ns.ID,
 		Body:                      modelBody,
-		ExistingAddOnDefinitionID: data.ID.ValueString(),
+		ExistingAddOnDefinitionID: plan.ID.ValueString(),
 	}
 	def, err := r.client.Waypoint.WaypointServiceUpdateAddOnDefinition(params, nil)
 	if err != nil {
@@ -422,27 +422,27 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	data.ID = types.StringValue(addOnDefinition.ID)
-	data.ProjectID = types.StringValue(projectID)
-	data.Name = types.StringValue(addOnDefinition.Name)
-	data.OrgID = types.StringValue(orgID)
-	data.Summary = types.StringValue(addOnDefinition.Summary)
-	data.Description = types.StringValue(addOnDefinition.Description)
-	data.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
+	plan.ID = types.StringValue(addOnDefinition.ID)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.Name = types.StringValue(addOnDefinition.Name)
+	plan.OrgID = types.StringValue(orgID)
+	plan.Summary = types.StringValue(addOnDefinition.Summary)
+	plan.Description = types.StringValue(addOnDefinition.Description)
+	plan.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.Labels = labels
+	plan.Labels = labels
 
 	if addOnDefinition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		data.TerraformCloudWorkspace = tfcWorkspace
+		plan.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	if addOnDefinition.TerraformNocodeModule != nil {
@@ -450,7 +450,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Source:  types.StringValue(addOnDefinition.TerraformNocodeModule.Source),
 			Version: types.StringValue(addOnDefinition.TerraformNocodeModule.Version),
 		}
-		data.TerraformNoCodeModule = tfcNoCode
+		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	// Write logs using the tflog package
@@ -458,22 +458,22 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	tflog.Trace(ctx, "updated add-on definition resource")
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *AddOnDefinitionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *AddOnDefinitionResourceModel
+	var state *AddOnDefinitionResourceModel
 
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
-		projectID = data.ProjectID.ValueString()
+	if !state.ProjectID.IsUnknown() {
+		projectID = state.ProjectID.ValueString()
 	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -493,7 +493,7 @@ func (r *AddOnDefinitionResource) Delete(ctx context.Context, req resource.Delet
 
 	params := &waypoint_service.WaypointServiceDeleteAddOnDefinitionParams{
 		NamespaceID:       ns.ID,
-		AddOnDefinitionID: data.ID.ValueString(),
+		AddOnDefinitionID: state.ID.ValueString(),
 	}
 
 	_, err = r.client.Waypoint.WaypointServiceDeleteAddOnDefinition(params, nil)

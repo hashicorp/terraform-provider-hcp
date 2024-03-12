@@ -84,7 +84,7 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 			},
 			"description": schema.StringAttribute{
 				Description: "A longer description of the Add-on Definition.",
-				Computed:    true,
+				Required:    true,
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
@@ -140,8 +140,8 @@ func (d *DataSourceAddOnDefinition) Configure(ctx context.Context, req datasourc
 }
 
 func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DataSourceAddOnDefinitionModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	var state DataSourceAddOnDefinitionModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
 	client := d.client
 	if d.client == nil {
@@ -153,8 +153,8 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	}
 
 	projectID := client.Config.ProjectID
-	if !data.ProjectID.IsNull() {
-		projectID = data.ProjectID.ValueString()
+	if !state.ProjectID.IsNull() {
+		projectID = state.ProjectID.ValueString()
 	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -165,36 +165,36 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	var definition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
 	var err error
 
-	if data.ID.IsNull() {
-		definition, err = clients.GetAddOnDefinitionByName(ctx, client, loc, data.Name.ValueString())
-	} else if data.Name.IsNull() {
-		definition, err = clients.GetAddOnDefinitionByID(ctx, client, loc, data.ID.ValueString())
+	if state.ID.IsNull() {
+		definition, err = clients.GetAddOnDefinitionByName(ctx, client, loc, state.Name.ValueString())
+	} else if state.Name.IsNull() {
+		definition, err = clients.GetAddOnDefinitionByID(ctx, client, loc, state.ID.ValueString())
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	data.ID = types.StringValue(definition.ID)
-	data.OrgID = types.StringValue(client.Config.OrganizationID)
-	data.ProjectID = types.StringValue(client.Config.ProjectID)
-	data.Summary = types.StringValue(definition.Summary)
-	data.Description = types.StringValue(definition.Description)
-	data.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
+	state.ID = types.StringValue(definition.ID)
+	state.OrgID = types.StringValue(client.Config.OrganizationID)
+	state.ProjectID = types.StringValue(client.Config.ProjectID)
+	state.Summary = types.StringValue(definition.Summary)
+	state.Description = types.StringValue(definition.Description)
+	state.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.Labels = labels
+	state.Labels = labels
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
 			Name:               types.StringValue(definition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		data.TerraformCloudWorkspace = tfcWorkspace
+		state.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	if definition.TerraformNocodeModule != nil {
@@ -202,8 +202,8 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 			Source:  types.StringValue(definition.TerraformNocodeModule.Source),
 			Version: types.StringValue(definition.TerraformNocodeModule.Version),
 		}
-		data.TerraformNoCodeModule = tfcNoCode
+		state.TerraformNoCodeModule = tfcNoCode
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
