@@ -6,7 +6,9 @@ package waypoint_test
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
@@ -28,10 +30,18 @@ func TestAccWaypointTfcConfig_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointTfcConfigDestroy(t, &tfcConfig),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(),
+				Config: testConfig(generateRandomSlug(), "waypoint-tfc-testing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTfcConfigExists(t, resourceName, &tfcConfig),
 					resource.TestCheckResourceAttr(resourceName, "tfc_org_name", "waypoint-tfc-testing"),
+				),
+			},
+			// update the token with new slug and TF Org
+			{
+				Config: testConfig(generateRandomSlug(), "some-new-org"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointTfcConfigExists(t, resourceName, &tfcConfig),
+					resource.TestCheckResourceAttr(resourceName, "tfc_org_name", "some-new-org"),
 				),
 			},
 		},
@@ -116,11 +126,23 @@ func testAccCheckWaypointTfcConfigDestroy(t *testing.T, tfcConfig *waypoint.TfcC
 	}
 }
 
-func testConfig() string {
-	return `
+func testConfig(token, orgName string) string {
+	return fmt.Sprintf(`
 provider "hcp" {}
 resource "hcp_waypoint_tfc_config" "test" {
-  token        = "some fake token"
-  tfc_org_name = "waypoint-tfc-testing"
-}`
+  token        = %q
+  tfc_org_name = %q
+}`, token, orgName)
+}
+
+// generateRandomSlug will create a valid randomized slug with a prefix
+func generateRandomSlug() string {
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	charset := "abcdefghijklmnopqrstuvwxyz0123456789"
+
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = charset[seed.Intn(len(charset))]
+	}
+	return "hcp-provider-acctest-" + string(b)
 }
