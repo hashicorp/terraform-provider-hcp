@@ -84,7 +84,7 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 			},
 			"description": schema.StringAttribute{
 				Description: "A longer description of the Add-on Definition.",
-				Required:    true,
+				Computed:    true,
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,

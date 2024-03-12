@@ -193,7 +193,6 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// TODO: (Henry) Follow up, is this the best way to type convert here?
 	stringLabels := []string{}
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
 		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
@@ -385,12 +384,24 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// TODO: (Henry) add support for Labels and Tags
+	stringLabels := []string{}
+	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
+		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
+		if diagnostics.HasError() {
+			resp.Diagnostics.AddError(
+				"error converting labels",
+				"Failed to convert labels from types.List to string list",
+			)
+			return
+		}
+	}
+	// TODO: (Henry) add support for Tags
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: strfmt.Base64(plan.ReadmeMarkdownTemplate.ValueString()),
+		Labels:                 stringLabels,
 		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
