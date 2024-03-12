@@ -83,11 +83,11 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Optional:    true,
+				Computed:    true,
 				Description: "A description of the template, along with when and why it should be used, up to 500 characters",
 			},
 			"readme_markdown_template": schema.StringAttribute{
-				Optional:    true,
+				Computed:    true,
 				Description: "Instructions for using the template (markdown format supported",
 			},
 			"labels": schema.ListAttribute{

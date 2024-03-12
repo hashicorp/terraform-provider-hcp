@@ -17,16 +17,16 @@ The Waypoint Template data source retrieves information on a given Application T
 
 ### Optional
 
-- `description` (String) A description of the template, along with when and why it should be used, up to 500 characters
 - `id` (String) The ID of the Application Template.
 - `name` (String) The name of the Application Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Application Template is located.
-- `readme_markdown_template` (String) Instructions for using the template (markdown format supported
 
 ### Read-Only
 
+- `description` (String) A description of the template, along with when and why it should be used, up to 500 characters
 - `labels` (List of String) List of labels attached to this Application Template.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application Template is located.
+- `readme_markdown_template` (String) Instructions for using the template (markdown format supported
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
