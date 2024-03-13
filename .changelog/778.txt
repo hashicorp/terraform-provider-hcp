@@ -1,0 +1,4 @@
+```release-note:feature
+ New resource: Add `hcp_waypoint_application_template` resource for managing Waypoint Application Templates.
+ New data-source: Add `data.hcp_waypoint_application_template` data-source for Waypoint Application Templates.
+ ```

@@ -1,0 +1,65 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package clients
+
+import (
+	"context"
+
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+)
+
+// getNamespaceByLocation will retrieve a namespace by location information
+// provided by HCP
+func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointNamespace, error) {
+	namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
+		LocationOrganizationID: loc.OrganizationID,
+		LocationProjectID:      loc.ProjectID,
+	}
+	// get namespace
+	ns, err := client.Waypoint.WaypointServiceGetNamespace(namespaceParams, nil)
+	if err != nil {
+		return nil, err
+	}
+	return ns.GetPayload().Namespace, nil
+}
+
+// GetApplicationTemplateByName will retrieve an application template by name
+func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetApplicationTemplate2Params{
+		ApplicationTemplateName: appName,
+		NamespaceID:             ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetApplicationTemplate2(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().ApplicationTemplate, nil
+}
+
+// GetApplicationTemplateByID will retrieve an application template by ID
+func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetApplicationTemplateParams{
+		ApplicationTemplateID: appID,
+		NamespaceID:           ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetApplicationTemplate(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().ApplicationTemplate, nil
+}
