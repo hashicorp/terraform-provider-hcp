@@ -88,7 +88,6 @@ func testAccCheckWaypointApplicationExists(t *testing.T, resourceName string, ap
 		if applicationModel != nil {
 			applicationModel.Name = types.StringValue(application.Name)
 			applicationModel.ID = types.StringValue(application.ID)
-			applicationModel.ExternalID = types.StringValue(application.ID)
 			applicationModel.ProjectID = types.StringValue(projectID)
 		}
 
@@ -129,8 +128,10 @@ func testAccCheckWaypointApplicationDestroy(t *testing.T, applicationModel *wayp
 
 func testApplicationConfig(name string) string {
 	return fmt.Sprintf(`
+%s
+
 resource "hcp_waypoint_application" "test" {
   name    = %q
-  summary = "some summary for fun"
-}`, name)
+  application_template_id = hcp_waypoint_application_template.test.id
+}`, testAppTemplateConfig(name), name)
 }

@@ -32,9 +32,7 @@ type ApplicationResource struct {
 
 // ApplicationResourceModel describes the resource data model.
 type ApplicationResourceModel struct {
-	ID types.String `tfsdk:"id"`
-	// Questionable if this should exist or just use external_id -> ID
-	ExternalID              types.String `tfsdk:"id"`
+	ID                      types.String `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
 	ProjectID               types.String `tfsdk:"project_id"`
 	OrgID                   types.String `tfsdk:"organization_id"`
