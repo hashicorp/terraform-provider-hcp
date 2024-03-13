@@ -144,6 +144,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
 		iam.NewWorkloadIdentityProviderResource,
+		iam.NewGroupResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
