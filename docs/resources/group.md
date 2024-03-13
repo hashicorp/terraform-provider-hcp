@@ -15,7 +15,7 @@ The user or service account that is running Terraform when creating an `hcp_grou
 ## Example Usage
 
 ```terraform
-resource "hcp_project" "example" {
+resource "hcp_group" "example" {
   display_name = "example-group"
   description  = "My new group!"
 }

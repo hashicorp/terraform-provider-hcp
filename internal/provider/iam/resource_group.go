@@ -104,7 +104,7 @@ func (r *resourceGroup) Create(ctx context.Context, req resource.CreateRequest, 
 	orgID := r.client.Config.OrganizationID
 	parent := fmt.Sprintf("organization/%s", orgID)
 
-	createParams := groups_service.NewGroupsServiceCreateGroupParams()
+	createParams := groups_service.NewGroupsServiceCreateGroupParams().WithContext(ctx)
 	createParams.ParentResourceName = parent
 	createParams.Body = groups_service.GroupsServiceCreateGroupBody{
 		Name:        plan.DisplayName.ValueString(),
@@ -134,7 +134,7 @@ func (r *resourceGroup) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	getParams := groups_service.NewGroupsServiceGetGroupParams()
+	getParams := groups_service.NewGroupsServiceGetGroupParams().WithContext(ctx)
 	getParams.ResourceName = state.ResourceName.ValueString()
 	res, err := r.client.Groups.GroupsServiceGetGroup(getParams, nil)
 
@@ -167,7 +167,7 @@ func (r *resourceGroup) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	updateParams := groups_service.NewGroupsServiceUpdateGroupParams()
+	updateParams := groups_service.NewGroupsServiceUpdateGroupParams().WithContext(ctx)
 	updateParams.ResourceName = state.ResourceName.ValueString()
 	updateParams.Body = groups_service.GroupsServiceUpdateGroupBody{Group: &models.HashicorpCloudIamGroup{ResourceName: state.ResourceName.ValueString(), ResourceID: state.ResourceID.ValueString()}}
 	paths := []string{}
@@ -204,7 +204,7 @@ func (r *resourceGroup) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	deleteParams := groups_service.NewGroupsServiceDeleteGroupParams()
+	deleteParams := groups_service.NewGroupsServiceDeleteGroupParams().WithContext(ctx)
 	deleteParams.ResourceName = state.ResourceName.ValueString()
 	_, err := r.client.Groups.GroupsServiceDeleteGroup(deleteParams, nil)
 

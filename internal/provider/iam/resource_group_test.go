@@ -4,7 +4,9 @@
 package iam_test
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
@@ -26,6 +28,7 @@ func TestAccGroupResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
+		CheckDestroy:             testAccCheckGroupDestroy(t, groupName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfigResource(groupName, description),
@@ -117,4 +120,22 @@ func testAccGroupImportID(s *terraform.State) (string, error) {
 	}
 
 	return id, nil
+}
+
+func testAccCheckGroupDestroy(t *testing.T, groupName string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		client := acctest.HCPClients(t)
+		resourceName := fmt.Sprintf("iam/organization/%s/group/%s", client.GetOrganizationID(), groupName)
+		getParams := groups_service.NewGroupsServiceGetGroupParams().WithResourceName(resourceName)
+		_, err := client.Groups.GroupsServiceGetGroup(getParams, nil)
+		if err != nil {
+			var getErr *groups_service.GroupsServiceGetGroupDefault
+			if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
+
+				return nil
+			}
+
+		}
+		return fmt.Errorf("didn't get a 404 when reading destroyed group %s: %v", resourceName, err)
+	}
 }

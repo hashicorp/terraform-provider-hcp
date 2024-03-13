@@ -1,4 +1,4 @@
-resource "hcp_project" "example" {
+resource "hcp_group" "example" {
   display_name = "example-group"
   description  = "My new group!"
 }
