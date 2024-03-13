@@ -93,7 +93,6 @@ func (d *DataSourceGroup) Read(ctx context.Context, req datasource.ReadRequest, 
 	// if shorthand resourceName was provided, generate full resourceName
 	if !strings.HasPrefix(getParams.ResourceName, "iam/") {
 		orgID := d.client.Config.OrganizationID
-		fmt.Printf("orgID is : %s", orgID)
 		getParams.ResourceName = fmt.Sprintf("iam/organization/%s/group/%s", orgID, data.ResourceName.ValueString())
 	}
 
