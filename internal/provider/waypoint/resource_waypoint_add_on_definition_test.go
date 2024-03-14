@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"math/rand"
-	"testing"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
+	"testing"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
@@ -124,7 +121,7 @@ func testAccCheckWaypointAddOnDefinitionDestroy(t *testing.T, definitionModel *w
 	}
 }
 
-// TODO: (Henry) Add remaining add-on definition fields to test (tags, labels, readmemarkdown, definition.. etc)
+// TODO: (Henry) Add remaining add-on definition fields to test (tags, labels, readmemarkdown.. etc)
 func testAddOnDefinitionConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_add_on_definition" "test" {
@@ -140,17 +137,4 @@ resource "hcp_waypoint_add_on_definition" "test" {
     terraform_project_id = "some id"
   }
 }`, name)
-}
-
-// generateRandomName will create a valid randomized name
-// TODO: (Henry) This function is duplicated in multiple tests. It should be moved to a common location.
-func generateRandomName() string {
-	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
-	charset := "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = charset[seed.Intn(len(charset))]
-	}
-	return "hcp-provider-acctest-" + string(b)
 }

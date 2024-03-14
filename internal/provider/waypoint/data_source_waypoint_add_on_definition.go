@@ -86,6 +86,10 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 				Description: "A longer description of the Add-on Definition.",
 				Computed:    true,
 			},
+			"readme_markdown_template": schema.StringAttribute{
+				Computed:    true,
+				Description: "Instructions for using the definition (markdown format supported)",
+			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
 				Description: "List of labels attached to this Add-on Definition.",
@@ -179,15 +183,6 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	state.OrgID = types.StringValue(client.Config.OrganizationID)
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
-	state.Description = types.StringValue(definition.Description)
-	state.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
-
-	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.Labels = labels
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -203,6 +198,27 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 			Version: types.StringValue(definition.TerraformNocodeModule.Version),
 		}
 		state.TerraformNoCodeModule = tfcNoCode
+	}
+
+	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(labels.Elements()) == 0 {
+		labels = types.ListNull(types.StringType)
+	}
+	state.Labels = labels
+
+	// set plan.description if it's not null or addOnDefinition.description is not empty
+	state.Description = types.StringValue(definition.Description)
+	if definition.Description == "" {
+		state.Description = types.StringNull()
+	}
+	state.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
+	// set state.readme if it's not null or addOnDefinition.readme is not empty
+	if definition.ReadmeMarkdownTemplate.String() == "" {
+		state.ReadmeMarkdownTemplate = types.StringNull()
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

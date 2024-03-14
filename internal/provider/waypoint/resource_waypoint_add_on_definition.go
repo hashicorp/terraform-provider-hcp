@@ -7,8 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/go-openapi/strfmt"
-
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
@@ -252,8 +250,18 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
+
 	plan.Description = types.StringValue(addOnDefinition.Description)
+	// set plan.description if it's not null or addOnDefinition.description is not empty
+	if addOnDefinition.Description == "" {
+		plan.Description = types.StringNull()
+	}
 	plan.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
+	// set plan.readme if it's not null or addOnDefinition.readme is not empty
+	if addOnDefinition.ReadmeMarkdownTemplate.String() == "" {
+		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -324,8 +332,17 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	state.OrgID = types.StringValue(client.Config.OrganizationID)
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
+
 	state.Description = types.StringValue(definition.Description)
+	// set plan.description if it's not null or addOnDefinition.description is not empty
+	if definition.Description == "" {
+		state.Description = types.StringNull()
+	}
 	state.ReadmeMarkdownTemplate = types.StringValue(definition.ReadmeMarkdownTemplate.String())
+	// set plan.readme if it's not null or addOnDefinition.readme is not empty
+	if definition.ReadmeMarkdownTemplate.String() == "" {
+		state.ReadmeMarkdownTemplate = types.StringNull()
+	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
 	resp.Diagnostics.Append(diags...)
@@ -384,6 +401,8 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
+
 	stringLabels := []string{}
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
 		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
@@ -395,12 +414,12 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			return
 		}
 	}
-	// TODO: (Henry) add support for Tags
+	// TODO: add support for Tags
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
-		ReadmeMarkdownTemplate: strfmt.Base64(plan.ReadmeMarkdownTemplate.ValueString()),
+		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
 		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
@@ -438,8 +457,17 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
+
 	plan.Description = types.StringValue(addOnDefinition.Description)
+	// set plan.description if it's not null or addOnDefinition.description is not empty
+	if addOnDefinition.Description == "" {
+		plan.Description = types.StringNull()
+	}
 	plan.ReadmeMarkdownTemplate = types.StringValue(addOnDefinition.ReadmeMarkdownTemplate.String())
+	// set plan.readme if it's not null or addOnDefinition.readme is not empty
+	if addOnDefinition.ReadmeMarkdownTemplate.String() == "" {
+		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)
 	resp.Diagnostics.Append(diags...)
