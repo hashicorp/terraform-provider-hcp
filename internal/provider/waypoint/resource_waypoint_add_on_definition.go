@@ -7,9 +7,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypointmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -202,6 +203,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			return
 		}
 	}
+
 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -209,18 +211,19 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			err.Error(),
 		)
 	}
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
+
+	modelBody := &waypointmodels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
+		TerraformNocodeModule: &waypointmodels.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		TerraformCloudWorkspaceDetails: &waypointmodels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
@@ -236,7 +239,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	var addOnDefinition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypointmodels.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
@@ -402,6 +405,12 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"error decoding base64 readme markdown template",
+			err.Error(),
+		)
+	}
 
 	stringLabels := []string{}
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
@@ -415,18 +424,18 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		}
 	}
 	// TODO: add support for Tags
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
+	modelBody := &waypointmodels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
+		TerraformNocodeModule: &waypointmodels.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		TerraformCloudWorkspaceDetails: &waypointmodels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
@@ -443,7 +452,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	var addOnDefinition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypointmodels.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
