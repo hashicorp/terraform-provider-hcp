@@ -7,6 +7,9 @@ import (
 	"context"
 	"fmt"
 
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -93,6 +96,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			// TODO(clint): not sure why both are in the model
 			"application_template_name": schema.StringAttribute{
 				Computed:    true,
+				Optional:    true,
 				Description: "Name of the Application Template this Application is based on.",
 			},
 			"readme_markdown": schema.StringAttribute{
@@ -137,127 +141,70 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// projectID := r.client.Config.ProjectID
-	// if !plan.ProjectID.IsUnknown() {
-	// 	projectID = plan.ProjectID.ValueString()
-	// }
+	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
 
-	// orgID := r.client.Config.OrganizationID
-	// loc := &sharedmodels.HashicorpCloudLocationLocation{
-	// 	OrganizationID: orgID,
-	// 	ProjectID:      projectID,
-	// }
+	orgID := r.client.Config.OrganizationID
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: orgID,
+		ProjectID:      projectID,
+	}
 
-	// client := r.client
-	// ns, err := getNamespaceByLocation(ctx, client, loc)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"error getting namespace by location",
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
+	client := r.client
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"error getting namespace by location",
+			err.Error(),
+		)
+		return
+	}
 
-	// strLabels := []string{}
-	// diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
-	// if diags.HasError() {
-	// 	return
-	// }
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
+		Name: plan.Name.ValueString(),
+		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
+			// ID:   plan.ApplicationTemplateID.ValueString(),
+			Name: plan.ApplicationTemplateName.ValueString(),
+		},
+	}
 
-	// readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdown.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"error decoding the base64 file contents",
-	// 		err.Error(),
-	// 	)
-	// }
+	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
+		NamespaceID: ns.ID,
+		Body:        modelBody,
+	}
+	app, err := r.client.Waypoint.WaypointServiceCreateApplicationFromTemplate(params, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating application from template", err.Error())
+		return
+	}
 
-	// modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
-	// 	ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-	// 		Name:                   plan.Name.ValueString(),
-	// 		Summary:                plan.Summary.ValueString(),
-	// 		Labels:                 strLabels,
-	// 		Description:            plan.Description.ValueString(),
-	// 		ReadmeMarkdownTemplate: readmeBytes,
-	// 		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
-	// 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-	// 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
-	// 		},
-	// 		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-	// 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
-	// 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-	// 		},
-	// 	},
-	// }
+	var application *waypoint_models.HashicorpCloudWaypointApplication
+	if app.Payload != nil {
+		application = app.Payload.Application
+	}
+	if application == nil {
+		resp.Diagnostics.AddError("unknown error creating application from template", "empty application template found")
+		return
+	}
 
-	// params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
-	// 	NamespaceID: ns.ID,
-	// 	Body:        modelBody,
-	// }
-	// app, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Error creating application template", err.Error())
-	// 	return
-	// }
+	plan.ID = types.StringValue(application.ID)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.Name = types.StringValue(application.Name)
+	plan.OrgID = types.StringValue(orgID)
+	plan.NamespaceID = types.StringValue(ns.ID)
 
-	// var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
-	// if app.Payload != nil {
-	// 	appTemplate = app.Payload.ApplicationTemplate
-	// }
-	// if appTemplate == nil {
-	// 	resp.Diagnostics.AddError("unknown error creating application template", "empty application template found")
-	// 	return
-	// }
-
-	// plan.ID = types.StringValue(appTemplate.ID)
-	// plan.ProjectID = types.StringValue(projectID)
-	// plan.Name = types.StringValue(appTemplate.Name)
-	// plan.OrgID = types.StringValue(orgID)
-	// plan.Summary = types.StringValue(appTemplate.Summary)
-
-	// if appTemplate.TerraformCloudWorkspaceDetails != nil {
-	// 	tfcWorkspace := &tfcWorkspace{
-	// 		Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-	// 		TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-	// 	}
-	// 	plan.TerraformCloudWorkspace = tfcWorkspace
-	// }
-
-	// if appTemplate.TerraformNocodeModule != nil {
-	// 	tfcNoCode := &tfcNoCodeModule{
-	// 		Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-	// 		Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-	// 	}
-	// 	plan.TerraformNoCodeModule = tfcNoCode
-	// }
-
-	// labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-	// if len(labels.Elements()) == 0 {
-	// 	labels = types.ListNull(types.StringType)
-	// }
-
-	// plan.Labels = labels
-
-	// // set plan.description if it's not null or appTemplate.description is not
-	// // empty
-	// plan.Description = types.StringValue(appTemplate.Description)
-	// if appTemplate.Description == "" {
-	// 	plan.Description = types.StringNull()
-	// }
-	// // set plan.readme if it's not null or appTemplate.readme is not
-	// // empty
-	// plan.ReadmeMarkdown = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
-	// if appTemplate.ReadmeMarkdownTemplate.String() == "" {
-	// 	plan.ReadmeMarkdown = types.StringNull()
-	// }
+	// set plan.readme if it's not null or appTemplate.readme is not
+	// empty
+	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
+	if application.ReadmeMarkdown.String() == "" {
+		plan.ReadmeMarkdown = types.StringNull()
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "created application template resource")
+	tflog.Trace(ctx, "created application from template resource")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -273,74 +220,42 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	// 	projectID := r.client.Config.ProjectID
-	// 	if !data.ProjectID.IsUnknown() {
-	// 		projectID = data.ProjectID.ValueString()
-	// 	}
+	projectID := r.client.Config.ProjectID
+	if !data.ProjectID.IsUnknown() {
+		projectID = data.ProjectID.ValueString()
+	}
 
-	// 	orgID := r.client.Config.OrganizationID
-	// 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-	// 		OrganizationID: orgID,
-	// 		ProjectID:      projectID,
-	// 	}
+	orgID := r.client.Config.OrganizationID
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: orgID,
+		ProjectID:      projectID,
+	}
 
-	// 	client := r.client
+	client := r.client
 
-	// 	appTemplate, err := clients.GetApplicationTemplateByID(ctx, client, loc, data.ID.ValueString())
-	// 	if err != nil {
-	// 		if clients.IsResponseCodeNotFound(err) {
-	// 			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
-	// 			resp.State.RemoveResource(ctx)
-	// 			return
-	// 		}
-	// 		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
-	// 		return
-	// 	}
+	application, err := clients.GetApplicationByID(ctx, client, loc, data.ID.ValueString())
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
+		return
+	}
 
-	// 	data.ID = types.StringValue(appTemplate.ID)
-	// 	data.Name = types.StringValue(appTemplate.Name)
-	// 	data.OrgID = types.StringValue(client.Config.OrganizationID)
-	// 	data.ProjectID = types.StringValue(client.Config.ProjectID)
-	// 	data.Summary = types.StringValue(appTemplate.Summary)
+	data.ID = types.StringValue(application.ID)
+	data.ProjectID = types.StringValue(projectID)
+	data.Name = types.StringValue(application.Name)
+	data.OrgID = types.StringValue(orgID)
+	// data.NamespaceID = types.StringValue(ns.ID)
 
-	// 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
-	// 		tfcWorkspace := &tfcWorkspace{
-	// 			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-	// 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-	// 		}
-	// 		data.TerraformCloudWorkspace = tfcWorkspace
-	// 	}
-
-	// 	if appTemplate.TerraformNocodeModule != nil {
-	// 		tfcNoCode := &tfcNoCodeModule{
-	// 			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-	// 			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-	// 		}
-	// 		data.TerraformNoCodeModule = tfcNoCode
-	// 	}
-
-	// 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
-	// 	resp.Diagnostics.Append(diags...)
-	// 	if resp.Diagnostics.HasError() {
-	// 		return
-	// 	}
-	// 	if len(labels.Elements()) == 0 {
-	// 		labels = types.ListNull(types.StringType)
-	// 	}
-	// 	data.Labels = labels
-
-	// 	// set data.description if it's not null or appTemplate.description is not
-	// 	// empty
-	// 	data.Description = types.StringValue(appTemplate.Description)
-	// 	if appTemplate.Description == "" {
-	// 		data.Description = types.StringNull()
-	// 	}
-	// 	// set data.readme if it's not null or appTemplate.readme is not
-	// 	// empty
-	// 	data.ReadmeMarkdown = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
-	// 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
-	// 		data.ReadmeMarkdown = types.StringNull()
-	// 	}
+	// set plan.readme if it's not null or appTemplate.readme is not
+	// empty
+	data.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
+	if application.ReadmeMarkdown.String() == "" {
+		data.ReadmeMarkdown = types.StringNull()
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
