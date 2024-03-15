@@ -88,7 +88,7 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 			},
 			"readme_markdown_template": schema.StringAttribute{
 				Computed:    true,
-				Description: "Instructions for using the definition (markdown format supported)",
+				Description: "Instructions for using the Add-on Definition (markdown format supported).",
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
@@ -97,29 +97,29 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud Workspace details",
+				Description: "Terraform Cloud Workspace details.",
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Computed:    true,
-						Description: "Name of the Terraform Cloud Workspace",
+						Description: "Name of the Terraform Cloud Workspace.",
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Computed:    true,
-						Description: "Tetraform Cloud Project ID",
+						Description: "Terraform Cloud Project ID.",
 					},
 				},
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud No Code Module details",
+				Description: "Terraform Cloud no-code Module details.",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
 						Computed:    true,
-						Description: "No Code Module Source",
+						Description: "Terraform Cloud no-code Module Source",
 					},
 					"version": &schema.StringAttribute{
 						Computed:    true,
-						Description: "No Code Module Version",
+						Description: "Terraform Cloud no-code Module Version",
 					},
 				},
 			},

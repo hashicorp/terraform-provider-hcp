@@ -26,18 +26,18 @@ The Waypoint Add-on Definition data source retrieves information on a given Add-
 - `description` (String) A longer description of the Add-on Definition.
 - `labels` (List of String) List of labels attached to this Add-on Definition.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Add-on Definition is located.
-- `readme_markdown_template` (String) Instructions for using the definition (markdown format supported)
+- `readme_markdown_template` (String) Instructions for using the Add-on Definition (markdown format supported).
 - `summary` (String) A short summary of the Add-on Definition.
-- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
+- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
 
 Read-Only:
 
-- `name` (String) Name of the Terraform Cloud Workspace
-- `terraform_project_id` (String) Tetraform Cloud Project ID
+- `name` (String) Name of the Terraform Cloud Workspace.
+- `terraform_project_id` (String) Terraform Cloud Project ID.
 
 
 <a id="nestedatt--terraform_no_code_module"></a>
@@ -45,5 +45,5 @@ Read-Only:
 
 Read-Only:
 
-- `source` (String) No Code Module Source
-- `version` (String) No Code Module Version
+- `source` (String) Terraform Cloud no-code Module Source
+- `version` (String) Terraform Cloud no-code Module Version

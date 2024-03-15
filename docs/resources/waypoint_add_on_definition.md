@@ -19,9 +19,9 @@ Waypoint Add-on Definition resource
 
 - `description` (String) A longer description of the Add-on Definition.
 - `name` (String) The name of the Add-on Definition.
-- `summary` (String) The ID of the HCP project where the Waypoint Add-on Definition is located.
+- `summary` (String) A short summary of the Add-on Definition.
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 ### Optional
 
@@ -48,5 +48,5 @@ Required:
 
 Required:
 
-- `source` (String) No Code Module Source
-- `version` (String) No Code Module Version
+- `source` (String) Terraform Cloud no-code Module Source
+- `version` (String) Terraform Cloud no-code Module Version

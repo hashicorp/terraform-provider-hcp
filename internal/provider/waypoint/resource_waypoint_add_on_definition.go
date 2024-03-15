@@ -48,9 +48,6 @@ type AddOnDefinitionResourceModel struct {
 
 	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
-
-	// questionable
-	// Namespace types.String `tfsdk:"namespace_id"`
 }
 
 func (r *AddOnDefinitionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -90,7 +87,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"summary": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Add-on Definition is located.",
+				Description: "A short summary of the Add-on Definition.",
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
@@ -126,15 +123,15 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Required:    true,
-				Description: "Terraform Cloud No Code Module details",
+				Description: "Terraform Cloud no-code Module details.",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
 						Required:    true,
-						Description: "No Code Module Source",
+						Description: "Terraform Cloud no-code Module Source",
 					},
 					"version": &schema.StringAttribute{
 						Required:    true,
-						Description: "No Code Module Version",
+						Description: "Terraform Cloud no-code Module Version",
 					},
 				},
 			},
@@ -198,7 +195,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		if diagnostics.HasError() {
 			resp.Diagnostics.AddError(
 				"error converting labels",
-				"Failed to convert labels from types.List to string list",
+				"The list of labels was incorrectly formated",
 			)
 			return
 		}
@@ -244,7 +241,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
 	if addOnDefinition == nil {
-		resp.Diagnostics.AddError("unknown error creating add-on definition", "empty add-on definition found")
+		resp.Diagnostics.AddError("unknown error creating add-on definition", "empty add-on definition returned")
 		return
 	}
 
@@ -322,11 +319,11 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	definition, err := clients.GetAddOnDefinitionByID(ctx, client, loc, state.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
+			tflog.Info(ctx, "Add-on Definition not found for organization, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
+		resp.Diagnostics.AddError("Error reading Add-on Definition", err.Error())
 		return
 	}
 
@@ -448,7 +445,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	}
 	def, err := r.client.Waypoint.WaypointServiceUpdateAddOnDefinition(params, nil)
 	if err != nil {
-		resp.Diagnostics.AddError("Error updating project", err.Error())
+		resp.Diagnostics.AddError("Error updating Add-on Definition", err.Error())
 		return
 	}
 
@@ -457,7 +454,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
 	if addOnDefinition == nil {
-		resp.Diagnostics.AddError("unknown error updating add-on definition", "empty add-on definition found")
+		resp.Diagnostics.AddError("Unknown error updating Add-on Definition", "Empty Add-on Definition found")
 		return
 	}
 

@@ -118,11 +118,11 @@ func testAccCheckWaypointAddOnDefinitionDestroy(t *testing.T, definitionModel *w
 			return fmt.Errorf("expected add-on definition to be destroyed, but it still exists")
 		}
 
-		return fmt.Errorf("both definition and error were nil in destroy check, this should not happen")
+		return fmt.Errorf("Both add-on definition and error were nil in destroy check, this should not happen")
 	}
 }
 
-// TODO: (Henry) Add remaining add-on definition fields to test (tags, labels, readmemarkdown.. etc)
+// TODO: Add remaining add-on definition fields to test (tags, labels, readmemarkdown.. etc)
 func testAddOnDefinitionConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_add_on_definition" "test" {
