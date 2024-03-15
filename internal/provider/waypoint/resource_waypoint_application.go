@@ -185,7 +185,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		application = app.Payload.Application
 	}
 	if application == nil {
-		resp.Diagnostics.AddError("unknown error creating application from template", "empty application template found")
+		resp.Diagnostics.AddError("unknown error creating application from template", "empty application template returned")
 		return
 	}
 
@@ -340,7 +340,8 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	// 		appTemplate = app.Payload.ApplicationTemplate
 	// 	}
 	// 	if appTemplate == nil {
-	// 		resp.Diagnostics.AddError("unknown error updating application template", "empty application template found")
+	// 		resp.Diagnostics.AddError("unknown error updating application
+	// 		template", "empty application template returned")
 	// 		return
 	// 	}
 
