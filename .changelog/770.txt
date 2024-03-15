@@ -1,0 +1,3 @@
+```release-note:bug
+Update Boundary API clients method name to match the latest version
+```
