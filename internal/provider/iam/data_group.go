@@ -43,8 +43,8 @@ func (d *DataSourceGroup) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:    true,
 			},
 			"resource_name": schema.StringAttribute{
-				Description: fmt.Sprintf("The group's resource name in format `%s` or shortened `%s`",
-					"iam/organization/<organization_id>/group/<resource_name>", "<resource_name>"),
+				Description: fmt.Sprintf("The group's resource name in format `%s`. The shortened `%s` version can be used for input.",
+					"iam/organization/<organization_id>/group/<group_name>", "<group_name>"),
 				Required: true,
 			},
 			"resource_id": schema.StringAttribute{

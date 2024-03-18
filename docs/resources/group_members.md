@@ -17,7 +17,7 @@ The user or service account that is running Terraform when creating an `hcp_grou
 
 ```terraform
 resource "hcp_group_members" "example" {
-  group = hcp_group.example.id
+  group = hcp_group.example.resource_name
   members = [
     hcp_user_principal.example1.id,
     hcp_user_principal.example2.id,

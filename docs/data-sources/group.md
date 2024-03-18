@@ -22,7 +22,7 @@ data "hcp_group" "example" {
 
 ### Required
 
-- `resource_name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<resource_name>` or shortened `<resource_name>`
+- `resource_name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<group_name>`. The shortened `<group_name>` version can be used for input.
 
 ### Read-Only
 
