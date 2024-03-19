@@ -163,17 +163,6 @@ func testAccConfigBuildersToString(builders ...testAccConfigBuilderInterface) st
 	return config
 }
 
-func testAccOutputBuilder(uniqueName string, value string) testAccConfigBuilderInterface {
-	return &testAccGenericNamedBlockConfigBuilder{
-		canReference:    false,
-		blockIdentifier: "output",
-		uniqueName:      uniqueName,
-		attributes: map[string]string{
-			"value": value,
-		},
-	}
-}
-
 // Generic ConfigBuilder for Blocks that have a UniqueName and no other labels
 // like `output` and `variable`
 type testAccGenericNamedBlockConfigBuilder struct {
