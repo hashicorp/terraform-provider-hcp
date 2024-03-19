@@ -115,7 +115,7 @@ func testAccCreateSlug(testName string) string {
 type testAccConfigBuilderInterface interface {
 	// The fully-qualified name of a block that can be referenced, like
 	// `hcp_packer_channel.prod` (a resource) or
-	// `data.hcp_packer_iteration.latest` (a data source).
+	// `data.hcp_packer_version.latest` (a data source).
 	// Panics if the block cannot be referenced.
 	BlockName() string
 	// Unquoted Block identifier, like `resource`, `data`, or `output`
