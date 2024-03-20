@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
@@ -208,11 +209,23 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags = append(diags, diag.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)...)
+	if orgLen == 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "The configured credentials do not have access to any organization.",
+			Detail:   "Please assign at least one organization to the configured credentials to use this provider.",
+		})
 		return nil, diags
 	}
 	orgID := listOrgResp.Payload.Organizations[0].ID
+	if orgLen > 1 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "There is more than one organization associated with the configured credentials.",
+			Detail:   "The oldest organization is selected as the default. To switch to a specific project within an organization, configure that in the HCP provider config block.",
+		})
+		orgID = GetOldestOrganization(listOrgResp.Payload.Organizations).ID
+	}
 
 	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
@@ -236,7 +249,22 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 	return project, diags
 }
 
-// getOldestProject retrieves the oldest project from a list based on its created_at time.
+// GetOldestOrganization retrieves the oldest organization from a list based on
+// its created_at time.
+func GetOldestOrganization(organizations []*models.HashicorpCloudResourcemanagerOrganization) (oldestOrg *models.HashicorpCloudResourcemanagerOrganization) {
+	oldestTime := time.Now()
+
+	for _, org := range organizations {
+		orgTime := time.Time(org.CreatedAt)
+		if orgTime.Before(oldestTime) {
+			oldestOrg = org
+			oldestTime = orgTime
+		}
+	}
+	return oldestOrg
+}
+
+// GetOldestProject retrieves the oldest project from a list based on its created_at time.
 func GetOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
 	oldestTime := time.Now()
 
