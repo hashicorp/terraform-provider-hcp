@@ -35,7 +35,6 @@ type AddOnResource struct {
 	client *clients.Client
 }
 
-// TODO: Get rid of most of these because they are not used in the protos?
 // AddOnResourceModel describes the resource data model.
 type AddOnResourceModel struct {
 	ID             types.String `tfsdk:"id"`
@@ -45,7 +44,7 @@ type AddOnResourceModel struct {
 	Description    types.String `tfsdk:"description"`
 	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
 	CreatedBy      types.String `tfsdk:"created_by"`
-	Count          types.Int64  `tfsdk:"count"`
+	Count          types.Int64  `tfsdk:"install_count"`
 	Status         types.Int64  `tfsdk:"status"`
 	OutputValues   types.List   `tfsdk:"output_values"`
 
@@ -100,7 +99,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Description: "The user who created the Add-on.",
 				Computed:    true,
 			},
-			"count": schema.Int64Attribute{
+			"install_count": schema.Int64Attribute{
 				Description: "The number of installed Add-ons for the same Application that share the same " +
 					"Add-on Definition.",
 				Computed: true,
@@ -694,12 +693,12 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	// TODO: Why do these function not exist?
 
-	params := &waypoint_service.WaypointServiceDeleteAddOn{
+	params := &waypoint_service.WaypointServiceDestroyAddOnParams{
 		NamespaceID: ns.ID,
 		AddOnID:     state.ID.ValueString(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDeleteAddOn(params, nil)
+	_, err = r.client.Waypoint.WaypointServiceDestroyAddOn(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Add-on not found for organization during delete call, ignoring")
@@ -711,7 +710,7 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
-	
+
 }
 
 func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

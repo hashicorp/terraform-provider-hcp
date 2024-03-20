@@ -6,6 +6,7 @@ package waypoint
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
@@ -43,7 +44,7 @@ type DataSourceAddOnModel struct {
 	Description    types.String `tfsdk:"description"`
 	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
 	CreatedBy      types.String `tfsdk:"created_by"`
-	Count          types.Int64  `tfsdk:"count"`
+	Count          types.Int64  `tfsdk:"install_count"`
 	Status         types.Int64  `tfsdk:"status"`
 	OutputValues   types.List   `tfsdk:"output_values"`
 
@@ -67,7 +68,7 @@ func NewAddOnDataSource() datasource.DataSource {
 }
 
 func (d *DataSourceAddOn) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_add_on_definition"
+	resp.TypeName = req.ProviderTypeName + "_waypoint_add_on"
 }
 
 //TODO: Make sure this schema is correct (do we want to include count or output values?)
@@ -107,7 +108,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				Description: "The user who created the Add-on.",
 				Computed:    true,
 			},
-			"count": schema.Int64Attribute{
+			"install_count": schema.Int64Attribute{
 				Description: "The number of installed Add-ons for the same Application that share the same " +
 					"Add-on Definition.",
 				Computed: true,
@@ -227,15 +228,20 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if state.ID.IsNull() {
 		addOn, err = clients.GetAddOnByName(ctx, client, loc, state.Name.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(err.Error(), "failed to get add-on by name")
+			return
+		}
+		state.ID = types.StringValue(addOn.ID)
 	} else if state.Name.IsNull() {
 		addOn, err = clients.GetAddOnByID(ctx, client, loc, state.ID.ValueString())
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
-		return
+		if err != nil {
+			resp.Diagnostics.AddError(err.Error(), "failed to get add-on by ID")
+			return
+		}
+		state.Name = types.StringValue(addOn.Name)
 	}
 
-	state.ID = types.StringValue(addOn.ID)
 	state.Summary = types.StringValue(addOn.Summary)
 
 	if addOn.TerraformNocodeModule != nil {
@@ -265,6 +271,62 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 	// set state.readme if it's not null or addOnDefinition.readme is not empty
 	if addOn.ReadmeMarkdown.String() == "" {
 		state.ReadmeMarkdown = types.StringNull()
+	}
+
+	state.CreatedBy = types.StringValue(addOn.CreatedBy)
+
+	// TODO: Add support for outputValues
+
+	// If we can process status as an int64, add it to the plan
+	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-on status", err.Error())
+	} else {
+		state.Status = types.Int64Value(statusNum)
+	}
+
+	// If we can process count as an int64, add it to the plan
+	installedCount, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-ons count", err.Error())
+	} else {
+		state.Count = types.Int64Value(installedCount)
+	}
+
+	// Display the reference to the Definition in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Definition != nil {
+		definitionRef := &addOnDefinitionRef{}
+		if addOn.Definition.Name != "" {
+			definitionRef.Name = types.StringValue(addOn.Definition.Name)
+		} else if addOn.Definition.ID != "" {
+			definitionRef.ID = types.StringValue(addOn.Definition.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading definition ref",
+				"the definition reference was missing, no ID or Name found")
+			return
+		}
+		state.Definition = definitionRef
+	}
+
+	// Display the reference to the Application in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Application != nil {
+		applicationRef := &addOnApplicationRef{}
+		if addOn.Application.Name != "" {
+			applicationRef.Name = types.StringValue(addOn.Application.Name)
+		} else if addOn.Application.ID != "" {
+			applicationRef.ID = types.StringValue(addOn.Application.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading application ref",
+				"the application reference was missing, no ID or Name found")
+			return
+		}
+		state.Application = applicationRef
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
