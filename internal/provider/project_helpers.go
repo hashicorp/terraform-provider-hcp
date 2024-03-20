@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -30,11 +31,15 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags.AddError(fmt.Sprintf("unexpected number of organizations: expected 1, actual: %v", orgLen), "")
+	if orgLen == 0 {
+		diags.AddError("The configured credentials do not have access to any organization.", "Please assign at least one organization to the configured credentials to use this provider.")
 		return nil, diags
 	}
 	orgID := listOrgResp.Payload.Organizations[0].ID
+	if orgLen > 1 {
+		diags.AddWarning("There is more than one organization associated with the configured credentials.", "The oldest organization is selected as the default. To switch to a specific project within an organization, configure that in the HCP provider config block.")
+		orgID = getOldestOrganization(listOrgResp.Payload.Organizations).ID
+	}
 
 	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
@@ -56,6 +61,21 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
+}
+
+// getOldestOrganization retrieves the oldest organization from a list based on its created_at time.
+func getOldestOrganization(organizations []*models.HashicorpCloudResourcemanagerOrganization) (oldestOrg *models.HashicorpCloudResourcemanagerOrganization) {
+	oldestTime := time.Now()
+
+	for _, org := range organizations {
+		orgTime := time.Time(org.CreatedAt)
+		if orgTime.Before(oldestTime) {
+			oldestOrg = org
+			oldestTime = orgTime
+		}
+	}
+
+	return oldestOrg
 }
 
 // getOldestProject retrieves the oldest project from a list based on its created_at time.
