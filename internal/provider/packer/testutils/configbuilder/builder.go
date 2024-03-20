@@ -94,7 +94,7 @@ type HasBlockName interface {
 	//
 	// Example:
 	// `hcp_packer_channel.prod` (a resource) or
-	// `data.hcp_packer_iteration.latest` (a data source)
+	// `data.hcp_packer_version.latest` (a data source)
 	BlockName() string
 }
 
