@@ -4,11 +4,11 @@
  ```
 
 ```release-note:feature
- New data source: Add `hcp_group` data source for managing HCP groups.
+ New data source: Add `hcp_group` data source for retrieving HCP groups.
  ```
 
  ```release-note:feature
- New data source: Add `hcp_user_principal` data source for managing HCP user principals.
+ New data source: Add `hcp_user_principal` data source for retrieving HCP user principals.
  ```
 
 ```release-note:feature
