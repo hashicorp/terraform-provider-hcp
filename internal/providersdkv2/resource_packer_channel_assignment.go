@@ -30,7 +30,6 @@ func resourcePackerChannelAssignment() *schema.Resource {
 		DeleteContext: resourcePackerChannelAssignmentDelete,
 		ReadContext:   resourcePackerChannelAssignmentRead,
 		UpdateContext: resourcePackerChannelAssignmentUpdate,
-		CustomizeDiff: resourcePackerChannelAssignmentCustomizeDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create:  &defaultPackerTimeout,
 			Default: &defaultPackerTimeout,
@@ -57,22 +56,11 @@ func resourcePackerChannelAssignment() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Optional inputs
-			"iteration_fingerprint": {
-				Description:  "The fingerprint of the version assigned to the channel.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"iteration_fingerprint", "version_fingerprint"},
-				ValidateFunc: validation.StringIsNotEmpty,
-				Deprecated: "This attribute has been renamed to 'version_fingerprint`. The `iteration_fingerprint` attribute is deprecated and will be removed in a future release. " +
-					"The `iteration_fingerprint` attribute will act as an alias for `version_fingerprint` during the deprecation period.",
-			},
 			"version_fingerprint": {
 				Description:  "The fingerprint of the version assigned to the channel.",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"iteration_fingerprint", "version_fingerprint"},
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"project_id": {
@@ -158,9 +146,6 @@ func resourcePackerChannelAssignmentCreate(ctx context.Context, d *schema.Resour
 	}
 
 	versionFingerprint := d.Get("version_fingerprint").(string)
-	if versionFingerprint == "" {
-		versionFingerprint = d.Get("iteration_fingerprint").(string)
-	}
 	if versionFingerprint == unassignString {
 		versionFingerprint = ""
 	}
@@ -189,9 +174,6 @@ func resourcePackerChannelAssignmentUpdate(ctx context.Context, d *schema.Resour
 	channelName := d.Get("channel_name").(string)
 
 	versionFingerprint := d.Get("version_fingerprint").(string)
-	if versionFingerprint == "" {
-		versionFingerprint = d.Get("iteration_fingerprint").(string)
-	}
 	if versionFingerprint == unassignString {
 		versionFingerprint = ""
 	}
@@ -316,23 +298,6 @@ func setPackerChannelAssignmentVersionData(d *schema.ResourceData, v *packermode
 	}
 	if err := d.Set("version_fingerprint", fingerprint); err != nil {
 		return err
-	}
-	if err := d.Set("iteration_fingerprint", fingerprint); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func resourcePackerChannelAssignmentCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if rawFingerprint, ok := d.GetOk("version_fingerprint"); ok && d.HasChange("version_fingerprint") && d.NewValueKnown("version_fingerprint") {
-		if err := d.SetNew("iteration_fingerprint", rawFingerprint.(string)); err != nil {
-			return err
-		}
-	} else if rawFingerprint, ok := d.GetOk("iteration_fingerprint"); ok && d.HasChange("iteration_fingerprint") && d.NewValueKnown("iteration_fingerprint") {
-		if err := d.SetNew("version_fingerprint", rawFingerprint.(string)); err != nil {
-			return err
-		}
 	}
 
 	return nil
