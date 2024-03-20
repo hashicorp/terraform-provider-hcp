@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"strings"
 
-	webhookservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client/webhook_service"
-	webhookmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/models"
+	webhookservice "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client/webhook_service"
+	webhookmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
