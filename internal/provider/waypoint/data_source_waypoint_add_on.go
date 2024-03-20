@@ -44,12 +44,12 @@ type DataSourceAddOnModel struct {
 	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
 	CreatedBy      types.String `tfsdk:"created_by"`
 	Count          types.Int64  `tfsdk:"count"`
-	Status         types.Number `tfsdk:"status"`
+	Status         types.Int64  `tfsdk:"status"`
 	OutputValues   types.List   `tfsdk:"output_values"`
 
-	Application           *applicationRef     `tfsdk:"application"`
-	Definition            *addOnDefinitionRef `tfsdk:"definition"`
-	TerraformNoCodeModule *tfcNoCodeModule    `tfsdk:"terraform_no_code_module"`
+	Application           *addOnApplicationRef `tfsdk:"application"`
+	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
+	TerraformNoCodeModule *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
 }
 
 type addOnDefinitionRef struct {
@@ -57,7 +57,7 @@ type addOnDefinitionRef struct {
 	Name types.String `tfsdk:"name"`
 }
 
-type applicationRef struct {
+type addOnApplicationRef struct {
 	ID   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
 }
@@ -154,7 +154,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 					},
 				},
 			},
-			"status": schema.NumberAttribute{
+			"status": schema.Int64Attribute{
 				Computed:    true,
 				Description: "The status of the Terraform run for the Add-on.",
 			},

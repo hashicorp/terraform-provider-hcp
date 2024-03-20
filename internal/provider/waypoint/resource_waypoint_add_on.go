@@ -5,8 +5,8 @@ package waypoint
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
@@ -46,19 +46,19 @@ type AddOnResourceModel struct {
 	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
 	CreatedBy      types.String `tfsdk:"created_by"`
 	Count          types.Int64  `tfsdk:"count"`
-	Status         types.Number `tfsdk:"status"`
+	Status         types.Int64  `tfsdk:"status"`
 	OutputValues   types.List   `tfsdk:"output_values"`
 
-	Application           *applicationRef     `tfsdk:"application"`
-	Definition            *addOnDefinitionRef `tfsdk:"definition"`
-	TerraformNoCodeModule *tfcNoCodeModule    `tfsdk:"terraform_no_code_module"`
+	Application           *addOnApplicationRef `tfsdk:"application"`
+	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
+	TerraformNoCodeModule *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
 }
 
 func (r *AddOnResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_waypoint_add_on"
 }
 
-// TODO: Get rid of most of these because they are not used in the protos?
+// TODO: Make most of these computed because they are not used in the protos (Also add variables later)
 func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
@@ -78,15 +78,14 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"summary": schema.StringAttribute{
 				Description: "A short summary of the Add-on.",
-				Required:    true,
+				Computed:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "A longer description of the Add-on.",
-				Required:    true,
+				Computed:    true,
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
-				Optional:    true,
 				Description: "List of labels attached to this Add-on.",
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
@@ -95,21 +94,16 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"readme_markdown": schema.StringAttribute{
 				Description: "The markdown for the Add-on README.",
-				Optional:    true,
+				Computed:    true,
 			},
-			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				Required:    true,
-				Description: "Terraform Cloud Workspace details",
-				Attributes: map[string]schema.Attribute{
-					"name": &schema.StringAttribute{
-						Required:    true,
-						Description: "Name of the Terraform Cloud Workspace",
-					},
-					"terraform_project_id": &schema.StringAttribute{
-						Required:    true,
-						Description: "Tetraform Cloud Project ID",
-					},
-				},
+			"created_by": schema.StringAttribute{
+				Description: "The user who created the Add-on.",
+				Computed:    true,
+			},
+			"count": schema.Int64Attribute{
+				Description: "The number of installed Add-ons for the same Application that share the same " +
+					"Add-on Definition.",
+				Computed: true,
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Required:    true,
@@ -122,6 +116,65 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					"version": &schema.StringAttribute{
 						Required:    true,
 						Description: "Terraform Cloud no-code Module Version",
+					},
+				},
+			},
+			"definition": schema.SingleNestedAttribute{
+				Required: true,
+				Description: "The Add-on Definition from which this Add-on was created. At least " +
+					"one of ID or Name must be set.",
+				Attributes: map[string]schema.Attribute{
+					"name": schema.StringAttribute{
+						Optional:    true,
+						Description: "The name of the Add-on Definition.",
+					},
+					"id": schema.StringAttribute{
+						Optional:    true,
+						Description: "The ID of the Add-on Definition.",
+					},
+				},
+			},
+			"application": schema.SingleNestedAttribute{
+				Required: true,
+				Description: "The Application for which this Add-on was created. At least one of " +
+					"ID or Name must be set.",
+				Attributes: map[string]schema.Attribute{
+					"name": schema.StringAttribute{
+						Computed:    true,
+						Description: "The name of the Application.",
+					},
+					"id": schema.StringAttribute{
+						Computed:    true,
+						Description: "The ID of the Application.",
+					},
+				},
+			},
+			"status": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The status of the Terraform run for the Add-on.",
+			},
+			"output_values": schema.ListNestedAttribute{
+				Computed: true,
+				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
+					"and value omitted.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: "The name of the output value.",
+						},
+						"type": schema.StringAttribute{
+							Computed:    true,
+							Description: "The type of the output value.",
+						},
+						"value": schema.StringAttribute{
+							Computed:    true,
+							Description: "The value of the output value.",
+						},
+						"sensitive": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the output value is sensitive.",
+						},
 					},
 				},
 			},
@@ -233,15 +286,15 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		NamespaceID: ns.ID,
 		Body:        modelBody,
 	}
-	def, err := r.client.Waypoint.WaypointServiceCreateAddOn(params, nil)
+	responseAddOn, err := r.client.Waypoint.WaypointServiceCreateAddOn(params, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating add-on", err.Error())
 		return
 	}
 
 	var addOn *waypointmodels.HashicorpCloudWaypointAddOn
-	if def.Payload != nil {
-		addOn = def.Payload.AddOn
+	if responseAddOn.Payload != nil {
+		addOn = responseAddOn.Payload.AddOn
 	}
 	if addOn == nil {
 		resp.Diagnostics.AddError("unknown error creating add-on", "empty add-on returned")
@@ -257,10 +310,10 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if addOn.Description == "" {
 		plan.Description = types.StringNull()
 	}
-	plan.ReadmeMarkdownTemplate = types.StringValue(addOn.ReadmeMarkdownTemplate.String())
+	plan.ReadmeMarkdown = types.StringValue(addOn.ReadmeMarkdown.String())
 	// set plan.readme if it's not null or addOn.readme is not empty
-	if addOn.ReadmeMarkdownTemplate.String() == "" {
-		plan.ReadmeMarkdownTemplate = types.StringNull()
+	if addOn.ReadmeMarkdown.String() == "" {
+		plan.ReadmeMarkdown = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOn.Labels)
@@ -270,14 +323,6 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	plan.Labels = labels
 
-	if addOn.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(addOn.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(addOn.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
 	if addOn.TerraformNocodeModule != nil {
 		tfcNoCode := &tfcNoCodeModule{
 			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
@@ -285,6 +330,62 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 		plan.TerraformNoCodeModule = tfcNoCode
 	}
+
+	// Display the reference to the Definition in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Definition != nil {
+		definitionRef := &addOnDefinitionRef{}
+		if addOn.Definition.Name != "" {
+			definitionRef.Name = types.StringValue(addOn.Definition.Name)
+		} else if addOn.Definition.ID != "" {
+			definitionRef.ID = types.StringValue(addOn.Definition.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading definition ref",
+				"the definition reference was missing, no ID or Name found")
+			return
+		}
+		plan.Definition = definitionRef
+	}
+
+	// Display the reference to the Application in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Application != nil {
+		applicationRef := &addOnApplicationRef{}
+		if addOn.Application.Name != "" {
+			applicationRef.Name = types.StringValue(addOn.Application.Name)
+		} else if addOn.Application.ID != "" {
+			applicationRef.ID = types.StringValue(addOn.Application.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading application ref",
+				"the application reference was missing, no ID or Name found")
+			return
+		}
+		plan.Application = applicationRef
+	}
+
+	plan.CreatedBy = types.StringValue(addOn.CreatedBy)
+
+	// If we can process status as an int64, add it to the plan
+	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-on status", err.Error())
+	} else {
+		plan.Status = types.Int64Value(statusNum)
+	}
+
+	// If we can process count as an int64, add it to the plan
+	installedCount, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-ons count", err.Error())
+	} else {
+		plan.Count = types.Int64Value(installedCount)
+	}
+
+	// TODO: Add support for output values
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -306,9 +407,6 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.ProjectID.IsUnknown() {
-		projectID = state.ProjectID.ValueString()
-	}
 
 	orgID := r.client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -318,7 +416,7 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	client := r.client
 
-	addOn, err := clients.GetAddOnnByID(ctx, client, loc, state.ID.ValueString())
+	addOn, err := clients.GetAddOnByID(ctx, client, loc, state.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Add-on not found for organization, removing from state.")
@@ -331,8 +429,6 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	state.ID = types.StringValue(addOn.ID)
 	state.Name = types.StringValue(addOn.Name)
-	state.OrgID = types.StringValue(client.Config.OrganizationID)
-	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(addOn.Summary)
 
 	state.Description = types.StringValue(addOn.Description)
@@ -340,10 +436,10 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if addOn.Description == "" {
 		state.Description = types.StringNull()
 	}
-	state.ReadmeMarkdownTemplate = types.StringValue(addOn.ReadmeMarkdownTemplate.String())
+	state.ReadmeMarkdown = types.StringValue(addOn.ReadmeMarkdown.String())
 	// set plan.readme if it's not null or addOn.readme is not empty
-	if addOn.ReadmeMarkdownTemplate.String() == "" {
-		state.ReadmeMarkdownTemplate = types.StringNull()
+	if addOn.ReadmeMarkdown.String() == "" {
+		state.ReadmeMarkdown = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOn.Labels)
@@ -353,14 +449,6 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 	state.Labels = labels
 
-	if addOn.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(addOn.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(addOn.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		state.TerraformCloudWorkspace = tfcWorkspace
-	}
-
 	if addOn.TerraformNocodeModule != nil {
 		tfcNoCode := &tfcNoCodeModule{
 			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
@@ -368,6 +456,64 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 		state.TerraformNoCodeModule = tfcNoCode
 	}
+
+	state.CreatedBy = types.StringValue(addOn.CreatedBy)
+
+	// TODO: Error out here on failure to convert?
+
+	// If we can process status as an int64, add it to the plan
+	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-on status", err.Error())
+	} else {
+		state.Status = types.Int64Value(statusNum)
+	}
+
+	// If we can process count as an int64, add it to the plan
+	installedCount, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-ons count", err.Error())
+	} else {
+		state.Count = types.Int64Value(installedCount)
+	}
+
+	// Display the reference to the Definition in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Definition != nil {
+		definitionRef := &addOnDefinitionRef{}
+		if addOn.Definition.Name != "" {
+			definitionRef.Name = types.StringValue(addOn.Definition.Name)
+		} else if addOn.Definition.ID != "" {
+			definitionRef.ID = types.StringValue(addOn.Definition.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading definition ref",
+				"the definition reference was missing, no ID or Name found")
+			return
+		}
+		state.Definition = definitionRef
+	}
+
+	// Display the reference to the Application in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Application != nil {
+		applicationRef := &addOnApplicationRef{}
+		if addOn.Application.Name != "" {
+			applicationRef.Name = types.StringValue(addOn.Application.Name)
+		} else if addOn.Application.ID != "" {
+			applicationRef.ID = types.StringValue(addOn.Application.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading application ref",
+				"the application reference was missing, no ID or Name found")
+			return
+		}
+		state.Application = applicationRef
+	}
+
+	// TODO: Add support for output values
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -384,9 +530,6 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !plan.ProjectID.IsUnknown() {
-		projectID = plan.ProjectID.ValueString()
-	}
 
 	orgID := r.client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -404,41 +547,8 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error decoding base64 readme markdown template",
-			err.Error(),
-		)
-	}
-
-	stringLabels := []string{}
-	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
-		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
-		if diagnostics.HasError() {
-			resp.Diagnostics.AddError(
-				"error converting labels",
-				"Failed to convert labels from types.List to string list",
-			)
-			return
-		}
-	}
-	// TODO: add support for Tags
 	modelBody := &waypointmodels.HashicorpCloudWaypointWaypointServiceUpdateAddOnBody{
-		Name:                   plan.Name.ValueString(),
-		Summary:                plan.Summary.ValueString(),
-		Description:            plan.Description.ValueString(),
-		ReadmeMarkdownTemplate: readmeBytes,
-		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypointmodels.HashicorpCloudWaypointTerraformNocodeModule{
-			// verify these exist in the file
-			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-			Version: plan.TerraformNoCodeModule.Version.ValueString(),
-		},
-		TerraformCloudWorkspaceDetails: &waypointmodels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
-			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-		},
+		Name: plan.Name.ValueString(),
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnParams{
@@ -462,9 +572,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	plan.ID = types.StringValue(addOn.ID)
-	plan.ProjectID = types.StringValue(projectID)
 	plan.Name = types.StringValue(addOn.Name)
-	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOn.Summary)
 
 	plan.Description = types.StringValue(addOn.Description)
@@ -472,10 +580,10 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if addOn.Description == "" {
 		plan.Description = types.StringNull()
 	}
-	plan.ReadmeMarkdownTemplate = types.StringValue(addOn.ReadmeMarkdownTemplate.String())
+	plan.ReadmeMarkdown = types.StringValue(addOn.ReadmeMarkdown.String())
 	// set plan.readme if it's not null or addOn.readme is not empty
-	if addOn.ReadmeMarkdownTemplate.String() == "" {
-		plan.ReadmeMarkdownTemplate = types.StringNull()
+	if addOn.ReadmeMarkdown.String() == "" {
+		plan.ReadmeMarkdown = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOn.Labels)
@@ -485,14 +593,6 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 	plan.Labels = labels
 
-	if addOn.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(addOn.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(addOn.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
 	if addOn.TerraformNocodeModule != nil {
 		tfcNoCode := &tfcNoCodeModule{
 			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
@@ -500,6 +600,62 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 		plan.TerraformNoCodeModule = tfcNoCode
 	}
+
+	// Display the reference to the Definition in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Definition != nil {
+		definitionRef := &addOnDefinitionRef{}
+		if addOn.Definition.Name != "" {
+			definitionRef.Name = types.StringValue(addOn.Definition.Name)
+		} else if addOn.Definition.ID != "" {
+			definitionRef.ID = types.StringValue(addOn.Definition.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading definition ref",
+				"the definition reference was missing, no ID or Name found")
+			return
+		}
+		plan.Definition = definitionRef
+	}
+
+	// Display the reference to the Application in the plan,
+	// prioritizing displaying Name because it is more user-friendly
+	if addOn.Application != nil {
+		applicationRef := &addOnApplicationRef{}
+		if addOn.Application.Name != "" {
+			applicationRef.Name = types.StringValue(addOn.Application.Name)
+		} else if addOn.Application.ID != "" {
+			applicationRef.ID = types.StringValue(addOn.Application.ID)
+		} else {
+			// One of the above cases has to be true, this should not happen
+			resp.Diagnostics.AddError(
+				"error reading application ref",
+				"the application reference was missing, no ID or Name found")
+			return
+		}
+		plan.Application = applicationRef
+	}
+
+	plan.CreatedBy = types.StringValue(addOn.CreatedBy)
+
+	// If we can process status as an int64, add it to the plan
+	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-on status", err.Error())
+	} else {
+		plan.Status = types.Int64Value(statusNum)
+	}
+
+	// If we can process count as an int64, add it to the plan
+	installedCount, err := strconv.ParseInt(addOn.Count, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Error parsing installed Add-ons count", err.Error())
+	} else {
+		plan.Count = types.Int64Value(installedCount)
+	}
+
+	// TODO: Add support for output values
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -520,9 +676,6 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.ProjectID.IsUnknown() {
-		projectID = state.ProjectID.ValueString()
-	}
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: r.client.Config.OrganizationID,
@@ -539,7 +692,9 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	params := &waypoint_service.WaypointServiceDeleteAddOnParams{
+	// TODO: Why do these function not exist?
+
+	params := &waypoint_service.WaypointServiceDeleteAddOn{
 		NamespaceID: ns.ID,
 		AddOnID:     state.ID.ValueString(),
 	}
@@ -556,6 +711,7 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
+	
 }
 
 func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
