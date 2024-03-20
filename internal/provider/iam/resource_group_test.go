@@ -68,7 +68,7 @@ func TestAccGroupResource(t *testing.T) {
 
 func testAccGroupConfigResource(displayName, description string) string {
 	return fmt.Sprintf(`
-	resource "hcp_group" "example" { 
+	resource "hcp_group" "example" {
 		display_name = %q
 		description = %q
 	}

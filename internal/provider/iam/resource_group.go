@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/models"
@@ -167,27 +166,29 @@ func (r *resourceGroup) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	updateParams := groups_service.NewGroupsServiceUpdateGroupParams().WithContext(ctx)
+	updateParams := groups_service.NewGroupsServiceUpdateGroup2Params().WithContext(ctx)
 	updateParams.ResourceName = state.ResourceName.ValueString()
-	updateParams.Body = groups_service.GroupsServiceUpdateGroupBody{Group: &models.HashicorpCloudIamGroup{ResourceName: state.ResourceName.ValueString(), ResourceID: state.ResourceID.ValueString()}}
-	paths := []string{}
+	updateParams.Group = &models.HashicorpCloudIamGroup{}
+
+	shouldUpdate := false
 
 	// Check if the display name was updated
 	if !plan.DisplayName.Equal(state.DisplayName) {
-		updateParams.Body.Group.DisplayName = plan.DisplayName.ValueString()
-		paths = append(paths, "displayName")
+		updateParams.Group.DisplayName = plan.DisplayName.ValueString()
+		shouldUpdate = true
 	}
 
 	// Check if the description was updated
 	if !plan.Description.Equal(state.Description) {
-		updateParams.Body.Group.Description = plan.Description.ValueString()
-		paths = append(paths, "description")
+		updateParams.Group.Description = plan.Description.ValueString()
+		shouldUpdate = true
 	}
 
-	mask := strings.Join(paths, `,`)
-	updateParams.Body.UpdateMask = mask
-	_, err := r.client.Groups.GroupsServiceUpdateGroup(updateParams, nil)
+	if !shouldUpdate {
+		return
+	}
 
+	_, err := r.client.Groups.GroupsServiceUpdateGroup2(updateParams, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating group", err.Error())
 		return
