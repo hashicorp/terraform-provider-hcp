@@ -36,7 +36,6 @@ resource "hcp_packer_channel_assignment" "staging" {
 
 ### Optional
 
-- `iteration_fingerprint` (String, Deprecated) The fingerprint of the version assigned to the channel.
 - `project_id` (String) The ID of the HCP project where the channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
