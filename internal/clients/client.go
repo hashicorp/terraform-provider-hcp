@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client/consul_service"
 
 	cloud_iam "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/iam_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 
@@ -76,6 +77,7 @@ type Client struct {
 	PackerV2          packer_service_v2.ClientService
 	Project           project_service.ClientService
 	ServicePrincipals service_principals_service.ClientService
+	Groups            groups_service.ClientService
 	Vault             vault_service.ClientService
 	VaultSecrets      secret_service.ClientService
 	Waypoint          waypoint_service.ClientService
@@ -167,6 +169,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		PackerV2:          cloud_packer_v2.New(httpClient, nil).PackerService,
 		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
 		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
+		Groups:            cloud_iam.New(httpClient, nil).GroupsService,
 		Vault:             cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
 		Waypoint:          cloud_waypoint.New(httpClient, nil).WaypointService,

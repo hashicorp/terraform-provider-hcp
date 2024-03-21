@@ -1,0 +1,16 @@
+
+  ```release-note:feature
+ New resource: Add `hcp_group` resource for managing HCP groups.
+ ```
+
+```release-note:feature
+ New data source: Add `hcp_group` data source for retrieving HCP groups.
+ ```
+
+ ```release-note:feature
+ New data source: Add `hcp_user_principal` data source for retrieving HCP user principals.
+ ```
+
+```release-note:feature
+ New resource: Add `hcp_group_members` resource for managing HCP user principals in a group.
+ ```
