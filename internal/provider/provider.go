@@ -144,6 +144,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
 		iam.NewWorkloadIdentityProviderResource,
+		iam.NewGroupResource,
+		iam.NewGroupMembersResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
@@ -166,6 +168,8 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
+		iam.NewGroupDataSource,
+		iam.NewUserPrincipalDataSource,
 		// Waypoint
 		waypoint.NewApplicationTemplateDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
