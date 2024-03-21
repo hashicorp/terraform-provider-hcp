@@ -105,15 +105,15 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
-				Required:    true,
+				Computed:    true,
 				Description: "Terraform Cloud no-code Module details.",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
-						Required:    true,
+						Computed:    true,
 						Description: "Terraform Cloud no-code Module Source",
 					},
 					"version": &schema.StringAttribute{
-						Required:    true,
+						Computed:    true,
 						Description: "Terraform Cloud no-code Module Version",
 					},
 				},
@@ -139,11 +139,11 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					"ID or Name must be set.",
 				Attributes: map[string]schema.Attribute{
 					"name": schema.StringAttribute{
-						Computed:    true,
+						Optional:    true,
 						Description: "The name of the Application.",
 					},
 					"id": schema.StringAttribute{
-						Computed:    true,
+						Optional:    true,
 						Description: "The ID of the Application.",
 					},
 				},

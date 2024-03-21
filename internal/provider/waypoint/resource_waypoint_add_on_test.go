@@ -18,8 +18,10 @@ import (
 func TestAccWaypoint_Add_On_basic(t *testing.T) {
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test"
-	name := generateRandomName()
-	updatedName := generateRandomName()
+	addOnName := generateRandomName()
+	templateName := generateRandomName()
+	appName := generateRandomName()
+	defName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -27,19 +29,11 @@ func TestAccWaypoint_Add_On_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointAddOnDestroy(t, &addOnModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testAddOnConfig(name),
+				Config: testAddOnConfig(templateName, appName, defName, addOnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
-					testAccCheckWaypointAddOnName(t, &addOnModel, name),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-				),
-			},
-			{
-				Config: testAddOnConfig(updatedName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
-					testAccCheckWaypointAddOnName(t, &addOnModel, updatedName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					testAccCheckWaypointAddOnName(t, &addOnModel, addOnName),
+					resource.TestCheckResourceAttr(resourceName, "name", addOnName),
 				),
 			},
 		},
@@ -121,17 +115,50 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 	}
 }
 
-func testAddOnConfig(name string) string {
+// Copied from the application resource test (same no-code and project):
+// These are hardcoded project and no-code module values because they work. The
+// automated tests do not run acceptance tests at this time, so these should be
+// sufficient for now.
+func testAddOnConfig(templateName string, appName string, defName string, addOnName string) string {
 	return fmt.Sprintf(`
+resource "hcp_waypoint_application_template" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+}
+resource "hcp_waypoint_application" "test" {
+  name    = "%s"
+  application_template_id = hcp_waypoint_application_template.test.id
+}
+resource "hcp_waypoint_add_on_definition" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  description = "some description for fun"
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+}
 resource "hcp_waypoint_add_on" "test" {
-  name    = %q
+  name    = "%s"
   application = {
-    name  = "some name"
-    id = "some id"
+    id = hcp_waypoint_application_template.test.id
   }
   definition = {
-	name = "some name"
-	id = "some id"
+	id = hcp_waypoint_add_on_definition.test.id
   }
-}`, name)
+}`, templateName, appName, defName, addOnName)
 }

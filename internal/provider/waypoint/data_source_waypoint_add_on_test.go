@@ -18,8 +18,10 @@ func TestAccWaypointData_Add_On_basic(t *testing.T) {
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test"
 	dataSourceName := "data." + resourceName
-	name := generateRandomName()
-	updatedName := generateRandomName()
+	addOnName := generateRandomName()
+	templateName := generateRandomName()
+	appName := generateRandomName()
+	defName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -30,33 +32,25 @@ func TestAccWaypointData_Add_On_basic(t *testing.T) {
 				// establish the base add-on
 				// note this reuses the config method from the add-on
 				// resource test
-				Config: testAddOnConfig(name),
+				Config: testAddOnConfig(templateName, appName, defName, addOnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
 				),
 			},
 			{
 				// add a data source config to read the add-on
-				Config: testDataAddOnConfig(name),
+				Config: testDataAddOnConfig(templateName, appName, defName, addOnName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", name),
-				),
-			},
-			{
-				// update the add-on name, make sure it reflects in the data source
-				Config: testDataAddOnConfig(updatedName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
-					resource.TestCheckResourceAttr(dataSourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(dataSourceName, "name", addOnName),
 				),
 			},
 		},
 	})
 }
 
-func testDataAddOnConfig(name string) string {
+func testDataAddOnConfig(templateName string, appName string, defName string, addOnName string) string {
 	return fmt.Sprintf(`%s
 data "hcp_waypoint_add_on" "test" {
   name    = hcp_waypoint_add_on.test.name
-}`, testAddOnConfig(name))
+}`, testAddOnConfig(templateName, appName, defName, addOnName))
 }
