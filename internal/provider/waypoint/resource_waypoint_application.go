@@ -210,7 +210,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	// set plan.readme if it's not null or appTemplate.readme is not
+	// set plan.readme if it's not null or application.readme is not
 	// empty
 	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
@@ -265,7 +265,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.OrgID = types.StringValue(orgID)
 	data.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
 
-	// set plan.readme if it's not null or appTemplate.readme is not
+	// set plan.readme if it's not null or application.readme is not
 	// empty
 	data.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
@@ -356,7 +356,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	// set plan.readme if it's not null or appTemplate.readme is not
+	// set plan.readme if it's not null or application.readme is not
 	// empty
 	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {

@@ -27,4 +27,4 @@ The Waypoint Application data source retrieves information on a given Applicatio
 - `application_template_name` (String) Name of the Application Template this Application is based on.
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
-- `readme_markdown` (String) Instructions for using the Application (markdown format supported
+- `readme_markdown` (String) Instructions for using the Application (markdown format supported).

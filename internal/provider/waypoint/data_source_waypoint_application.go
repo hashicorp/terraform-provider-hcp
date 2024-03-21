@@ -66,7 +66,7 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			},
 			"readme_markdown": schema.StringAttribute{
 				Computed:    true,
-				Description: "Instructions for using the Application (markdown format supported",
+				Description: "Instructions for using the Application (markdown format supported).",
 			},
 			"application_template_id": schema.StringAttribute{
 				Computed:    true,
