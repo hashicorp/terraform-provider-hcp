@@ -5,6 +5,7 @@ package waypoint
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -46,10 +47,8 @@ type ApplicationResourceModel struct {
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
-	// CreatedAt             types.String `tfsdk:"created_at"`
-	// UpdatedAt             types.String `tfsdk:"updated_at"`
 
-	// deferred and probably a list or objects
+	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 }
 
@@ -73,6 +72,9 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			"name": schema.StringAttribute{
 				Description: "The name of the Application.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the Waypoint Application is located.",
@@ -93,20 +95,33 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:    true,
 				Description: "ID of the Application Template this Application is based on.",
 			},
-			// TODO(clint): not sure why both are in the model
+			// application_template_name is a computed only attribute for ease
+			// of reference
 			"application_template_name": schema.StringAttribute{
 				Computed:    true,
-				Optional:    true,
 				Description: "Name of the Application Template this Application is based on.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"readme_markdown": schema.StringAttribute{
-				Computed:    true,
-				Optional:    true,
-				Description: "Instructions for using the Application (markdown format supported)",
+				Computed: true,
+				Optional: true,
+				Description: "Instructions for using the Application (markdown" +
+					"format supported). Note: this is a base64 encoded string, and" +
+					"can only be set in configuration after initial creation. The" +
+					"initial version of the README is generated from the README" +
+					"Template from source Application Template.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"namespace_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Internal Namespace ID.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -165,8 +180,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
 		Name: plan.Name.ValueString(),
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
-			// ID:   plan.ApplicationTemplateID.ValueString(),
-			Name: plan.ApplicationTemplateName.ValueString(),
+			ID: plan.ApplicationTemplateID.ValueString(),
 		},
 	}
 
@@ -185,7 +199,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		application = app.Payload.Application
 	}
 	if application == nil {
-		resp.Diagnostics.AddError("unknown error creating application from template", "empty application template returned")
+		resp.Diagnostics.AddError("unknown error creating application from template", "empty application returned")
 		return
 	}
 
@@ -193,6 +207,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.ProjectID = types.StringValue(projectID)
 	plan.Name = types.StringValue(application.Name)
 	plan.OrgID = types.StringValue(orgID)
+	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
 	// set plan.readme if it's not null or appTemplate.readme is not
@@ -236,11 +251,11 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	application, err := clients.GetApplicationByID(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
+			tflog.Info(ctx, "Application not found for organization, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
+		resp.Diagnostics.AddError("Error reading Application", err.Error())
 		return
 	}
 
@@ -248,7 +263,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.ProjectID = types.StringValue(projectID)
 	data.Name = types.StringValue(application.Name)
 	data.OrgID = types.StringValue(orgID)
-	// data.NamespaceID = types.StringValue(ns.ID)
+	data.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
 
 	// set plan.readme if it's not null or appTemplate.readme is not
 	// empty
@@ -270,122 +285,87 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	// 	projectID := r.client.Config.ProjectID
-	// 	if !plan.ProjectID.IsUnknown() {
-	// 		projectID = plan.ProjectID.ValueString()
-	// 	}
+	// get the current state as well, so we know the current name of the
+	// application for reference during the update
+	var data *ApplicationResourceModel
 
-	// 	orgID := r.client.Config.OrganizationID
-	// 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-	// 		OrganizationID: orgID,
-	// 		ProjectID:      projectID,
-	// 	}
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	// 	client := r.client
-	// 	ns, err := getNamespaceByLocation(ctx, client, loc)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			"error getting namespace by location",
-	// 			err.Error(),
-	// 		)
-	// 		return
-	// 	}
+	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
 
-	// 	strLabels := []string{}
-	// 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
-	// 	if diags.HasError() {
-	// 		return
-	// 	}
+	orgID := r.client.Config.OrganizationID
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: orgID,
+		ProjectID:      projectID,
+	}
 
-	// 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdown.ValueString())
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			"error decoding the base64 file contents",
-	// 			err.Error(),
-	// 		)
-	// 		return
-	// 	}
+	client := r.client
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"error getting namespace by location",
+			err.Error(),
+		)
+		return
+	}
 
-	// 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
-	// 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-	// 			Name:                   plan.Name.ValueString(),
-	// 			Summary:                plan.Summary.ValueString(),
-	// 			Labels:                 strLabels,
-	// 			Description:            plan.Description.ValueString(),
-	// 			ReadmeMarkdownTemplate: readmeBytes,
-	// 			TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
-	// 				Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-	// 				Version: plan.TerraformNoCodeModule.Version.ValueString(),
-	// 			},
-	// 			TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-	// 				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
-	// 				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-	// 			},
-	// 		},
-	// 	}
+	// read the readme from the plan and decode it
+	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdown.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"error decoding the base64 file contents",
+			err.Error(),
+		)
+		return
+	}
 
-	// 	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{
-	// 		NamespaceID:                   ns.ID,
-	// 		Body:                          modelBody,
-	// 		ExistingApplicationTemplateID: plan.ID.ValueString(),
-	// 	}
-	// 	app, err := r.client.Waypoint.WaypointServiceUpdateApplicationTemplate(params, nil)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError("Error updating project", err.Error())
-	// 		return
-	// 	}
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationBody{
+		// this is the updated name
+		Name:           plan.Name.ValueString(),
+		ReadmeMarkdown: readmeBytes,
+	}
 
-	// 	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
-	// 	if app.Payload != nil {
-	// 		appTemplate = app.Payload.ApplicationTemplate
-	// 	}
-	// 	if appTemplate == nil {
-	// 		resp.Diagnostics.AddError("unknown error updating application
-	// 		template", "empty application template returned")
-	// 		return
-	// 	}
+	params := &waypoint_service.WaypointServiceUpdateApplicationParams{
+		ApplicationID: plan.ID.ValueString(),
+		NamespaceID:   ns.ID,
+		Body:          modelBody,
+	}
+	app, err := r.client.Waypoint.WaypointServiceUpdateApplication(params, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Error updating Application", err.Error())
+		return
+	}
 
-	// 	plan.ID = types.StringValue(appTemplate.ID)
-	// 	plan.ProjectID = types.StringValue(projectID)
-	// 	plan.Name = types.StringValue(appTemplate.Name)
-	// 	plan.OrgID = types.StringValue(orgID)
-	// 	plan.Summary = types.StringValue(appTemplate.Summary)
+	var application *waypoint_models.HashicorpCloudWaypointApplication
+	if app.Payload != nil {
+		application = app.Payload.Application
+	}
+	if application == nil {
+		resp.Diagnostics.AddError("unknown error updating application", "empty application returned")
+		return
+	}
 
-	// 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
-	// 	resp.Diagnostics.Append(diags...)
-	// 	if resp.Diagnostics.HasError() {
-	// 		return
-	// 	}
-	// 	plan.Labels = labels
+	plan.ID = types.StringValue(application.ID)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.Name = types.StringValue(application.Name)
+	plan.OrgID = types.StringValue(orgID)
+	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
+	plan.NamespaceID = types.StringValue(ns.ID)
 
-	// 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
-	// 		tfcWorkspace := &tfcWorkspace{
-	// 			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-	// 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-	// 		}
-	// 		plan.TerraformCloudWorkspace = tfcWorkspace
-	// 	}
-
-	// 	if appTemplate.TerraformNocodeModule != nil {
-	// 		tfcNoCode := &tfcNoCodeModule{
-	// 			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-	// 			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-	// 		}
-	// 		plan.TerraformNoCodeModule = tfcNoCode
-	// 	}
-
-	// 	plan.Description = types.StringValue(appTemplate.Description)
-	// 	if appTemplate.Description == "" {
-	// 		plan.Description = types.StringNull()
-	// 	}
-	// 	plan.ReadmeMarkdown = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
-	// 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
-	// 		plan.ReadmeMarkdown = types.StringNull()
-	// 	}
+	// set plan.readme if it's not null or appTemplate.readme is not
+	// empty
+	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
+	if application.ReadmeMarkdown.String() == "" {
+		plan.ReadmeMarkdown = types.StringNull()
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "updated application template resource")
+	tflog.Trace(ctx, "updated application resource")
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -401,44 +381,44 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// 	projectID := r.client.Config.ProjectID
-	// 	if !data.ProjectID.IsUnknown() {
-	// 		projectID = data.ProjectID.ValueString()
-	// 	}
+	projectID := r.client.Config.ProjectID
+	if !data.ProjectID.IsUnknown() {
+		projectID = data.ProjectID.ValueString()
+	}
 
-	// 	loc := &sharedmodels.HashicorpCloudLocationLocation{
-	// 		OrganizationID: r.client.Config.OrganizationID,
-	// 		ProjectID:      projectID,
-	// 	}
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: r.client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
 
-	// 	client := r.client
-	// 	ns, err := getNamespaceByLocation(ctx, client, loc)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			"Error Deleting TFC Config",
-	// 			err.Error(),
-	// 		)
-	// 		return
-	// 	}
+	client := r.client
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"error deleting application",
+			err.Error(),
+		)
+		return
+	}
 
-	// 	params := &waypoint_service.WaypointServiceDeleteApplicationTemplateParams{
-	// 		NamespaceID:           ns.ID,
-	// 		ApplicationTemplateID: data.ID.ValueString(),
-	// 	}
+	params := &waypoint_service.WaypointServiceDestroyApplicationParams{
+		NamespaceID:   ns.ID,
+		ApplicationID: data.ID.ValueString(),
+	}
 
-	// 	_, err = r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
+	_, err = r.client.Waypoint.WaypointServiceDestroyApplication(params, nil)
 
-	//	if err != nil {
-	//		if clients.IsResponseCodeNotFound(err) {
-	//			tflog.Info(ctx, "Application Template not found for organization during delete call, ignoring")
-	//			return
-	//		}
-	//		resp.Diagnostics.AddError(
-	//			"Error Deleting Application Template",
-	//			err.Error(),
-	//		)
-	//		return
-	//	}
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			tflog.Info(ctx, "Application not found for organization during delete call, ignoring")
+			return
+		}
+		resp.Diagnostics.AddError(
+			"error deleting Application",
+			err.Error(),
+		)
+		return
+	}
 }
 
 func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

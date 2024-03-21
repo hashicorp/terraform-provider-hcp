@@ -20,8 +20,8 @@ import (
 func TestAccWaypoint_Application_basic(t *testing.T) {
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test"
-	name := generateRandomName()
-	updatedName := generateRandomName()
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -29,19 +29,11 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointApplicationDestroy(t, &applicationModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testApplicationConfig(name),
+				Config: testApplicationConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
-					testAccCheckWaypointApplicationName(t, &applicationModel, name),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-				),
-			},
-			{
-				Config: testApplicationConfig(updatedName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
-					testAccCheckWaypointApplicationName(t, &applicationModel, updatedName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
 				),
 			},
 		},
@@ -126,12 +118,28 @@ func testAccCheckWaypointApplicationDestroy(t *testing.T, applicationModel *wayp
 	}
 }
 
-func testApplicationConfig(name string) string {
+// these are hardcoded project and no-code module values because they work. The
+// automated tests do not run acceptance tests at this time, so these should be
+// sufficient for now.
+func testApplicationConfig(tempName, appName string) string {
 	return fmt.Sprintf(`
-%s
+resource "hcp_waypoint_application_template" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+}
 
 resource "hcp_waypoint_application" "test" {
-  name    = %q
+  name    = "%s"
   application_template_id = hcp_waypoint_application_template.test.id
-}`, testAppTemplateConfig(name), name)
+}`, tempName, appName)
 }
