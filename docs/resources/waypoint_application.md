@@ -23,7 +23,7 @@ Waypoint Application resource
 ### Optional
 
 - `project_id` (String) The ID of the HCP project where the Waypoint Application is located.
-- `readme_markdown` (String) Instructions for using the Application (markdown format supported). Note: this is a base64 encoded string, and can only be set in configuration after initial creation. The initial version of the README is generated from the README template from source Application Template.
+- `readme_markdown` (String) Instructions for using the Application (markdownformat supported). Note: this is a base64 encoded string, andcan only be set in configuration after initial creation. Theinitial version of the README is generated from the READMETemplate from source Application Template.
 
 ### Read-Only
 
