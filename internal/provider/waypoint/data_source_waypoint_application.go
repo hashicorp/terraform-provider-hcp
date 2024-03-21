@@ -33,20 +33,6 @@ type DataSourceApplication struct {
 	client *clients.Client
 }
 
-// type DataSourceApplicationModel struct {
-// 	ID                     types.String `tfsdk:"id"`
-// 	Name                   types.String `tfsdk:"name"`
-// 	ProjectID              types.String `tfsdk:"project_id"`
-// 	OrgID                  types.String `tfsdk:"organization_id"`
-// 	Summary                types.String `tfsdk:"summary"`
-// 	Labels                 types.List   `tfsdk:"labels"`
-// 	Description            types.String `tfsdk:"description"`
-// 	ReadmeMarkdown types.String `tfsdk:"readme_markdown_template"`
-
-// 	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-// 	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
-// }
-
 func NewApplicationDataSource() datasource.DataSource {
 	return &DataSourceApplication{}
 }
