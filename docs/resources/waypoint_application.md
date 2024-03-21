@@ -3,12 +3,12 @@
 page_title: "hcp_waypoint_application Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  Waypoint Application resource
+  The Waypoint Application resource managed the lifecycle of an Application that's based off of a Template.
 ---
 
 # hcp_waypoint_application (Resource)
 
-Waypoint Application resource
+The Waypoint Application resource managed the lifecycle of an Application that's based off of a Template.
 
 
 
