@@ -172,6 +172,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		iam.NewGroupDataSource,
 		iam.NewUserPrincipalDataSource,
 		// Waypoint
+		waypoint.NewApplicationDataSource,
 		waypoint.NewApplicationTemplateDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
 	}, packer.DataSourceSchemaBuilders...)
