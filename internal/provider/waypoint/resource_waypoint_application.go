@@ -59,7 +59,7 @@ func (r *ApplicationResource) Metadata(ctx context.Context, req resource.Metadat
 func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Waypoint Application resource",
+		MarkdownDescription: "The Waypoint Application resource managed the lifecycle of an Application that's based off of a Template.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
