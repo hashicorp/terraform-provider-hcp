@@ -1,0 +1,4 @@
+```release-note:feature
+ New resource: Add `hcp_waypoint_application` resource for managing Waypoint Application.
+ New data-source: Add `data.hcp_waypoint_application` data-source for Waypoint Application.
+ ```
