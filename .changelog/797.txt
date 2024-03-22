@@ -1,5 +1,5 @@
 ```release-note:improvement
-Adjust the sub category for hcp_user_principal, hcp_group_members, hcp_iam_workload_identity_provider to Cloud Platform
+Documentation: Adjust the subcategory for hcp_user_principal, hcp_group_members, hcp_iam_workload_identity_provider to Cloud Platform
 ```
 
 ```release-note:bug
