@@ -1,3 +1,12 @@
+## v0.84.1 (March 22, 2024)
+
+IMPROVEMENTS:
+
+* Documentation: Adjust the subcategory for hcp_user_principal, hcp_group_members, hcp_iam_workload_identity_provider to Cloud Platform [[GH-797](https://github.com/hashicorp/terraform-provider-hcp/pull/797)]
+
+BUG FIXES:
+
+* Fixes an issue where organization ID was not sent on data.hcp_user_principal lookup [[GH-797](https://github.com/hashicorp/terraform-provider-hcp/pull/797)]
 ## v0.84.0 (March 22, 2024)
 BREAKING CHANGES:
 
