@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_iam_workload_identity_provider - terraform-provider-hcp"
-subcategory: "Cloud Platform"
+subcategory: "Cloud IAM"
 description: |-
   The workload identity provider resource allows federating an external identity to a HCP Service Principal.
 ---
