@@ -1,3 +1,24 @@
+## v0.84.0 (March 22, 2024)
+BREAKING CHANGES:
+
+* Removed `hcp_packer_image` data source, previously deprecated and replaced by `hcp_packer_artifact` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+* Removed `hcp_packer_iteration` data source, previously deprecated and replaced by `hcp_packer_version` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+* Removed `iteration_fingerprint` attribute from `hcp_packer_channel_assignment` resource, previously deprecated and replaced by `version_fingerprint` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+
+FEATURES:
+
+* New data source: Add `hcp_group` data source for retrieving HCP groups. [[GH-787](https://github.com/hashicorp/terraform-provider-hcp/pull/787)]
+* New resource: Add `hcp_group_members` resource for managing HCP user principals in a group. [[GH-787](https://github.com/hashicorp/terraform-provider-hcp/pull/787)]
+* New resource: Add `hcp_waypoint_add_on_definition` resource for managing Waypoint Add-on Definitions.
+ New data-source: Add `data.hcp_waypoint_add_on_definition` data-source for Waypoint Add-on Definitions. [[GH-785](https://github.com/hashicorp/terraform-provider-hcp/pull/785)]
+* New resource: Add `hcp_waypoint_application_template` resource for managing Waypoint Application Templates.
+ New data-source: Add `data.hcp_waypoint_application_template` data-source for Waypoint Application Templates. [[GH-778](https://github.com/hashicorp/terraform-provider-hcp/pull/778)]
+* New resource: Add `hcp_waypoint_tfc_config` resource for managing the TFC
+ Configuration used by Waypoint. [[GH-766](https://github.com/hashicorp/terraform-provider-hcp/pull/766)]
+
+BUG FIXES:
+
+* Update Boundary API clients method name to match the latest version [[GH-770](https://github.com/hashicorp/terraform-provider-hcp/pull/770)]
 ## v0.83.0 (February 23, 2024)
 
 FEATURES:
