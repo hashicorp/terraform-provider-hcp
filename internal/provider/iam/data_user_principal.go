@@ -94,8 +94,9 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		return
 	} else if !data.UserID.IsNull() {
 		// Get the user principal by ID.
-		getParams := iam_service.NewIamServiceGetUserPrincipalByIDInOrganizationParams()
-		getParams.UserPrincipalID = data.UserID.ValueString()
+		getParams := iam_service.NewIamServiceGetUserPrincipalByIDInOrganizationParamsWithContext(ctx)
+		getParams.SetUserPrincipalID(data.UserID.ValueString())
+		getParams.SetOrganizationID(d.client.Config.OrganizationID)
 
 		res, err := d.client.IAM.IamServiceGetUserPrincipalByIDInOrganization(getParams, nil)
 		if err != nil {
@@ -115,7 +116,8 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	} else if !data.Email.IsNull() {
 		// Search for the user principal by email.
-		getParams := iam_service.NewIamServiceSearchPrincipalsParams()
+		getParams := iam_service.NewIamServiceSearchPrincipalsParamsWithContext(ctx)
+		getParams.SetOrganizationID(d.client.Config.OrganizationID)
 		getParams.SetBody(iam_service.IamServiceSearchPrincipalsBody{
 			Filter: &models.HashicorpCloudIamSearchPrincipalsFilter{
 				SearchText: data.Email.ValueString(),

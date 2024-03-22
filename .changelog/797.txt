@@ -1,0 +1,7 @@
+```release-note:improvement
+Documentation: Adjust the subcategory for hcp_user_principal, hcp_group_members, hcp_iam_workload_identity_provider to Cloud Platform
+```
+
+```release-note:bug
+Fixes an issue where organization ID was not sent on data.hcp_user_principal lookup
+```
