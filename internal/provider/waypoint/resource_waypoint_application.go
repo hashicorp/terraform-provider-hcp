@@ -110,7 +110,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Instructions for using the Application (markdown" +
 					" format supported). Note: this is a base64 encoded string, and " +
 					"can only be set in configuration after initial creation. The" +
-					"initial version of the README is generated from the README" +
+					" initial version of the README is generated from the README " +
 					"Template from source Application Template.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
