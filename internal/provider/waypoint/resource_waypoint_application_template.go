@@ -128,7 +128,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Required:    true,
-						Description: "Tetraform Cloud Project ID",
+						Description: "Terraform Cloud Project ID",
 					},
 				},
 			},
@@ -247,7 +247,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 		appTemplate = app.Payload.ApplicationTemplate
 	}
 	if appTemplate == nil {
-		resp.Diagnostics.AddError("unknown error creating application template", "empty application template found")
+		resp.Diagnostics.AddError("unknown error creating application template", "empty application template returned")
 		return
 	}
 
@@ -467,7 +467,7 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 		appTemplate = app.Payload.ApplicationTemplate
 	}
 	if appTemplate == nil {
-		resp.Diagnostics.AddError("unknown error updating application template", "empty application template found")
+		resp.Diagnostics.AddError("unknown error updating application template", "empty application template returned")
 		return
 	}
 

@@ -132,8 +132,9 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 func testAppTemplateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_application_template" "test" {
-  name    = %q
+  name    = "%s"
   summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "some source"
     version = "some version"

@@ -40,7 +40,7 @@ Waypoint Application Template resource
 Required:
 
 - `name` (String) Name of the Terraform Cloud Workspace
-- `terraform_project_id` (String) Tetraform Cloud Project ID
+- `terraform_project_id` (String) Terraform Cloud Project ID
 
 
 <a id="nestedatt--terraform_no_code_module"></a>

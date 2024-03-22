@@ -101,3 +101,41 @@ func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmode
 	}
 	return getResp.GetPayload().AddOnDefinition, nil
 }
+
+// GetApplicationByName will retrieve an application by name
+func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetApplication2Params{
+		ApplicationName: appName,
+		NamespaceID:     ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetApplication2(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().Application, nil
+}
+
+// GetApplicationByID will retrieve an application by ID
+func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetApplicationParams{
+		ApplicationID: appID,
+		NamespaceID:   ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetApplication(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().Application, nil
+}
