@@ -87,13 +87,13 @@ func (d *DataSourceGroup) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	getParams := groups_service.NewGroupsServiceGetGroupParams()
-	getParams.ResourceName = data.ResourceName.ValueString()
+	getParams := groups_service.NewGroupsServiceGetGroupParamsWithContext(ctx)
+	getParams.SetResourceName(data.ResourceName.ValueString())
 
 	// if shorthand resourceName was provided, generate full resourceName
 	if !strings.HasPrefix(getParams.ResourceName, "iam/") {
 		orgID := d.client.Config.OrganizationID
-		getParams.ResourceName = fmt.Sprintf("iam/organization/%s/group/%s", orgID, data.ResourceName.ValueString())
+		getParams.SetResourceName(fmt.Sprintf("iam/organization/%s/group/%s", orgID, data.ResourceName.ValueString()))
 	}
 
 	res, err := d.client.Groups.GroupsServiceGetGroup(getParams, nil)
