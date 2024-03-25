@@ -140,6 +140,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Vault Secrets
 		vaultsecrets.NewVaultSecretsAppResource,
 		vaultsecrets.NewVaultSecretsSecretResource,
+		vaultsecrets.NewHVSIAMPolicyResource,
+		vaultsecrets.NewHVSIAMBindingResource,
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,

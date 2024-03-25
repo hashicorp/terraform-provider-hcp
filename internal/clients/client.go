@@ -41,6 +41,7 @@ import (
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
@@ -81,6 +82,7 @@ type Client struct {
 	Waypoint          waypoint_service.ClientService
 	Webhook           webhook_service.ClientService
 	LogService        log_service.ClientService
+	ResourceService   resource_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -172,6 +174,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Waypoint:          cloud_waypoint.New(httpClient, nil).WaypointService,
 		LogService:        cloud_log_service.New(httpClient, nil).LogService,
 		Webhook:           cloud_webhook.New(httpClient, nil).WebhookService,
+		ResourceService:   cloud_resource_manager.New(httpClient, nil).ResourceService,
 	}
 
 	return client, nil
