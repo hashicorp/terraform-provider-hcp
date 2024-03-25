@@ -333,7 +333,7 @@ func upsertCompleteBuild(
 		build = createResp.Payload.Build
 	}
 
-	// Iterations are currently only assigned an incremental version when publishing image metadata on update.
+	// Versions are currently only assigned an incremental name when publishing artifact metadata on update.
 	// Incremental versions are a requirement for assigning the channel.
 	updateBuildParams := packerservice.NewPackerServiceUpdateBuildParams()
 	updateBuildParams.LocationOrganizationID = loc.OrganizationID

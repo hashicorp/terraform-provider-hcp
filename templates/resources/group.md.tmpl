@@ -1,6 +1,6 @@
 ---
 page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
-subcategory: "HCP Packer"
+subcategory: "Cloud Platform"
 description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
@@ -9,6 +9,14 @@ description: |-
 
 {{ .Description | trimspace }}
 
-~> **Deprecated:** This data source is deprecated and will be removed in a future release. Please use the [`hcp_packer_artifact`](./packer_artifact) data source instead.
+## Example Usage
+
+{{ tffile "examples/resources/hcp_group/resource.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" "examples/resources/hcp_group/import.sh" }}

@@ -1,0 +1,11 @@
+```release-note:breaking-change
+Removed `hcp_packer_iteration` data source, previously deprecated and replaced by `hcp_packer_version` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0).
+```
+
+```release-note:breaking-change
+Removed `hcp_packer_image` data source, previously deprecated and replaced by `hcp_packer_artifact` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0).
+```
+
+```release-note:breaking-change
+Removed `iteration_fingerprint` attribute from `hcp_packer_channel_assignment` resource, previously deprecated and replaced by `version_fingerprint` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0).
+```
