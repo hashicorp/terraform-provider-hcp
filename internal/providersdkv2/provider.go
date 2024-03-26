@@ -217,15 +217,16 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		})
 		return nil, diags
 	}
-	orgID := listOrgResp.Payload.Organizations[0].ID
 	if orgLen > 1 {
 		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
+			Severity: diag.Error,
 			Summary:  "There is more than one organization associated with the configured credentials.",
-			Detail:   "The oldest organization is selected as the default. To switch to a specific project within an organization, configure that in the HCP provider config block.",
+			Detail:   "Please configure a specific organization in the HCP provider config block",
 		})
-		orgID = GetOldestOrganization(listOrgResp.Payload.Organizations).ID
+		return nil, diags
 	}
+
+	orgID := listOrgResp.Payload.Organizations[0].ID
 
 	// Get the project using the organization ID.
 	listProjParams := project_service.NewProjectServiceListParams()
@@ -247,21 +248,6 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 	}
 	project = listProjResp.Payload.Projects[0]
 	return project, diags
-}
-
-// GetOldestOrganization retrieves the oldest organization from a list based on
-// its created_at time.
-func GetOldestOrganization(organizations []*models.HashicorpCloudResourcemanagerOrganization) (oldestOrg *models.HashicorpCloudResourcemanagerOrganization) {
-	oldestTime := time.Now()
-
-	for _, org := range organizations {
-		orgTime := time.Time(org.CreatedAt)
-		if orgTime.Before(oldestTime) {
-			oldestOrg = org
-			oldestTime = orgTime
-		}
-	}
-	return oldestOrg
 }
 
 // GetOldestProject retrieves the oldest project from a list based on its created_at time.
