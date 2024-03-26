@@ -221,7 +221,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "There is more than one organization associated with the configured credentials.",
-			Detail:   "Please configure a specific organization in the HCP provider config block",
+			Detail:   "Please configure a specific project in the HCP provider config block",
 		})
 		return nil, diags
 	}
