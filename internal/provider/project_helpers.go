@@ -36,7 +36,7 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 		return nil, diags
 	}
 	if orgLen > 1 {
-		diags.AddError("There is more than one organization associated with the configured credentials.", "Please configure a specific organization in the HCP provider config block.")
+		diags.AddError("There is more than one organization associated with the configured credentials.", "Please configure a specific project in the HCP provider config block.")
 		return nil, diags
 	}
 
