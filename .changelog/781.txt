@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed an issue that caused a HTTP audit-log streaming config to fail with allowed values for http_codec are only "JSON" or "NDJSON"
+```
