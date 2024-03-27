@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
@@ -208,10 +209,23 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags = append(diags, diag.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)...)
+	if orgLen == 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "The configured credentials do not have access to any organization.",
+			Detail:   "Please assign at least one organization to the configured credentials to use this provider.",
+		})
 		return nil, diags
 	}
+	if orgLen > 1 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "There is more than one organization associated with the configured credentials.",
+			Detail:   "Please configure a specific project in the HCP provider config block",
+		})
+		return nil, diags
+	}
+
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
 	// Get the project using the organization ID.
@@ -236,7 +250,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 	return project, diags
 }
 
-// getOldestProject retrieves the oldest project from a list based on its created_at time.
+// GetOldestProject retrieves the oldest project from a list based on its created_at time.
 func GetOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
 	oldestTime := time.Now()
 
