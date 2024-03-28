@@ -18,10 +18,6 @@ The basic roles can be referenced as follows:
 * `roles/contributor`
 * `roles/viewer`
 
-You can now assign HCP Vault Secrets specific roles, please see [Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#project)
-* `roles/secrets.app-manager`
-* `roles/secrets.app-secret-reader`
-
 ## Example Usage
 
 ```terraform
@@ -43,7 +39,7 @@ data "hcp_iam_policy" "example" {
       ]
     },
     {
-      role = "roles/secrets.app-secret-reader"
+      role = "roles/viewer"
       principals = [
         "example-sp-3"
       ]
