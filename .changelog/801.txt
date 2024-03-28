@@ -1,3 +1,3 @@
 ```release-note:improvement
-Update hcp_iam_policy docs with HCP Vault Secrets Roles App Manager and App Secret Reader
+Documentation: Update hcp_iam_policy docs with HCP Vault Secrets Roles App Manager and App Secret Reader
 ```
