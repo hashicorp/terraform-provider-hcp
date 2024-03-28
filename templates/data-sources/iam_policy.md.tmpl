@@ -10,13 +10,18 @@ description: |-
 {{ .Description | trimspace }}
 
 To see what each role grants, please see [HCP
-Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#organization-role).
+Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#organization).
 The basic roles can be referenced as follows:
 
 * `roles/owner`
 * `roles/admin`
 * `roles/contributor`
 * `roles/viewer`
+
+You can now assign HCP Vault Secrets specific roles, please see [Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#project)
+* `roles/secrets.app-manager`
+* `roles/secrets.app-secret-reader`
+
 
 ## Example Usage
 
