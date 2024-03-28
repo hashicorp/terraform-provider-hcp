@@ -10,13 +10,18 @@ description: |-
 Generates an IAM policy that may be referenced by and applied to other HCP IAM resources, such as the `hcp_project_iam_policy` resource.
 
 To see what each role grants, please see [HCP
-Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#organization-role).
+Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#organization).
 The basic roles can be referenced as follows:
 
 * `roles/owner`
 * `roles/admin`
 * `roles/contributor`
 * `roles/viewer`
+
+You can now assign HCP Vault Secrets specific roles, please see [Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#project)
+* `roles/secrets.app-manager`
+* `roles/secrets.app-secret-reader`
+
 
 ## Example Usage
 
@@ -39,7 +44,7 @@ data "hcp_iam_policy" "example" {
       ]
     },
     {
-      role = "roles/viewer"
+      role = "roles/secrets.app-secret-reader"
       principals = [
         "example-sp-3"
       ]
