@@ -16,7 +16,7 @@ data "hcp_iam_policy" "example" {
       ]
     },
     {
-      role = "roles/viewer"
+      role = "roles/secrets.app-secret-reader"
       principals = [
         "example-sp-3"
       ]
