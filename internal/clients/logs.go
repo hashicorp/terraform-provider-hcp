@@ -63,3 +63,26 @@ func DeleteLogStreamingDestination(ctx context.Context, client *Client, loc *sha
 
 	return nil
 }
+
+func UpdateLogStreamingDestination(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, updatePaths []string, destination *models.LogService20210330Destination) error {
+	updateParams := log_service.NewLogServiceUpdateStreamingDestinationParams()
+	updateParams.Context = ctx
+	updateParams.DestinationResourceID = destination.Resource.ID
+	updateParams.DestinationResourceLocationOrganizationID = loc.OrganizationID
+	updateParams.DestinationResourceLocationProjectID = loc.ProjectID
+
+	updateBody := &models.LogService20210330UpdateStreamingDestinationRequest{
+		Destination: destination,
+		Mask: &models.ProtobufFieldMask{
+			Paths: updatePaths,
+		},
+	}
+
+	updateParams.Body = updateBody
+	_, err := client.LogService.LogServiceUpdateStreamingDestination(updateParams, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
