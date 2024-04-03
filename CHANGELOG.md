@@ -1,3 +1,13 @@
+## v0.85.0 (April 03, 2024)
+
+FEATURES:
+
+* New resource: Add `hcp_waypoint_application` resource for managing Waypoint Application.
+ New data-source: Add `data.hcp_waypoint_application` data-source for Waypoint Application. [[GH-794](https://github.com/hashicorp/terraform-provider-hcp/pull/794)]
+
+IMPROVEMENTS:
+
+* Documentation: Update hcp_iam_policy docs with HCP Vault Secrets Roles App Manager and App Secret Reader [[GH-801](https://github.com/hashicorp/terraform-provider-hcp/pull/801)]
 ## v0.84.1 (March 22, 2024)
 
 IMPROVEMENTS:
