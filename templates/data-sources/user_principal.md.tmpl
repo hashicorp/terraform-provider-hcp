@@ -1,6 +1,6 @@
 ---
 page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
-subcategory: "HCP Packer"
+subcategory: "Cloud Platform"
 description: |-
 {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
 ---
@@ -9,6 +9,8 @@ description: |-
 
 {{ .Description | trimspace }}
 
-~> **Deprecated:** This data source is deprecated and will be removed in a future release. Please use the [`hcp_packer_version`](./packer_version) data source instead.
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_user_principal/data-source.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}

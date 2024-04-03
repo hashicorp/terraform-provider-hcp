@@ -1,0 +1,4 @@
+```release-note:feature
+ New resource: Add `hcp_waypoint_add_on_definition` resource for managing Waypoint Add-on Definitions.
+ New data-source: Add `data.hcp_waypoint_add_on_definition` data-source for Waypoint Add-on Definitions.
+ ```

@@ -144,12 +144,16 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
 		iam.NewWorkloadIdentityProviderResource,
+		iam.NewGroupResource,
+		iam.NewGroupMembersResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
 		webhook.NewNotificationsWebhookResource,
 		// Waypoint
+		waypoint.NewApplicationResource,
 		waypoint.NewApplicationTemplateResource,
+		waypoint.NewAddOnDefinitionResource,
 		waypoint.NewTfcConfigResource,
 	}, packer.ResourceSchemaBuilders...)
 }
@@ -165,8 +169,12 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
+		iam.NewGroupDataSource,
+		iam.NewUserPrincipalDataSource,
 		// Waypoint
+		waypoint.NewApplicationDataSource,
 		waypoint.NewApplicationTemplateDataSource,
+		waypoint.NewAddOnDefinitionDataSource,
 	}, packer.DataSourceSchemaBuilders...)
 }
 

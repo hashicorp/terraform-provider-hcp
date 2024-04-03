@@ -6,6 +6,7 @@ package providersdkv2
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
+
+var defaultPackerTimeout = time.Minute
 
 func dataSourcePackerBucketNames() *schema.Resource {
 	return &schema.Resource{
