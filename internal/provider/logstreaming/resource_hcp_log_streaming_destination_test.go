@@ -172,6 +172,85 @@ func testAccCloudWatchLogsConfigUpdated(name string) string {
   		`, name)
 }
 
+func TestAccHCPLogStreamingDestinationDatadog(t *testing.T) {
+	resourceName := "hcp_log_streaming_destination.test_datadog"
+	ddName := "dd-resource-name-1"
+	ddNameUpdated := "dd-resource-name-2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccHCPLogStreamingDestinationDestroy(t, s)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			// Tests create
+			{
+				Config: testAccDatadogConfig(ddName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccHCPLogStreamingDestinationExists(t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", ddName),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.application_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.api_key"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.endpoint", "https://datadog-api.com"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.application_key", "APPLICATION-VALUE-HERE"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.api_key", "VALUEHERE"),
+				),
+			},
+			{
+				// Update the name, endpoint and api key and expect in-place update
+				Config: testAccDatadogConfigUpdated(ddNameUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccHCPLogStreamingDestinationExists(t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", ddNameUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.application_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "datadog.api_key"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.endpoint", "https://datadog-api.com/updated-endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.application_key", "APPLICATION-VALUE-HERE"),
+					resource.TestCheckResourceAttr(resourceName, "datadog.api_key", "VALUEHERECHANGED"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDatadogConfig(name string) string {
+	return fmt.Sprintf(`
+  		resource "hcp_log_streaming_destination" "test_datadog" {
+  			name = "%[1]s"
+  			datadog = {
+  				endpoint = "https://datadog-api.com"
+				api_key = "VALUEHERE"
+				application_key = "APPLICATION-VALUE-HERE"
+  			}
+  		}
+  		`, name)
+}
+
+func testAccDatadogConfigUpdated(name string) string {
+	return fmt.Sprintf(`
+ 		resource "hcp_log_streaming_destination" "test_datadog" {
+ 			name = "%[1]s"
+ 			datadog = {
+ 				endpoint = "https://datadog-api.com/updated-endpoint"
+				api_key = "VALUEHERECHANGED"
+				application_key = "APPLICATION-VALUE-HERE"
+ 			}
+ 		}
+ 		`, name)
+}
+
 func testAccHCPLogStreamingDestinationExists(t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
