@@ -250,14 +250,14 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	// An application ref can only have one of ID or Name set,
-	// so if we have both, we'll use ID
+	// so if we have both, we'll use Name
 	applicationId := plan.Application.ID.ValueString()
 	applicationName := plan.Application.Name.ValueString()
 	applicationRefModel := &waypointmodels.HashicorpCloudWaypointRefApplication{}
-	if applicationId != "" {
-		applicationRefModel.ID = applicationId
-	} else if applicationName != "" {
+	if applicationName != "" {
 		applicationRefModel.Name = applicationName
+	} else if applicationId != "" {
+		applicationRefModel.ID = applicationId
 	} else {
 		resp.Diagnostics.AddError(
 			"error reading application ref",

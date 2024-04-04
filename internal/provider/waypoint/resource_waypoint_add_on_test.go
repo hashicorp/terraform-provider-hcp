@@ -70,7 +70,7 @@ func testAccCheckWaypointAddOnExists(t *testing.T, resourceName string, addOnMod
 		}
 
 		// Fetch the add-on
-		addOn, err := clients.GetAddOnDefinitionByID(context.Background(), client, loc, appTempID)
+		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, appTempID)
 		if err != nil {
 			return err
 		}
@@ -96,10 +96,10 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 			ProjectID:      projectID,
 		}
 
-		definition, err := clients.GetAddOnByID(context.Background(), client, loc, id)
+		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, id)
 		if err != nil {
-			// expected
-			if clients.IsResponseCodeNotFound(err) {
+			// expected (500 because the application is destoryed as well)
+			if clients.IsResponseCodeInternalError(err) {
 				return nil
 			}
 			return err
@@ -107,7 +107,7 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 
 		// fall through, we expect a not found above but if we get this far then
 		// the test should fail
-		if definition != nil {
+		if addOn != nil {
 			return fmt.Errorf("expected add-on to be destroyed, but it still exists")
 		}
 
@@ -163,7 +163,7 @@ resource "hcp_waypoint_add_on" "test" {
     id = hcp_waypoint_application.test.id
   }
   definition = {
-	id = hcp_waypoint_add_on_definition.test.id
+	name = hcp_waypoint_add_on_definition.test.name
   }
 }`, templateName, appName, defName, addOnName)
 }
