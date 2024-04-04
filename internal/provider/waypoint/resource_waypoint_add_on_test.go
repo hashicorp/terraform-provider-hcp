@@ -115,6 +115,8 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 	}
 }
 
+// TODO: (Henry) These are hardcoded project and no-code module values because they work. They will have to be changed
+// TODO: before any of this can be merged
 // Copied from the application resource test (same no-code and project):
 // These are hardcoded project and no-code module values because they work. The
 // automated tests do not run acceptance tests at this time, so these should be
@@ -135,10 +137,12 @@ resource "hcp_waypoint_application_template" "test" {
   }
   labels = ["one", "two"]
 }
+
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
   application_template_id = hcp_waypoint_application_template.test.id
 }
+
 resource "hcp_waypoint_add_on_definition" "test" {
   name    = "%s"
   summary = "some summary for fun"
@@ -152,10 +156,11 @@ resource "hcp_waypoint_add_on_definition" "test" {
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
 }
+
 resource "hcp_waypoint_add_on" "test" {
   name    = "%s"
   application = {
-    id = hcp_waypoint_application_template.test.id
+    id = hcp_waypoint_application.test.id
   }
   definition = {
 	id = hcp_waypoint_add_on_definition.test.id

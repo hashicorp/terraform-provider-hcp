@@ -20,7 +20,6 @@ Waypoint Add-on resource
 - `application` (Attributes) The Application for which this Add-on was created. At least one of ID or Name must be set. (see [below for nested schema](#nestedatt--application))
 - `definition` (Attributes) The Add-on Definition from which this Add-on was created. At least one of ID or Name must be set. (see [below for nested schema](#nestedatt--definition))
 - `name` (String) The name of the Add-on.
-- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 ### Read-Only
 
@@ -29,15 +28,15 @@ Waypoint Add-on resource
 - `id` (String) The ID of the Add-on.
 - `install_count` (Number) The number of installed Add-ons for the same Application that share the same Add-on Definition.
 - `labels` (List of String) List of labels attached to this Add-on.
-- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
 - `readme_markdown` (String) The markdown for the Add-on README.
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.
+- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 <a id="nestedatt--application"></a>
 ### Nested Schema for `application`
 
-Read-Only:
+Optional:
 
 - `id` (String) The ID of the Application.
 - `name` (String) The name of the Application.
@@ -55,18 +54,7 @@ Optional:
 <a id="nestedatt--terraform_no_code_module"></a>
 ### Nested Schema for `terraform_no_code_module`
 
-Required:
+Read-Only:
 
 - `source` (String) Terraform Cloud no-code Module Source
 - `version` (String) Terraform Cloud no-code Module Version
-
-
-<a id="nestedatt--output_values"></a>
-### Nested Schema for `output_values`
-
-Read-Only:
-
-- `name` (String) The name of the output value.
-- `sensitive` (Boolean) Whether the output value is sensitive.
-- `type` (String) The type of the output value.
-- `value` (String) The value of the output value.

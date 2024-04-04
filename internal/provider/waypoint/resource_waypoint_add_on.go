@@ -6,6 +6,7 @@ package waypoint
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -46,11 +47,18 @@ type AddOnResourceModel struct {
 	CreatedBy      types.String `tfsdk:"created_by"`
 	Count          types.Int64  `tfsdk:"install_count"`
 	Status         types.Int64  `tfsdk:"status"`
-	OutputValues   types.List   `tfsdk:"output_values"`
+	//OutputValues   types.List   `tfsdk:"output_values"`
 
 	Application           *addOnApplicationRef `tfsdk:"application"`
 	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
-	TerraformNoCodeModule *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	TerraformNoCodeModule types.Object         `tfsdk:"terraform_no_code_module"`
+}
+
+func (r tfcNoCodeModule) attrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"source":  types.StringType,
+		"version": types.StringType,
+	}
 }
 
 func (r *AddOnResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -152,7 +160,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "The status of the Terraform run for the Add-on.",
 			},
-			"output_values": schema.ListNestedAttribute{
+			/*"output_values": schema.ListNestedAttribute{
 				Computed: true,
 				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
@@ -176,7 +184,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 						},
 					},
 				},
-			},
+			},*/
 		},
 	}
 }
@@ -259,14 +267,14 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	// Similarly, a definition ref can only have one of ID or Name set,
-	// so if we have both, we'll use ID
+	// so if we have both, we'll use Name
 	definitionId := plan.Definition.ID.ValueString()
 	definitionName := plan.Definition.Name.ValueString()
 	definitionRefModel := &waypointmodels.HashicorpCloudWaypointRefAddOnDefinition{}
-	if definitionId != "" {
-		definitionRefModel.ID = definitionId
-	} else if definitionName != "" {
+	if definitionName != "" {
 		definitionRefModel.Name = definitionName
+	} else if definitionId != "" {
+		definitionRefModel.ID = definitionId
 	} else {
 		resp.Diagnostics.AddError(
 			"error reading definition ref",
@@ -323,11 +331,18 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	plan.Labels = labels
 
 	if addOn.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
-			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
+		tfcNoCode := &tfcNoCodeModule{}
+		if addOn.TerraformNocodeModule.Source != "" {
+			tfcNoCode.Source = types.StringValue(addOn.TerraformNocodeModule.Source)
 		}
-		plan.TerraformNoCodeModule = tfcNoCode
+		if addOn.TerraformNocodeModule.Version != "" {
+			tfcNoCode.Version = types.StringValue(addOn.TerraformNocodeModule.Version)
+		}
+		plan.TerraformNoCodeModule, diags = types.ObjectValueFrom(ctx, tfcNoCode.attrTypes(), tfcNoCode)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Display the reference to the Definition in the plan,
@@ -453,7 +468,11 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
 			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
 		}
-		state.TerraformNoCodeModule = tfcNoCode
+		state.TerraformNoCodeModule, diags = types.ObjectValueFrom(ctx, tfcNoCode.attrTypes(), tfcNoCode)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	state.CreatedBy = types.StringValue(addOn.CreatedBy)
@@ -597,7 +616,11 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
 			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
 		}
-		plan.TerraformNoCodeModule = tfcNoCode
+		plan.TerraformNoCodeModule, diags = types.ObjectValueFrom(ctx, tfcNoCode.attrTypes(), tfcNoCode)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Display the reference to the Definition in the plan,
@@ -690,8 +713,6 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		)
 		return
 	}
-
-	// TODO: Why do these function not exist?
 
 	params := &waypoint_service.WaypointServiceDestroyAddOnParams{
 		NamespaceID: ns.ID,
