@@ -1587,7 +1587,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
 
-		if strings.ToUpper(httpMethod) != "JSON" && strings.ToUpper(httpMethod) != "NDJSON" {
+		if strings.ToUpper(httpCodec) != "JSON" && strings.ToUpper(httpCodec) != "NDJSON" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
 		}
 
