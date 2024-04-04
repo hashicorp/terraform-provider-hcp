@@ -1,3 +1,14 @@
+## v0.86.0 (April 04, 2024)
+
+FEATURES:
+
+* Add DataDog config option for hcp_log_streaming_destination resource. [[GH-803](https://github.com/hashicorp/terraform-provider-hcp/pull/803)]
+* Add in-place update functionality to `hcp_log_streaming_destination` resource. [[GH-802](https://github.com/hashicorp/terraform-provider-hcp/pull/802)]
+
+BUG FIXES:
+
+* Fixed an issue that caused a HTTP audit-log streaming config to fail with allowed values for http_codec are only "JSON" or "NDJSON" [[GH-781](https://github.com/hashicorp/terraform-provider-hcp/pull/781)]
+* Handle the case when multiple organizations are associated with the configured credentials. Now, it instead prompts an error, requiring users to specify a particular organization in the HCP provider config block. [[GH-793](https://github.com/hashicorp/terraform-provider-hcp/pull/793)]
 ## v0.85.0 (April 03, 2024)
 
 FEATURES:
