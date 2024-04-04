@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	diagnostic "github.com/hashicorp/terraform-plugin-framework/diag"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -30,10 +31,15 @@ func getProjectFromCredentialsFramework(ctx context.Context, client *clients.Cli
 		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags.AddError(fmt.Sprintf("unexpected number of organizations: expected 1, actual: %v", orgLen), "")
+	if orgLen == 0 {
+		diags.AddError("The configured credentials do not have access to any organization.", "Please assign at least one organization to the configured credentials to use this provider.")
 		return nil, diags
 	}
+	if orgLen > 1 {
+		diags.AddError("There is more than one organization associated with the configured credentials.", "Please configure a specific project in the HCP provider config block.")
+		return nil, diags
+	}
+
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
 	// Get the project using the organization ID.
