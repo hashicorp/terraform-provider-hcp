@@ -54,14 +54,14 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 					stringvalidator.LengthBetween(1, 30),
 				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"streaming_destination_id": schema.StringAttribute{
 				Description: "The ID of the HCP Log Streaming Destination",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"splunk_cloud": schema.SingleNestedAttribute{
@@ -77,7 +77,7 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 					},
 				},
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.UseStateForUnknown(),
 				},
 				Optional: true,
 				Validators: []validator.Object{
@@ -109,7 +109,7 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 					},
 				},
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.UseStateForUnknown(),
 				},
 				Optional: true,
 				Validators: []validator.Object{
@@ -307,7 +307,77 @@ func (r *resourceHCPLogStreamingDestination) Read(ctx context.Context, req resou
 }
 
 func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// In-place update is not supported
+	var plan, state HCPLogStreamingDestination
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	resp.Diagnostics.Append(plan.extract(ctx)...)
+	resp.Diagnostics.Append(state.extract(ctx)...)
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: r.client.Config.OrganizationID,
+		ProjectID:      r.client.Config.ProjectID,
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var fieldMaskPaths []string
+	destination := &models.LogService20210330Destination{}
+
+	if !plan.Name.Equal(state.Name) {
+		fieldMaskPaths = append(fieldMaskPaths, "name")
+		destination.Name = plan.Name.ValueString()
+	}
+
+	// if tf plan is for cloudwatch
+	if !plan.CloudWatch.IsNull() {
+		// check if the saved tf state is also cloudwatch and see if there has been any drift
+		if !state.CloudWatch.IsNull() && plan.CloudWatch.Equal(state.CloudWatch) {
+			// do nothing ... state has not changed
+		} else {
+			// if there is a diff between plan and state we need to call log service to update destination
+			fieldMaskPaths = append(fieldMaskPaths, "provider")
+			destination.CloudwatchlogsProvider = &models.LogService20210330CloudwatchLogsProvider{
+				ExternalID:   plan.cloudwatch.ExternalID.ValueString(),
+				Region:       plan.cloudwatch.Region.ValueString(),
+				RoleArn:      plan.cloudwatch.RoleArn.ValueString(),
+				LogGroupName: plan.cloudwatch.LogGroupName.ValueString(),
+			}
+		}
+	}
+
+	// if tf plan is for splunk
+	if !plan.SplunkCloud.IsNull() {
+		if !state.SplunkCloud.IsNull() && plan.SplunkCloud.Equal(state.SplunkCloud) {
+			// do nothing ... state has not changed
+		} else {
+			// if there is a diff between plan and state we need to call log service to update destination
+			fieldMaskPaths = append(fieldMaskPaths, "provider")
+			destination.SplunkCloudProvider = &models.LogService20210330SplunkCloudProvider{
+				HecEndpoint: plan.splunkCloud.HecEndpoint.ValueString(),
+				Token:       plan.splunkCloud.Token.ValueString(),
+			}
+		}
+	}
+
+	if len(fieldMaskPaths) > 0 {
+		destination.Resource = &models.LocationLink{
+			ID: state.StreamingDestinationID.ValueString(),
+			Location: &models.CloudlocationLocation{
+				OrganizationID: loc.OrganizationID,
+				ProjectID:      loc.ProjectID,
+			},
+		}
+		err := clients.UpdateLogStreamingDestination(ctx, r.client, loc, fieldMaskPaths, destination)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating log streaming destination", err.Error())
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	}
 }
 func (r *resourceHCPLogStreamingDestination) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state HCPLogStreamingDestination
