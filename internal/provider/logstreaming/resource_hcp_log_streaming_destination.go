@@ -81,9 +81,10 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 				},
 				Optional: true,
 				Validators: []validator.Object{
-					// Validate only this attribute or cloudwatch is configured.
+					// Validate only this attribute, cloudwatch or datadog is configured.
 					objectvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("cloudwatch"),
+						path.MatchRoot("datadog"),
 					}...),
 				},
 			},
@@ -113,9 +114,39 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 				},
 				Optional: true,
 				Validators: []validator.Object{
-					// Validate only this attribute or splunk_cloud is configured.
+					// Validate only this attribute, splunk_cloud or datadog is configured.
 					objectvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("splunk_cloud"),
+						path.MatchRoot("datadog"),
+					}...),
+				},
+			},
+			"datadog": schema.SingleNestedAttribute{
+				Attributes: map[string]schema.Attribute{
+					"endpoint": schema.StringAttribute{
+						Description: "The Datadog endpoint to send logs to.",
+						Required:    true,
+					},
+					"api_key": schema.StringAttribute{
+						Description: "The value for the DD-API-KEY to send when making requests to DataDog.",
+						Required:    true,
+						Sensitive:   true,
+					},
+					"application_key": schema.StringAttribute{
+						Description: "The value for the DD-APPLICATION-KEY to send when making requests to DataDog.",
+						Optional:    true,
+						Sensitive:   true,
+					},
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+				Optional: true,
+				Validators: []validator.Object{
+					// Validate only this attribute, splunk_cloud or cloudwatch is configured.
+					objectvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("splunk_cloud"),
+						path.MatchRoot("cloudwatch"),
 					}...),
 				},
 			},
@@ -143,9 +174,25 @@ type HCPLogStreamingDestination struct {
 	StreamingDestinationID types.String `tfsdk:"streaming_destination_id"`
 	SplunkCloud            types.Object `tfsdk:"splunk_cloud"`
 	CloudWatch             types.Object `tfsdk:"cloudwatch"`
+	Datadog                types.Object `tfsdk:"datadog"`
 
 	splunkCloud *SplunkCloudProvider `tfsdk:"-"`
 	cloudwatch  *CloudWatchProvider  `tfsdk:"-"`
+	datadog     *DataDogProvider     `tfsdk:"-"`
+}
+
+type DataDogProvider struct {
+	Endpoint       types.String `tfsdk:"endpoint"`
+	APIKey         types.String `tfsdk:"api_key"`
+	ApplicationKey types.String `tfsdk:"application_key"`
+}
+
+func (d DataDogProvider) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"endpoint":        types.StringType,
+		"api_key":         types.StringType,
+		"application_key": types.StringType,
+	}
 }
 
 type SplunkCloudProvider struct {
@@ -190,12 +237,17 @@ func (h *HCPLogStreamingDestination) extract(ctx context.Context) diag.Diagnosti
 		diags = h.CloudWatch.As(ctx, h.cloudwatch, basetypes.ObjectAsOptions{})
 	}
 
+	if !h.Datadog.IsNull() {
+		h.datadog = &DataDogProvider{}
+		diags = h.Datadog.As(ctx, h.datadog, basetypes.ObjectAsOptions{})
+	}
+
 	return diags
 }
 
 // fromModel encodes the values from a Log Streaming Destination model into the
 // Terraform values, such that they can be saved to state.
-func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *models.LogService20210330Destination) diag.Diagnostics {
+func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *models.LogService20210330Destination, dataDogAPIKeyValue string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	h.Name = types.StringValue(logSD.Name)
 	h.StreamingDestinationID = types.StringValue(logSD.Resource.ID)
@@ -212,6 +264,23 @@ func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *model
 		h.SplunkCloud = types.ObjectValueMust(h.SplunkCloud.AttributeTypes(ctx), map[string]attr.Value{
 			"endpoint": types.StringValue(logSD.SplunkCloudProvider.HecEndpoint),
 			"token":    types.StringValue(logSD.SplunkCloudProvider.Token),
+		})
+	}
+
+	if logSD.DatadogProvider != nil {
+		var applicationKeyValue basetypes.StringValue
+
+		if logSD.DatadogProvider.Authorization.ExtraProperties != nil {
+			extraProps, ok := logSD.DatadogProvider.Authorization.ExtraProperties.(map[string]interface{})
+			if ok {
+				applicationKeyValue = types.StringValue(extraProps["DD-APPLICATION-KEY"].(string))
+			}
+		}
+
+		h.Datadog = types.ObjectValueMust(h.Datadog.AttributeTypes(ctx), map[string]attr.Value{
+			"endpoint":        types.StringValue(logSD.DatadogProvider.Endpoint),
+			"api_key":         types.StringValue(dataDogAPIKeyValue),
+			"application_key": applicationKeyValue,
 		})
 	}
 
@@ -257,6 +326,27 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 		}
 	}
 
+	fromModelDatadogAPIKey := ""
+	if plan.datadog != nil {
+		fromModelDatadogAPIKey = plan.datadog.APIKey.ValueString()
+
+		ddProviderAuthorization := &models.LogService20210330Authorization{
+			Header: "DD-API-KEY",
+			Value:  fromModelDatadogAPIKey,
+		}
+
+		if !plan.datadog.ApplicationKey.IsNull() {
+			ddProviderAuthorization.ExtraProperties = map[string]string{
+				"DD-APPLICATION-KEY": plan.datadog.ApplicationKey.ValueString(),
+			}
+		}
+
+		createRequestBody.DatadogProvider = &models.LogService20210330DatadogProvider{
+			Endpoint:      plan.datadog.Endpoint.ValueString(),
+			Authorization: ddProviderAuthorization,
+		}
+	}
+
 	createParams.Body = createRequestBody
 
 	res, err := r.client.LogService.LogServiceCreateStreamingDestination(createParams, nil)
@@ -276,7 +366,7 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 		resp.Diagnostics.AddError("Error retrieving newly created Log Streaming Destination", err.Error())
 	}
 
-	resp.Diagnostics.Append(plan.fromModel(ctx, logStreamingDest)...)
+	resp.Diagnostics.Append(plan.fromModel(ctx, logStreamingDest, fromModelDatadogAPIKey)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -302,7 +392,14 @@ func (r *resourceHCPLogStreamingDestination) Read(ctx context.Context, req resou
 		return
 	}
 
-	resp.Diagnostics.Append(state.fromModel(ctx, res)...)
+	ddAPIKey := ""
+	if !state.Datadog.IsNull() {
+		var dataDogState DataDogProvider
+		_ = state.Datadog.As(ctx, &dataDogState, basetypes.ObjectAsOptions{})
+		ddAPIKey = dataDogState.APIKey.ValueString()
+	}
+
+	resp.Diagnostics.Append(state.fromModel(ctx, res, ddAPIKey)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -362,6 +459,34 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 		}
 	}
 
+	// if tf plan is for datadog
+	if !plan.Datadog.IsNull() {
+		if !state.Datadog.IsNull() && plan.Datadog.Equal(state.Datadog) {
+			// do nothing ... state has not changed
+		} else {
+			// if there is a diff between plan and state we need to call log service to update destination
+			fieldMaskPaths = append(fieldMaskPaths, "provider")
+			ddProviderAuthorization := &models.LogService20210330Authorization{
+				Header: "DD-API-KEY",
+				Value:  plan.datadog.APIKey.ValueString(),
+			}
+
+			if !plan.datadog.ApplicationKey.IsNull() {
+				ddProviderAuthorization.ExtraProperties = map[string]string{
+					"DD-APPLICATION-KEY": plan.datadog.ApplicationKey.ValueString(),
+				}
+			}
+
+			destination.DatadogProvider = &models.LogService20210330DatadogProvider{
+				Endpoint:      plan.datadog.Endpoint.ValueString(),
+				Authorization: ddProviderAuthorization,
+			}
+		}
+	}
+
+	// For the sake of simplicity ... we update the entire provider object if a value in said provider object has been changed.
+	// We could have opted to change the subfields of a specific provider object but that would lead to more complexity as we add
+	// providers to the supported list.
 	if len(fieldMaskPaths) > 0 {
 		destination.Resource = &models.LocationLink{
 			ID: state.StreamingDestinationID.ValueString(),
@@ -379,6 +504,7 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	}
 }
+
 func (r *resourceHCPLogStreamingDestination) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state HCPLogStreamingDestination
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
