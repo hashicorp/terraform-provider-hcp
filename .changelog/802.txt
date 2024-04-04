@@ -1,0 +1,3 @@
+```release-note:feature
+ Add in-place update functionality to `hcp_log_streaming_destination` resource.
+ ```
