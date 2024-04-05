@@ -115,9 +115,6 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 	}
 }
 
-// TODO: (Henry) These are hardcoded project and no-code module values because they work. They will have to be changed
-// TODO: before any of this can be merged
-// Copied from the application resource test (same no-code and project):
 // These are hardcoded project and no-code module values because they work. The
 // automated tests do not run acceptance tests at this time, so these should be
 // sufficient for now.

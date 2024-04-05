@@ -34,8 +34,6 @@ type DataSourceAddOn struct {
 	client *clients.Client
 }
 
-//TODO: Make sure this list is correct (is this the right type for output values?)
-
 type DataSourceAddOnModel struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
