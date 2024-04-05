@@ -98,7 +98,7 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 
 		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, id)
 		if err != nil {
-			// expected (500 because the application is destoryed as well)
+			// expected (500 because the application is destroyed as well)
 			if clients.IsResponseCodeInternalError(err) {
 				return nil
 			}

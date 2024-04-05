@@ -6,12 +6,12 @@ package waypoint
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypointmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -47,7 +47,7 @@ type AddOnResourceModel struct {
 	CreatedBy      types.String `tfsdk:"created_by"`
 	Count          types.Int64  `tfsdk:"install_count"`
 	Status         types.Int64  `tfsdk:"status"`
-	//OutputValues   types.List   `tfsdk:"output_values"`
+	// OutputValues   types.List   `tfsdk:"output_values"`
 
 	Application           *addOnApplicationRef `tfsdk:"application"`
 	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
@@ -251,13 +251,13 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	// An application ref can only have one of ID or Name set,
 	// so if we have both, we'll use Name
-	applicationId := plan.Application.ID.ValueString()
+	applicationID := plan.Application.ID.ValueString()
 	applicationName := plan.Application.Name.ValueString()
 	applicationRefModel := &waypointmodels.HashicorpCloudWaypointRefApplication{}
 	if applicationName != "" {
 		applicationRefModel.Name = applicationName
-	} else if applicationId != "" {
-		applicationRefModel.ID = applicationId
+	} else if applicationID != "" {
+		applicationRefModel.ID = applicationID
 	} else {
 		resp.Diagnostics.AddError(
 			"error reading application ref",
@@ -268,13 +268,13 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	// Similarly, a definition ref can only have one of ID or Name set,
 	// so if we have both, we'll use Name
-	definitionId := plan.Definition.ID.ValueString()
+	definitionID := plan.Definition.ID.ValueString()
 	definitionName := plan.Definition.Name.ValueString()
 	definitionRefModel := &waypointmodels.HashicorpCloudWaypointRefAddOnDefinition{}
 	if definitionName != "" {
 		definitionRefModel.Name = definitionName
-	} else if definitionId != "" {
-		definitionRefModel.ID = definitionId
+	} else if definitionID != "" {
+		definitionRefModel.ID = definitionID
 	} else {
 		resp.Diagnostics.AddError(
 			"error reading definition ref",
