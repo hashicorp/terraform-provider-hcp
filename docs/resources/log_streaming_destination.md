@@ -60,7 +60,6 @@ resource "hcp_log_streaming_destination" "example_splunk_cloud" {
 ### Optional
 
 - `cloudwatch` (Attributes) (see [below for nested schema](#nestedatt--cloudwatch))
-- `datadog` (Attributes) (see [below for nested schema](#nestedatt--datadog))
 - `splunk_cloud` (Attributes) (see [below for nested schema](#nestedatt--splunk_cloud))
 
 ### Read-Only
@@ -79,19 +78,6 @@ Required:
 Optional:
 
 - `log_group_name` (String) The log_group_name of the CloudWatch destination.
-
-
-<a id="nestedatt--datadog"></a>
-### Nested Schema for `datadog`
-
-Required:
-
-- `api_key` (String, Sensitive) The value for the DD-API-KEY to send when making requests to DataDog.
-- `endpoint` (String) The Datadog endpoint to send logs to.
-
-Optional:
-
-- `application_key` (String, Sensitive) The value for the DD-APPLICATION-KEY to send when making requests to DataDog.
 
 
 <a id="nestedatt--splunk_cloud"></a>
