@@ -156,11 +156,7 @@ resource "hcp_waypoint_add_on_definition" "test" {
 
 resource "hcp_waypoint_add_on" "test" {
   name    = "%s"
-  application = {
-    id = hcp_waypoint_application.test.id
-  }
-  definition = {
-	name = hcp_waypoint_add_on_definition.test.name
-  }
+  application_id = hcp_waypoint_application.test.id
+  definition_id = hcp_waypoint_add_on_definition.test.id
 }`, templateName, appName, defName, addOnName)
 }

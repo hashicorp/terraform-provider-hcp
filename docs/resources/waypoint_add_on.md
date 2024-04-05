@@ -16,8 +16,8 @@ Waypoint Add-on resource
 
 ### Required
 
-- `application` (Attributes) The Application for which this Add-on was created. At least one of ID or Name must be set. (see [below for nested schema](#nestedatt--application))
-- `definition` (Attributes) The Add-on Definition from which this Add-on was created. At least one of ID or Name must be set. (see [below for nested schema](#nestedatt--definition))
+- `application_id` (String) The ID of the Application that this Add-on is created for.
+- `definition_id` (String) The ID of the Add-on Definition that this Add-on is created from.
 - `name` (String) The name of the Add-on.
 
 ### Optional
@@ -36,24 +36,6 @@ Waypoint Add-on resource
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
-
-<a id="nestedatt--application"></a>
-### Nested Schema for `application`
-
-Optional:
-
-- `id` (String) The ID of the Application.
-- `name` (String) The name of the Application.
-
-
-<a id="nestedatt--definition"></a>
-### Nested Schema for `definition`
-
-Optional:
-
-- `id` (String) The ID of the Add-on Definition.
-- `name` (String) The name of the Add-on Definition.
-
 
 <a id="nestedatt--terraform_no_code_module"></a>
 ### Nested Schema for `terraform_no_code_module`

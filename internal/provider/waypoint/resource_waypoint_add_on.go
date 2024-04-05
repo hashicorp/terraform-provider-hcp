@@ -49,11 +49,11 @@ type AddOnResourceModel struct {
 	CreatedBy      types.String `tfsdk:"created_by"`
 	Count          types.Int64  `tfsdk:"install_count"`
 	Status         types.Int64  `tfsdk:"status"`
+	ApplicationID  types.String `tfsdk:"application_id"`
+	DefinitionID   types.String `tfsdk:"definition_id"`
 	// OutputValues   types.List   `tfsdk:"output_values"`
 
-	Application           *addOnApplicationRef `tfsdk:"application"`
-	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
-	TerraformNoCodeModule types.Object         `tfsdk:"terraform_no_code_module"`
+	TerraformNoCodeModule types.Object `tfsdk:"terraform_no_code_module"`
 }
 
 func (r tfcNoCodeModule) attrTypes() map[string]attr.Type {
@@ -143,35 +143,13 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"definition": schema.SingleNestedAttribute{
-				Required: true,
-				Description: "The Add-on Definition from which this Add-on was created. At least " +
-					"one of ID or Name must be set.",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Optional:    true,
-						Description: "The name of the Add-on Definition.",
-					},
-					"id": schema.StringAttribute{
-						Optional:    true,
-						Description: "The ID of the Add-on Definition.",
-					},
-				},
+			"definition_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Add-on Definition that this Add-on is created from.",
 			},
-			"application": schema.SingleNestedAttribute{
-				Required: true,
-				Description: "The Application for which this Add-on was created. At least one of " +
-					"ID or Name must be set.",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Optional:    true,
-						Description: "The name of the Application.",
-					},
-					"id": schema.StringAttribute{
-						Optional:    true,
-						Description: "The ID of the Application.",
-					},
-				},
+			"application_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Application that this Add-on is created for.",
 			},
 			"status": schema.Int64Attribute{
 				Computed:    true,
@@ -270,35 +248,29 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	// An application ref can only have one of ID or Name set,
-	// so if we have both, we'll use Name
-	applicationID := plan.Application.ID.ValueString()
-	applicationName := plan.Application.Name.ValueString()
+	// we ask for ID, so we will set ID
+	applicationID := plan.ApplicationID.ValueString()
 	applicationRefModel := &waypointmodels.HashicorpCloudWaypointRefApplication{}
-	if applicationName != "" {
-		applicationRefModel.Name = applicationName
-	} else if applicationID != "" {
+	if applicationID != "" {
 		applicationRefModel.ID = applicationID
 	} else {
 		resp.Diagnostics.AddError(
-			"error reading application ref",
-			"The application reference was missing",
+			"error reading application ID",
+			"The application ID was missing",
 		)
 		return
 	}
 
 	// Similarly, a definition ref can only have one of ID or Name set,
-	// so if we have both, we'll use Name
-	definitionID := plan.Definition.ID.ValueString()
-	definitionName := plan.Definition.Name.ValueString()
+	// we ask for ID, so we will set ID
+	definitionID := plan.DefinitionID.ValueString()
 	definitionRefModel := &waypointmodels.HashicorpCloudWaypointRefAddOnDefinition{}
-	if definitionName != "" {
-		definitionRefModel.Name = definitionName
-	} else if definitionID != "" {
+	if definitionID != "" {
 		definitionRefModel.ID = definitionID
 	} else {
 		resp.Diagnostics.AddError(
-			"error reading definition ref",
-			"The definition reference was missing",
+			"error reading definition ID",
+			"The definition ID was missing",
 		)
 		return
 	}
@@ -367,40 +339,18 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
-	// Display the reference to the Definition in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Definition in the plan
 	if addOn.Definition != nil {
-		definitionRef := &addOnDefinitionRef{}
-		if addOn.Definition.Name != "" {
-			definitionRef.Name = types.StringValue(addOn.Definition.Name)
-		} else if addOn.Definition.ID != "" {
-			definitionRef.ID = types.StringValue(addOn.Definition.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading definition ref",
-				"the definition reference was missing, no ID or Name found")
-			return
+		if addOn.Definition.ID != "" {
+			plan.DefinitionID = types.StringValue(addOn.Definition.ID)
 		}
-		plan.Definition = definitionRef
 	}
 
-	// Display the reference to the Application in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Application in the plan
 	if addOn.Application != nil {
-		applicationRef := &addOnApplicationRef{}
-		if addOn.Application.Name != "" {
-			applicationRef.Name = types.StringValue(addOn.Application.Name)
-		} else if addOn.Application.ID != "" {
-			applicationRef.ID = types.StringValue(addOn.Application.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading application ref",
-				"the application reference was missing, no ID or Name found")
-			return
+		if addOn.Application.ID != "" {
+			plan.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
-		plan.Application = applicationRef
 	}
 
 	plan.CreatedBy = types.StringValue(addOn.CreatedBy)
@@ -519,40 +469,18 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		state.Count = types.Int64Value(installedCount)
 	}
 
-	// Display the reference to the Definition in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Definition in the state
 	if addOn.Definition != nil {
-		definitionRef := &addOnDefinitionRef{}
-		if addOn.Definition.Name != "" {
-			definitionRef.Name = types.StringValue(addOn.Definition.Name)
-		} else if addOn.Definition.ID != "" {
-			definitionRef.ID = types.StringValue(addOn.Definition.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading definition ref",
-				"the definition reference was missing, no ID or Name found")
-			return
+		if addOn.Definition.ID != "" {
+			state.DefinitionID = types.StringValue(addOn.Definition.ID)
 		}
-		state.Definition = definitionRef
 	}
 
-	// Display the reference to the Application in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Application in the state
 	if addOn.Application != nil {
-		applicationRef := &addOnApplicationRef{}
-		if addOn.Application.Name != "" {
-			applicationRef.Name = types.StringValue(addOn.Application.Name)
-		} else if addOn.Application.ID != "" {
-			applicationRef.ID = types.StringValue(addOn.Application.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading application ref",
-				"the application reference was missing, no ID or Name found")
-			return
+		if addOn.Application.ID != "" {
+			state.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
-		state.Application = applicationRef
 	}
 
 	// TODO: Add support for output values
@@ -649,40 +577,18 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	// Display the reference to the Definition in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Definition in the plan
 	if addOn.Definition != nil {
-		definitionRef := &addOnDefinitionRef{}
-		if addOn.Definition.Name != "" {
-			definitionRef.Name = types.StringValue(addOn.Definition.Name)
-		} else if addOn.Definition.ID != "" {
-			definitionRef.ID = types.StringValue(addOn.Definition.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading definition ref",
-				"the definition reference was missing, no ID or Name found")
-			return
+		if addOn.Definition.ID != "" {
+			plan.DefinitionID = types.StringValue(addOn.Definition.ID)
 		}
-		plan.Definition = definitionRef
 	}
 
-	// Display the reference to the Application in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Application in the plan
 	if addOn.Application != nil {
-		applicationRef := &addOnApplicationRef{}
-		if addOn.Application.Name != "" {
-			applicationRef.Name = types.StringValue(addOn.Application.Name)
-		} else if addOn.Application.ID != "" {
-			applicationRef.ID = types.StringValue(addOn.Application.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading application ref",
-				"the application reference was missing, no ID or Name found")
-			return
+		if addOn.Application.ID != "" {
+			plan.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
-		plan.Application = applicationRef
 	}
 
 	plan.CreatedBy = types.StringValue(addOn.CreatedBy)

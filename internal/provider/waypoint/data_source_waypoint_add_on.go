@@ -34,33 +34,6 @@ type DataSourceAddOn struct {
 	client *clients.Client
 }
 
-type DataSourceAddOnModel struct {
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	Summary        types.String `tfsdk:"summary"`
-	Labels         types.List   `tfsdk:"labels"`
-	Description    types.String `tfsdk:"description"`
-	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
-	CreatedBy      types.String `tfsdk:"created_by"`
-	Count          types.Int64  `tfsdk:"install_count"`
-	Status         types.Int64  `tfsdk:"status"`
-	OutputValues   types.List   `tfsdk:"output_values"`
-
-	Application           *addOnApplicationRef `tfsdk:"application"`
-	Definition            *addOnDefinitionRef  `tfsdk:"definition"`
-	TerraformNoCodeModule *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
-}
-
-type addOnDefinitionRef struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
-}
-
-type addOnApplicationRef struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
-}
-
 func NewAddOnDataSource() datasource.DataSource {
 	return &DataSourceAddOn{}
 }
@@ -84,6 +57,15 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				Description: "The name of the Add-on.",
 				Computed:    true,
 				Optional:    true,
+			},
+
+			"organization_id": schema.StringAttribute{
+				Description: "The ID of the HCP organization where the Waypoint AddOn is located.",
+				Computed:    true,
+			},
+			"project_id": schema.StringAttribute{
+				Description: "The ID of the HCP project where the Waypoint AddOn is located.",
+				Computed:    true,
 			},
 			"summary": schema.StringAttribute{
 				Description: "A short summary of the Add-on.",
@@ -111,33 +93,13 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 					"Add-on Definition.",
 				Computed: true,
 			},
-			"definition": schema.SingleNestedAttribute{
+			"definition_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The Add-on Definition from which this Add-on was created.",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Computed:    true,
-						Description: "The name of the Add-on Definition.",
-					},
-					"id": schema.StringAttribute{
-						Computed:    true,
-						Description: "The ID of the Add-on Definition.",
-					},
-				},
+				Description: "The ID of the Add-on Definition that this Add-on is created from.",
 			},
-			"application": schema.SingleNestedAttribute{
+			"application_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The Application for which this Add-on was created.",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						Computed:    true,
-						Description: "The name of the Application.",
-					},
-					"id": schema.StringAttribute{
-						Computed:    true,
-						Description: "The ID of the Application.",
-					},
-				},
+				Description: "The ID of the Application that this Add-on is created for.",
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
 				Computed:    true,
@@ -157,7 +119,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:    true,
 				Description: "The status of the Terraform run for the Add-on.",
 			},
-			"output_values": schema.ListNestedAttribute{
+			/*"output_values": schema.ListNestedAttribute{
 				Computed: true,
 				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
@@ -181,7 +143,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 						},
 					},
 				},
-			},
+			},*/
 		},
 	}
 }
@@ -202,9 +164,9 @@ func (d *DataSourceAddOn) Configure(ctx context.Context, req datasource.Configur
 	d.client = client
 }
 
-// TODO: Convert count from uint64 to int64, add support for application, definition, created at, status, created by, (output values?)
+// TODO: Output values?
 func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state DataSourceAddOnModel
+	var state AddOnResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
 	client := d.client
@@ -242,14 +204,6 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	state.Summary = types.StringValue(addOn.Summary)
 
-	if addOn.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
-			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
-		}
-		state.TerraformNoCodeModule = tfcNoCode
-	}
-
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOn.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -259,6 +213,18 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		labels = types.ListNull(types.StringType)
 	}
 	state.Labels = labels
+
+	if addOn.TerraformNocodeModule != nil {
+		tfcNoCode := &tfcNoCodeModule{
+			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
+			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
+		}
+		state.TerraformNoCodeModule, diags = types.ObjectValueFrom(ctx, tfcNoCode.attrTypes(), tfcNoCode)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	// set plan.description if it's not null or addOn.description is not empty
 	state.Description = types.StringValue(addOn.Description)
@@ -291,40 +257,18 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		state.Count = types.Int64Value(installedCount)
 	}
 
-	// Display the reference to the Definition in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Definition in the state
 	if addOn.Definition != nil {
-		definitionRef := &addOnDefinitionRef{}
-		if addOn.Definition.Name != "" {
-			definitionRef.Name = types.StringValue(addOn.Definition.Name)
-		} else if addOn.Definition.ID != "" {
-			definitionRef.ID = types.StringValue(addOn.Definition.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading definition ref",
-				"the definition reference was missing, no ID or Name found")
-			return
+		if addOn.Definition.ID != "" {
+			state.DefinitionID = types.StringValue(addOn.Definition.ID)
 		}
-		state.Definition = definitionRef
 	}
 
-	// Display the reference to the Application in the plan,
-	// prioritizing displaying Name because it is more user-friendly
+	// Display the reference to the Application in the state
 	if addOn.Application != nil {
-		applicationRef := &addOnApplicationRef{}
-		if addOn.Application.Name != "" {
-			applicationRef.Name = types.StringValue(addOn.Application.Name)
-		} else if addOn.Application.ID != "" {
-			applicationRef.ID = types.StringValue(addOn.Application.ID)
-		} else {
-			// One of the above cases has to be true, this should not happen
-			resp.Diagnostics.AddError(
-				"error reading application ref",
-				"the application reference was missing, no ID or Name found")
-			return
+		if addOn.Application.ID != "" {
+			state.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
-		state.Application = applicationRef
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
