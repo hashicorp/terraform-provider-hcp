@@ -40,6 +40,8 @@ type AddOnResource struct {
 type AddOnResourceModel struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrgID          types.String `tfsdk:"organization_id"`
 	Summary        types.String `tfsdk:"summary"`
 	Labels         types.List   `tfsdk:"labels"`
 	Description    types.String `tfsdk:"description"`
@@ -82,6 +84,21 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"name": schema.StringAttribute{
 				Description: "The name of the Add-on.",
 				Required:    true,
+			},
+			"organization_id": schema.StringAttribute{
+				Description: "The ID of the HCP organization where the Waypoint AddOn is located.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"project_id": schema.StringAttribute{
+				Description: "The ID of the HCP project where the Waypoint AddOn is located.",
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"summary": schema.StringAttribute{
 				Description: "A short summary of the Add-on.",
@@ -220,6 +237,9 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
 
 	orgID := r.client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -310,6 +330,8 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	plan.ID = types.StringValue(addOn.ID)
 	plan.Name = types.StringValue(addOn.Name)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOn.Summary)
 
 	plan.Description = types.StringValue(addOn.Description)
@@ -443,6 +465,8 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	state.ID = types.StringValue(addOn.ID)
 	state.Name = types.StringValue(addOn.Name)
+	state.ProjectID = types.StringValue(projectID)
+	state.OrgID = types.StringValue(orgID)
 	state.Summary = types.StringValue(addOn.Summary)
 
 	state.Description = types.StringValue(addOn.Description)
@@ -591,6 +615,8 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	plan.ID = types.StringValue(addOn.ID)
 	plan.Name = types.StringValue(addOn.Name)
+	plan.ProjectID = types.StringValue(projectID)
+	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOn.Summary)
 
 	plan.Description = types.StringValue(addOn.Description)
