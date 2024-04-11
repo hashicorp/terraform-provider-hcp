@@ -64,7 +64,7 @@ func testAccCheckWaypointAddOnExists(t *testing.T, resourceName string, addOnMod
 		client := acctest.HCPClients(t)
 		// Get the project ID and ID from state
 		projectID := rs.Primary.Attributes["project_id"]
-		appTempID := rs.Primary.Attributes["id"]
+		addOnID := rs.Primary.Attributes["id"]
 		orgID := client.Config.OrganizationID
 
 		loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -73,7 +73,7 @@ func testAccCheckWaypointAddOnExists(t *testing.T, resourceName string, addOnMod
 		}
 
 		// Fetch the add-on
-		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, appTempID)
+		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, addOnID)
 		if err != nil {
 			return err
 		}
@@ -102,7 +102,7 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 		addOn, err := clients.GetAddOnByID(context.Background(), client, loc, id)
 		if err != nil {
 			// expected (500 because the application is destroyed as well)
-			if clients.IsResponseCodeInternalError(err) {
+			if clients.IsResponseCodeNotFound(err) {
 				return nil
 			}
 			return err
