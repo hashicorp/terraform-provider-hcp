@@ -5,6 +5,10 @@ package clients
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strconv"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 
@@ -118,7 +122,6 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 
 // OpenVaultSecretsAppSecret will retrieve the latest secret for a Vault Secrets app, including it's value.
 func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20230613OpenSecret, error) {
-
 	getParams := secret_service.NewOpenAppSecretParams()
 	getParams.Context = ctx
 	getParams.AppName = appName
@@ -126,11 +129,25 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
 
-	getResp, err := client.VaultSecrets.OpenAppSecret(getParams, nil)
-	if err != nil {
-		return nil, err
+	var getResp *secret_service.OpenAppSecretOK
+	var err error
+	for attempt := 0; attempt < retryCount; attempt++ {
+		getResp, err = client.VaultSecrets.OpenAppSecret(getParams, nil)
+		if err != nil {
+			serviceErr, ok := err.(*secret_service.OpenAppSecretDefault)
+			if !ok {
+				return nil, err
+			}
+			if shouldRetryErrorCode(serviceErr.Code(), []int{429}) {
+				backOffDuration := getAPIBackoffDuration(serviceErr)
+				fmt.Printf("The api rate limit exceeded, attempt: %d trying in %d seconds", (attempt + 1), int64(backOffDuration.Seconds()))
+				time.Sleep(backOffDuration)
+				continue
+			}
+			return nil, err
+		}
+		break
 	}
-
 	return getResp.Payload.Secret, nil
 }
 
@@ -150,4 +167,17 @@ func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	}
 
 	return nil
+}
+
+func getAPIBackoffDuration(serviceErr *secret_service.OpenAppSecretDefault) time.Duration {
+	re := regexp.MustCompile(`try again in (\d+) seconds`)
+	match := re.FindStringSubmatch(serviceErr.Error())
+	baseDelayUnit := 60
+	if len(match) > 1 {
+		retryCountInSec, err := strconv.Atoi(match[1])
+		if err == nil {
+			baseDelayUnit = retryCountInSec
+		}
+	}
+	return time.Duration(baseDelayUnit) * time.Second
 }
