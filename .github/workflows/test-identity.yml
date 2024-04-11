@@ -6,87 +6,40 @@ on:
       - 'internal/provider/iam/**'
 
 jobs:
-  # ensure go.mod and go.sum are updated
-  depscheck:
-    name: Check Dependencies
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-    - name: Set up Go
-      uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-      id: go
-
-
-    - name: Run 'go mod tidy' and check for differences
-      run: |
-        make depscheck
-
-  # ensure the code builds
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-    - name: Set up Go
-      uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-      id: go
-
-    - name: Get dependencies
-      run: |
-        go mod download
-
-    - name: Build
-      run: |
-        go build -v .
-
-  # run identity acceptance tests
   identity_tests:
-    name: Run Identity specific tests
-    needs: build
+    name: Run identity specific tests
     runs-on: ubuntu-latest
     steps:
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-    - name: Set up Go
-      uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-      id: go
-
-    - name: Get dependencies
-      run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
-        go mod download
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         
-    - name: Run identity tests
-      env:
-        HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
-        HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
-        HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
-        HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-        HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
-        HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
-      run: |
-          make testacc-ci TEST=./internal/provider/iam
-    
-    - name: Upload Coverage Artifacts
-      uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
-      with:
-        name: Identity Test Coverage
-        path: identity-coverage.html
+      - name: Set up Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+        id: go
+
+      - name: Run 'go mod tidy' and check for differences
+        run: |
+          make depscheck
+
+      - name: Get dependencies
+        run: |
+          go mod download
+
+      - name: Build
+        run: |
+          go build -v .
+
+      - name: Run identity tests
+        env:
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
+          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
+          HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
+        run: |
+            make testacc-ci TEST=./internal/provider/iam
