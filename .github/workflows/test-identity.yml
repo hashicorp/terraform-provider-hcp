@@ -75,8 +75,15 @@ jobs:
         go mod download
         
     - name: Run identity tests
+      env:
+        HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
+        HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
+        HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
+        HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
+        HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
+        HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
       run: |
-        make testacc-ci TEST=./internal/provider/iam
+          make testacc-ci TEST=./internal/provider/iam
     
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
