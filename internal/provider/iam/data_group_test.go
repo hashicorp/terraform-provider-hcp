@@ -40,5 +40,3 @@ func testAccGroupConfig(name, description string) string {
 	}
 `, name, description)
 }
-
-// This is a test to see if the identity test action works as expected. Do not merge!
