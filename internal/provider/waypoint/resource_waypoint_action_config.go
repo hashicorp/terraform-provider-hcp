@@ -357,8 +357,8 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	params := &waypoint_service.WaypointServiceDeleteActionConfigParams{
 		NamespaceID: ns.ID,
-		ActionID:    &data.ID.ValueString(),
-		ActionName:  &data.Name.ValueString(),
+		ActionID:    data.ID.ValueStringPointer(),
+		ActionName:  data.Name.ValueStringPointer(),
 	}
 
 	_, err = r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
