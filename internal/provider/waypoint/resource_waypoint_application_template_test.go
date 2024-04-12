@@ -132,16 +132,16 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 func testAppTemplateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_application_template" "test" {
-  name    = "%s"
-  summary = "some summary for fun"
+  name                     = "%s"
+  summary                  = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
-    source  = "some source"
-    version = "some version"
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
   }
   terraform_cloud_workspace_details = {
-    name                 = "some name"
-    terraform_project_id = "some id"
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
 }`, name)
