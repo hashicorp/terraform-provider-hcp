@@ -130,12 +130,12 @@ resource "hcp_waypoint_add_on_definition" "test" {
   summary = "some summary for fun"
   description = "some description for fun"
   terraform_no_code_module = {
-    source  = "some source"
-    version = "some version"
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
   }
   terraform_cloud_workspace_details = {
-    name                 = "some name"
-    terraform_project_id = "some id"
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
 }`, name)
 }
