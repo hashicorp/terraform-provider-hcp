@@ -11,6 +11,7 @@ import (
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/models"
@@ -140,7 +141,7 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 			}
 			if shouldRetryErrorCode(serviceErr.Code(), []int{429}) {
 				backOffDuration := getAPIBackoffDuration(serviceErr)
-				fmt.Printf("The api rate limit exceeded, attempt: %d trying in %d seconds", (attempt + 1), int64(backOffDuration.Seconds()))
+				tflog.Debug(ctx, fmt.Sprintf("The api rate limit has been exceeded, retrying in %d seconds, attempt: %d", int64(backOffDuration.Seconds()), (attempt+1)))
 				time.Sleep(backOffDuration)
 				continue
 			}
