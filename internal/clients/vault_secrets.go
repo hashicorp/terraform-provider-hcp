@@ -6,6 +6,7 @@ package clients
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"time"
@@ -139,7 +140,8 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 			if !ok {
 				return nil, err
 			}
-			if shouldRetryErrorCode(serviceErr.Code(), []int{429}) {
+
+			if shouldRetryErrorCode(serviceErr.Code(), []int{http.StatusTooManyRequests}) {
 				backOffDuration := getAPIBackoffDuration(serviceErr)
 				tflog.Debug(ctx, fmt.Sprintf("The api rate limit has been exceeded, retrying in %d seconds, attempt: %d", int64(backOffDuration.Seconds()), (attempt+1)))
 				time.Sleep(backOffDuration)
@@ -173,12 +175,12 @@ func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 func getAPIBackoffDuration(serviceErr *secret_service.OpenAppSecretDefault) time.Duration {
 	re := regexp.MustCompile(`try again in (\d+) seconds`)
 	match := re.FindStringSubmatch(serviceErr.Error())
-	baseDelayUnit := 60
+	backoffSeconds := 60
 	if len(match) > 1 {
-		retryCountInSec, err := strconv.Atoi(match[1])
+		backoffSecondsOverride, err := strconv.Atoi(match[1])
 		if err == nil {
-			baseDelayUnit = retryCountInSec
+			backoffSeconds = backoffSecondsOverride
 		}
 	}
-	return time.Duration(baseDelayUnit) * time.Second
+	return time.Duration(backoffSeconds) * time.Second
 }
