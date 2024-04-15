@@ -8,12 +8,12 @@ import (
 	"fmt"
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -41,7 +41,6 @@ func (d *DataSourceActionConfig) Metadata(ctx context.Context, req datasource.Me
 	resp.TypeName = req.ProviderTypeName + "_waypoint_action_config"
 }
 
-// TODO: Add remaining data types
 func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The Waypoint Action Config data source retrieves information on a given Action Config.",
@@ -76,6 +75,49 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 			"action_url": schema.StringAttribute{
 				Description: "The URL to trigger an action on. Only used in Custom mode",
 				Computed:    true,
+			},
+			/*"created_at": schema.StringAttribute{
+				Description: "The timestamp when the Action Config was created in the database.",
+				Computed:    true,
+			},*/
+			"request": schema.ListNestedAttribute{
+				Description: "The kind of HTTP request this config should trigger.",
+				Computed:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"custom": schema.ListNestedAttribute{
+							Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
+							Computed:    true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"method": schema.StringAttribute{
+										Description: "The HTTP method to use for the request.",
+										Computed:    true,
+									},
+									"headers": schema.MapAttribute{
+										Description: "Key value headers to send with the request.",
+										Computed:    true,
+									},
+									"url": schema.StringAttribute{
+										Description: "The full URL this request should make when invoked.",
+										Computed:    true,
+									},
+									"body": schema.StringAttribute{
+										Description: "The body to be submitted with the request.",
+										Computed:    true,
+									},
+								},
+							},
+						},
+						/*"github": schema.ListNestedAttribute{
+							Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
+							Optional:    true,
+						},
+						"agent": schema.ListNestedAttribute{
+							Optional: true,
+						},*/
+					},
+				},
 			},
 		},
 	}
@@ -124,11 +166,7 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 	var actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig
 	var err error
 
-	if data.ID.IsNull() {
-		actionCfg, err = clients.GetActionConfigByName(ctx, client, loc, data.Name.ValueString())
-	} else if data.Name.IsNull() {
-		actionCfg, err = clients.GetActionConfigByID(ctx, client, loc, data.ID.ValueString())
-	}
+	actionCfg, err = clients.GetActionConfig(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
@@ -140,4 +178,41 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
+
+	data.Request = actionConfigRequest{}
+	headerMap := make(map[types.String][]types.String)
+
+	var diags diag.Diagnostics
+
+	// In the future, expand this to accommodate other types of requests
+	if actionCfg.Request.Custom != nil {
+		data.Request.custom = customRequest{}
+		if actionCfg.Request.Custom.Method != nil {
+			methodString, err := ConvertMethodToStringType(*actionCfg.Request.Custom.Method)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP Method",
+					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
+				)
+			} else {
+				data.Request.custom.Method = methodString
+			}
+		}
+		if actionCfg.Request.Custom.Headers != nil {
+			for _, header := range actionCfg.Request.Custom.Headers {
+				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+			}
+			data.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+		if actionCfg.Request.Custom.URL != "" {
+			data.Request.custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+		}
+		if actionCfg.Request.Custom.Body != "" {
+			data.Request.custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+		}
+	}
 }

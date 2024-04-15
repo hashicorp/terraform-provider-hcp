@@ -10,6 +10,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -35,9 +36,9 @@ type ActionConfigResourceModel struct {
 	Description types.String `tfsdk:"description"`
 	NamespaceID types.String `tfsdk:"namespace_id"`
 	ActionURL   types.String `tfsdk:"action_url"`
-	CreatedAt   types.String `tfsdk:"created_at"`
-	//TODO: Add custom type here instead probably
-	Request types.Object `tfsdk:"request"`
+	//CreatedAt   types.String `tfsdk:"created_at"`
+
+	Request actionConfigRequest `tfsdk:"request"`
 }
 
 type actionConfigRequest struct {
@@ -49,6 +50,44 @@ type customRequest struct {
 	Headers types.Map    `tfsdk:"headers"`
 	URL     types.String `tfsdk:"url"`
 	Body    types.String `tfsdk:"body"`
+}
+
+func ConvertMethodToStringType(method waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod) (types.String, error) {
+	var methodString types.String
+	switch method {
+	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodGET:
+		methodString = types.StringValue("GET")
+	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPOST:
+		methodString = types.StringValue("POST")
+	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPUT:
+		methodString = types.StringValue("PUT")
+	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPATCH:
+		methodString = types.StringValue("PATCH")
+	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodDELETE:
+		methodString = types.StringValue("DELETE")
+	default:
+		return methodString, fmt.Errorf("unknown method")
+	}
+	return methodString, nil
+}
+
+func ConvertMethodToEnumType(method string) (waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod, error) {
+	var methodEnum waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod
+	switch method {
+	case "GET":
+		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodGET
+	case "POST":
+		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPOST
+	case "PUT":
+		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPUT
+	case "PATCH":
+		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPATCH
+	case "DELETE":
+		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodDELETE
+	default:
+		return methodEnum, fmt.Errorf("unknown method")
+	}
+	return methodEnum, nil
 }
 
 func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -94,10 +133,10 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The URL to trigger an action on. Only used in Custom mode",
 				Optional:    true,
 			},
-			"created_at": schema.StringAttribute{
+			/*"created_at": schema.StringAttribute{
 				Description: "The timestamp when the Action Config was created in the database.",
 				Computed:    true,
-			},
+			},*/
 			"request": schema.ListNestedAttribute{
 				Description: "The kind of HTTP request this config should trigger.",
 				Required:    true,
@@ -115,6 +154,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 									"headers": schema.MapAttribute{
 										Description: "Key value headers to send with the request.",
 										Optional:    true,
+										ElementType: types.StringType,
 									},
 									"url": schema.StringAttribute{
 										Description: "The full URL this request should make when invoked.",
@@ -193,7 +233,9 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{},
+		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
+			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+		},
 	}
 
 	if !plan.Name.IsUnknown() {
@@ -206,6 +248,37 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 
 	if !plan.ActionURL.IsUnknown() {
 		modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
+	}
+
+	// This is a proxy for the request type, as custom.Method is required for custom requests
+	if !plan.Request.custom.Method.IsUnknown() {
+		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+
+		method, err := ConvertMethodToEnumType(plan.Request.custom.Method.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP Method",
+				"Expected GET, POST, PUT, DELETE, or PATCH",
+			)
+			return
+		}
+		modelBody.ActionConfig.Request.Custom.Method = &method
+
+		if !plan.Request.custom.Headers.IsUnknown() {
+			for key, value := range plan.Request.custom.Headers.Elements() {
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+					Key:   key,
+					Value: value.String(),
+				})
+			}
+		}
+		if !plan.Request.custom.URL.IsUnknown() {
+			modelBody.ActionConfig.Request.Custom.URL = plan.Request.custom.URL.ValueString()
+		}
+		if !plan.Request.custom.Body.IsUnknown() {
+			modelBody.ActionConfig.Request.Custom.Body = plan.Request.custom.Body.ValueString()
+
+		}
 	}
 
 	params := &waypoint_service.WaypointServiceCreateActionConfigParams{
@@ -236,6 +309,43 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
+
+	plan.Request = actionConfigRequest{}
+	headerMap := make(map[types.String][]types.String)
+
+	var diags diag.Diagnostics
+
+	// In the future, expand this to accommodate other types of requests
+	if aCfgModel.Request.Custom != nil {
+		plan.Request.custom = customRequest{}
+		if aCfgModel.Request.Custom.Method != nil {
+			methodString, err := ConvertMethodToStringType(*aCfgModel.Request.Custom.Method)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP Method",
+					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
+				)
+			} else {
+				plan.Request.custom.Method = methodString
+			}
+		}
+		if aCfgModel.Request.Custom.Headers != nil {
+			for _, header := range aCfgModel.Request.Custom.Headers {
+				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+			}
+			plan.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+		if aCfgModel.Request.Custom.URL != "" {
+			plan.Request.custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
+		}
+		if aCfgModel.Request.Custom.Body != "" {
+			plan.Request.custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
+		}
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -287,6 +397,43 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	data.ProjectID = types.StringValue(projectID)
 	data.OrgID = types.StringValue(orgID)
 
+	data.Request = actionConfigRequest{}
+	headerMap := make(map[types.String][]types.String)
+
+	var diags diag.Diagnostics
+
+	// In the future, expand this to accommodate other types of requests
+	if actionCfg.Request.Custom != nil {
+		data.Request.custom = customRequest{}
+		if actionCfg.Request.Custom.Method != nil {
+			methodString, err := ConvertMethodToStringType(*actionCfg.Request.Custom.Method)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP Method",
+					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
+				)
+			} else {
+				data.Request.custom.Method = methodString
+			}
+		}
+		if actionCfg.Request.Custom.Headers != nil {
+			for _, header := range actionCfg.Request.Custom.Headers {
+				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+			}
+			data.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+		if actionCfg.Request.Custom.URL != "" {
+			data.Request.custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+		}
+		if actionCfg.Request.Custom.Body != "" {
+			data.Request.custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -329,7 +476,9 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{},
+		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
+			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+		},
 	}
 
 	// These are the updated values
@@ -341,6 +490,37 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	if !plan.ActionURL.IsUnknown() {
 		modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
+	}
+
+	// This is a proxy for the request type, as custom.Method is required for custom requests
+	if !plan.Request.custom.Method.IsUnknown() {
+		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+
+		method, err := ConvertMethodToEnumType(plan.Request.custom.Method.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP Method",
+				"Expected GET, POST, PUT, DELETE, or PATCH",
+			)
+			return
+		}
+		modelBody.ActionConfig.Request.Custom.Method = &method
+
+		if !plan.Request.custom.Headers.IsUnknown() {
+			for key, value := range plan.Request.custom.Headers.Elements() {
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+					Key:   key,
+					Value: value.String(),
+				})
+			}
+		}
+		if !plan.Request.custom.URL.IsUnknown() {
+			modelBody.ActionConfig.Request.Custom.URL = plan.Request.custom.URL.ValueString()
+		}
+		if !plan.Request.custom.Body.IsUnknown() {
+			modelBody.ActionConfig.Request.Custom.Body = plan.Request.custom.Body.ValueString()
+
+		}
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateActionConfigParams{
@@ -371,6 +551,43 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
+
+	plan.Request = actionConfigRequest{}
+	headerMap := make(map[types.String][]types.String)
+
+	var diags diag.Diagnostics
+
+	// In the future, expand this to accommodate other types of requests
+	if aCfgModel.Request.Custom != nil {
+		plan.Request.custom = customRequest{}
+		if aCfgModel.Request.Custom.Method != nil {
+			methodString, err := ConvertMethodToStringType(*aCfgModel.Request.Custom.Method)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unexpected HTTP Method",
+					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
+				)
+			} else {
+				plan.Request.custom.Method = methodString
+			}
+		}
+		if aCfgModel.Request.Custom.Headers != nil {
+			for _, header := range aCfgModel.Request.Custom.Headers {
+				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+			}
+			plan.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+		if aCfgModel.Request.Custom.URL != "" {
+			plan.Request.custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
+		}
+		if aCfgModel.Request.Custom.Body != "" {
+			plan.Request.custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
+		}
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
