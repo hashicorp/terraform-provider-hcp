@@ -35,9 +35,20 @@ type ActionConfigResourceModel struct {
 	Description types.String `tfsdk:"description"`
 	NamespaceID types.String `tfsdk:"namespace_id"`
 	ActionURL   types.String `tfsdk:"action_url"`
-	// TODO:
-	// request
-	// created_at
+	CreatedAt   types.String `tfsdk:"created_at"`
+	//TODO: Add custom type here instead probably
+	Request types.Object `tfsdk:"request"`
+}
+
+type actionConfigRequest struct {
+	custom customRequest `tfsdk:"custom"`
+}
+
+type customRequest struct {
+	Method  types.String `tfsdk:"method"`
+	Headers types.Map    `tfsdk:"headers"`
+	URL     types.String `tfsdk:"url"`
+	Body    types.String `tfsdk:"body"`
 }
 
 func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -83,6 +94,49 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The URL to trigger an action on. Only used in Custom mode",
 				Optional:    true,
 			},
+			"created_at": schema.StringAttribute{
+				Description: "The timestamp when the Action Config was created in the database.",
+				Computed:    true,
+			},
+			"request": schema.ListNestedAttribute{
+				Description: "The kind of HTTP request this config should trigger.",
+				Required:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"custom": schema.ListNestedAttribute{
+							Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
+							Optional:    true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"method": schema.StringAttribute{
+										Description: "The HTTP method to use for the request.",
+										Required:    true,
+									},
+									"headers": schema.MapAttribute{
+										Description: "Key value headers to send with the request.",
+										Optional:    true,
+									},
+									"url": schema.StringAttribute{
+										Description: "The full URL this request should make when invoked.",
+										Optional:    true,
+									},
+									"body": schema.StringAttribute{
+										Description: "The body to be submitted with the request.",
+										Optional:    true,
+									},
+								},
+							},
+						},
+						/*"github": schema.ListNestedAttribute{
+							Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
+							Optional:    true,
+						},
+						"agent": schema.ListNestedAttribute{
+							Optional: true,
+						},*/
+					},
+				},
+			},
 		},
 	}
 }
@@ -106,6 +160,7 @@ func (r *ActionConfigResource) Configure(ctx context.Context, req resource.Confi
 	r.client = client
 }
 
+// TODO: Add support for request and created at
 func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *ActionConfigResourceModel
 
@@ -213,7 +268,7 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 
 	client := r.client
 
-	actionCfg, err := clients.GetActionConfigByID(ctx, client, loc, data.ID.ValueString())
+	actionCfg, err := clients.GetActionConfig(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Action Config not found for organization, removing from state.")

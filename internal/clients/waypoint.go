@@ -26,6 +26,25 @@ func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels
 	return ns.GetPayload().Namespace, nil
 }
 
+// GetActionConfig will retrieve an Action Config using the provided ID
+func GetActionConfig(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionConfigID string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetActionConfigParams{
+		ActionID:    &actionConfigID,
+		NamespaceID: ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetActionConfig(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().ActionConfig, nil
+}
+
 // GetApplicationTemplateByName will retrieve an application template by name
 func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
