@@ -1,0 +1,3 @@
+```release-note:improvement
+CODEOWNERS: Fix vault-secrets resource ownership to @hashicorp/cloud-vault-secrets team.
+```
