@@ -225,8 +225,10 @@ func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, update
 		if diags.HasError() {
 			return diags
 		}
-
-		p.Etag = existingPolicy.Etag
+		// Resources might not have an existing policy
+		if existingPolicy != nil {
+			p.Etag = existingPolicy.Etag
+		}
 	}
 
 	updatedPolicy, setDiags := updater.SetResourceIamPolicy(ctx, &p)
