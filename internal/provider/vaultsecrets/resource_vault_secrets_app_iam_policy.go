@@ -34,7 +34,7 @@ func vaultSecretsAppIAMSchema(binding bool) schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			"resource_name": schema.StringAttribute{
 				Required:    true,
-				Description: "The Name of the HCP resource to apply the IAM Policy to. Either this of the resource ID must be provided",
+				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app ID>.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
