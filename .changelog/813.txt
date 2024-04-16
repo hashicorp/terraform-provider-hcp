@@ -1,0 +1,7 @@
+```release-note:feature
+ Add `hcp_vault_secrets_app_iam_policy` resource.
+ ```
+
+```release-note:feature
+ Add `hcp_vault_secrets_app_iam_binding` resource.
+ ```
