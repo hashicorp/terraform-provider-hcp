@@ -62,6 +62,21 @@ PASS
 ok  	github.com/hashicorp/terraform-provider-hcp/internal/provider	539.112s
 ```
 
+Running a specific test package:
+```sh
+$ make testacc TEST="./internal/provider/iam"
+==> Checking that code complies with gofmt requirements...
+golangci-lint run --config ./golangci-config.yml 
+TF_ACC=1 go test ./internal/provider/iam -v  -timeout 360m -parallel=10
+=== RUN   TestAccGroupDataSource
+--- PASS: TestAccGroupDataSource (8.69s)
+...
+=== RUN   TestAccWorkloadIdentityProviderResource
+--- PASS: TestAccWorkloadIdentityProviderResource (11.67s)
+PASS
+ok      github.com/hashicorp/terraform-provider-hcp/internal/provider/iam       125.260s
+```
+
 Entire resource test suites can be targeted by using the naming convention to
 write the regular expression.
 
