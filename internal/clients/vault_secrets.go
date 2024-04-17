@@ -5,8 +5,14 @@ package clients
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/models"
@@ -118,7 +124,6 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 
 // OpenVaultSecretsAppSecret will retrieve the latest secret for a Vault Secrets app, including it's value.
 func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20230613OpenSecret, error) {
-
 	getParams := secret_service.NewOpenAppSecretParams()
 	getParams.Context = ctx
 	getParams.AppName = appName
@@ -126,11 +131,26 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 	getParams.LocationOrganizationID = loc.OrganizationID
 	getParams.LocationProjectID = loc.ProjectID
 
-	getResp, err := client.VaultSecrets.OpenAppSecret(getParams, nil)
-	if err != nil {
-		return nil, err
-	}
+	var getResp *secret_service.OpenAppSecretOK
+	var err error
+	for attempt := 0; attempt < retryCount; attempt++ {
+		getResp, err = client.VaultSecrets.OpenAppSecret(getParams, nil)
+		if err != nil {
+			serviceErr, ok := err.(*secret_service.OpenAppSecretDefault)
+			if !ok {
+				return nil, err
+			}
 
+			if shouldRetryErrorCode(serviceErr.Code(), []int{http.StatusTooManyRequests}) {
+				backOffDuration := getAPIBackoffDuration(serviceErr)
+				tflog.Debug(ctx, fmt.Sprintf("The api rate limit has been exceeded, retrying in %d seconds, attempt: %d", int64(backOffDuration.Seconds()), (attempt+1)))
+				time.Sleep(backOffDuration)
+				continue
+			}
+			return nil, err
+		}
+		break
+	}
 	return getResp.Payload.Secret, nil
 }
 
@@ -150,4 +170,17 @@ func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	}
 
 	return nil
+}
+
+func getAPIBackoffDuration(serviceErr *secret_service.OpenAppSecretDefault) time.Duration {
+	re := regexp.MustCompile(`try again in (\d+) seconds`)
+	match := re.FindStringSubmatch(serviceErr.Error())
+	backoffSeconds := 60
+	if len(match) > 1 {
+		backoffSecondsOverride, err := strconv.Atoi(match[1])
+		if err == nil {
+			backoffSeconds = backoffSecondsOverride
+		}
+	}
+	return time.Duration(backoffSeconds) * time.Second
 }
