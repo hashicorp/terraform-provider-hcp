@@ -19,7 +19,7 @@ import (
 )
 
 func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
-	var appTemplateModel waypoint.AddOnDefinitionResourceModel
+	var addOnDefinitionModel waypoint.AddOnDefinitionResourceModel
 	resourceName := "hcp_waypoint_add_on_definition.test"
 	name := generateRandomName()
 	updatedName := generateRandomName()
@@ -27,21 +27,21 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAddOnDefinitionDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointAddOnDefinitionDestroy(t, &addOnDefinitionModel),
 		Steps: []resource.TestStep{
 			{
 				Config: testAddOnDefinitionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAddOnDefinitionName(t, &appTemplateModel, name),
+					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
+					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
 			{
 				Config: testAddOnDefinitionConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAddOnDefinitionName(t, &appTemplateModel, updatedName),
+					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
+					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
 			},
