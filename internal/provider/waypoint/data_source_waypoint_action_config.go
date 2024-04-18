@@ -80,43 +80,40 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 				Description: "The timestamp when the Action Config was created in the database.",
 				Computed:    true,
 			},*/
-			"request": schema.ListNestedAttribute{
+			"request": schema.SingleNestedAttribute{
 				Description: "The kind of HTTP request this config should trigger.",
 				Computed:    true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"custom": schema.ListNestedAttribute{
-							Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
-							Computed:    true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"method": schema.StringAttribute{
-										Description: "The HTTP method to use for the request.",
-										Computed:    true,
-									},
-									"headers": schema.MapAttribute{
-										Description: "Key value headers to send with the request.",
-										Computed:    true,
-									},
-									"url": schema.StringAttribute{
-										Description: "The full URL this request should make when invoked.",
-										Computed:    true,
-									},
-									"body": schema.StringAttribute{
-										Description: "The body to be submitted with the request.",
-										Computed:    true,
-									},
-								},
+				Attributes: map[string]schema.Attribute{
+					"custom": schema.SingleNestedAttribute{
+						Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"method": schema.StringAttribute{
+								Description: "The HTTP method to use for the request.",
+								Computed:    true,
+							},
+							"headers": schema.MapAttribute{
+								Description: "Key value headers to send with the request.",
+								Computed:    true,
+								ElementType: types.StringType,
+							},
+							"url": schema.StringAttribute{
+								Description: "The full URL this request should make when invoked.",
+								Computed:    true,
+							},
+							"body": schema.StringAttribute{
+								Description: "The body to be submitted with the request.",
+								Computed:    true,
 							},
 						},
-						/*"github": schema.ListNestedAttribute{
-							Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
-							Optional:    true,
-						},
-						"agent": schema.ListNestedAttribute{
-							Optional: true,
-						},*/
 					},
+					/*"github": schema.ListNestedAttribute{
+						Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
+						Optional:    true,
+					},
+					"agent": schema.ListNestedAttribute{
+						Optional: true,
+					},*/
 				},
 			},
 		},
@@ -166,27 +163,36 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 	var actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig
 	var err error
 
-	actionCfg, err = clients.GetActionConfig(ctx, client, loc, data.ID.ValueString())
+	actionCfg, err = clients.GetActionConfig(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	// TODO: Add remaining data types
-	data.ID = types.StringValue(actionCfg.ID)
-	data.ActionURL = types.StringValue(actionCfg.ActionURL)
+	if actionCfg.ID != "" {
+		data.ID = types.StringValue(actionCfg.ID)
+	}
+	if actionCfg.Name != "" {
+		data.Name = types.StringValue(actionCfg.Name)
+	}
+	if actionCfg.Description != "" {
+		data.Description = types.StringValue(actionCfg.Description)
+	}
+	if actionCfg.ActionURL != "" {
+		data.ActionURL = types.StringValue(actionCfg.ActionURL)
+	}
 
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 
-	data.Request = actionConfigRequest{}
-	headerMap := make(map[types.String][]types.String)
+	data.Request = &actionConfigRequest{}
+	headerMap := make(map[string]string)
 
 	var diags diag.Diagnostics
 
 	// In the future, expand this to accommodate other types of requests
 	if actionCfg.Request.Custom != nil {
-		data.Request.custom = customRequest{}
+		data.Request.Custom = &customRequest{}
 		if actionCfg.Request.Custom.Method != nil {
 			methodString, err := ConvertMethodToStringType(*actionCfg.Request.Custom.Method)
 			if err != nil {
@@ -195,24 +201,28 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
 				)
 			} else {
-				data.Request.custom.Method = methodString
+				data.Request.Custom.Method = methodString
 			}
 		}
 		if actionCfg.Request.Custom.Headers != nil {
 			for _, header := range actionCfg.Request.Custom.Headers {
-				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+				headerMap[header.Key] = header.Value
 			}
-			data.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
+			if len(headerMap) > 0 {
+				data.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			} else {
+				data.Request.Custom.Headers = types.MapNull(types.StringType)
 			}
 		}
 		if actionCfg.Request.Custom.URL != "" {
-			data.Request.custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+			data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
 		}
 		if actionCfg.Request.Custom.Body != "" {
-			data.Request.custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+			data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
 		}
 	}
 }

@@ -27,7 +27,7 @@ func TestAccWaypoint_Action_Config_DataSource_basic(t *testing.T) {
 				// establish the base action config
 				Config: testActionConfigConfig(actionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointActionExists(t, resourceName, &actionConfigModel),
+					testAccCheckWaypointActionConfigExists(t, resourceName, &actionConfigModel),
 				),
 			},
 			{
@@ -46,5 +46,5 @@ func testDataActionConfigConfig(actionName string) string {
 
 data "hcp_waypoint_action_config" "test" {
   name    = hcp_waypoint_action_config.test.name
-}`, testActionConfigConfig(action))
+}`, testActionConfigConfig(actionName))
 }
