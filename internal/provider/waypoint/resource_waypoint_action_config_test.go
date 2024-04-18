@@ -4,11 +4,12 @@
 package waypoint_test
 
 import (
+	"context"
 	"fmt"
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"testing"
 
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -21,7 +22,7 @@ func TestAccWaypoint_Action_Config_basic(t *testing.T) {
 	resourceName := "hcp_waypoint_action_config.test"
 	actionName := generateRandomName()
 
-	resource.Test(t,, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckWaypointActionConfigDestroy(t, &actionCfgModel),
@@ -60,6 +61,7 @@ func testAccCheckWaypointActionConfigExists(t *testing.T, resourceName string, a
 		// Get the project ID and ID from state
 		projectID := rs.Primary.Attributes["project_id"]
 		actionID := rs.Primary.Attributes["id"]
+		actionName := rs.Primary.Attributes["name"]
 		orgID := client.Config.OrganizationID
 
 		loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -68,17 +70,16 @@ func testAccCheckWaypointActionConfigExists(t *testing.T, resourceName string, a
 		}
 
 		// Fetch the action config
-		actionCfg, err := clients.GetActionConfig(client, loc, actionID)
+		actionCfg, err := clients.GetActionConfig(context.Background(), client, loc, actionID, actionName)
 		if err != nil {
 			return err
 		}
 
 		// at this time we're only verifing existence and not checking all the
-		// values, so only set name,id, and project id for now
+		// values, so only set name and id
 		if actionCfgModel != nil {
 			actionCfgModel.Name = types.StringValue(actionCfg.Name)
 			actionCfgModel.ID = types.StringValue(actionCfg.ID)
-			actionCfgModel.ProjectID = types.StringValue(actionCfg.ProjectID)
 		}
 
 		return nil
@@ -89,6 +90,7 @@ func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *wa
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		id := actionConfigModel.ID.ValueString()
+		name := actionConfigModel.Name.ValueString()
 		projectID := actionConfigModel.ProjectID.ValueString()
 		orgID := client.Config.OrganizationID
 
@@ -97,7 +99,7 @@ func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *wa
 			ProjectID:      projectID,
 		}
 
-		actionConfig, err := clients.GetActionConfig(client, loc id)
+		actionConfig, err := clients.GetActionConfig(context.Background(), client, loc, id, name)
 		if err != nil {
 			// expected
 			if clients.IsResponseCodeNotFound(err) {
@@ -116,11 +118,21 @@ func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *wa
 	}
 }
 
-// TODO: Fill this out with remaining information
 func testActionConfigConfig(actionName string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_action_config" "test" {
 	name = "%s"
+	description = "Test action config"
+	request = {
+	    custom = {
+			method = "GET"
+			url = "https://example.com"
+			headers = {
+				Test-Header = "test"
+			}
+			body = "test"
+		}
+	}
 }
 `, actionName)
 }

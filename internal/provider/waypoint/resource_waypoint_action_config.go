@@ -23,6 +23,10 @@ import (
 var _ resource.Resource = &ActionConfigResource{}
 var _ resource.ResourceWithImportState = &ActionConfigResource{}
 
+func NewActionConfigResource() resource.Resource {
+	return &ActionConfigResource{}
+}
+
 type ActionConfigResource struct {
 	client *clients.Client
 }
@@ -38,11 +42,11 @@ type ActionConfigResourceModel struct {
 	ActionURL   types.String `tfsdk:"action_url"`
 	//CreatedAt   types.String `tfsdk:"created_at"`
 
-	Request actionConfigRequest `tfsdk:"request"`
+	Request *actionConfigRequest `tfsdk:"request"`
 }
 
 type actionConfigRequest struct {
-	custom customRequest `tfsdk:"custom"`
+	Custom *customRequest `tfsdk:"custom"`
 }
 
 type customRequest struct {
@@ -104,7 +108,6 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the Action Config.",
 				Computed:    true,
 			},
-			// TODO: Should Name be optional?
 			"name": schema.StringAttribute{
 				Description: "The name of the Action Config.",
 				Required:    true,
@@ -121,8 +124,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			// An Action Config description must be fewer than 125 characters if set.
 			"description": schema.StringAttribute{
 				Description: "A description of the Action Config.",
-				// TODO: Should this be optional?
-				Optional: true,
+				Optional:    true,
 			},
 			"namespace_id": schema.StringAttribute{
 				Description: "Internal Namespace ID",
@@ -130,51 +132,47 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			// Action URL is required if the action is custom
 			"action_url": schema.StringAttribute{
-				Description: "The URL to trigger an action on. Only used in Custom mode",
+				Description: "The URL to trigger an action on. Only used in custom mode",
 				Optional:    true,
 			},
 			/*"created_at": schema.StringAttribute{
 				Description: "The timestamp when the Action Config was created in the database.",
 				Computed:    true,
 			},*/
-			"request": schema.ListNestedAttribute{
+			"request": schema.SingleNestedAttribute{
 				Description: "The kind of HTTP request this config should trigger.",
 				Required:    true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"custom": schema.ListNestedAttribute{
-							Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
-							Optional:    true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"method": schema.StringAttribute{
-										Description: "The HTTP method to use for the request.",
-										Required:    true,
-									},
-									"headers": schema.MapAttribute{
-										Description: "Key value headers to send with the request.",
-										Optional:    true,
-										ElementType: types.StringType,
-									},
-									"url": schema.StringAttribute{
-										Description: "The full URL this request should make when invoked.",
-										Optional:    true,
-									},
-									"body": schema.StringAttribute{
-										Description: "The body to be submitted with the request.",
-										Optional:    true,
-									},
-								},
+				Attributes: map[string]schema.Attribute{
+					"custom": schema.SingleNestedAttribute{
+						Description: "Custom mode allows users to define the HTTP method, the request body, etc.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"method": schema.StringAttribute{
+								Description: "The HTTP method to use for the request.",
+								Required:    true,
+							},
+							"headers": schema.MapAttribute{
+								Description: "Key value headers to send with the request.",
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"url": schema.StringAttribute{
+								Description: "The full URL this request should make when invoked.",
+								Optional:    true,
+							},
+							"body": schema.StringAttribute{
+								Description: "The body to be submitted with the request.",
+								Optional:    true,
 							},
 						},
-						/*"github": schema.ListNestedAttribute{
-							Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
-							Optional:    true,
-						},
-						"agent": schema.ListNestedAttribute{
-							Optional: true,
-						},*/
 					},
+					/*"github": schema.ListNestedAttribute{
+						Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
+						Optional:    true,
+					},
+					"agent": schema.ListNestedAttribute{
+						Optional: true,
+					},*/
 				},
 			},
 		},
@@ -200,7 +198,6 @@ func (r *ActionConfigResource) Configure(ctx context.Context, req resource.Confi
 	r.client = client
 }
 
-// TODO: Add support for request and created at
 func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *ActionConfigResourceModel
 
@@ -250,11 +247,13 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
 	}
 
-	// This is a proxy for the request type, as custom.Method is required for custom requests
-	if !plan.Request.custom.Method.IsUnknown() {
+	var diags diag.Diagnostics
+
+	// This is a proxy for the request type, as Custom.Method is required for Custom requests
+	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method, err := ConvertMethodToEnumType(plan.Request.custom.Method.ValueString())
+		method, err := ConvertMethodToEnumType(plan.Request.Custom.Method.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP Method",
@@ -264,19 +263,25 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		}
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
-		if !plan.Request.custom.Headers.IsUnknown() {
-			for key, value := range plan.Request.custom.Headers.Elements() {
+		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
+			elements := make(map[string]types.String, len(plan.Request.Custom.Headers.Elements()))
+			diags = plan.Request.Custom.Headers.ElementsAs(ctx, &elements, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			for key, value := range elements {
 				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
 					Key:   key,
-					Value: value.String(),
+					Value: value.ValueString(),
 				})
 			}
 		}
-		if !plan.Request.custom.URL.IsUnknown() {
-			modelBody.ActionConfig.Request.Custom.URL = plan.Request.custom.URL.ValueString()
+		if !plan.Request.Custom.URL.IsUnknown() && !plan.Request.Custom.URL.IsNull() {
+			modelBody.ActionConfig.Request.Custom.URL = plan.Request.Custom.URL.ValueString()
 		}
-		if !plan.Request.custom.Body.IsUnknown() {
-			modelBody.ActionConfig.Request.Custom.Body = plan.Request.custom.Body.ValueString()
+		if !plan.Request.Custom.Body.IsUnknown() && !plan.Request.Custom.Body.IsNull() {
+			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
 
 		}
 	}
@@ -301,23 +306,29 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	plan.ID = types.StringValue(aCfgModel.ID)
-	plan.Name = types.StringValue(aCfgModel.Name)
-	plan.Description = types.StringValue(aCfgModel.Description)
-	plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
+	if aCfgModel.ID != "" {
+		plan.ID = types.StringValue(aCfgModel.ID)
+	}
+	if aCfgModel.Name != "" {
+		plan.Name = types.StringValue(aCfgModel.Name)
+	}
+	if aCfgModel.Description != "" {
+		plan.Description = types.StringValue(aCfgModel.Description)
+	}
+	if aCfgModel.ActionURL != "" {
+		plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
+	}
 
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	plan.Request = actionConfigRequest{}
-	headerMap := make(map[types.String][]types.String)
-
-	var diags diag.Diagnostics
+	plan.Request = &actionConfigRequest{}
+	headerMap := make(map[string]string)
 
 	// In the future, expand this to accommodate other types of requests
 	if aCfgModel.Request.Custom != nil {
-		plan.Request.custom = customRequest{}
+		plan.Request.Custom = &customRequest{}
 		if aCfgModel.Request.Custom.Method != nil {
 			methodString, err := ConvertMethodToStringType(*aCfgModel.Request.Custom.Method)
 			if err != nil {
@@ -326,24 +337,28 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
 				)
 			} else {
-				plan.Request.custom.Method = methodString
+				plan.Request.Custom.Method = methodString
 			}
 		}
 		if aCfgModel.Request.Custom.Headers != nil {
 			for _, header := range aCfgModel.Request.Custom.Headers {
-				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+				headerMap[header.Key] = header.Value
 			}
-			plan.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
+			if len(headerMap) > 0 {
+				plan.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			} else {
+				plan.Request.Custom.Headers = types.MapNull(types.StringType)
 			}
 		}
 		if aCfgModel.Request.Custom.URL != "" {
-			plan.Request.custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
+			plan.Request.Custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
 		}
 		if aCfgModel.Request.Custom.Body != "" {
-			plan.Request.custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
+			plan.Request.Custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
 		}
 	}
 
@@ -378,7 +393,7 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 
 	client := r.client
 
-	actionCfg, err := clients.GetActionConfig(ctx, client, loc, data.ID.ValueString())
+	actionCfg, err := clients.GetActionConfig(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Action Config not found for organization, removing from state.")
@@ -389,22 +404,30 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	data.ID = types.StringValue(actionCfg.ID)
-	data.Name = types.StringValue(actionCfg.Name)
-	data.Description = types.StringValue(actionCfg.Description)
-	data.ActionURL = types.StringValue(actionCfg.ActionURL)
+	if actionCfg.ID != "" {
+		data.ID = types.StringValue(actionCfg.ID)
+	}
+	if actionCfg.Name != "" {
+		data.Name = types.StringValue(actionCfg.Name)
+	}
+	if actionCfg.Description != "" {
+		data.Description = types.StringValue(actionCfg.Description)
+	}
+	if actionCfg.ActionURL != "" {
+		data.ActionURL = types.StringValue(actionCfg.ActionURL)
+	}
 
 	data.ProjectID = types.StringValue(projectID)
 	data.OrgID = types.StringValue(orgID)
 
-	data.Request = actionConfigRequest{}
-	headerMap := make(map[types.String][]types.String)
+	data.Request = &actionConfigRequest{}
+	headerMap := make(map[string]string)
 
 	var diags diag.Diagnostics
 
 	// In the future, expand this to accommodate other types of requests
 	if actionCfg.Request.Custom != nil {
-		data.Request.custom = customRequest{}
+		data.Request.Custom = &customRequest{}
 		if actionCfg.Request.Custom.Method != nil {
 			methodString, err := ConvertMethodToStringType(*actionCfg.Request.Custom.Method)
 			if err != nil {
@@ -413,24 +436,28 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
 				)
 			} else {
-				data.Request.custom.Method = methodString
+				data.Request.Custom.Method = methodString
 			}
 		}
 		if actionCfg.Request.Custom.Headers != nil {
 			for _, header := range actionCfg.Request.Custom.Headers {
-				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+				headerMap[header.Key] = header.Value
 			}
-			data.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
+			if len(headerMap) > 0 {
+				data.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			} else {
+				data.Request.Custom.Headers = types.MapNull(types.StringType)
 			}
 		}
 		if actionCfg.Request.Custom.URL != "" {
-			data.Request.custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+			data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
 		}
 		if actionCfg.Request.Custom.Body != "" {
-			data.Request.custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+			data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
 		}
 	}
 
@@ -492,11 +519,13 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
 	}
 
-	// This is a proxy for the request type, as custom.Method is required for custom requests
-	if !plan.Request.custom.Method.IsUnknown() {
+	var diags diag.Diagnostics
+
+	// This is a proxy for the request type, as Custom.Method is required for Custom requests
+	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method, err := ConvertMethodToEnumType(plan.Request.custom.Method.ValueString())
+		method, err := ConvertMethodToEnumType(plan.Request.Custom.Method.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP Method",
@@ -506,19 +535,25 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		}
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
-		if !plan.Request.custom.Headers.IsUnknown() {
-			for key, value := range plan.Request.custom.Headers.Elements() {
+		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
+			elements := make(map[string]types.String, len(plan.Request.Custom.Headers.Elements()))
+			diags = plan.Request.Custom.Headers.ElementsAs(ctx, &elements, false)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			for key, value := range elements {
 				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
 					Key:   key,
-					Value: value.String(),
+					Value: value.ValueString(),
 				})
 			}
 		}
-		if !plan.Request.custom.URL.IsUnknown() {
-			modelBody.ActionConfig.Request.Custom.URL = plan.Request.custom.URL.ValueString()
+		if !plan.Request.Custom.URL.IsUnknown() && !plan.Request.Custom.URL.IsNull() {
+			modelBody.ActionConfig.Request.Custom.URL = plan.Request.Custom.URL.ValueString()
 		}
-		if !plan.Request.custom.Body.IsUnknown() {
-			modelBody.ActionConfig.Request.Custom.Body = plan.Request.custom.Body.ValueString()
+		if !plan.Request.Custom.Body.IsUnknown() && !plan.Request.Custom.Body.IsNull() {
+			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
 
 		}
 	}
@@ -543,23 +578,29 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	plan.ID = types.StringValue(aCfgModel.ID)
-	plan.Name = types.StringValue(aCfgModel.Name)
-	plan.Description = types.StringValue(aCfgModel.Description)
-	plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
+	if aCfgModel.ID != "" {
+		plan.ID = types.StringValue(aCfgModel.ID)
+	}
+	if aCfgModel.Name != "" {
+		plan.Name = types.StringValue(aCfgModel.Name)
+	}
+	if aCfgModel.Description != "" {
+		plan.Description = types.StringValue(aCfgModel.Description)
+	}
+	if aCfgModel.ActionURL != "" {
+		plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
+	}
 
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	plan.Request = actionConfigRequest{}
-	headerMap := make(map[types.String][]types.String)
-
-	var diags diag.Diagnostics
+	plan.Request = &actionConfigRequest{}
+	headerMap := make(map[string]string)
 
 	// In the future, expand this to accommodate other types of requests
 	if aCfgModel.Request.Custom != nil {
-		plan.Request.custom = customRequest{}
+		plan.Request.Custom = &customRequest{}
 		if aCfgModel.Request.Custom.Method != nil {
 			methodString, err := ConvertMethodToStringType(*aCfgModel.Request.Custom.Method)
 			if err != nil {
@@ -568,24 +609,28 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
 				)
 			} else {
-				plan.Request.custom.Method = methodString
+				plan.Request.Custom.Method = methodString
 			}
 		}
 		if aCfgModel.Request.Custom.Headers != nil {
 			for _, header := range aCfgModel.Request.Custom.Headers {
-				headerMap[types.StringValue(header.Key)] = append(headerMap[types.StringValue(header.Key)], types.StringValue(header.Value))
+				headerMap[header.Key] = header.Value
 			}
-			plan.Request.custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
+			if len(headerMap) > 0 {
+				plan.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			} else {
+				plan.Request.Custom.Headers = types.MapNull(types.StringType)
 			}
 		}
 		if aCfgModel.Request.Custom.URL != "" {
-			plan.Request.custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
+			plan.Request.Custom.URL = types.StringValue(aCfgModel.Request.Custom.URL)
 		}
 		if aCfgModel.Request.Custom.Body != "" {
-			plan.Request.custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
+			plan.Request.Custom.Body = types.StringValue(aCfgModel.Request.Custom.Body)
 		}
 	}
 
