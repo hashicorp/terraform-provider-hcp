@@ -46,8 +46,9 @@ type ApplicationTemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 type tfcWorkspace struct {
@@ -59,6 +60,12 @@ type tfcWorkspace struct {
 type tfcNoCodeModule struct {
 	Source  types.String `tfsdk:"source"`
 	Version types.String `tfsdk:"version"`
+}
+
+type tfcVariableOption struct {
+	Name         types.String `tfsdk:"name"`
+	VariableType types.String `tfsdk:"variable_type"`
+	Options      types.List   `tfsdk:"options"`
 }
 
 func (r *ApplicationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -146,6 +153,27 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 					},
 				},
 			},
+			"variable_options": schema.ListNestedAttribute{
+				Optional:    true,
+				Description: "List of variable options for the template",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
+						"options": &schema.ListAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+							Description: "List of options",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -214,6 +242,22 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 		)
 	}
 
+	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	for _, v := range plan.TerraformVariableOptions {
+		strOpts := []string{}
+		diags = v.Options.ElementsAs(ctx, &strOpts, false)
+		if diags.HasError() {
+			return
+		}
+
+		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+			Name:         v.Name.ValueString(),
+			VariableType: v.VariableType.ValueString(),
+			Options:      strOpts,
+			UserEditable: false,
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			Name:                   plan.Name.ValueString(),
@@ -229,6 +273,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 			},
+			VariableOptions: varOpts,
 		},
 	}
 
@@ -236,15 +281,15 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 		NamespaceID: ns.ID,
 		Body:        modelBody,
 	}
-	app, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
+	createTplResp, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating application template", err.Error())
 		return
 	}
 
 	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
-	if app.Payload != nil {
-		appTemplate = app.Payload.ApplicationTemplate
+	if createTplResp.Payload != nil {
+		appTemplate = createTplResp.Payload.ApplicationTemplate
 	}
 	if appTemplate == nil {
 		resp.Diagnostics.AddError("unknown error creating application template", "empty application template returned")
@@ -296,6 +341,23 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
 	}
+
+	var actualVars []*tfcVariableOption
+	for _, v := range appTemplate.VariableOptions {
+		varOptsState := &tfcVariableOption{
+			Name:         types.StringValue(v.Name),
+			VariableType: types.StringValue(v.VariableType),
+		}
+		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
+
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		actualVars = append(actualVars, varOptsState)
+	}
+	plan.TerraformVariableOptions = actualVars
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -359,6 +421,28 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
 		}
 		data.TerraformNoCodeModule = tfcNoCode
+	}
+
+	if appTemplate.VariableOptions != nil && len(appTemplate.VariableOptions) > 0 {
+		varOpts := []*tfcVariableOption{}
+		for _, v := range appTemplate.VariableOptions {
+			varOptsState := &tfcVariableOption{
+				Name:         types.StringValue(v.Name),
+				VariableType: types.StringValue(v.VariableType),
+			}
+
+			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
+			varOptsState.Options = vOpts
+
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			varOpts = append(varOpts, varOptsState)
+		}
+
+		data.TerraformVariableOptions = varOpts
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
@@ -433,6 +517,22 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
+	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	for _, v := range plan.TerraformVariableOptions {
+		strOpts := []string{}
+		diags = v.Options.ElementsAs(ctx, &strOpts, false)
+		if diags.HasError() {
+			return
+		}
+
+		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+			Name:         v.Name.ValueString(),
+			VariableType: v.VariableType.ValueString(),
+			Options:      strOpts,
+			UserEditable: false,
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			Name:                   plan.Name.ValueString(),
@@ -448,6 +548,7 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 			},
+			VariableOptions: varOpts,
 		},
 	}
 
@@ -507,6 +608,22 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 	plan.ReadmeMarkdownTemplate = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	plan.TerraformVariableOptions = []*tfcVariableOption{}
+	for _, v := range appTemplate.VariableOptions {
+		varOptsState := &tfcVariableOption{
+			Name:         types.StringValue(v.Name),
+			VariableType: types.StringValue(v.VariableType),
+		}
+		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
+
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		plan.TerraformVariableOptions = append(plan.TerraformVariableOptions, varOptsState)
 	}
 
 	// Write logs using the tflog package

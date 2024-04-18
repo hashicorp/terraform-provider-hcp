@@ -40,6 +40,10 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 				Config: testDataAppTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 			{
@@ -48,6 +52,10 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(dataSourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 		},

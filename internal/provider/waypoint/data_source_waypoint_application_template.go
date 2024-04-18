@@ -43,8 +43,9 @@ type DataSourceApplicationTemplateModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+	TerraformCloudWorkspace *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModule   *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	VariableOptions         []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewApplicationTemplateDataSource() datasource.DataSource {
@@ -123,6 +124,27 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 					},
 				},
 			},
+			"variable_options": schema.ListNestedAttribute{
+				Optional:    true,
+				Description: "List of variable options for the template",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
+						"options": &schema.ListAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+							Description: "List of options",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -198,6 +220,28 @@ func (d *DataSourceApplicationTemplate) Read(ctx context.Context, req datasource
 			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
 		}
 		data.TerraformNoCodeModule = tfcNoCode
+	}
+
+	if appTemplate.VariableOptions != nil && len(appTemplate.VariableOptions) > 0 {
+		varOpts := []*tfcVariableOption{}
+		for _, v := range appTemplate.VariableOptions {
+			varOptsState := &tfcVariableOption{
+				Name:         types.StringValue(v.Name),
+				VariableType: types.StringValue(v.VariableType),
+			}
+
+			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
+			varOptsState.Options = vOpts
+
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			varOpts = append(varOpts, varOptsState)
+		}
+
+		data.VariableOptions = varOpts
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)

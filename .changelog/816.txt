@@ -1,0 +1,3 @@
+```release-note:improvement
+Support setting variable options on HCP Waypoint templates.
+```

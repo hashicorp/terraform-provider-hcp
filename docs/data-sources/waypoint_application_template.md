@@ -19,6 +19,7 @@ The Waypoint Template data source retrieves information on a given Application T
 - `id` (String) The ID of the Application Template.
 - `name` (String) The name of the Application Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Application Template is located.
+- `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
 
@@ -29,6 +30,16 @@ The Waypoint Template data source retrieves information on a given Application T
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+
+<a id="nestedatt--variable_options"></a>
+### Nested Schema for `variable_options`
+
+Required:
+
+- `name` (String) Variable name
+- `options` (List of String) List of options
+- `variable_type` (String) Variable type
+
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
