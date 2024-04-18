@@ -40,7 +40,7 @@ type ActionConfigResourceModel struct {
 	Description types.String `tfsdk:"description"`
 	NamespaceID types.String `tfsdk:"namespace_id"`
 	ActionURL   types.String `tfsdk:"action_url"`
-	//CreatedAt   types.String `tfsdk:"created_at"`
+	// CreatedAt   types.String `tfsdk:"created_at"`
 
 	Request *actionConfigRequest `tfsdk:"request"`
 }
