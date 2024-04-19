@@ -34,3 +34,4 @@ resource "hcp_vault_secrets_app" "example" {
 
 - `id` (String) Required ID field that is set to the app name.
 - `organization_id` (String) The ID of the HCP organization where the project the HCP Vault Secrets app is located.
+- `resource_name` (String) The app's resource name in the format secrets/project/<project ID>/app/<app ID>.
