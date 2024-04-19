@@ -531,6 +531,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
+		VariableOptions: varOpts,
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{
