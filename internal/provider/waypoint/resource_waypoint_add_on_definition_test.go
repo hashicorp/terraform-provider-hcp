@@ -35,6 +35,10 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
 					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "b"),
 				),
 			},
 			{
@@ -43,6 +47,10 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
 					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "b"),
 				),
 			},
 		},
@@ -134,11 +142,20 @@ resource "hcp_waypoint_add_on_definition" "test" {
   description = "some description for fun"
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.2"
+    version = "0.0.3"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
+  variable_options = [
+	{
+	  name        = "string_variable"
+      variable_type = "string"
+      options = [
+        "b"
+      ]
+    }
+  ]
 }`, name)
 }

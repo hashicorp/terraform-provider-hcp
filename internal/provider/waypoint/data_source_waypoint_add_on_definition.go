@@ -43,8 +43,9 @@ type DataSourceAddOnDefinitionModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewAddOnDefinitionDataSource() datasource.DataSource {
@@ -120,6 +121,27 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 					"version": &schema.StringAttribute{
 						Computed:    true,
 						Description: "Terraform Cloud no-code Module Version",
+					},
+				},
+			},
+			"variable_options": schema.ListNestedAttribute{
+				Optional:    true,
+				Description: "List of variable options for the template",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
+						"options": &schema.ListAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+							Description: "List of options",
+						},
 					},
 				},
 			},
@@ -219,6 +241,28 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	// set state.readme if it's not null or addOnDefinition.readme is not empty
 	if definition.ReadmeMarkdownTemplate.String() == "" {
 		state.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	if definition.VariableOptions != nil && len(definition.VariableOptions) > 0 {
+		varOpts := []*tfcVariableOption{}
+		for _, v := range definition.VariableOptions {
+			varOptsState := &tfcVariableOption{
+				Name:         types.StringValue(v.Name),
+				VariableType: types.StringValue(v.VariableType),
+			}
+
+			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
+			varOptsState.Options = vOpts
+
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			varOpts = append(varOpts, varOptsState)
+		}
+
+		state.TerraformVariableOptions = varOpts
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
