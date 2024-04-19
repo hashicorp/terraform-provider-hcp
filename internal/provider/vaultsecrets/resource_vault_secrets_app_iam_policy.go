@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
 )
@@ -24,9 +23,9 @@ import (
 // (policy/binding). It will be merged with the base policy.
 func vaultSecretsAppIAMSchema(binding bool) schema.Schema {
 	// Determine the description based on if it is for the policy or binding
-	d := "Sets the vault secrets app IAM policy and replaces any existing policy."
+	d := "Sets the Vault Secrets App IAM policy and replaces any existing policy."
 	if binding {
-		d = "Updates the vault secrets app IAM policy to bind a role to a new member. Existing bindings are preserved."
+		d = "Updates the Vault Secrets App IAM policy to bind a role to a new member. Existing bindings are preserved."
 	}
 
 	return schema.Schema{
@@ -84,10 +83,6 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx conte
 
 	res, err := u.client.ResourceService.ResourceServiceGetIamPolicy(params, nil)
 	if err != nil {
-		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "IAM policy not found")
-			return nil, diags
-		}
 		diags.AddError("failed to retrieve resource IAM policy", err.Error())
 		return nil, diags
 	}
