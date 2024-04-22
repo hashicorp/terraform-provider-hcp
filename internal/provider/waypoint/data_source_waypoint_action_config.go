@@ -77,10 +77,6 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 				Description: "The URL to trigger an action on. Only used in Custom mode",
 				Computed:    true,
 			},
-			/*"created_at": schema.StringAttribute{
-				Description: "The timestamp when the Action Config was created in the database.",
-				Computed:    true,
-			},*/
 			"request": schema.SingleNestedAttribute{
 				Description: "The kind of HTTP request this config should trigger.",
 				Computed:    true,
@@ -108,13 +104,6 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 							},
 						},
 					},
-					/*"github": schema.ListNestedAttribute{
-						Description: "GitHub mode is configured to do various operations on GitHub Repositories.",
-						Optional:    true,
-					},
-					"agent": schema.ListNestedAttribute{
-						Optional: true,
-					},*/
 				},
 			},
 		},
@@ -166,7 +155,7 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 
 	actionCfg, err = clients.GetActionConfig(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
+		resp.Diagnostics.AddError(err.Error(), "Failed to find action config by ID or name")
 		return
 	}
 
@@ -192,38 +181,38 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 	var diags diag.Diagnostics
 
 	// In the future, expand this to accommodate other types of requests
-	if actionCfg.Request.Custom != nil {
-		data.Request.Custom = &customRequest{}
-		if actionCfg.Request.Custom.Method != nil {
-			methodString, err := ConvertMethodToStringType(*actionCfg.Request.Custom.Method)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Unexpected HTTP Method",
-					"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
-				)
-			} else {
-				data.Request.Custom.Method = methodString
+
+	data.Request.Custom = &customRequest{}
+	if actionCfg.Request.Custom.Method != nil {
+		methodString, err := convertMethodToStringType(*actionCfg.Request.Custom.Method)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unexpected HTTP Method",
+				"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
+			)
+			return
+		} else {
+			data.Request.Custom.Method = methodString
+		}
+	}
+	if actionCfg.Request.Custom.Headers != nil {
+		for _, header := range actionCfg.Request.Custom.Headers {
+			headerMap[header.Key] = header.Value
+		}
+		if len(headerMap) > 0 {
+			data.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
 			}
+		} else {
+			data.Request.Custom.Headers = types.MapNull(types.StringType)
 		}
-		if actionCfg.Request.Custom.Headers != nil {
-			for _, header := range actionCfg.Request.Custom.Headers {
-				headerMap[header.Key] = header.Value
-			}
-			if len(headerMap) > 0 {
-				data.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
-				resp.Diagnostics.Append(diags...)
-				if resp.Diagnostics.HasError() {
-					return
-				}
-			} else {
-				data.Request.Custom.Headers = types.MapNull(types.StringType)
-			}
-		}
-		if actionCfg.Request.Custom.URL != "" {
-			data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
-		}
-		if actionCfg.Request.Custom.Body != "" {
-			data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
-		}
+	}
+	if actionCfg.Request.Custom.URL != "" {
+		data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+	}
+	if actionCfg.Request.Custom.Body != "" {
+		data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
 	}
 }
