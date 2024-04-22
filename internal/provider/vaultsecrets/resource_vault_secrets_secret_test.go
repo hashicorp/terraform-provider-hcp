@@ -5,7 +5,6 @@ package vaultsecrets_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -15,7 +14,6 @@ import (
 func TestAccVaultSecretsResourceSecret(t *testing.T) {
 	testAppName1 := generateRandomSlug()
 	testAppName2 := generateRandomSlug()
-	projectID := os.Getenv("HCP_PROJECT_ID")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,20 +35,28 @@ func TestAccVaultSecretsResourceSecret(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {
-					createTestApp(t, testAppName2)
-				},
 				Config: fmt.Sprintf(`
-				resource "hcp_vault_secrets_secret" "example" {
+				resource "hcp_project" "example" {
+					name        = "test-project"
+				}
+
+				resource "hcp_vault_secrets_app" "example" {
 					app_name = %q
+					description = "Acceptance test run"
+					project_id = hcp_project.example.resource_id
+			  	}
+
+				resource "hcp_vault_secrets_secret" "example" {
+					app_name = hcp_vault_secrets_app.example.app_name
 					secret_name = "test_secret"
 					secret_value = "super secret"
+					project_id = hcp_project.example.resource_id
 				}`, testAppName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "app_name", testAppName2),
 					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "secret_name", "test_secret"),
 					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "secret_value", "super secret"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_secret.example", "project_id", projectID),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_secret.example", "project_id"),
 				),
 			},
 		},
