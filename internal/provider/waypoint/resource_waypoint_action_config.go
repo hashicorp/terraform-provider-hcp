@@ -518,7 +518,7 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	plan.Request = &actionConfigRequest{}
 
 	if aCfgModel.Request.Custom != nil {
-		diags = readCustomConfig(ctx, data, aCfgModel)
+		diags = readCustomConfig(ctx, plan, aCfgModel)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
