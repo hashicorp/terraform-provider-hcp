@@ -1,0 +1,14 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "HCP Waypoint"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} `{{.Type}}`
+
+-> **Note:** HCP Waypoint is currently in public beta.
+
+{{ .Description | trimspace }}
+
+{{ .SchemaMarkdown | trimspace }}
