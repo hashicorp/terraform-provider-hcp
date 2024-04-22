@@ -1,3 +1,7 @@
+```release-note:improvement
+Return resource name when a Vault Secrets App is created
+```
+
 ```release-note:feature
  Add `hcp_vault_secrets_app_iam_policy` resource.
  ```
