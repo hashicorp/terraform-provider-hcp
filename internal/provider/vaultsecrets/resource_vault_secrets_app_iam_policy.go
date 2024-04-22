@@ -33,7 +33,7 @@ func vaultSecretsAppIAMSchema(binding bool) schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			"resource_name": schema.StringAttribute{
 				Required:    true,
-				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app ID>.",
+				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

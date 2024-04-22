@@ -72,7 +72,7 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 			},
 			"resource_name": schema.StringAttribute{
 				Computed:    true,
-				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app ID>.",
+				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
 			},
 		},
 	}
