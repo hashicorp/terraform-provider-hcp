@@ -28,9 +28,9 @@ resource "hcp_vault_secrets_app" "example" {
 ### Optional
 
 - `description` (String) The Vault Secrets app description
+- `project_id` (String) The ID of the HCP project where the HCP Vault Secrets app is located.
 
 ### Read-Only
 
 - `id` (String) Required ID field that is set to the app name.
 - `organization_id` (String) The ID of the HCP organization where the project the HCP Vault Secrets app is located.
-- `project_id` (String) The ID of the HCP project where the HCP Vault Secrets app is located.
