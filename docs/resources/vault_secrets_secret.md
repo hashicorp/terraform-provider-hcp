@@ -30,8 +30,11 @@ resource "hcp_vault_secrets_secret" "example" {
 - `secret_name` (String) The name of the secret
 - `secret_value` (String, Sensitive) The value of the secret
 
+### Optional
+
+- `project_id` (String) The ID of the HCP project where the HCP Vault Secrets secret is located.
+
 ### Read-Only
 
 - `id` (String) The id of the resource
 - `organization_id` (String) The ID of the HCP organization where the project the HCP Vault Secrets secret is located.
-- `project_id` (String) The ID of the HCP project where the HCP Vault Secrets secret is located.
