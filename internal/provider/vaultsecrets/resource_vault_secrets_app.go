@@ -70,6 +70,10 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Description: "The ID of the HCP organization where the project the HCP Vault Secrets app is located.",
 				Computed:    true,
 			},
+			"resource_name": schema.StringAttribute{
+				Computed:    true,
+				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
+			},
 		},
 	}
 }
@@ -99,6 +103,7 @@ type VaultSecretsApp struct {
 	Description    types.String `tfsdk:"description"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
+	ResourceName   types.String `tfsdk:"resource_name"`
 }
 
 func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -130,6 +135,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 	plan.ProjectID = types.StringValue(loc.ProjectID)
+	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -160,6 +166,7 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 
 	state.AppName = types.StringValue(res.Name)
 	state.Description = types.StringValue(res.Description)
+	state.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -192,6 +199,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 	plan.ProjectID = types.StringValue(loc.ProjectID)
+	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -219,4 +227,8 @@ func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.Delet
 		resp.Diagnostics.AddError("Error deleting app", err.Error())
 		return
 	}
+}
+
+func generateResourceName(projectID, appName string) string {
+	return fmt.Sprintf("secrets/project/%s/app/%s", projectID, appName)
 }

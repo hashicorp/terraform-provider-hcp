@@ -86,7 +86,7 @@ func (u *projectIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mo
 	params.ID = u.projectID
 	res, err := u.client.Project.ProjectServiceGetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		diags.AddError("failed to retrieve project IAM policy", err.Error())
 		return nil, diags
 	}
 
@@ -104,7 +104,7 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 
 	res, err := u.client.Project.ProjectServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		diags.AddError("failed to retrieve project IAM policy", err.Error())
 		return nil, diags
 	}
 
