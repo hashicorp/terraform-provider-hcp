@@ -225,7 +225,6 @@ func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, update
 		if diags.HasError() {
 			return diags
 		}
-
 		p.Etag = existingPolicy.Etag
 	}
 
