@@ -50,6 +50,8 @@ type ApplicationResourceModel struct {
 
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
+
+	InputVars types.Map `tfsdk:"input_vars"`
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -122,6 +124,12 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"input_vars": schema.MapAttribute{
+				Optional: true,
+				Description: "Input variables for the Application. These are " +
+					"key-value pairs that are used to configure the Application.",
+				ElementType: types.StringType,
 			},
 		},
 	}

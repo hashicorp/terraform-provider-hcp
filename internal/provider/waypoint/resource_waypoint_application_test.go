@@ -34,6 +34,8 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.string_variable", "a"),
 				),
 			},
 		},
@@ -129,17 +131,30 @@ resource "hcp_waypoint_application_template" "test" {
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.2"
+    version = "0.0.3"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+  variable_options = [
+	{
+	  name        = "string_variable"
+      variable_type = "string"
+      options = [
+        "a"
+      ]
+    }
+  ]
 }
 
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
   application_template_id = hcp_waypoint_application_template.test.id
+
+  input_vars = {
+	"string_variable" = "a"
+  }
 }`, tempName, appName)
 }
