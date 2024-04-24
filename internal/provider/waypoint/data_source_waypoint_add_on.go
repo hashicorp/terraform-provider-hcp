@@ -119,7 +119,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:    true,
 				Description: "The status of the Terraform run for the Add-on.",
 			},
-			/*"output_values": schema.ListNestedAttribute{
+			"output_values": schema.ListNestedAttribute{
 				Computed: true,
 				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
@@ -143,7 +143,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 						},
 					},
 				},
-			},*/
+			},
 		},
 	}
 }
@@ -239,8 +239,6 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	state.CreatedBy = types.StringValue(addOn.CreatedBy)
 
-	// TODO: Add support for outputValues
-
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
 	if err != nil {
@@ -269,6 +267,30 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		if addOn.Application.ID != "" {
 			state.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
+	}
+
+	if addOn.OutputValues != nil {
+		outputList := make([]*outputValue, len(addOn.OutputValues))
+		for i, outputVal := range addOn.OutputValues {
+			output := &outputValue{
+				Name:      types.StringValue(outputVal.Name),
+				Type:      types.StringValue(outputVal.Type),
+				Value:     types.StringValue(outputVal.Value),
+				Sensitive: types.BoolValue(outputVal.Sensitive),
+			}
+			outputList[i] = output
+		}
+		if len(outputList) > 0 || len(outputList) != len(state.OutputValues.Elements()) {
+			state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		} else {
+			state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+		}
+	} else {
+		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
