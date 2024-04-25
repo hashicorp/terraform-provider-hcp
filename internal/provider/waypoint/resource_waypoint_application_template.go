@@ -6,7 +6,6 @@ package waypoint
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -381,8 +380,8 @@ func readVarOpts(
 		optsList, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
 		d.Append(diags...)
 		if d.HasError() {
-			return nil, errors.New(fmt.Sprintf("error reading options for "+
-				"variable %q into list of string", v.Name))
+			return nil, fmt.Errorf("error reading options for "+
+				"variable %q into list of string", v.Name)
 		}
 
 		varWithOpts.Options = optsList
