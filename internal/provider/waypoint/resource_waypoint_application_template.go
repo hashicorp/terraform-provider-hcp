@@ -6,11 +6,13 @@ package waypoint
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -66,6 +68,7 @@ type tfcVariableOption struct {
 	Name         types.String `tfsdk:"name"`
 	VariableType types.String `tfsdk:"variable_type"`
 	Options      types.List   `tfsdk:"options"`
+	UserEditable types.Bool   `tfsdk:"user_editable"`
 }
 
 func (r *ApplicationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -171,6 +174,11 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 							Required:    true,
 							Description: "List of options",
 						},
+						"user_editable": &schema.BoolAttribute{
+							Optional: true,
+							Description: "Whether the variable is editable by the user " +
+								"creating an application.",
+						},
 					},
 				},
 			},
@@ -254,7 +262,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
-			UserEditable: false,
+			UserEditable: v.UserEditable.ValueBool(),
 		})
 	}
 
@@ -342,22 +350,11 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 		plan.ReadmeMarkdownTemplate = types.StringNull()
 	}
 
-	var actualVars []*tfcVariableOption
-	for _, v := range appTemplate.VariableOptions {
-		varOptsState := &tfcVariableOption{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-		}
-		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
-
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		actualVars = append(actualVars, varOptsState)
+	plan.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
-	plan.TerraformVariableOptions = actualVars
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -365,6 +362,34 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func readVarOpts(
+	ctx context.Context,
+	v []*waypoint_models.HashicorpCloudWaypointTFModuleVariable,
+	d *diag.Diagnostics,
+) ([]*tfcVariableOption, error) {
+	var varOpts []*tfcVariableOption
+
+	for _, v := range v {
+		varWithOpts := &tfcVariableOption{
+			Name:         types.StringValue(v.Name),
+			VariableType: types.StringValue(v.VariableType),
+			UserEditable: types.BoolValue(v.UserEditable),
+		}
+
+		optsList, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
+		d.Append(diags...)
+		if d.HasError() {
+			return nil, errors.New(fmt.Sprintf("error reading options for "+
+				"variable %q into list of string", v.Name))
+		}
+
+		varWithOpts.Options = optsList
+
+		varOpts = append(varOpts, varWithOpts)
+	}
+	return varOpts, nil
 }
 
 func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -423,26 +448,10 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 		data.TerraformNoCodeModule = tfcNoCode
 	}
 
-	if appTemplate.VariableOptions != nil && len(appTemplate.VariableOptions) > 0 {
-		varOpts := []*tfcVariableOption{}
-		for _, v := range appTemplate.VariableOptions {
-			varOptsState := &tfcVariableOption{
-				Name:         types.StringValue(v.Name),
-				VariableType: types.StringValue(v.VariableType),
-			}
-
-			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
-			varOptsState.Options = vOpts
-
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			varOpts = append(varOpts, varOptsState)
-		}
-
-		data.TerraformVariableOptions = varOpts
+	data.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
@@ -529,7 +538,7 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
-			UserEditable: false,
+			UserEditable: v.UserEditable.ValueBool(),
 		})
 	}
 
@@ -610,20 +619,10 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 		plan.ReadmeMarkdownTemplate = types.StringNull()
 	}
 
-	plan.TerraformVariableOptions = []*tfcVariableOption{}
-	for _, v := range appTemplate.VariableOptions {
-		varOptsState := &tfcVariableOption{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-		}
-		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
-
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		plan.TerraformVariableOptions = append(plan.TerraformVariableOptions, varOptsState)
+	plan.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	// Write logs using the tflog package

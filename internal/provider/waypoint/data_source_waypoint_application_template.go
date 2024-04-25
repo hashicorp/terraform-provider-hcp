@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -125,7 +126,7 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 				},
 			},
 			"variable_options": schema.ListNestedAttribute{
-				Optional:    true,
+				Computed:    true,
 				Description: "List of variable options for the template",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -222,26 +223,10 @@ func (d *DataSourceApplicationTemplate) Read(ctx context.Context, req datasource
 		data.TerraformNoCodeModule = tfcNoCode
 	}
 
-	if appTemplate.VariableOptions != nil && len(appTemplate.VariableOptions) > 0 {
-		varOpts := []*tfcVariableOption{}
-		for _, v := range appTemplate.VariableOptions {
-			varOptsState := &tfcVariableOption{
-				Name:         types.StringValue(v.Name),
-				VariableType: types.StringValue(v.VariableType),
-			}
-
-			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
-			varOptsState.Options = vOpts
-
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			varOpts = append(varOpts, varOptsState)
-		}
-
-		data.VariableOptions = varOpts
+	data.VariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
