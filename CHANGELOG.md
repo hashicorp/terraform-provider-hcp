@@ -1,3 +1,24 @@
+## v0.87.0 (April 25, 2024)
+
+FEATURES:
+
+* Add `hcp_vault_secrets_app_iam_binding` resource. [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* Add `hcp_vault_secrets_app_iam_policy` resource. [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* New resource: Add `hcp_waypoint_add_on` resource for managing Waypoint Add-ons.
+ New data-source: Add `data.hcp_waypoint_add_on` data-source for Waypoint Add-ons. [[GH-807](https://github.com/hashicorp/terraform-provider-hcp/pull/807)]
+
+IMPROVEMENTS:
+
+* Add GitHub Action to run identity-specific tests [[GH-810](https://github.com/hashicorp/terraform-provider-hcp/pull/810)]
+* CODEOWNERS: Fix the vault-secrets resource ownership to @hashicorp/cloud-vault-secrets team. [[GH-820](https://github.com/hashicorp/terraform-provider-hcp/pull/820)]
+* CODEOWNERS: Fix vault-secrets resource ownership to @hashicorp/cloud-vault-secrets team. [[GH-814](https://github.com/hashicorp/terraform-provider-hcp/pull/814)]
+* Documentation: Gracefully handle rate limiting error on `hcp_vault_secrets_secret` resource. [[GH-812](https://github.com/hashicorp/terraform-provider-hcp/pull/812)]
+* Return resource name when a Vault Secrets App is created [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* Vault secret resources can now be created with an optional project ID. If project ID is present, the resource will be created within that project. [[GH-808](https://github.com/hashicorp/terraform-provider-hcp/pull/808)]
+
+BUG FIXES:
+
+* Fixes the case where Vault secret resources ignore provider project changes. [[GH-808](https://github.com/hashicorp/terraform-provider-hcp/pull/808)]
 ## v0.86.0 (April 04, 2024)
 
 FEATURES:
