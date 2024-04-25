@@ -1,0 +1,4 @@
+```release-note:bug
+Fix documentation of hcp_vault_secrets_app_iam_binding and hcp_vault_secrets_app_iam_policy
+
+```
