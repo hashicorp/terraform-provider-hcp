@@ -1,3 +1,8 @@
+## v0.87.1 (April 25, 2024)
+
+BUG FIXES:
+
+* Fix documentation of hcp_vault_secrets_app_iam_binding and hcp_vault_secrets_app_iam_policy [[GH-825](https://github.com/hashicorp/terraform-provider-hcp/pull/825)]
 ## v0.87.0 (April 25, 2024)
 
 FEATURES:
