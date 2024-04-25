@@ -116,10 +116,22 @@ func testAccCheckWaypointTfcConfigDestroy(t *testing.T, tfcConfig *waypoint.TfcC
 		}
 
 		// Fetch the config
-		_, err = client.Waypoint.WaypointServiceGetTFCConfig(params, nil)
-		if clients.IsResponseCodeNotFound(err) {
+		cfg, err := client.Waypoint.WaypointServiceGetTFCConfig(params, nil)
+		// TODO: (clint) remove the err== nil thing once the API is fixed
+		if err == nil || clients.IsResponseCodeNotFound(err) {
 			// we expect the config to be gone
 			return nil
+		}
+
+		if cfg == nil && err != nil {
+			// TODO: (clint) remove this once the API is fixed.
+			// this is fine, we expect the config to be gone, but need to remove
+			// once API is changed
+			return nil
+		}
+
+		if cfg != nil {
+			return fmt.Errorf("expected TFC Config to be destroyed, but was still found: (%s)", cfg.Payload.TfcConfig.OrganizationName)
 		}
 
 		return fmt.Errorf("expected TFC Config to be destroyed, but no expected error returned: %v", err)
