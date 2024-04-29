@@ -159,6 +159,7 @@ resource "hcp_waypoint_application_template" "test" {
       options = [
         "a"
       ]
+      user_editable = false
     }
   ]
 }`, name)

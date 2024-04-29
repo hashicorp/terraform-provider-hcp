@@ -143,6 +143,10 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 							Required:    true,
 							Description: "List of options",
 						},
+						"user_editable": &schema.BoolAttribute{
+							Required:    true,
+							Description: "Whether the variable is editable by the user creating an application",
+						},
 					},
 				},
 			},
