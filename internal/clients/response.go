@@ -31,3 +31,8 @@ func IsResponseCodeInternalError(erro error) bool {
 		return strings.Contains(erro.Error(), fmt.Sprintf("[%d]", http.StatusInternalServerError))
 	}
 }
+
+type ErrorWithCode interface {
+	error
+	Code() int
+}
