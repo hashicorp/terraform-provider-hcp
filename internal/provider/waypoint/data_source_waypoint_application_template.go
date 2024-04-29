@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -43,8 +44,9 @@ type DataSourceApplicationTemplateModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+	TerraformCloudWorkspace *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModule   *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	VariableOptions         []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewApplicationTemplateDataSource() datasource.DataSource {
@@ -123,6 +125,31 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 					},
 				},
 			},
+			"variable_options": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "List of variable options for the template",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable type",
+						},
+						"options": &schema.ListAttribute{
+							ElementType: types.StringType,
+							Computed:    true,
+							Description: "List of options",
+						},
+						"user_editable": &schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the variable is editable by the user creating an application",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -198,6 +225,12 @@ func (d *DataSourceApplicationTemplate) Read(ctx context.Context, req datasource
 			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
 		}
 		data.TerraformNoCodeModule = tfcNoCode
+	}
+
+	data.VariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
