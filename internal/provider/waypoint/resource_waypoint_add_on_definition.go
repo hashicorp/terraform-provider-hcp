@@ -344,7 +344,12 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 
 		actualVars = append(actualVars, varOptsState)
 	}
-	plan.TerraformVariableOptions = actualVars
+
+	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -428,27 +433,10 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 		state.TerraformNoCodeModule = tfcNoCode
 	}
 
-	if definition.VariableOptions != nil && len(definition.VariableOptions) > 0 {
-		varOpts := []*tfcVariableOption{}
-		for _, v := range definition.VariableOptions {
-			varOptsState := &tfcVariableOption{
-				Name:         types.StringValue(v.Name),
-				VariableType: types.StringValue(v.VariableType),
-				UserEditable: types.BoolValue(v.UserEditable),
-			}
-
-			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
-			varOptsState.Options = vOpts
-
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			varOpts = append(varOpts, varOptsState)
-		}
-
-		state.TerraformVariableOptions = varOpts
+	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -616,7 +604,11 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 
 		actualVars = append(actualVars, varOptsState)
 	}
-	plan.TerraformVariableOptions = actualVars
+	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log

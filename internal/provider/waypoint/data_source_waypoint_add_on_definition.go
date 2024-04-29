@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -247,27 +248,10 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 		state.ReadmeMarkdownTemplate = types.StringNull()
 	}
 
-	if definition.VariableOptions != nil && len(definition.VariableOptions) > 0 {
-		varOpts := []*tfcVariableOption{}
-		for _, v := range definition.VariableOptions {
-			varOptsState := &tfcVariableOption{
-				Name:         types.StringValue(v.Name),
-				VariableType: types.StringValue(v.VariableType),
-				UserEditable: types.BoolValue(v.UserEditable),
-			}
-
-			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
-			varOptsState.Options = vOpts
-
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			varOpts = append(varOpts, varOptsState)
-		}
-
-		state.TerraformVariableOptions = varOpts
+	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
