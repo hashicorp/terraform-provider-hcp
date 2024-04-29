@@ -131,20 +131,20 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
-							Required:    true,
+							Computed:    true,
 							Description: "Variable name",
 						},
 						"variable_type": &schema.StringAttribute{
-							Required:    true,
+							Computed:    true,
 							Description: "Variable type",
 						},
 						"options": &schema.ListAttribute{
 							ElementType: types.StringType,
-							Required:    true,
+							Computed:    true,
 							Description: "List of options",
 						},
 						"user_editable": &schema.BoolAttribute{
-							Required:    true,
+							Computed:    true,
 							Description: "Whether the variable is editable by the user creating an application",
 						},
 					},
