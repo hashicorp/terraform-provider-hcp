@@ -44,6 +44,7 @@ func TestAccWaypointData_Add_On_Definition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.0", "b"),
+					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 			{
@@ -56,6 +57,7 @@ func TestAccWaypointData_Add_On_Definition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.0", "b"),
+					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 		},

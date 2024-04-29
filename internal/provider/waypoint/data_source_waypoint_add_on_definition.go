@@ -125,22 +125,26 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 				},
 			},
 			"variable_options": schema.ListNestedAttribute{
-				Optional:    true,
+				Computed:    true,
 				Description: "List of variable options for the template",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
-							Required:    true,
+							Computed:    true,
 							Description: "Variable name",
 						},
 						"variable_type": &schema.StringAttribute{
-							Required:    true,
+							Computed:    true,
 							Description: "Variable type",
 						},
 						"options": &schema.ListAttribute{
 							ElementType: types.StringType,
-							Required:    true,
+							Computed:    true,
 							Description: "List of options",
+						},
+						"user_editable": &schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the variable is editable by the user creating an add-on",
 						},
 					},
 				},
@@ -249,6 +253,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 			varOptsState := &tfcVariableOption{
 				Name:         types.StringValue(v.Name),
 				VariableType: types.StringValue(v.VariableType),
+				UserEditable: types.BoolValue(v.UserEditable),
 			}
 
 			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)

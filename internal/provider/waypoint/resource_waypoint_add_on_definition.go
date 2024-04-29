@@ -154,6 +154,10 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 							Required:    true,
 							Description: "List of options",
 						},
+						"user_editable": &schema.BoolAttribute{
+							Required:    true,
+							Description: "Whether the variable is editable by the user creating an add-on",
+						},
 					},
 				},
 			},
@@ -243,7 +247,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
-			UserEditable: false,
+			UserEditable: v.UserEditable.ValueBool(),
 		})
 	}
 
@@ -329,6 +333,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		varOptsState := &tfcVariableOption{
 			Name:         types.StringValue(v.Name),
 			VariableType: types.StringValue(v.VariableType),
+			UserEditable: types.BoolValue(v.UserEditable),
 		}
 		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
 
@@ -429,6 +434,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 			varOptsState := &tfcVariableOption{
 				Name:         types.StringValue(v.Name),
 				VariableType: types.StringValue(v.VariableType),
+				UserEditable: types.BoolValue(v.UserEditable),
 			}
 
 			vOpts, diags := types.ListValueFrom(ctx, types.StringType, v.Options)
@@ -511,7 +517,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
-			UserEditable: false,
+			UserEditable: v.UserEditable.ValueBool(),
 		})
 	}
 
@@ -599,6 +605,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		varOptsState := &tfcVariableOption{
 			Name:         types.StringValue(v.Name),
 			VariableType: types.StringValue(v.VariableType),
+			UserEditable: types.BoolValue(v.UserEditable),
 		}
 		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
 

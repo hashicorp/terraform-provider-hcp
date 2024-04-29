@@ -39,6 +39,7 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "b"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 			{
@@ -51,6 +52,7 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "b"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 		},
@@ -155,6 +157,7 @@ resource "hcp_waypoint_add_on_definition" "test" {
       options = [
         "b"
       ]
+      user_editable = false
     }
   ]
 }`, name)
