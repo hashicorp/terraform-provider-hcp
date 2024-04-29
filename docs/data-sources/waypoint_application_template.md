@@ -52,7 +52,7 @@ Read-Only:
 <a id="nestedatt--variable_options"></a>
 ### Nested Schema for `variable_options`
 
-Required:
+Read-Only:
 
 - `name` (String) Variable name
 - `options` (List of String) List of options
