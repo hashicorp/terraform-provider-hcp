@@ -328,23 +328,6 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
-	var actualVars []*tfcVariableOption
-	for _, v := range addOnDefinition.VariableOptions {
-		varOptsState := &tfcVariableOption{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-			UserEditable: types.BoolValue(v.UserEditable),
-		}
-		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
-
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		actualVars = append(actualVars, varOptsState)
-	}
-
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
 	if err != nil {
 		tflog.Error(ctx, err.Error())
@@ -588,22 +571,6 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
-	var actualVars []*tfcVariableOption
-	for _, v := range addOnDefinition.VariableOptions {
-		varOptsState := &tfcVariableOption{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-			UserEditable: types.BoolValue(v.UserEditable),
-		}
-		varOptsState.Options, diags = types.ListValueFrom(ctx, types.StringType, v.Options)
-
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		actualVars = append(actualVars, varOptsState)
-	}
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
 	if err != nil {
 		tflog.Error(ctx, err.Error())
