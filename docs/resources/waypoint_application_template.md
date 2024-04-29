@@ -27,6 +27,7 @@ Waypoint Application Template resource
 - `labels` (List of String) List of labels attached to this Application Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Application Template is located.
 - `readme_markdown_template` (String) Instructions for using the template (markdown format supported
+- `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
 
@@ -49,3 +50,17 @@ Required:
 
 - `source` (String) No-Code Module Source
 - `version` (String) No-Code Module Version
+
+
+<a id="nestedatt--variable_options"></a>
+### Nested Schema for `variable_options`
+
+Required:
+
+- `name` (String) Variable name
+- `options` (List of String) List of options
+- `variable_type` (String) Variable type
+
+Optional:
+
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an application.
