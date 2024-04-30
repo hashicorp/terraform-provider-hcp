@@ -22,8 +22,10 @@
 *vaultsecrets*  @hashicorp/cloud-vault-secrets
 *vault_secrets* @hashicorp/cloud-vault-secrets
 
-# all Vault resources and clients are owned by the vault-cloud team
-**/vault*  @hashicorp/vault-cloud
+# all Vault resources and clients are owned by the vault-cloud team.
+# Adding cloud-vault-secrets here as well, as the patterns match one another and the last one is selected
+# if not in the same line
+**/vault*  @hashicorp/vault-cloud @hashicorp/cloud-vault-secrets
 
 # all Boundary resources and clients are owned by the boundary-cloud team
 *boundary* @hashicorp/boundary-cloud
