@@ -19,8 +19,8 @@
 *packer* @hashicorp/cloud-packer
 
 # all Vault Secrets resources and clients are owned by cloud-vault-secrets team
-**/vaultsecrets/**  @hashicorp/cloud-vault-secrets
-**/vault_secrets/** @hashicorp/cloud-vault-secrets
+*vaultsecrets*  @hashicorp/cloud-vault-secrets
+*vault_secrets* @hashicorp/cloud-vault-secrets
 
 # all Vault resources and clients are owned by the vault-cloud team
 **/vault*  @hashicorp/vault-cloud
