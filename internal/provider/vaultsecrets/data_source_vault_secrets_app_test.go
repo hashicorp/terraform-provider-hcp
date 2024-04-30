@@ -151,6 +151,7 @@ func createTestAppSecret(t *testing.T, appName, secretName, secretValue string) 
 func deleteTestAppSecret(t *testing.T, appName, secretName string) {
 	t.Helper()
 
+	// todo
 	client := acctest.HCPClients(t)
 
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
