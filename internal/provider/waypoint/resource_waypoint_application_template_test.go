@@ -37,6 +37,10 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 			{
@@ -45,6 +49,10 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 		},
@@ -86,7 +94,7 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 			return err
 		}
 
-		// at this time we're only verifing existence and not checking all the
+		// at this time we're only verifying existence and not checking all the
 		// values, so only set name,id, and project id for now
 		if appTemplateModel != nil {
 			appTemplateModel.Name = types.StringValue(template.Name)
@@ -137,13 +145,23 @@ resource "hcp_waypoint_application_template" "test" {
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.2"
+    version = "0.0.3"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+  variable_options = [
+	{
+	  name        = "string_variable"
+      variable_type = "string"
+      options = [
+        "a"
+      ]
+      user_editable = false
+    }
+  ]
 }`, name)
 }
 
