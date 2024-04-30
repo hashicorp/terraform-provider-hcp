@@ -51,7 +51,13 @@ type ApplicationResourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars types.Map `tfsdk:"input_vars"`
+	InputVars []*InputVar `tfsdk:"input_vars"`
+}
+
+type InputVar struct {
+	Name         types.String `tfsdk:"name"`
+	VariableType types.String `tfsdk:"variable_type"`
+	Value        types.String `tfsdk:"value"`
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -125,11 +131,30 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"input_vars": schema.MapAttribute{
-				Optional: true,
-				Description: "Input variables for the Application. These are " +
-					"key-value pairs that are used to configure the Application.",
-				ElementType: types.StringType,
+			"input_vars": schema.ListNestedAttribute{
+				Optional:    true,
+				Description: "Input variables for the Application.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Computed: true,
+							Required: false,
+							Optional: false,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -185,11 +210,20 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	vars := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+	for _, v := range plan.InputVars {
+		vars = append(vars, &waypoint_models.HashicorpCloudWaypointInputVariable{
+			Name:  v.Name.ValueString(),
+			Value: v.Value.ValueString(),
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
 		Name: plan.Name.ValueString(),
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.ApplicationTemplateID.ValueString(),
 		},
+		Variables: vars,
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
@@ -223,6 +257,20 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
 		plan.ReadmeMarkdown = types.StringNull()
+	}
+
+	inputVars, err := clients.GetInputVariables(ctx, client, plan.Name.String(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
+		return
+	}
+
+	for _, v := range inputVars {
+		plan.InputVars = append(plan.InputVars, &InputVar{
+			Name:         types.StringValue(v.Name),
+			VariableType: types.StringValue(v.VariableType),
+			Value:        types.StringValue(v.Value),
+		})
 	}
 
 	// Write logs using the tflog package
@@ -278,6 +326,20 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
 		data.ReadmeMarkdown = types.StringNull()
+	}
+
+	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.String(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
+		return
+	}
+
+	for _, v := range inputVars {
+		data.InputVars = append(data.InputVars, &InputVar{
+			Name:         types.StringValue(v.Name),
+			VariableType: types.StringValue(v.VariableType),
+			Value:        types.StringValue(v.Value),
+		})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
