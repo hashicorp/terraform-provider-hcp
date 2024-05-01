@@ -32,6 +32,8 @@ func IsResponseCodeInternalError(erro error) bool {
 	}
 }
 
+// ErrorWithCode is an interface wrapping the error interface
+// to also return the response status code.
 type ErrorWithCode interface {
 	error
 	Code() int
