@@ -18,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var _ datasource.DataSource = &DataSourceActionConfig{}
-var _ datasource.DataSourceWithConfigValidators = &DataSourceActionConfig{}
+var _ datasource.DataSource = &DataSourceAction{}
+var _ datasource.DataSourceWithConfigValidators = &DataSourceAction{}
 
-func (d DataSourceActionConfig) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+func (d DataSourceAction) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(
 			path.MatchRoot("name"),
@@ -30,47 +30,47 @@ func (d DataSourceActionConfig) ConfigValidators(ctx context.Context) []datasour
 	}
 }
 
-type DataSourceActionConfig struct {
+type DataSourceAction struct {
 	client *clients.Client
 }
 
-func NewActionConfigDataSource() datasource.DataSource {
-	return &DataSourceActionConfig{}
+func NewActionDataSource() datasource.DataSource {
+	return &DataSourceAction{}
 }
 
-func (d *DataSourceActionConfig) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_action_config"
+func (d *DataSourceAction) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_waypoint_action"
 }
 
-func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Waypoint Action Config data source retrieves information on a given Action Config.",
+		MarkdownDescription: "The Waypoint Action data source retrieves information on a given Action.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "The ID of the Action Config.",
+				Description: "The ID of the Action.",
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the Action Config.",
+				Description: "The name of the Action.",
 				Computed:    true,
 				Optional:    true,
 			},
 			"namespace_id": schema.StringAttribute{
-				Description: "The ID of the namespace where the Waypoint Action Config is located.",
+				Description: "The ID of the namespace where the Waypoint Action is located.",
 				Computed:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of the HCP organization where the Waypoint Action Config is located.",
+				Description: "The ID of the HCP organization where the Waypoint Action is located.",
 				Computed:    true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Action Config is located.",
+				Description: "The ID of the HCP project where the Waypoint Action is located.",
 				Optional:    true,
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "A description of the Action Config.",
+				Description: "A description of the Action.",
 				Computed:    true,
 			},
 			"action_url": schema.StringAttribute{
@@ -78,7 +78,7 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 				Computed:    true,
 			},
 			"request": schema.SingleNestedAttribute{
-				Description: "The kind of HTTP request this config should trigger.",
+				Description: "The kind of HTTP request this should trigger.",
 				Computed:    true,
 				Attributes: map[string]schema.Attribute{
 					"custom": schema.SingleNestedAttribute{
@@ -110,7 +110,7 @@ func (d *DataSourceActionConfig) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func (d *DataSourceActionConfig) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceAction) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -126,8 +126,8 @@ func (d *DataSourceActionConfig) Configure(ctx context.Context, req datasource.C
 	d.client = client
 }
 
-func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ActionConfigResourceModel
+func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data ActionResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -150,32 +150,32 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 		ProjectID:      projectID,
 	}
 
-	var actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig
+	var actionModel *waypoint_models.HashicorpCloudWaypointActionConfig
 	var err error
 
-	actionCfg, err = clients.GetActionConfig(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
+	actionModel, err = clients.GetAction(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Failed to find action config by ID or name")
+		resp.Diagnostics.AddError(err.Error(), "Failed to find action by ID or name")
 		return
 	}
 
-	if actionCfg.ID != "" {
-		data.ID = types.StringValue(actionCfg.ID)
+	if actionModel.ID != "" {
+		data.ID = types.StringValue(actionModel.ID)
 	}
-	if actionCfg.Name != "" {
-		data.Name = types.StringValue(actionCfg.Name)
+	if actionModel.Name != "" {
+		data.Name = types.StringValue(actionModel.Name)
 	}
-	if actionCfg.Description != "" {
-		data.Description = types.StringValue(actionCfg.Description)
+	if actionModel.Description != "" {
+		data.Description = types.StringValue(actionModel.Description)
 	}
-	if actionCfg.ActionURL != "" {
-		data.ActionURL = types.StringValue(actionCfg.ActionURL)
+	if actionModel.ActionURL != "" {
+		data.ActionURL = types.StringValue(actionModel.ActionURL)
 	}
 
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 
-	data.Request = &actionConfigRequest{}
+	data.Request = &actionRequest{}
 	headerMap := make(map[string]string)
 
 	var diags diag.Diagnostics
@@ -183,8 +183,8 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 	// In the future, expand this to accommodate other types of requests
 
 	data.Request.Custom = &customRequest{}
-	if actionCfg.Request.Custom.Method != nil {
-		methodString, err := convertMethodToStringType(*actionCfg.Request.Custom.Method)
+	if actionModel.Request.Custom.Method != nil {
+		methodString, err := convertMethodToStringType(*actionModel.Request.Custom.Method)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unexpected HTTP Method",
@@ -195,8 +195,8 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 			data.Request.Custom.Method = methodString
 		}
 	}
-	if actionCfg.Request.Custom.Headers != nil {
-		for _, header := range actionCfg.Request.Custom.Headers {
+	if actionModel.Request.Custom.Headers != nil {
+		for _, header := range actionModel.Request.Custom.Headers {
 			headerMap[header.Key] = header.Value
 		}
 		if len(headerMap) > 0 {
@@ -209,10 +209,10 @@ func (d *DataSourceActionConfig) Read(ctx context.Context, req datasource.ReadRe
 			data.Request.Custom.Headers = types.MapNull(types.StringType)
 		}
 	}
-	if actionCfg.Request.Custom.URL != "" {
-		data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+	if actionModel.Request.Custom.URL != "" {
+		data.Request.Custom.URL = types.StringValue(actionModel.Request.Custom.URL)
 	}
-	if actionCfg.Request.Custom.Body != "" {
-		data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+	if actionModel.Request.Custom.Body != "" {
+		data.Request.Custom.Body = types.StringValue(actionModel.Request.Custom.Body)
 	}
 }

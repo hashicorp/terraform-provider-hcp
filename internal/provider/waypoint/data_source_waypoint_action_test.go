@@ -13,26 +13,26 @@ import (
 )
 
 func TestAccWaypoint_Action_Config_DataSource_basic(t *testing.T) {
-	var actionConfigModel waypoint.ActionConfigResourceModel
-	resourceName := "hcp_waypoint_action_config.test"
+	var actionConfigModel waypoint.ActionResourceModel
+	resourceName := "hcp_waypoint_action.test"
 	dataSourceName := "data." + resourceName
 	actionName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointActionConfigDestroy(t, &actionConfigModel),
+		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionConfigModel),
 		Steps: []resource.TestStep{
 			{
 				// establish the base action config
-				Config: testActionConfigConfig(actionName),
+				Config: testActionConfig(actionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointActionConfigExists(t, resourceName, &actionConfigModel),
+					testAccCheckWaypointActionExists(t, resourceName, &actionConfigModel),
 				),
 			},
 			{
 				// add a data source config to read the action config
-				Config: testDataActionConfigConfig(actionName),
+				Config: testDataActionConfig(actionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", actionName),
 				),
@@ -41,10 +41,10 @@ func TestAccWaypoint_Action_Config_DataSource_basic(t *testing.T) {
 	})
 }
 
-func testDataActionConfigConfig(actionName string) string {
+func testDataActionConfig(actionName string) string {
 	return fmt.Sprintf(`%s
 
-data "hcp_waypoint_action_config" "test" {
-  name    = hcp_waypoint_action_config.test.name
-}`, testActionConfigConfig(actionName))
+data "hcp_waypoint_action" "test" {
+  name    = hcp_waypoint_action.test.name
+}`, testActionConfig(actionName))
 }

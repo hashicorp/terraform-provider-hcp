@@ -26,9 +26,9 @@ func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels
 	return ns.GetPayload().Namespace, nil
 }
 
-// GetActionConfig will retrieve an Action Config using the provided ID by default
+// GetAction will retrieve an Action using the provided ID by default
 // or by name if the ID is not provided
-func GetActionConfig(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionConfigID string, actionConfigName string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
+func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionConfigID string, actionConfigName string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
 		return nil, err

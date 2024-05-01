@@ -20,19 +20,19 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &ActionConfigResource{}
-var _ resource.ResourceWithImportState = &ActionConfigResource{}
+var _ resource.Resource = &ActionResource{}
+var _ resource.ResourceWithImportState = &ActionResource{}
 
-func NewActionConfigResource() resource.Resource {
-	return &ActionConfigResource{}
+func NewActionResource() resource.Resource {
+	return &ActionResource{}
 }
 
-type ActionConfigResource struct {
+type ActionResource struct {
 	client *clients.Client
 }
 
-// ActionConfigModel describes the resource data model.
-type ActionConfigResourceModel struct {
+// ActionModel describes the resource data model.
+type ActionResourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	ProjectID   types.String `tfsdk:"project_id"`
@@ -41,10 +41,10 @@ type ActionConfigResourceModel struct {
 	NamespaceID types.String `tfsdk:"namespace_id"`
 	ActionURL   types.String `tfsdk:"action_url"`
 
-	Request *actionConfigRequest `tfsdk:"request"`
+	Request *actionRequest `tfsdk:"request"`
 }
 
-type actionConfigRequest struct {
+type actionRequest struct {
 	Custom *customRequest `tfsdk:"custom"`
 }
 
@@ -93,36 +93,36 @@ func convertMethodToEnumType(method string) (waypoint_models.HashicorpCloudWaypo
 	return methodEnum, nil
 }
 
-func (r *ActionConfigResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_action_config"
+func (r *ActionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_waypoint_action"
 }
 
-func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "The Waypoint Action Config resource managed the lifecycle of an Action Config.",
+		MarkdownDescription: "The Waypoint Action resource managed the lifecycle of an Action.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "The ID of the Action Config.",
+				Description: "The ID of the Action.",
 				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the Action Config.",
+				Description: "The name of the Action.",
 				Required:    true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Action Config is located.",
+				Description: "The ID of the HCP project where the Action is located.",
 				Computed:    true,
 				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of the HCP organization where the Action Config is located.",
+				Description: "The ID of the HCP organization where the Action is located.",
 				Computed:    true,
 			},
-			// An Action Config description must be fewer than 125 characters if set.
+			// An Action description must be fewer than 125 characters if set.
 			"description": schema.StringAttribute{
-				Description: "A description of the Action Config.",
+				Description: "A description of the Action.",
 				Optional:    true,
 			},
 			"namespace_id": schema.StringAttribute{
@@ -135,7 +135,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional:    true,
 			},
 			"request": schema.SingleNestedAttribute{
-				Description: "The kind of HTTP request this config should trigger.",
+				Description: "The kind of HTTP request this should trigger.",
 				Required:    true,
 				Attributes: map[string]schema.Attribute{
 					"custom": schema.SingleNestedAttribute{
@@ -167,7 +167,7 @@ func (r *ActionConfigResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *ActionConfigResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ActionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -186,8 +186,8 @@ func (r *ActionConfigResource) Configure(ctx context.Context, req resource.Confi
 	r.client = client
 }
 
-func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ActionConfigResourceModel
+func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *ActionResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -279,7 +279,7 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 
 	aCfg, err := r.client.Waypoint.WaypointServiceCreateActionConfig(params, nil)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating Action Config", err.Error())
+		resp.Diagnostics.AddError("Error creating Action", err.Error())
 		return
 	}
 
@@ -288,7 +288,7 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 		aCfgModel = aCfg.Payload.ActionConfig
 	}
 	if aCfgModel == nil {
-		resp.Diagnostics.AddError("Unknown error creating Action Config", "Empty Action Config returned")
+		resp.Diagnostics.AddError("Unknown error creating Action", "Empty Action returned")
 		return
 	}
 
@@ -309,10 +309,10 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	plan.Request = &actionConfigRequest{}
+	plan.Request = &actionRequest{}
 
 	if aCfgModel.Request.Custom != nil {
-		diags = readCustomConfig(ctx, plan, aCfgModel)
+		diags = readCustomAction(ctx, plan, aCfgModel)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -321,14 +321,14 @@ func (r *ActionConfigResource) Create(ctx context.Context, req resource.CreateRe
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "Created Action Config resource")
+	tflog.Trace(ctx, "Created Action resource")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *ActionConfigResourceModel
+func (r *ActionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *ActionResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -350,14 +350,14 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 
 	client := r.client
 
-	actionCfg, err := clients.GetActionConfig(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
+	actionCfg, err := clients.GetAction(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "Action Config not found for organization, removing from state.")
+			tflog.Info(ctx, "Action not found for organization, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error reading Action Config", err.Error())
+		resp.Diagnostics.AddError("Error reading Action", err.Error())
 		return
 	}
 
@@ -377,10 +377,10 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	data.ProjectID = types.StringValue(projectID)
 	data.OrgID = types.StringValue(orgID)
 
-	data.Request = &actionConfigRequest{}
+	data.Request = &actionRequest{}
 
 	if actionCfg.Request.Custom != nil {
-		diags := readCustomConfig(ctx, data, actionCfg)
+		diags := readCustomAction(ctx, data, actionCfg)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -390,8 +390,8 @@ func (r *ActionConfigResource) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ActionConfigResourceModel
+func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *ActionResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -401,8 +401,8 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// get the current state as well, so we know the current name of the
-	// action config for reference during the update
-	var data *ActionConfigResourceModel
+	// action for reference during the update
+	var data *ActionResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -485,7 +485,7 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 
 	actionCfg, err := r.client.Waypoint.WaypointServiceUpdateActionConfig(params, nil)
 	if err != nil {
-		resp.Diagnostics.AddError("Error updating Action Config", err.Error())
+		resp.Diagnostics.AddError("Error updating Action", err.Error())
 		return
 	}
 
@@ -494,7 +494,7 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 		aCfgModel = actionCfg.Payload.ActionConfig
 	}
 	if aCfgModel == nil {
-		resp.Diagnostics.AddError("Unknown error updating Action Config", "Empty Action Config returned")
+		resp.Diagnostics.AddError("Unknown error updating Action", "Empty Action returned")
 		return
 	}
 
@@ -515,10 +515,10 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 	plan.OrgID = types.StringValue(orgID)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
-	plan.Request = &actionConfigRequest{}
+	plan.Request = &actionRequest{}
 
 	if aCfgModel.Request.Custom != nil {
-		diags = readCustomConfig(ctx, plan, aCfgModel)
+		diags = readCustomAction(ctx, plan, aCfgModel)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -527,14 +527,14 @@ func (r *ActionConfigResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "Updated Action Config resource")
+	tflog.Trace(ctx, "Updated Action resource")
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *ActionConfigResourceModel
+func (r *ActionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data *ActionResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -557,7 +557,7 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting Action Config",
+			"Error deleting Action",
 			err.Error(),
 		)
 		return
@@ -572,23 +572,23 @@ func (r *ActionConfigResource) Delete(ctx context.Context, req resource.DeleteRe
 	_, err = r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "Action Config not found for organization during delete call, ignoring")
+			tflog.Info(ctx, "Action not found for organization during delete call, ignoring")
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error deleting Action Config",
+			"Error deleting Action",
 			err.Error(),
 		)
 		return
 	}
 }
-func (r *ActionConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ActionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func readCustomConfig(
+func readCustomAction(
 	ctx context.Context,
-	data *ActionConfigResourceModel,
+	data *ActionResourceModel,
 	actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig,
 ) diag.Diagnostics {
 	data.Request.Custom = &customRequest{}

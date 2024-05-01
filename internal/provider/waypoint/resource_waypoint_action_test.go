@@ -18,20 +18,20 @@ import (
 )
 
 func TestAccWaypoint_Action_Config_basic(t *testing.T) {
-	var actionCfgModel waypoint.ActionConfigResourceModel
-	resourceName := "hcp_waypoint_action_config.test"
+	var actionCfgModel waypoint.ActionResourceModel
+	resourceName := "hcp_waypoint_action.test"
 	actionName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointActionConfigDestroy(t, &actionCfgModel),
+		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionCfgModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testActionConfigConfig(actionName),
+				Config: testActionConfig(actionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointActionConfigExists(t, resourceName, &actionCfgModel),
-					testAccCheckWaypointActionConfigName(t, &actionCfgModel, actionName),
+					testAccCheckWaypointActionExists(t, resourceName, &actionCfgModel),
+					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
 					resource.TestCheckResourceAttr(resourceName, "name", actionName),
 				),
 			},
@@ -39,17 +39,17 @@ func TestAccWaypoint_Action_Config_basic(t *testing.T) {
 	})
 }
 
-// Simple attribute check on the action config received from the API
-func testAccCheckWaypointActionConfigName(_ *testing.T, actionCfgModel *waypoint.ActionConfigResourceModel, nameValue string) resource.TestCheckFunc {
+// Simple attribute check on the action received from the API
+func testAccCheckWaypointActionName(_ *testing.T, actionCfgModel *waypoint.ActionResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if actionCfgModel.Name.ValueString() != nameValue {
-			return fmt.Errorf("expected action config name to be %s, but got %s", nameValue, actionCfgModel.Name.ValueString())
+			return fmt.Errorf("expected action name to be %s, but got %s", nameValue, actionCfgModel.Name.ValueString())
 		}
 		return nil
 	}
 }
 
-func testAccCheckWaypointActionConfigExists(t *testing.T, resourceName string, actionCfgModel *waypoint.ActionConfigResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointActionExists(t *testing.T, resourceName string, actionCfgModel *waypoint.ActionResourceModel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -70,7 +70,7 @@ func testAccCheckWaypointActionConfigExists(t *testing.T, resourceName string, a
 		}
 
 		// Fetch the action config
-		actionCfg, err := clients.GetActionConfig(context.Background(), client, loc, actionID, actionName)
+		actionCfg, err := clients.GetAction(context.Background(), client, loc, actionID, actionName)
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func testAccCheckWaypointActionConfigExists(t *testing.T, resourceName string, a
 	}
 }
 
-func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *waypoint.ActionConfigResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointActionDestroy(t *testing.T, actionConfigModel *waypoint.ActionResourceModel) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		id := actionConfigModel.ID.ValueString()
@@ -99,7 +99,7 @@ func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *wa
 			ProjectID:      projectID,
 		}
 
-		actionConfig, err := clients.GetActionConfig(context.Background(), client, loc, id, name)
+		actionConfig, err := clients.GetAction(context.Background(), client, loc, id, name)
 		if err != nil {
 			// expected
 			if clients.IsResponseCodeNotFound(err) {
@@ -111,18 +111,18 @@ func testAccCheckWaypointActionConfigDestroy(t *testing.T, actionConfigModel *wa
 		// fall through, we expect a not found above but if we get this far then
 		// the test should fail
 		if actionConfig != nil {
-			return fmt.Errorf("expected action config to be destroyed, but it still exists")
+			return fmt.Errorf("expected action to be destroyed, but it still exists")
 		}
 
-		return fmt.Errorf("both action config and error were nil in destroy check, this should not happen")
+		return fmt.Errorf("both action and error were nil in destroy check, this should not happen")
 	}
 }
 
-func testActionConfigConfig(actionName string) string {
+func testActionConfig(actionName string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_action_config" "test" {
+resource "hcp_waypoint_action" "test" {
 	name = "%s"
-	description = "Test action config"
+	description = "Test action"
 	request = {
 	    custom = {
 			method = "GET"
