@@ -7,14 +7,11 @@ import (
 	"net/http"
 
 	"google.golang.org/grpc/codes"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-type ErrorWithCode interface {
-	error
-	Code() int
-}
-
-func isAlreadyExistsError(e ErrorWithCode) bool {
+func isAlreadyExistsError(e clients.ErrorWithCode) bool {
 	switch e.Code() {
 	case int(codes.AlreadyExists), http.StatusConflict:
 		return true
