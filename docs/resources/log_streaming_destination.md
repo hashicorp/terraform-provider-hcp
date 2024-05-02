@@ -7,7 +7,7 @@ description: |-
 
 # hcp_log_streaming_destination (Resource)
 
--> **Note:** This feature is currently in private beta. If you would like early access, please [contact our sales team](https://www.hashicorp.com/contact-sales).
+-> **Note:** This resource is currently in public beta.
 
 The Streaming Destination resource allows users to configure an external log system to stream HCP logs to.
 

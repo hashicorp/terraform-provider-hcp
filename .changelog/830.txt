@@ -1,0 +1,3 @@
+```release-note:improvement
+resource/hcp_log_streaming_destination: Label resource as public beta
+```
