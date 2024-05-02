@@ -98,7 +98,7 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	appSecrets, err := clients.ListVaultSecretsAppSecrets(ctx, client, loc, data.AppName.ValueString())
+	appSecrets, err := clients.OpenVaultSecretsAppSecrets(ctx, client, loc, data.AppName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
@@ -107,13 +107,7 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 	openAppSecrets := map[string]string{}
 	for _, appSecret := range appSecrets {
 		secretName := appSecret.Name
-
-		openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), secretName)
-		if err != nil {
-			resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
-			return
-		}
-		openAppSecrets[secretName] = openSecret.Version.Value
+		openAppSecrets[secretName] = appSecret.Version.Value
 	}
 
 	data.ID = data.AppName

@@ -31,3 +31,10 @@ func IsResponseCodeInternalError(erro error) bool {
 		return strings.Contains(erro.Error(), fmt.Sprintf("[%d]", http.StatusInternalServerError))
 	}
 }
+
+// ErrorWithCode is an interface wrapping the error interface
+// to also return the response status code.
+type ErrorWithCode interface {
+	error
+	Code() int
+}
