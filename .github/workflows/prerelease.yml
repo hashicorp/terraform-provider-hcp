@@ -21,7 +21,8 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/test.yml
     with:
-      skip-e2e-tests: ${{ inputs.skip-tests == true }} # inputs are null when run with the schedule cron
+      # need to use contains because inputs are null for schedule runs
+      skip-e2e-tests: ${{ contains(inputs.skip-tests, 'true') }}
     secrets: inherit
     permissions:
       contents: read
