@@ -39,4 +39,4 @@
 /internal/providersdkv2/statuspage.go @hashicorp/core-sre
 
 # changelog does not need ownership
-/.changelog []
+!/.changelog
