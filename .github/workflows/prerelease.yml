@@ -14,16 +14,6 @@ on:
         description: "Skip the E2E test suite for break-glass scenarios"
         type: boolean
         default: false
-  workflow_call:
-    inputs:
-      release-as-patch:
-        description: "Patch Release (default: Minor)"
-        type: boolean
-        default: false
-      skip-tests:
-        description: "Skip the E2E test suite for break-glass scenarios"
-        type: boolean
-        default: false
 permissions: write-all
 
 jobs:
@@ -31,7 +21,8 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/test.yml
     with:
-      skip-e2e-tests: ${{ inputs.skip-tests }}
+      # need to use contains because inputs are null for schedule runs
+      skip-e2e-tests: ${{ contains(inputs.skip-tests, 'true') }}
     secrets: inherit
     permissions:
       contents: read
