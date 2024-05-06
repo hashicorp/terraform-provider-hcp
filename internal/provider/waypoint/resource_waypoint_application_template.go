@@ -175,6 +175,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 						},
 						"user_editable": &schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 							Description: "Whether the variable is editable by the user " +
 								"creating an application",
 						},

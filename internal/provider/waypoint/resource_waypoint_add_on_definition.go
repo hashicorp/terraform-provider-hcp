@@ -10,7 +10,7 @@ import (
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypointModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -155,7 +155,8 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 							Description: "List of options",
 						},
 						"user_editable": &schema.BoolAttribute{
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 							Description: "Whether the variable is editable by the user creating an add-on",
 						},
 					},
@@ -235,7 +236,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		)
 	}
 
-	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	varOpts := []*waypointModels.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags := v.Options.ElementsAs(ctx, &strOpts, false)
@@ -243,7 +244,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypointModels.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -251,18 +252,18 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
+	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
+		TerraformNocodeModule: &waypointModels.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
@@ -279,7 +280,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	var addOnDefinition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypointModels.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
@@ -476,7 +477,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		}
 	}
 
-	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	varOpts := []*waypointModels.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags := v.Options.ElementsAs(ctx, &strOpts, false)
@@ -484,7 +485,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypointModels.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -493,18 +494,18 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// TODO: add support for Tags
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
+	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
 		Name:                   plan.Name.ValueString(),
 		Summary:                plan.Summary.ValueString(),
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
+		TerraformNocodeModule: &waypointModels.HashicorpCloudWaypointTerraformNocodeModule{
 			// verify these exist in the file
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
 		},
@@ -522,7 +523,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	var addOnDefinition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypointModels.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
