@@ -141,10 +141,7 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 				return nil, err
 			}
 
-			if shouldRetryErrorCode(serviceErr.Code(), []int{http.StatusTooManyRequests}) {
-				backOffDuration := getAPIBackoffDuration(serviceErr)
-				tflog.Debug(ctx, fmt.Sprintf("The api rate limit has been exceeded, retrying in %d seconds, attempt: %d", int64(backOffDuration.Seconds()), (attempt+1)))
-				time.Sleep(backOffDuration)
+			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
 				continue
 			}
 			return nil, err
@@ -152,6 +149,33 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 		break
 	}
 	return getResp.Payload.Secret, nil
+}
+
+func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20230613OpenSecret, error) {
+	params := secret_service.NewOpenAppSecretsParams()
+	params.Context = ctx
+	params.AppName = appName
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+
+	var secrets *secret_service.OpenAppSecretsOK
+	var err error
+	for attempt := 0; attempt < retryCount; attempt++ {
+		secrets, err = client.VaultSecrets.OpenAppSecrets(params, nil)
+		if err != nil {
+			serviceErr, ok := err.(*secret_service.OpenAppSecretsDefault)
+			if !ok {
+				return nil, err
+			}
+			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
+				continue
+			}
+			return nil, err
+		}
+		break
+	}
+
+	return secrets.Payload.Secrets, nil
 }
 
 // DeleteVaultSecretsAppSecret will delete a Vault Secrets application secret.
@@ -172,9 +196,19 @@ func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	return nil
 }
 
-func getAPIBackoffDuration(serviceErr *secret_service.OpenAppSecretDefault) time.Duration {
+func shouldRetryWithSleep(ctx context.Context, err ErrorWithCode, attemptNum int, expectedErrorCodes []int) bool {
+	if shouldRetryErrorCode(err.Code(), expectedErrorCodes) {
+		backOffDuration := getAPIBackoffDuration(err.Error())
+		tflog.Debug(ctx, fmt.Sprintf("error: %q, retrying in %d seconds, attempt: %d", http.StatusText(err.Code()), int64(backOffDuration.Seconds()), attemptNum+1))
+		time.Sleep(backOffDuration)
+		return true
+	}
+	return false
+}
+
+func getAPIBackoffDuration(serviceErrStr string) time.Duration {
 	re := regexp.MustCompile(`try again in (\d+) seconds`)
-	match := re.FindStringSubmatch(serviceErr.Error())
+	match := re.FindStringSubmatch(serviceErrStr)
 	backoffSeconds := 60
 	if len(match) > 1 {
 		backoffSecondsOverride, err := strconv.Atoi(match[1])

@@ -1,3 +1,10 @@
+## v0.88.0 (May 02, 2024)
+
+IMPROVEMENTS:
+
+* Documentation: call OpenAppSecrets instead of List + Open in hcp_vault_secrets_app data source. This improves an issue with additional unnecessary client API usage. [[GH-826](https://github.com/hashicorp/terraform-provider-hcp/pull/826)]
+* Support setting variable options in `hcp_waypoint_application_template`. [[GH-816](https://github.com/hashicorp/terraform-provider-hcp/pull/816)]
+* resource/hcp_log_streaming_destination: Label resource as public beta [[GH-830](https://github.com/hashicorp/terraform-provider-hcp/pull/830)]
 ## v0.87.1 (April 25, 2024)
 
 BUG FIXES:
