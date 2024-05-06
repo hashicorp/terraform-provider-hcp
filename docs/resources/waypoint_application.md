@@ -21,6 +21,7 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 
 ### Optional
 
+- `input_vars` (Attributes List) Input variables for the Application. (see [below for nested schema](#nestedatt--input_vars))
 - `project_id` (String) The ID of the HCP project where the Waypoint Application is located.
 - `readme_markdown` (String) Instructions for using the Application (markdown format supported). Note: this is a base64 encoded string, and can only be set in configuration after initial creation. The initial version of the README is generated from the README Template from source Application Template.
 
@@ -30,3 +31,11 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 - `id` (String) The ID of the Application.
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
+
+<a id="nestedatt--input_vars"></a>
+### Nested Schema for `input_vars`
+
+Required:
+
+- `name` (String) Variable name
+- `value` (String) Variable value

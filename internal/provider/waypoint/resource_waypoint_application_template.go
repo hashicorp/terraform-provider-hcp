@@ -169,6 +169,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 							Description: "Variable type",
 						},
 						"options": &schema.ListAttribute{
+							Optional:    true,
 							ElementType: types.StringType,
 							Description: "List of options",
 						},
