@@ -170,7 +170,6 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 						},
 						"options": &schema.ListAttribute{
 							ElementType: types.StringType,
-							Required:    true,
 							Description: "List of options",
 						},
 						"user_editable": &schema.BoolAttribute{

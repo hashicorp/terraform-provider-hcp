@@ -55,9 +55,8 @@ type ApplicationResourceModel struct {
 }
 
 type InputVar struct {
-	Name         types.String `tfsdk:"name"`
-	VariableType types.String `tfsdk:"variable_type"`
-	Value        types.String `tfsdk:"value"`
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -139,15 +138,6 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						"name": &schema.StringAttribute{
 							Required:    true,
 							Description: "Variable name",
-						},
-						"variable_type": &schema.StringAttribute{
-							Computed: true,
-							Required: false,
-							Optional: false,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-							Description: "Variable type",
 						},
 						"value": &schema.StringAttribute{
 							Required:    true,
@@ -267,9 +257,8 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	for _, v := range inputVars {
 		plan.InputVars = append(plan.InputVars, &InputVar{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-			Value:        types.StringValue(v.Value),
+			Name:  types.StringValue(v.Name),
+			Value: types.StringValue(v.Value),
 		})
 	}
 
@@ -336,9 +325,8 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 
 	for _, v := range inputVars {
 		data.InputVars = append(data.InputVars, &InputVar{
-			Name:         types.StringValue(v.Name),
-			VariableType: types.StringValue(v.VariableType),
-			Value:        types.StringValue(v.Value),
+			Name:  types.StringValue(v.Name),
+			Value: types.StringValue(v.Value),
 		})
 	}
 

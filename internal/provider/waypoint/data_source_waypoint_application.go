@@ -80,6 +80,22 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Internal Namespace ID.",
 			},
+			"input_vars": schema.ListNestedAttribute{
+				Optional:    true,
+				Description: "Input variables for the Application.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable name",
+						},
+						"value": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -155,9 +171,8 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 
 	for _, iv := range inputVars {
 		data.InputVars = append(data.InputVars, &InputVar{
-			Name:         types.StringValue(iv.Name),
-			Value:        types.StringValue(iv.Value),
-			VariableType: types.StringValue(iv.VariableType),
+			Name:  types.StringValue(iv.Name),
+			Value: types.StringValue(iv.Value),
 		})
 	}
 
