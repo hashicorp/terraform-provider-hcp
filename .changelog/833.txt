@@ -1,0 +1,4 @@
+```release-note:improvement
+Add support for input variables to `hcp_waypoint_application` resource and
+data source.
+```
