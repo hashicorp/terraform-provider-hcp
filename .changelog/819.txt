@@ -1,0 +1,3 @@
+```release-note:improvement
+Support setting variable options in `Support setting variable options in `hcp_waypoint_add_on_definition`.
+```

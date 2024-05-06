@@ -8,12 +8,13 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypointModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -43,8 +44,9 @@ type DataSourceAddOnDefinitionModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace    `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule `tfsdk:"terraform_no_code_module"`
+	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
+	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewAddOnDefinitionDataSource() datasource.DataSource {
@@ -123,6 +125,31 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 					},
 				},
 			},
+			"variable_options": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "List of variable options for the template",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable type",
+						},
+						"options": &schema.ListAttribute{
+							ElementType: types.StringType,
+							Computed:    true,
+							Description: "List of options",
+						},
+						"user_editable": &schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the variable is editable by the user creating an add-on",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -166,7 +193,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 		ProjectID:      projectID,
 	}
 
-	var definition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var definition *waypointModels.HashicorpCloudWaypointAddOnDefinition
 	var err error
 
 	if state.ID.IsNull() {
@@ -219,6 +246,12 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	// set state.readme if it's not null or addOnDefinition.readme is not empty
 	if definition.ReadmeMarkdownTemplate.String() == "" {
 		state.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

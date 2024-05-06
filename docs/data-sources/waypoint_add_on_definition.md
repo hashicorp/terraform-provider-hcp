@@ -29,6 +29,7 @@ The Waypoint Add-on Definition data source retrieves information on a given Add-
 - `summary` (String) A short summary of the Add-on Definition.
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
@@ -46,3 +47,14 @@ Read-Only:
 
 - `source` (String) Terraform Cloud no-code Module Source
 - `version` (String) Terraform Cloud no-code Module Version
+
+
+<a id="nestedatt--variable_options"></a>
+### Nested Schema for `variable_options`
+
+Read-Only:
+
+- `name` (String) Variable name
+- `options` (List of String) List of options
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on
+- `variable_type` (String) Variable type
