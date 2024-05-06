@@ -63,4 +63,4 @@ Required:
 
 Optional:
 
-- `user_editable` (Boolean) Whether the variable is editable by the user creating an application.
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an application
