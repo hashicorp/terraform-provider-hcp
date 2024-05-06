@@ -269,28 +269,10 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		}
 	}
 
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 || len(outputList) != len(state.OutputValues.Elements()) {
-			state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
-			state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	diags = ReadOutputs(ctx, addOn, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

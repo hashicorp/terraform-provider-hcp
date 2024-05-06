@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypointmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -387,28 +388,10 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 || len(outputList) != len(plan.OutputValues.Elements()) {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	diags = ReadOutputs(ctx, addOn, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Write logs using the tflog package
@@ -522,28 +505,10 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 	}
 
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 || len(outputList) != len(state.OutputValues.Elements()) {
-			state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
-			state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	diags = ReadOutputs(ctx, addOn, state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -669,28 +634,10 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 || len(outputList) != len(plan.OutputValues.Elements()) {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	diags = ReadOutputs(ctx, addOn, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Write logs using the tflog package
@@ -750,4 +697,31 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func ReadOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if addOn.OutputValues != nil {
+		outputList := make([]*outputValue, len(addOn.OutputValues))
+		for i, outputVal := range addOn.OutputValues {
+			output := &outputValue{
+				Name:      types.StringValue(outputVal.Name),
+				Type:      types.StringValue(outputVal.Type),
+				Value:     types.StringValue(outputVal.Value),
+				Sensitive: types.BoolValue(outputVal.Sensitive),
+			}
+			outputList[i] = output
+		}
+		if len(outputList) > 0 || len(outputList) != len(plan.OutputValues.Elements()) {
+			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+			if diags.HasError() {
+				return diags
+			}
+		} else {
+			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+		}
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+	return diags
 }
