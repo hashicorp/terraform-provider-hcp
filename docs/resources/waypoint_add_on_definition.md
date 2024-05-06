@@ -59,5 +59,8 @@ Required:
 
 - `name` (String) Variable name
 - `options` (List of String) List of options
-- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on
 - `variable_type` (String) Variable type
+
+Optional:
+
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on
