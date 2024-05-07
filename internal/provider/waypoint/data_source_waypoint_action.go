@@ -56,10 +56,6 @@ func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequ
 				Computed:    true,
 				Optional:    true,
 			},
-			"namespace_id": schema.StringAttribute{
-				Description: "The ID of the namespace where the Waypoint Action is located.",
-				Computed:    true,
-			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the Waypoint Action is located.",
 				Computed:    true,
@@ -71,10 +67,6 @@ func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequ
 			},
 			"description": schema.StringAttribute{
 				Description: "A description of the Action.",
-				Computed:    true,
-			},
-			"action_url": schema.StringAttribute{
-				Description: "The URL to trigger an action on. Only used in Custom mode",
 				Computed:    true,
 			},
 			"request": schema.SingleNestedAttribute{
@@ -167,9 +159,6 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 	if actionModel.Description != "" {
 		data.Description = types.StringValue(actionModel.Description)
-	}
-	if actionModel.ActionURL != "" {
-		data.ActionURL = types.StringValue(actionModel.ActionURL)
 	}
 
 	data.OrgID = types.StringValue(client.Config.OrganizationID)

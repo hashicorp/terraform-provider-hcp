@@ -22,14 +22,12 @@ The Waypoint Action resource managed the lifecycle of an Action.
 
 ### Optional
 
-- `action_url` (String) The URL to trigger an action on. Only used in custom mode
 - `description` (String) A description of the Action.
 - `project_id` (String) The ID of the HCP project where the Action is located.
 
 ### Read-Only
 
 - `id` (String) The ID of the Action.
-- `namespace_id` (String) Internal Namespace ID
 - `organization_id` (String) The ID of the HCP organization where the Action is located.
 
 <a id="nestedatt--request"></a>
@@ -44,7 +42,7 @@ Optional:
 
 Required:
 
-- `method` (String) The HTTP method to use for the request.
+- `method` (String) The HTTP method to use for the request. Must be one of: 'GET', 'POST', 'PUT', 'DELETE', or 'PATCH'.
 
 Optional:
 

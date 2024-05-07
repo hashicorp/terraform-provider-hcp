@@ -22,9 +22,7 @@ The Waypoint Action data source retrieves information on a given Action.
 
 ### Read-Only
 
-- `action_url` (String) The URL to trigger an action on. Only used in Custom mode
 - `description` (String) A description of the Action.
-- `namespace_id` (String) The ID of the namespace where the Waypoint Action is located.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Action is located.
 - `request` (Attributes) The kind of HTTP request this should trigger. (see [below for nested schema](#nestedatt--request))
 

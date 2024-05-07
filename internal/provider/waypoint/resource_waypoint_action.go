@@ -10,10 +10,12 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -38,8 +40,6 @@ type ActionResourceModel struct {
 	ProjectID   types.String `tfsdk:"project_id"`
 	OrgID       types.String `tfsdk:"organization_id"`
 	Description types.String `tfsdk:"description"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	ActionURL   types.String `tfsdk:"action_url"`
 
 	Request *actionRequest `tfsdk:"request"`
 }
@@ -125,15 +125,6 @@ func (r *ActionResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "A description of the Action.",
 				Optional:    true,
 			},
-			"namespace_id": schema.StringAttribute{
-				Description: "Internal Namespace ID",
-				Computed:    true,
-			},
-			// Action URL is required if the action is custom
-			"action_url": schema.StringAttribute{
-				Description: "The URL to trigger an action on. Only used in custom mode",
-				Optional:    true,
-			},
 			"request": schema.SingleNestedAttribute{
 				Description: "The kind of HTTP request this should trigger.",
 				Required:    true,
@@ -143,8 +134,11 @@ func (r *ActionResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"method": schema.StringAttribute{
-								Description: "The HTTP method to use for the request.",
+								Description: "The HTTP method to use for the request. Must be one of: 'GET', 'POST', 'PUT', 'DELETE', or 'PATCH'.",
 								Required:    true,
+								Validators: []validator.String{
+									stringvalidator.OneOf("GET", "POST", "PUT", "DELETE", "PATCH"),
+								},
 							},
 							"headers": schema.MapAttribute{
 								Description: "Key value headers to send with the request.",
@@ -229,10 +223,6 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		modelBody.ActionConfig.Description = plan.Description.ValueString()
 	}
 
-	if !plan.ActionURL.IsUnknown() {
-		modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
-	}
-
 	var diags diag.Diagnostics
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
@@ -301,13 +291,9 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	if aCfgModel.Description != "" {
 		plan.Description = types.StringValue(aCfgModel.Description)
 	}
-	if aCfgModel.ActionURL != "" {
-		plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
-	}
 
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
-	plan.NamespaceID = types.StringValue(ns.ID)
 
 	plan.Request = &actionRequest{}
 
@@ -369,9 +355,6 @@ func (r *ActionResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if actionCfg.Description != "" {
 		data.Description = types.StringValue(actionCfg.Description)
-	}
-	if actionCfg.ActionURL != "" {
-		data.ActionURL = types.StringValue(actionCfg.ActionURL)
 	}
 
 	data.ProjectID = types.StringValue(projectID)
@@ -437,7 +420,6 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	// These are the updated values
 	modelBody.ActionConfig.Name = plan.Name.ValueString()
 	modelBody.ActionConfig.Description = plan.Description.ValueString()
-	modelBody.ActionConfig.ActionURL = plan.ActionURL.ValueString()
 
 	var diags diag.Diagnostics
 
@@ -507,13 +489,9 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if aCfgModel.Description != "" {
 		plan.Description = types.StringValue(aCfgModel.Description)
 	}
-	if aCfgModel.ActionURL != "" {
-		plan.ActionURL = types.StringValue(aCfgModel.ActionURL)
-	}
 
 	plan.ProjectID = types.StringValue(projectID)
 	plan.OrgID = types.StringValue(orgID)
-	plan.NamespaceID = types.StringValue(ns.ID)
 
 	plan.Request = &actionRequest{}
 
