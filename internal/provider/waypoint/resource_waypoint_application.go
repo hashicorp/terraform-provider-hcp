@@ -133,6 +133,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"input_vars": schema.ListNestedAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Input variables for the Application.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -205,6 +206,12 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API
+	varTypes := map[string]string{}
+
+	// Prepare the input variables that the user provided to the application
+	// creation request
 	vars := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
 	for _, v := range plan.InputVars {
 		vars = append(vars, &waypoint_models.HashicorpCloudWaypointInputVariable{
@@ -212,6 +219,8 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 			Value:        v.Value.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 		})
+
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
@@ -261,13 +270,31 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	planVars := make([]*InputVar, 0)
 	for _, v := range inputVars {
-		plan.InputVars = append(plan.InputVars, &InputVar{
-			Name:         types.StringValue(v.Name),
-			Value:        types.StringValue(v.Value),
-			VariableType: types.StringValue(v.VariableType),
-		})
+		// Omit the waypoint_application input variable from the list of input
+		// variables, because the TF configuration does not set this, HCP
+		// Waypoint does, resulting in a plan inconsistent w/config. In future
+		// use a plan modifier to set this value.
+		if v.Name != "waypoint_application" {
+			iv := &InputVar{
+				Name:  types.StringValue(v.Name),
+				Value: types.StringValue(v.Value),
+			}
+
+			// This is a workaround to set the variable type for the input by
+			// using the type defined in the configuration. This is needed
+			// because the API does not return the variable type for the input.
+			// When the API returns the variable type, this workaround can be
+			// removed.
+			if vt, ok := varTypes[v.Name]; ok {
+				iv.VariableType = types.StringValue(vt)
+			}
+
+			planVars = append(planVars, iv)
+		}
 	}
+	plan.InputVars = planVars
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -300,6 +327,13 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 
 	client := r.client
 
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API.
+	varTypes := map[string]string{}
+	for _, v := range data.InputVars {
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+	}
+
 	application, err := clients.GetApplicationByID(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
@@ -330,13 +364,31 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	dataVars := make([]*InputVar, 0)
 	for _, v := range inputVars {
-		data.InputVars = append(data.InputVars, &InputVar{
-			Name:         types.StringValue(v.Name),
-			Value:        types.StringValue(v.Value),
-			VariableType: types.StringValue(v.VariableType),
-		})
+		// Omit the waypoint_application input variable from the list of input
+		// variables, because the TF configuration does not set this, HCP
+		// Waypoint does, resulting in a plan inconsistent w/config. In future
+		// use a plan modifier to set this value.
+		if v.Name != "waypoint_application" {
+			iv := &InputVar{
+				Name:  types.StringValue(v.Name),
+				Value: types.StringValue(v.Value),
+			}
+
+			// This is a workaround to set the variable type for the input by
+			// using the type defined in the resource state. This is needed
+			// because the API does not return the variable type for the input.
+			// When the API returns the variable type, this workaround can be
+			// removed.
+			if vt, ok := varTypes[v.Name]; ok {
+				iv.VariableType = types.StringValue(vt)
+			}
+
+			dataVars = append(dataVars, iv)
+		}
 	}
+	data.InputVars = dataVars
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
