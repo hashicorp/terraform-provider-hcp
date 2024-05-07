@@ -21,8 +21,9 @@ import (
 )
 
 func TestAccWaypoint_Application_Template_basic(t *testing.T) {
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel, appTemplateModel2 waypoint.ApplicationTemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.test"
+	resourceName2 := "hcp_waypoint_application_template.test_2"
 	name := generateRandomName()
 	updatedName := generateRandomName()
 
@@ -41,6 +42,14 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
+
+					testAccCheckWaypointAppTemplateExists(t, resourceName2, &appTemplateModel2),
+					testAccCheckWaypointAppTemplateName(t, &appTemplateModel2, name+"-2"),
+					resource.TestCheckResourceAttr(resourceName2, "name", name+"-2"),
+					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.name", "string_variable"),
+					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.user_editable", "true"),
 				),
 			},
 			{
@@ -159,10 +168,33 @@ resource "hcp_waypoint_application_template" "test" {
       options = [
         "a"
       ]
-      user_editable = false
     }
   ]
-}`, name)
+}
+
+resource "hcp_waypoint_application_template" "test_2" {
+  name                     = "%s-2"
+  summary                  = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.3"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+  variable_options = [
+	{
+	  name        = "string_variable"
+      variable_type = "string"
+      user_editable = true
+      options = []		
+    }
+  ]
+}
+`, name, name)
 }
 
 // generateRandomName will create a valid randomized name

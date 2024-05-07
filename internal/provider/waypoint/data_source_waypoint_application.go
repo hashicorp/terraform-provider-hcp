@@ -163,7 +163,7 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	// A second API call is made to get the input vars set on the application
-	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.String(), loc)
+	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.ValueString(), loc)
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
 		return
@@ -171,8 +171,9 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 
 	for _, iv := range inputVars {
 		data.InputVars = append(data.InputVars, &InputVar{
-			Name:  types.StringValue(iv.Name),
-			Value: types.StringValue(iv.Value),
+			Name:         types.StringValue(iv.Name),
+			Value:        types.StringValue(iv.Value),
+			VariableType: types.StringValue(iv.VariableType),
 		})
 	}
 

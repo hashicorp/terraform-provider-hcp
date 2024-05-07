@@ -55,8 +55,9 @@ type ApplicationResourceModel struct {
 }
 
 type InputVar struct {
-	Name  types.String `tfsdk:"name"`
-	Value types.String `tfsdk:"value"`
+	Name         types.String `tfsdk:"name"`
+	VariableType types.String `tfsdk:"variable_type"`
+	Value        types.String `tfsdk:"value"`
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -139,6 +140,10 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 							Required:    true,
 							Description: "Variable name",
 						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
 						"value": &schema.StringAttribute{
 							Required:    true,
 							Description: "Variable value",
@@ -203,8 +208,9 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	vars := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
 	for _, v := range plan.InputVars {
 		vars = append(vars, &waypoint_models.HashicorpCloudWaypointInputVariable{
-			Name:  v.Name.ValueString(),
-			Value: v.Value.ValueString(),
+			Name:         v.Name.ValueString(),
+			Value:        v.Value.ValueString(),
+			VariableType: v.VariableType.ValueString(),
 		})
 	}
 
@@ -249,7 +255,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		plan.ReadmeMarkdown = types.StringNull()
 	}
 
-	inputVars, err := clients.GetInputVariables(ctx, client, plan.Name.String(), loc)
+	inputVars, err := clients.GetInputVariables(ctx, client, plan.Name.ValueString(), loc)
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
 		return
@@ -257,8 +263,9 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	for _, v := range inputVars {
 		plan.InputVars = append(plan.InputVars, &InputVar{
-			Name:  types.StringValue(v.Name),
-			Value: types.StringValue(v.Value),
+			Name:         types.StringValue(v.Name),
+			Value:        types.StringValue(v.Value),
+			VariableType: types.StringValue(v.VariableType),
 		})
 	}
 
@@ -317,7 +324,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		data.ReadmeMarkdown = types.StringNull()
 	}
 
-	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.String(), loc)
+	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.ValueString(), loc)
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
 		return
@@ -325,8 +332,9 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 
 	for _, v := range inputVars {
 		data.InputVars = append(data.InputVars, &InputVar{
-			Name:  types.StringValue(v.Name),
-			Value: types.StringValue(v.Value),
+			Name:         types.StringValue(v.Name),
+			Value:        types.StringValue(v.Value),
+			VariableType: types.StringValue(v.VariableType),
 		})
 	}
 

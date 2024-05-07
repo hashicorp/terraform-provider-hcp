@@ -36,7 +36,7 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
 					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "a"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "x"),
 				),
 			},
 		},
@@ -141,9 +141,10 @@ resource "hcp_waypoint_application_template" "test" {
   labels = ["one", "two"]
   variable_options = [
 	{
-	  name        = "string_variable"
+	  name          = "string_variable"
       variable_type = "string"
       user_editable = true
+      options 		= []
     }
   ]
 }
@@ -154,8 +155,9 @@ resource "hcp_waypoint_application" "test" {
 
   input_vars = [
 	{
-      name  = "string_variable"
-	  value = "a"
+      name  		= "string_variable"
+      variable_type = "string"
+	  value 		= "x"
     }
   ]
 }`, tempName, appName)
