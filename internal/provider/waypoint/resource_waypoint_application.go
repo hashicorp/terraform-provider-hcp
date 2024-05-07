@@ -133,7 +133,6 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"input_vars": schema.ListNestedAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Input variables for the Application.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -294,7 +293,9 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 			planVars = append(planVars, iv)
 		}
 	}
-	plan.InputVars = planVars
+	if len(planVars) > 0 {
+		plan.InputVars = planVars
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -388,7 +389,9 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 			dataVars = append(dataVars, iv)
 		}
 	}
-	data.InputVars = dataVars
+	if len(dataVars) > 0 {
+		data.InputVars = dataVars
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

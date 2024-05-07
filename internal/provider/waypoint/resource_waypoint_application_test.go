@@ -34,13 +34,41 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "x"),
 				),
 			},
 		},
 	})
+}
+
+func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
+	var applicationModel waypoint.ApplicationResourceModel
+	resourceName := "hcp_waypoint_application.test"
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointApplicationDestroy(t, &applicationModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testApplicationWithInputVarsConfig(templateName, applicationName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
+					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "vault_dweller_name"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "paladin-devops"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.1.name", "faction"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.1.value", "brotherhood-of-steel"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.1.variable_type", "string"),
+				),
+			},
+		},
+	})
+
 }
 
 // simple attribute check on the application receved from the API
@@ -132,20 +160,55 @@ resource "hcp_waypoint_application_template" "test" {
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.3"
+    version = "0.0.2"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+}
+
+resource "hcp_waypoint_application" "test" {
+  name    = "%s"
+  application_template_id = hcp_waypoint_application_template.test.id
+}`, tempName, appName)
+}
+
+func testApplicationWithInputVarsConfig(tempName, appName string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_application_template" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["fallout", "vault-tec"]
   variable_options = [
 	{
-	  name          = "string_variable"
+	  name          = "vault_dweller_name"
       variable_type = "string"
       user_editable = true
       options 		= []
-    }
+    },
+    {
+	  name          = "faction"
+      variable_type = "string"
+      user_editable = false
+      options 		= [
+        "ncr",
+        "brotherhood-of-steel",
+        "caesars-legion",
+        "raiders",
+        "institute"
+      ]
+    },
   ]
 }
 
@@ -154,11 +217,16 @@ resource "hcp_waypoint_application" "test" {
   application_template_id = hcp_waypoint_application_template.test.id
 
   input_vars = [
-	{
-      name  		= "string_variable"
+    {
+      name  		= "vault_dweller_name"
       variable_type = "string"
-	  value 		= "x"
-    }
+	  value 		= "paladin-devops"
+    },
+	{
+      name  		= "faction"
+      variable_type = "string"
+      value 		= "brotherhood-of-steel"
+    }	
   ]
 }`, tempName, appName)
 }
