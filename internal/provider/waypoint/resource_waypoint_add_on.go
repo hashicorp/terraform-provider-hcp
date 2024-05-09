@@ -388,7 +388,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = ReadOutputs(ctx, addOn, plan)
+	diags = readOutputs(ctx, addOn, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -505,7 +505,7 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 	}
 
-	diags = ReadOutputs(ctx, addOn, state)
+	diags = readOutputs(ctx, addOn, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -634,7 +634,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = ReadOutputs(ctx, addOn, plan)
+	diags = readOutputs(ctx, addOn, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -699,7 +699,7 @@ func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ReadOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
+func readOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if addOn.OutputValues != nil {
 		outputList := make([]*outputValue, len(addOn.OutputValues))
@@ -712,11 +712,8 @@ func ReadOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypoi
 			}
 			outputList[i] = output
 		}
-		if len(outputList) > 0 || len(outputList) != len(plan.OutputValues.Elements()) {
+		if len(outputList) > 0 {
 			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-			if diags.HasError() {
-				return diags
-			}
 		} else {
 			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 		}
