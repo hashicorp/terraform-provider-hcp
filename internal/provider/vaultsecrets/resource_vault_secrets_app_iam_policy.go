@@ -5,6 +5,7 @@ package vaultsecrets
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -83,6 +84,14 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx conte
 
 	res, err := u.client.ResourceService.ResourceServiceGetIamPolicy(params, nil)
 	if err != nil {
+		serviceErr, ok := err.(*resource_service.ResourceServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast resource IAM policy error", err.Error())
+			return nil, diags
+		}
+		if serviceErr.Code() == http.StatusNotFound {
+			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
+		}
 		diags.AddError("failed to retrieve resource IAM policy", err.Error())
 		return nil, diags
 	}

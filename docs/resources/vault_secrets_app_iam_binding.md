@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_vault_secrets_app_iam_binding - terraform-provider-hcp"
-subcategory: "Cloud Platform"
+subcategory: "HCP Vault Secrets"
 description: |-
   Updates the Vault Secrets App IAM policy to bind a role to a new member. Existing bindings are preserved.
 ---
