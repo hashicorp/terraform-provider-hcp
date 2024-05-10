@@ -1,6 +1,6 @@
 ---
 page_title: "Resource hcp_vault_secrets_app_iam_policy - terraform-provider-hcp"
-subcategory: "Cloud Platform"
+subcategory: "HCP Vault Secrets"
 description: |-
   Sets the Vault Secrets App IAM policy and replaces any existing policy.
 ---
@@ -25,7 +25,7 @@ Sets the Vault Secrets App IAM policy and replaces any existing policy.
 data "hcp_iam_policy" "example" {
   bindings = [
     {
-      role = "roles/contributor"
+      role = "roles/secrets.app-secret-reader"
       principals = [
         "example-user-id-1",
         "example-group-id-1",
@@ -35,13 +35,15 @@ data "hcp_iam_policy" "example" {
   ]
 }
 
-resource "hcp_project" "my_project" {
-  name = "example"
+
+resource "hcp_vault_secrets_app" "example" {
+  app_name    = "example-app-name"
+  description = "My new app!"
 }
 
-resource "hcp_project_iam_policy" "project_policy" {
-  project_id  = hcp_project.my_project.resource_id
-  policy_data = data.hcp_iam_policy.example.policy_data
+resource "hcp_vault_secrets_app_iam_policy" "example" {
+  resource_name = hcp_vault_secrets_app.example.resource_name
+  policy_data   = data.hcp_iam_policy.example.policy_data
 }
 ```
 
