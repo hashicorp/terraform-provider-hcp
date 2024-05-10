@@ -1,3 +1,12 @@
+## v0.89.0 (May 10, 2024)
+
+IMPROVEMENTS:
+
+* Support setting variable options in `Support setting variable options in `hcp_waypoint_add_on_definition`. [[GH-819](https://github.com/hashicorp/terraform-provider-hcp/pull/819)]
+
+BUG FIXES:
+
+* Fix first apply scenario for hcp_vault_secrets_app_iam_binding and hcp_vault_secrets_app_iam_policy, update docs [[GH-838](https://github.com/hashicorp/terraform-provider-hcp/pull/838)]
 ## v0.88.0 (May 02, 2024)
 
 IMPROVEMENTS:
