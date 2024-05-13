@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypoint_Action_Config_DataSource_basic(t *testing.T) {
-	var actionConfigModel waypoint.ActionResourceModel
+func TestAccWaypoint_Action_DataSource_basic(t *testing.T) {
+	var actionModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
 	dataSourceName := "data." + resourceName
 	actionName := generateRandomName()
@@ -21,13 +21,13 @@ func TestAccWaypoint_Action_Config_DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionConfigModel),
+		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionModel),
 		Steps: []resource.TestStep{
 			{
 				// establish the base action config
-				Config: testActionConfig(actionName),
+				Config: testAction(actionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointActionExists(t, resourceName, &actionConfigModel),
+					testAccCheckWaypointActionExists(t, resourceName, &actionModel),
 				),
 			},
 			{
@@ -46,5 +46,5 @@ func testDataActionConfig(actionName string) string {
 
 data "hcp_waypoint_action" "test" {
   name    = hcp_waypoint_action.test.name
-}`, testActionConfig(actionName))
+}`, testAction(actionName))
 }

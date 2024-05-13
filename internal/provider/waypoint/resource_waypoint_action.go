@@ -55,44 +55,6 @@ type customRequest struct {
 	Body    types.String `tfsdk:"body"`
 }
 
-func convertMethodToStringType(method waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod) (types.String, error) {
-	var methodString types.String
-	switch method {
-	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodGET:
-		methodString = types.StringValue("GET")
-	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPOST:
-		methodString = types.StringValue("POST")
-	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPUT:
-		methodString = types.StringValue("PUT")
-	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPATCH:
-		methodString = types.StringValue("PATCH")
-	case waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodDELETE:
-		methodString = types.StringValue("DELETE")
-	default:
-		return methodString, fmt.Errorf("unknown method")
-	}
-	return methodString, nil
-}
-
-func convertMethodToEnumType(method string) (waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod, error) {
-	var methodEnum waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod
-	switch method {
-	case "GET":
-		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodGET
-	case "POST":
-		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPOST
-	case "PUT":
-		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPUT
-	case "PATCH":
-		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodPATCH
-	case "DELETE":
-		methodEnum = waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethodDELETE
-	default:
-		return methodEnum, fmt.Errorf("unknown method")
-	}
-	return methodEnum, nil
-}
-
 func (r *ActionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_waypoint_action"
 }
@@ -100,7 +62,7 @@ func (r *ActionResource) Metadata(ctx context.Context, req resource.MetadataRequ
 func (r *ActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "The Waypoint Action resource managed the lifecycle of an Action.",
+		MarkdownDescription: "The Waypoint Action resource manages the lifecycle of an Action.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -229,14 +191,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method, err := convertMethodToEnumType(plan.Request.Custom.Method.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP Method",
-				"Expected GET, POST, PUT, DELETE, or PATCH",
-			)
-			return
-		}
+		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -290,6 +245,8 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 	if aCfgModel.Description != "" {
 		plan.Description = types.StringValue(aCfgModel.Description)
+	} else {
+		plan.Description = types.StringNull()
 	}
 
 	plan.ProjectID = types.StringValue(projectID)
@@ -355,6 +312,8 @@ func (r *ActionResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if actionCfg.Description != "" {
 		data.Description = types.StringValue(actionCfg.Description)
+	} else {
+		data.Description = types.StringNull()
 	}
 
 	data.ProjectID = types.StringValue(projectID)
@@ -427,14 +386,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method, err := convertMethodToEnumType(plan.Request.Custom.Method.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP Method",
-				"Expected GET, POST, PUT, DELETE, or PATCH",
-			)
-			return
-		}
+		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -488,6 +440,8 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	if aCfgModel.Description != "" {
 		plan.Description = types.StringValue(aCfgModel.Description)
+	} else {
+		plan.Description = types.StringNull()
 	}
 
 	plan.ProjectID = types.StringValue(projectID)
@@ -573,16 +527,9 @@ func readCustomAction(
 	headerMap := make(map[string]string)
 	var diags diag.Diagnostics
 	if actionCfg.Request.Custom.Method != nil {
-		methodString, err := convertMethodToStringType(*actionCfg.Request.Custom.Method)
-		if err != nil {
-			diags.AddError(
-				"Unexpected HTTP Method",
-				"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
-			)
-			return diags
-		} else {
-			data.Request.Custom.Method = methodString
-		}
+		data.Request.Custom.Method = types.StringValue(string(*actionCfg.Request.Custom.Method))
+	} else {
+		data.Request.Custom.Method = types.StringNull()
 	}
 	if actionCfg.Request.Custom.Headers != nil {
 		for _, header := range actionCfg.Request.Custom.Headers {
@@ -599,9 +546,13 @@ func readCustomAction(
 	}
 	if actionCfg.Request.Custom.URL != "" {
 		data.Request.Custom.URL = types.StringValue(actionCfg.Request.Custom.URL)
+	} else {
+		data.Request.Custom.URL = types.StringNull()
 	}
 	if actionCfg.Request.Custom.Body != "" {
 		data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
+	} else {
+		data.Request.Custom.Body = types.StringNull()
 	}
 	return diags
 }

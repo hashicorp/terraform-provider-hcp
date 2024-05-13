@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypoint_Action_Config_basic(t *testing.T) {
+func TestAccWaypoint_Action_basic(t *testing.T) {
 	var actionCfgModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
 	actionName := generateRandomName()
@@ -28,7 +28,7 @@ func TestAccWaypoint_Action_Config_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionCfgModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testActionConfig(actionName),
+				Config: testAction(actionName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointActionExists(t, resourceName, &actionCfgModel),
 					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
@@ -86,12 +86,12 @@ func testAccCheckWaypointActionExists(t *testing.T, resourceName string, actionC
 	}
 }
 
-func testAccCheckWaypointActionDestroy(t *testing.T, actionConfigModel *waypoint.ActionResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointActionDestroy(t *testing.T, actionModel *waypoint.ActionResourceModel) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
-		id := actionConfigModel.ID.ValueString()
-		name := actionConfigModel.Name.ValueString()
-		projectID := actionConfigModel.ProjectID.ValueString()
+		id := actionModel.ID.ValueString()
+		name := actionModel.Name.ValueString()
+		projectID := actionModel.ProjectID.ValueString()
 		orgID := client.Config.OrganizationID
 
 		loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -99,7 +99,7 @@ func testAccCheckWaypointActionDestroy(t *testing.T, actionConfigModel *waypoint
 			ProjectID:      projectID,
 		}
 
-		actionConfig, err := clients.GetAction(context.Background(), client, loc, id, name)
+		actionGetResp, err := clients.GetAction(context.Background(), client, loc, id, name)
 		if err != nil {
 			// expected
 			if clients.IsResponseCodeNotFound(err) {
@@ -110,7 +110,7 @@ func testAccCheckWaypointActionDestroy(t *testing.T, actionConfigModel *waypoint
 
 		// fall through, we expect a not found above but if we get this far then
 		// the test should fail
-		if actionConfig != nil {
+		if actionGetResp != nil {
 			return fmt.Errorf("expected action to be destroyed, but it still exists")
 		}
 
@@ -118,7 +118,7 @@ func testAccCheckWaypointActionDestroy(t *testing.T, actionConfigModel *waypoint
 	}
 }
 
-func testActionConfig(actionName string) string {
+func testAction(actionName string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_action" "test" {
 	name = "%s"

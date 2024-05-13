@@ -23,7 +23,7 @@ var _ datasource.DataSourceWithConfigValidators = &DataSourceAction{}
 
 func (d DataSourceAction) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
-		datasourcevalidator.Conflicting(
+		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot("name"),
 			path.MatchRoot("id"),
 		),
@@ -151,15 +151,9 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	if actionModel.ID != "" {
-		data.ID = types.StringValue(actionModel.ID)
-	}
-	if actionModel.Name != "" {
-		data.Name = types.StringValue(actionModel.Name)
-	}
-	if actionModel.Description != "" {
-		data.Description = types.StringValue(actionModel.Description)
-	}
+	data.ID = types.StringValue(actionModel.ID)
+	data.Name = types.StringValue(actionModel.Name)
+	data.Description = types.StringValue(actionModel.Description)
 
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
@@ -173,16 +167,9 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 
 	data.Request.Custom = &customRequest{}
 	if actionModel.Request.Custom.Method != nil {
-		methodString, err := convertMethodToStringType(*actionModel.Request.Custom.Method)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unexpected HTTP Method",
-				"Expected GET, POST, PUT, DELETE, or PATCH. Please report this issue to the provider developers.",
-			)
-			return
-		} else {
-			data.Request.Custom.Method = methodString
-		}
+		data.Request.Custom.Method = types.StringValue(string(*actionModel.Request.Custom.Method))
+	} else {
+		data.Request.Custom.Method = types.StringNull()
 	}
 	if actionModel.Request.Custom.Headers != nil {
 		for _, header := range actionModel.Request.Custom.Headers {
@@ -197,11 +184,11 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 		} else {
 			data.Request.Custom.Headers = types.MapNull(types.StringType)
 		}
+	} else {
+		data.Request.Custom.Headers = types.MapNull(types.StringType)
 	}
-	if actionModel.Request.Custom.URL != "" {
-		data.Request.Custom.URL = types.StringValue(actionModel.Request.Custom.URL)
-	}
-	if actionModel.Request.Custom.Body != "" {
-		data.Request.Custom.Body = types.StringValue(actionModel.Request.Custom.Body)
-	}
+	data.Request.Custom.URL = types.StringValue(actionModel.Request.Custom.URL)
+	data.Request.Custom.Body = types.StringValue(actionModel.Request.Custom.Body)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
