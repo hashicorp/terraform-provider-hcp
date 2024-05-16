@@ -184,7 +184,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	}
 
 	projectID := client.Config.ProjectID
-	if !state.ProjectID.IsNull() {
+	if !state.ProjectID.IsUnknown() && !state.ProjectID.IsNull() {
 		projectID = state.ProjectID.ValueString()
 	}
 

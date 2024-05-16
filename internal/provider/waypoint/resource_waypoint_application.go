@@ -236,7 +236,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
+	if !data.ProjectID.IsUnknown() && !data.ProjectID.IsNull() {
 		projectID = data.ProjectID.ValueString()
 	}
 

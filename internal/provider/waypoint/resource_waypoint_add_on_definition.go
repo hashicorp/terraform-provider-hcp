@@ -354,7 +354,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.ProjectID.IsUnknown() {
+	if !state.ProjectID.IsUnknown() && !state.ProjectID.IsNull() {
 		projectID = state.ProjectID.ValueString()
 	}
 
