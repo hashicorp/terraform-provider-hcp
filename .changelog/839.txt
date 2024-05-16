@@ -1,0 +1,3 @@
+```release-note:bug
+ Waypoint: fix issue with importing existing Waypoint resources
+ ```

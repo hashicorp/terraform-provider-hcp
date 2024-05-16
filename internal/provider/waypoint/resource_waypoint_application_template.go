@@ -403,7 +403,7 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
+	if !data.ProjectID.IsUnknown() && !data.ProjectID.IsNull() {
 		projectID = data.ProjectID.ValueString()
 	}
 
@@ -418,11 +418,11 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 	appTemplate, err := clients.GetApplicationTemplateByID(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "TFC Config not found for organization, removing from state.")
+			tflog.Info(ctx, "Template not found for organization, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error reading TFC Config", err.Error())
+		resp.Diagnostics.AddError("Error reading Template", err.Error())
 		return
 	}
 

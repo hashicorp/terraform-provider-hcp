@@ -393,6 +393,9 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	projectID := r.client.Config.ProjectID
+	if !state.ProjectID.IsUnknown() && !state.ProjectID.IsNull() {
+		projectID = state.ProjectID.ValueString()
+	}
 
 	orgID := r.client.Config.OrganizationID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
