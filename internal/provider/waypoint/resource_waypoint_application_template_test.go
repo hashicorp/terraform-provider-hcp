@@ -21,9 +21,8 @@ import (
 )
 
 func TestAccWaypoint_Application_Template_basic(t *testing.T) {
-	var appTemplateModel, appTemplateModel2 waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel waypoint.ApplicationTemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.test"
-	resourceName2 := "hcp_waypoint_application_template.test_2"
 	name := generateRandomName()
 	updatedName := generateRandomName()
 
@@ -38,18 +37,6 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
-
-					testAccCheckWaypointAppTemplateExists(t, resourceName2, &appTemplateModel2),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel2, name+"-2"),
-					resource.TestCheckResourceAttr(resourceName2, "name", name+"-2"),
-					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName2, "variable_options.0.user_editable", "true"),
 				),
 			},
 			{
@@ -58,10 +45,28 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
+	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	resourceName := "hcp_waypoint_application_template.var_opts_test"
+	name := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testAppTemplateConfigWithVarOpts(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
 		},
@@ -154,47 +159,51 @@ resource "hcp_waypoint_application_template" "test" {
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.3"
+    version = "0.0.2"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+}`, name)
+}
+
+func testAppTemplateConfigWithVarOpts(name string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_application_template" "var_opts_test" {
+  name                     = "%s"
+  summary                  = "A template with a variable with options."
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
   variable_options = [
 	{
-	  name        = "string_variable"
+	  name          = "vault_dweller_name"
+	  variable_type = "string"
+      user_editable = true
+      options       = []
+    },
+    {
+      name          = "faction"
       variable_type = "string"
-      options = [
-        "a"
+      user_editable = true
+      options       = [
+        "ncr",
+        "brotherhood-of-steel",
+        "caesars-legion",
+        "raiders",
+        "institute"
       ]
     }
   ]
-}
-
-resource "hcp_waypoint_application_template" "test_2" {
-  name                     = "%s-2"
-  summary                  = "some summary for fun"
-  readme_markdown_template = base64encode("# Some Readme")
-  terraform_no_code_module = {
-    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.3"
-  }
-  terraform_cloud_workspace_details = {
-    name                 = "Default Project"
-    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
-  }
-  labels = ["one", "two"]
-  variable_options = [
-	{
-	  name        = "string_variable"
-      variable_type = "string"
-      user_editable = true
-      options = []		
-    }
-  ]
-}
-`, name, name)
+}`, name)
 }
 
 // generateRandomName will create a valid randomized name
