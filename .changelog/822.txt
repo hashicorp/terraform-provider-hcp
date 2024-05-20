@@ -1,0 +1,3 @@
+```release-note:improvement
+Support retrieving output values in `hcp_waypoint_add_on`
+```

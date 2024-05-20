@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypointmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -51,9 +52,25 @@ type AddOnResourceModel struct {
 	Status         types.Int64  `tfsdk:"status"`
 	ApplicationID  types.String `tfsdk:"application_id"`
 	DefinitionID   types.String `tfsdk:"definition_id"`
-	// OutputValues   types.List   `tfsdk:"output_values"`
+	OutputValues   types.List   `tfsdk:"output_values"`
 
 	TerraformNoCodeModule types.Object `tfsdk:"terraform_no_code_module"`
+}
+
+type outputValue struct {
+	Name      types.String `tfsdk:"name"`
+	Type      types.String `tfsdk:"type"`
+	Value     types.String `tfsdk:"value"`
+	Sensitive types.Bool   `tfsdk:"sensitive"`
+}
+
+func (o outputValue) attrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":      types.StringType,
+		"type":      types.StringType,
+		"value":     types.StringType,
+		"sensitive": types.BoolType,
+	}
 }
 
 func (r tfcNoCodeModule) attrTypes() map[string]attr.Type {
@@ -155,7 +172,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "The status of the Terraform run for the Add-on.",
 			},
-			/*"output_values": schema.ListNestedAttribute{
+			"output_values": schema.ListNestedAttribute{
 				Computed: true,
 				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
@@ -179,7 +196,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 						},
 					},
 				},
-			},*/
+			},
 		},
 	}
 }
@@ -371,7 +388,11 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	// TODO: Add support for output values
+	diags = readOutputs(ctx, addOn, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -454,8 +475,6 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	state.CreatedBy = types.StringValue(addOn.CreatedBy)
 
-	// TODO: Error out here on failure to convert?
-
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
 	if err != nil {
@@ -486,12 +505,15 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 	}
 
-	// TODO: Add support for output values
+	diags = readOutputs(ctx, addOn, state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-// TODO: Add support for new fields
 func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *AddOnResourceModel
 
@@ -612,7 +634,11 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	// TODO: Add support for output values
+	diags = readOutputs(ctx, addOn, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
@@ -671,4 +697,28 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func readOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if addOn.OutputValues != nil {
+		outputList := make([]*outputValue, len(addOn.OutputValues))
+		for i, outputVal := range addOn.OutputValues {
+			output := &outputValue{
+				Name:      types.StringValue(outputVal.Name),
+				Type:      types.StringValue(outputVal.Type),
+				Value:     types.StringValue(outputVal.Value),
+				Sensitive: types.BoolValue(outputVal.Sensitive),
+			}
+			outputList[i] = output
+		}
+		if len(outputList) > 0 {
+			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		} else {
+			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+		}
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+	return diags
 }
