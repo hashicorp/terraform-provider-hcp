@@ -31,6 +31,16 @@ func TestAccGroupResource(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(t, groupName),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccGroupConfigResourceWithoutDescription(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_group.example", "display_name", groupName),
+					resource.TestCheckResourceAttr("hcp_group.example", "description", ""),
+					resource.TestCheckResourceAttrSet("hcp_group.example", "resource_name"),
+					resource.TestCheckResourceAttrSet("hcp_group.example", "resource_id"),
+					testAccGroupExists(t, "hcp_group.example", &group),
+				),
+			},
+			{
 				Config: testAccGroupConfigResource(groupName, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_group.example", "display_name", groupName),
@@ -73,6 +83,14 @@ func testAccGroupConfigResource(displayName, description string) string {
 		description = %q
 	}
 `, displayName, description)
+}
+
+func testAccGroupConfigResourceWithoutDescription(displayName string) string {
+	return fmt.Sprintf(`
+	resource "hcp_group" "example" {
+		display_name = %q
+	}
+`, displayName)
 }
 
 // testAccGroupsExists queries the API and retrieves the matching

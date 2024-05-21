@@ -1,0 +1,2 @@
+```release-note:bug
+Cloud Platform: fix issue where hcp_group without a description would cause a state error
