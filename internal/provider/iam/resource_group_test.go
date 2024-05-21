@@ -51,6 +51,16 @@ func TestAccGroupResource(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccGroupConfigResourceWithoutDescription(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_group.example", "display_name", groupName),
+					resource.TestCheckResourceAttr("hcp_group.example", "description", ""),
+					resource.TestCheckResourceAttrSet("hcp_group.example", "resource_name"),
+					resource.TestCheckResourceAttrSet("hcp_group.example", "resource_id"),
+					testAccGroupExists(t, "hcp_group.example", &group),
+				),
+			},
+			{
 				ResourceName:                         "hcp_group.example",
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: "resource_name",

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/models"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -70,6 +72,7 @@ The user or service account that is running Terraform when creating an %s resour
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 300),
 				},
+				Default: stringdefault.StaticString(""),
 			},
 		},
 	}
@@ -174,23 +177,26 @@ func (r *resourceGroup) Update(ctx context.Context, req resource.UpdateRequest, 
 	updateParams.ResourceName = state.ResourceName.ValueString()
 	updateParams.Group = &models.HashicorpCloudIamGroup{}
 
-	shouldUpdate := false
+	updateMask := []string{}
 
 	// Check if the display name was updated
 	if !plan.DisplayName.Equal(state.DisplayName) {
 		updateParams.Group.DisplayName = plan.DisplayName.ValueString()
-		shouldUpdate = true
+		updateMask = append(updateMask, "display_name")
 	}
 
 	// Check if the description was updated
 	if !plan.Description.Equal(state.Description) {
 		updateParams.Group.Description = plan.Description.ValueString()
-		shouldUpdate = true
+		updateMask = append(updateMask, "description")
 	}
 
-	if !shouldUpdate {
+	if len(updateMask) == 0 {
 		return
 	}
+
+	updateMaskStr := strings.Join(updateMask, ",")
+	updateParams.SetUpdateMask(&updateMaskStr)
 
 	_, err := r.client.Groups.GroupsServiceUpdateGroup2(updateParams, nil)
 	if err != nil {
