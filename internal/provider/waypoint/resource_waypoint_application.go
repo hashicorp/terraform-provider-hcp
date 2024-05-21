@@ -370,9 +370,6 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	// to be used later when fetching the input variables from the API
 	varTypes := map[string]string{}
 
-	// Prepare the input variables that the user provided to the application
-	// creation request
-	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
 	for _, v := range data.InputVars.Elements() {
 		// convert list element to a struct representing an input variable, of
 		// type varConverter
@@ -387,14 +384,6 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 			tflog.Error(ctx, "error reading application input variables")
 			return
 		}
-
-		// add the input variable to the list of input variables for the app
-		// creation API call
-		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
-			Name:         vc.name,
-			Value:        vc.value,
-			VariableType: vc.variableType,
-		})
 
 		// store var type for later use when fetching the input variables from the API
 		varTypes[vc.name] = vc.variableType
