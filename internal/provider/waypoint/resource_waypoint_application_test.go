@@ -71,6 +71,30 @@ func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 
 }
 
+func TestAccWaypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
+	var applicationModel waypoint.ApplicationResourceModel
+	resourceName := "hcp_waypoint_application.test_var_opts"
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointApplicationDestroy(t, &applicationModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testApplicationWithNoInputVarsConfig(templateName, applicationName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
+					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // simple attribute check on the application receved from the API
 func testAccCheckWaypointApplicationName(_ *testing.T, applicationModel *waypoint.ApplicationResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -233,5 +257,48 @@ resource "hcp_waypoint_application" "test_var_opts" {
 	  value 		= "courier"
     }	
   ]
+}`, tempName, appName)
+}
+
+func testApplicationWithNoInputVarsConfig(tempName, appName string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_application_template" "test_var_opts" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["fallout", "vault-tec"]
+  variable_options = [
+	{
+	  name          = "vault_dweller_name"
+      variable_type = "string"
+      user_editable = false
+      options 		= [
+        "lone-wanderer",
+      ]
+    },
+    {
+	  name          = "faction"
+      variable_type = "string"
+      user_editable = false
+      options 		= [
+        "brotherhood-of-steel",
+      ]
+    },
+  ]
+}
+
+resource "hcp_waypoint_application" "test_var_opts" {
+  name    = "%s"
+  application_template_id = hcp_waypoint_application_template.test_var_opts.id
+
+  input_vars = []
 }`, tempName, appName)
 }
