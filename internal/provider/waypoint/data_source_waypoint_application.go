@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -93,6 +94,10 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 							Computed:    true,
 							Description: "Variable value",
 						},
+						"variable_type": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable type",
+						},
 					},
 				},
 			},
@@ -169,12 +174,10 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	for _, iv := range inputVars {
-		data.InputVars = append(data.InputVars, &InputVar{
-			Name:         types.StringValue(iv.Name),
-			Value:        types.StringValue(iv.Value),
-			VariableType: types.StringValue(iv.VariableType),
-		})
+	resp.Diagnostics.Append(readInputs(ctx, inputVars, &data, nil)...)
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "error reading application input variables")
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

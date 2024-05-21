@@ -42,7 +42,7 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 
 func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 	var applicationModel waypoint.ApplicationResourceModel
-	resourceName := "hcp_waypoint_application.test"
+	resourceName := "hcp_waypoint_application.test_var_opts"
 	templateName := generateRandomName()
 	applicationName := generateRandomName()
 
@@ -58,11 +58,11 @@ func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
 					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "vault_dweller_name"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "paladin-devops"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "faction"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "brotherhood-of-steel"),
 					resource.TestCheckResourceAttr(resourceName, "input_vars.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.1.name", "faction"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.1.value", "brotherhood-of-steel"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.1.name", "vault_dweller_name"),
+					resource.TestCheckResourceAttr(resourceName, "input_vars.1.value", "courier"),
 					resource.TestCheckResourceAttr(resourceName, "input_vars.1.variable_type", "string"),
 				),
 			},
@@ -177,7 +177,7 @@ resource "hcp_waypoint_application" "test" {
 
 func testApplicationWithInputVarsConfig(tempName, appName string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "test" {
+resource "hcp_waypoint_application_template" "test_var_opts" {
   name    = "%s"
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
@@ -195,12 +195,17 @@ resource "hcp_waypoint_application_template" "test" {
 	  name          = "vault_dweller_name"
       variable_type = "string"
       user_editable = true
-      options 		= []
+      options 		= [
+        "lucy",
+        "courier",
+        "lone-wanderer",
+        "sole-survivor",
+      ]
     },
     {
 	  name          = "faction"
       variable_type = "string"
-      user_editable = false
+      user_editable = true
       options 		= [
         "ncr",
         "brotherhood-of-steel",
@@ -212,20 +217,20 @@ resource "hcp_waypoint_application_template" "test" {
   ]
 }
 
-resource "hcp_waypoint_application" "test" {
+resource "hcp_waypoint_application" "test_var_opts" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test.id
+  application_template_id = hcp_waypoint_application_template.test_var_opts.id
 
   input_vars = [
-    {
-      name  		= "vault_dweller_name"
-      variable_type = "string"
-	  value 		= "paladin-devops"
-    },
 	{
       name  		= "faction"
       variable_type = "string"
       value 		= "brotherhood-of-steel"
+    },
+    {
+      name  		= "vault_dweller_name"
+      variable_type = "string"
+	  value 		= "courier"
     }	
   ]
 }`, tempName, appName)

@@ -11,12 +11,16 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -51,13 +55,21 @@ type ApplicationResourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars []*InputVar `tfsdk:"input_vars"`
+	InputVars types.List `tfsdk:"input_vars"`
 }
 
 type InputVar struct {
 	Name         types.String `tfsdk:"name"`
 	VariableType types.String `tfsdk:"variable_type"`
 	Value        types.String `tfsdk:"value"`
+}
+
+func (i InputVar) attrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":          types.StringType,
+		"variable_type": types.StringType,
+		"value":         types.StringType,
+	}
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -174,6 +186,38 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 	r.client = client
 }
 
+type varConverter struct {
+	name         string
+	variableType string
+	value        string
+}
+
+// FromTerraform5Value implements the ValueConverter interface
+func (vc *varConverter) FromTerraform5Value(val tftypes.Value) error {
+	v := map[string]tftypes.Value{}
+	err := val.As(&v)
+	if err != nil {
+		return err
+	}
+
+	err = v["name"].As(&vc.name)
+	if err != nil {
+		return err
+	}
+
+	err = v["value"].As(&vc.value)
+	if err != nil {
+		return err
+	}
+
+	err = v["variable_type"].As(&vc.variableType)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *ApplicationResourceModel
 
@@ -211,15 +255,33 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Prepare the input variables that the user provided to the application
 	// creation request
-	vars := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
-	for _, v := range plan.InputVars {
-		vars = append(vars, &waypoint_models.HashicorpCloudWaypointInputVariable{
-			Name:         v.Name.ValueString(),
-			Value:        v.Value.ValueString(),
-			VariableType: v.VariableType.ValueString(),
+	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+	for _, v := range plan.InputVars.Elements() {
+		// convert list element to a struct representing an input variable, of
+		// type varConverter
+		var iv tftypes.Value
+		iv, err = v.ToTerraformValue(ctx)
+		if err != nil {
+			tflog.Error(ctx, "error reading application input variables")
+			return
+		}
+		vc := varConverter{}
+		err = iv.As(&vc)
+		if err != nil {
+			tflog.Error(ctx, "error reading application input variables")
+			return
+		}
+
+		// add the input variable to the list of input variables for the app
+		// creation API call
+		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
+			Name:         vc.name,
+			Value:        vc.value,
+			VariableType: vc.variableType,
 		})
 
-		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+		// store var type for later use when fetching the input variables from the API
+		varTypes[vc.name] = vc.variableType
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
@@ -227,7 +289,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.ApplicationTemplateID.ValueString(),
 		},
-		Variables: vars,
+		Variables: ivs,
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
@@ -269,32 +331,10 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	planVars := make([]*InputVar, 0)
-	for _, v := range inputVars {
-		// Omit the waypoint_application input variable from the list of input
-		// variables, because the TF configuration does not set this, HCP
-		// Waypoint does, resulting in a plan inconsistent w/config. In future
-		// use a plan modifier to set this value.
-		if v.Name != "waypoint_application" {
-			iv := &InputVar{
-				Name:  types.StringValue(v.Name),
-				Value: types.StringValue(v.Value),
-			}
-
-			// This is a workaround to set the variable type for the input by
-			// using the type defined in the configuration. This is needed
-			// because the API does not return the variable type for the input.
-			// When the API returns the variable type, this workaround can be
-			// removed.
-			if vt, ok := varTypes[v.Name]; ok {
-				iv.VariableType = types.StringValue(vt)
-			}
-
-			planVars = append(planVars, iv)
-		}
-	}
-	if len(planVars) > 0 {
-		plan.InputVars = planVars
+	resp.Diagnostics.Append(readInputs(ctx, inputVars, plan, varTypes)...)
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "error reading application input variables")
+		return
 	}
 
 	// Write logs using the tflog package
@@ -326,14 +366,41 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-
 	// varTypes is used to store the variable type for each input variable
-	// to be used later when fetching the input variables from the API.
+	// to be used later when fetching the input variables from the API
 	varTypes := map[string]string{}
-	for _, v := range data.InputVars {
-		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+
+	// Prepare the input variables that the user provided to the application
+	// creation request
+	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+	for _, v := range data.InputVars.Elements() {
+		// convert list element to a struct representing an input variable, of
+		// type varConverter
+		iv, err := v.ToTerraformValue(ctx)
+		if err != nil {
+			tflog.Error(ctx, "error reading application input variables")
+			return
+		}
+		vc := varConverter{}
+		err = iv.As(&vc)
+		if err != nil {
+			tflog.Error(ctx, "error reading application input variables")
+			return
+		}
+
+		// add the input variable to the list of input variables for the app
+		// creation API call
+		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
+			Name:         vc.name,
+			Value:        vc.value,
+			VariableType: vc.variableType,
+		})
+
+		// store var type for later use when fetching the input variables from the API
+		varTypes[vc.name] = vc.variableType
 	}
+
+	client := r.client
 
 	application, err := clients.GetApplicationByID(ctx, client, loc, data.ID.ValueString())
 	if err != nil {
@@ -365,35 +432,53 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	dataVars := make([]*InputVar, 0)
-	for _, v := range inputVars {
-		// Omit the waypoint_application input variable from the list of input
-		// variables, because the TF configuration does not set this, HCP
-		// Waypoint does, resulting in a plan inconsistent w/config. In future
-		// use a plan modifier to set this value.
-		if v.Name != "waypoint_application" {
-			iv := &InputVar{
-				Name:  types.StringValue(v.Name),
-				Value: types.StringValue(v.Value),
-			}
-
-			// This is a workaround to set the variable type for the input by
-			// using the type defined in the resource state. This is needed
-			// because the API does not return the variable type for the input.
-			// When the API returns the variable type, this workaround can be
-			// removed.
-			if vt, ok := varTypes[v.Name]; ok {
-				iv.VariableType = types.StringValue(vt)
-			}
-
-			dataVars = append(dataVars, iv)
-		}
-	}
-	if len(dataVars) > 0 {
-		data.InputVars = dataVars
+	resp.Diagnostics.Append(readInputs(ctx, inputVars, data, varTypes)...)
+	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "error reading application input variables")
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// readInputs reads the inputVars for an app into the application resource model
+func readInputs(
+	ctx context.Context,
+	inputVars []*waypoint_models.HashicorpCloudWaypointInputVariable,
+	plan *ApplicationResourceModel,
+	varTypes map[string]string,
+) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if inputVars != nil {
+		ivl := make([]*InputVar, 0)
+		for _, iv := range inputVars {
+			// TODO: Omit not only waypoint_application but also variables
+			// set on the template.
+			if iv.Name != "waypoint_application" {
+				inputVar := &InputVar{
+					Name:  types.StringValue(iv.Name),
+					Value: types.StringValue(iv.Value),
+				}
+
+				if _, ok := varTypes[iv.Name]; ok {
+					inputVar.VariableType = types.StringValue(varTypes[iv.Name])
+				}
+
+				ivl = append(ivl, inputVar)
+			}
+		}
+		if len(ivl) > 0 {
+			var ivs basetypes.ListValue
+			ivs, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, ivl)
+			if diags.HasError() {
+				return diags
+			}
+			plan.InputVars = ivs
+		} else {
+			plan.InputVars = types.ListNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+		}
+	}
+	return diags
 }
 
 func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
