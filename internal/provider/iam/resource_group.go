@@ -65,6 +65,7 @@ The user or service account that is running Terraform when creating an %s resour
 			},
 			"description": schema.StringAttribute{
 				Description: "The group's description - maximum length of 300 characters",
+				Computed:    true,
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 300),
