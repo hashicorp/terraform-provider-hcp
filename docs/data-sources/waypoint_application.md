@@ -36,3 +36,4 @@ Read-Only:
 
 - `name` (String) Variable name
 - `value` (String) Variable value
+- `variable_type` (String) Variable type
