@@ -1,0 +1,2 @@
+```release-note:bug
+Cloud Platform: fix hcp_group_members docs to reference an hcp_user_principal.user_id instead of an hcp_user_principal.id
