@@ -1,0 +1,2 @@
+```release-note:bug
+Cloud Platform: fix issue where hcp_group description cannot be set to an empty string after it has been set to a non-empty string
