@@ -27,7 +27,7 @@ Waypoint Application Template resource
 - `labels` (List of String) List of labels attached to this Application Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Application Template is located.
 - `readme_markdown_template` (String) Instructions for using the template (markdown format supported
-- `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
+- `variable_options` (Attributes Set) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
 

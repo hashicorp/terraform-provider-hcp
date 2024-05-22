@@ -155,7 +155,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 					},
 				},
 			},
-			"variable_options": schema.ListNestedAttribute{
+			"variable_options": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "List of variable options for the template",
 				NestedObject: schema.NestedAttributeObject{
