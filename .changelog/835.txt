@@ -1,0 +1,3 @@
+```release-note:feature
+Added HCP Boundary to statuspage components used to warn about potential issues with HCP.
+```
