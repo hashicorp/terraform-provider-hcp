@@ -1,3 +1,16 @@
+## v0.90.0 (May 22, 2024)
+
+FEATURES:
+
+* Added HCP Boundary to statuspage components used to warn about potential issues with HCP. [[GH-835](https://github.com/hashicorp/terraform-provider-hcp/pull/835)]
+
+IMPROVEMENTS:
+
+* Support retrieving output values in `hcp_waypoint_add_on` [[GH-822](https://github.com/hashicorp/terraform-provider-hcp/pull/822)]
+
+BUG FIXES:
+
+* Waypoint: fix issue with importing existing Waypoint resources [[GH-839](https://github.com/hashicorp/terraform-provider-hcp/pull/839)]
 ## v0.89.0 (May 10, 2024)
 
 IMPROVEMENTS:
