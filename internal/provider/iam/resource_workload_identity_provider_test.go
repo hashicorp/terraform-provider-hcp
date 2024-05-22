@@ -22,6 +22,14 @@ func TestAccWorkloadIdentityProviderResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
+				Config: testAccWorkloadIdentityProviderConfigNoDesc(spName, accountID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_iam_workload_identity_provider.example", "aws.account_id", accountID),
+					resource.TestCheckResourceAttrSet("hcp_iam_workload_identity_provider.example", "resource_name"),
+					resource.TestCheckResourceAttrSet("hcp_iam_workload_identity_provider.example", "resource_id"),
+				),
+			},
+			{
 				Config: testAccWorkloadIdentityProviderConfig(spName, accountID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_iam_workload_identity_provider.example", "aws.account_id", accountID),
@@ -67,6 +75,25 @@ func testAccWorkloadIdentityProviderImportID(s *terraform.State) (string, error)
 	}
 
 	return id, nil
+}
+
+func testAccWorkloadIdentityProviderConfigNoDesc(spName, accountID string) string {
+	config := `
+resource "hcp_service_principal" "example" {
+	name = %q
+}
+
+resource "hcp_iam_workload_identity_provider" "example" {
+	service_principal = hcp_service_principal.example.resource_name
+	name = "aws"
+	conditional_access = "aws.arn == \"arn:aws:sts::%s:assumed-role/bar\""
+
+	aws = {
+		account_id = %q
+	}
+} `
+
+	return fmt.Sprintf(config, spName, accountID, accountID)
 }
 
 func testAccWorkloadIdentityProviderConfig(spName, accountID string) string {

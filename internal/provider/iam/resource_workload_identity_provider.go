@@ -72,8 +72,9 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 				},
 			},
 			"description": schema.StringAttribute{
-				Optional:    true,
 				Description: "A description for the workload identity provider.",
+				Computed:    true,
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 255),
 				},

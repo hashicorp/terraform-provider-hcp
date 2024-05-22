@@ -1,0 +1,2 @@
+```release-note:bug
+Cloud Platform: fix issue where hcp_iam_workload_identity_provider without a description would cause a state error
