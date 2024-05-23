@@ -105,33 +105,6 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	return createResp.Payload.Secret, nil
 }
 
-func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20230613OpenSecret, error) {
-	params := secret_service.NewOpenAppSecretsParams()
-	params.Context = ctx
-	params.AppName = appName
-	params.LocationOrganizationID = loc.OrganizationID
-	params.LocationProjectID = loc.ProjectID
-
-	var secrets *secret_service.OpenAppSecretsOK
-	var err error
-	for attempt := 0; attempt < retryCount; attempt++ {
-		secrets, err = client.VaultSecrets.OpenAppSecrets(params, nil)
-		if err != nil {
-			serviceErr, ok := err.(*secret_service.OpenAppSecretsDefault)
-			if !ok {
-				return nil, err
-			}
-			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
-				continue
-			}
-			return nil, err
-		}
-		break
-	}
-
-	return secrets.Payload.Secrets, nil
-}
-
 // DeleteVaultSecretsAppSecret will delete a Vault Secrets application secret.
 func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) error {
 

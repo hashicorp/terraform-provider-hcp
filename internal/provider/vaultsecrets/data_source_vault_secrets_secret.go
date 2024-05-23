@@ -121,6 +121,10 @@ func (d *DataSourceVaultSecretsSecret) Read(ctx context.Context, req datasource.
 			resp.Diagnostics.AddError(err.Error(), "could not encode rotating secret as json")
 			return
 		}
+		resp.Diagnostics.AddWarning(
+			"HCP Vault Secrets mismatched type",
+			"Attempted to get a rotating secret in a KV secret data source, encoding the secret values as JSON",
+		)
 		secretValue = string(secretData)
 	default:
 		resp.Diagnostics.AddError(

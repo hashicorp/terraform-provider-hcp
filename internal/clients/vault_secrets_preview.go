@@ -16,20 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// ListVaultSecretsAppSecrets will retrieve all app secrets metadata for a Vault Secrets application.
-func ListVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20231128Secret, error) {
-	listParams := secret_service.NewListAppSecretsParamsWithContext(ctx).
-		WithAppName(appName).
-		WithOrganizationID(loc.OrganizationID).
-		WithProjectID(loc.ProjectID)
-
-	listResp, err := client.VaultSecretsPreview.ListAppSecrets(listParams, nil)
-	if err != nil {
-		return nil, err
-	}
-	return listResp.GetPayload().Secrets, nil
-}
-
 // OpenVaultSecretsAppSecret will retrieve the latest secret for a Vault Secrets app, including it's value.
 func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20231128OpenSecret, error) {
 	getParams := secret_service.NewOpenAppSecretParamsWithContext(ctx).
@@ -65,4 +51,35 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 	}
 
 	return getResp.GetPayload().Secret, nil
+}
+
+func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20231128OpenSecret, error) {
+	params := secret_service.NewOpenAppSecretsParamsWithContext(ctx).
+		WithAppName(appName).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID)
+
+	var secrets *secret_service.OpenAppSecretsOK
+	var err error
+	for attempt := 0; attempt < retryCount; attempt++ {
+		secrets, err = client.VaultSecretsPreview.OpenAppSecrets(params, nil)
+		if err != nil {
+			var serviceErr *secret_service.OpenAppSecretDefault
+			ok := errors.As(err, &serviceErr)
+			if !ok {
+				return nil, err
+			}
+			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
+				continue
+			}
+			return nil, err
+		}
+		break
+	}
+
+	if secrets == nil {
+		return nil, errors.New("unable to get secrets")
+	}
+
+	return secrets.GetPayload().Secrets, nil
 }
