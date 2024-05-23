@@ -54,8 +54,8 @@ type ApplicationResourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars         types.List `tfsdk:"app_input_vars"`
-	TemplateInputVars types.List `tfsdk:"template_input_vars"`
+	InputVars         types.Set `tfsdk:"app_input_vars"`
+	TemplateInputVars types.Set `tfsdk:"template_input_vars"`
 }
 
 type InputVar struct {
@@ -165,7 +165,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"template_input_vars": schema.SetNestedAttribute{
 				Computed:    true,
-				Description: "Input variables set by the template for the application.",
+				Description: "Input variables set for the application.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
@@ -482,23 +482,23 @@ func readInputs(
 			}
 		}
 		if len(aivls) > 0 {
-			aivs, diags := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
+			aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
 			if diags.HasError() {
 				return diags
 			}
 			plan.InputVars = aivs
 		} else {
-			plan.InputVars = types.ListNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+			plan.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 		}
 
 		if len(tivls) > 0 {
-			tivs, diags := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, tivls)
+			tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, tivls)
 			if diags.HasError() {
 				return diags
 			}
 			plan.TemplateInputVars = tivs
 		} else {
-			plan.TemplateInputVars = types.ListNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+			plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 		}
 	}
 	return diags

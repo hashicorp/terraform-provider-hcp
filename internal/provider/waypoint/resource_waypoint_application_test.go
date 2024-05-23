@@ -57,13 +57,13 @@ func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.name", "faction"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.value", "brotherhood-of-steel"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.1.name", "vault_dweller_name"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.1.value", "courier"),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.1.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.0.name", "faction"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.0.value", "brotherhood-of-steel"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.1.name", "vault_dweller_name"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.1.value", "courier"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.1.variable_type", "string"),
 				),
 			},
 		},
@@ -89,6 +89,13 @@ func TestAccWaypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
 					resource.TestCheckResourceAttr(resourceName, "app_input_vars.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "template_input_vars.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "template_input_vars.0.name", "faction"),
+					resource.TestCheckResourceAttr(resourceName, "template_input_vars.0.value", "brotherhood-of-steel"),
+					//resource.TestCheckResourceAttr(resourceName, "template_input_vars.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "template_input_vars.1.name", "vault_dweller_name"),
+					resource.TestCheckResourceAttr(resourceName, "template_input_vars.1.value", "lone-wanderer"),
+					//resource.TestCheckResourceAttr(resourceName, "template_input_vars.1.variable_type", "string"),
 				),
 			},
 		},
@@ -296,9 +303,7 @@ resource "hcp_waypoint_application_template" "test_var_opts" {
 }
 
 resource "hcp_waypoint_application" "test_var_opts" {
-  name    = "%s"
+  name    			      = "%s"
   application_template_id = hcp_waypoint_application_template.test_var_opts.id
-
-  app_input_vars = []
 }`, tempName, appName)
 }
