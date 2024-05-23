@@ -88,7 +88,7 @@ func TestAccWaypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(resourceName, "input_vars.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "app_input_vars.#", "0"),
 				),
 			},
 		},
@@ -245,7 +245,7 @@ resource "hcp_waypoint_application" "test_var_opts" {
   name    = "%s"
   application_template_id = hcp_waypoint_application_template.test_var_opts.id
 
-  input_vars = [
+  app_input_vars = [
 	{
       name  		= "faction"
       variable_type = "string"
@@ -299,6 +299,6 @@ resource "hcp_waypoint_application" "test_var_opts" {
   name    = "%s"
   application_template_id = hcp_waypoint_application_template.test_var_opts.id
 
-  input_vars = []
+  app_input_vars = []
 }`, tempName, appName)
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -55,7 +54,8 @@ type ApplicationResourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars types.List `tfsdk:"input_vars"`
+	InputVars         types.List `tfsdk:"app_input_vars"`
+	TemplateInputVars types.List `tfsdk:"template_input_vars"`
 }
 
 type InputVar struct {
@@ -143,9 +143,9 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"input_vars": schema.ListNestedAttribute{
+			"app_input_vars": schema.ListNestedAttribute{
 				Optional:    true,
-				Description: "Input variables for the Application.",
+				Description: "Input variables set for the application.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
@@ -154,6 +154,27 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						},
 						"variable_type": &schema.StringAttribute{
 							Required:    true,
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
+			"template_input_vars": schema.ListNestedAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "Input variables set by the template for the application.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    false,
 							Description: "Variable type",
 						},
 						"value": &schema.StringAttribute{
@@ -430,7 +451,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// readInputs reads the inputVars for an app into the application resource model
+// readInputs reads the inputVars for an app into the application resource model.
 func readInputs(
 	ctx context.Context,
 	inputVars []*waypoint_models.HashicorpCloudWaypointInputVariable,
@@ -438,33 +459,47 @@ func readInputs(
 	varTypes map[string]string,
 ) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	if inputVars != nil {
-		ivl := make([]*InputVar, 0)
+		// make app an template input vars lists
+		aivls := make([]*InputVar, 0)
+		tivls := make([]*InputVar, 0)
 		for _, iv := range inputVars {
-			// TODO: Omit not only waypoint_application but also variables
-			// set on the template.
 			if iv.Name != "waypoint_application" {
 				inputVar := &InputVar{
 					Name:  types.StringValue(iv.Name),
 					Value: types.StringValue(iv.Value),
 				}
 
+				// if the variable isn't in the varTypes map, it's an input
+				// variable set by the template
 				if _, ok := varTypes[iv.Name]; ok {
 					inputVar.VariableType = types.StringValue(varTypes[iv.Name])
+					aivls = append(aivls, inputVar)
+				} else {
+					inputVar.VariableType = types.StringNull()
+					tivls = append(tivls, inputVar)
 				}
-
-				ivl = append(ivl, inputVar)
 			}
 		}
-		if len(ivl) > 0 {
-			var ivs basetypes.ListValue
-			ivs, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, ivl)
+		if len(aivls) > 0 {
+			aivs, diags := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
 			if diags.HasError() {
 				return diags
 			}
-			plan.InputVars = ivs
+			plan.InputVars = aivs
 		} else {
 			plan.InputVars = types.ListNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+		}
+
+		if len(tivls) > 0 {
+			tivs, diags := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, tivls)
+			if diags.HasError() {
+				return diags
+			}
+			plan.TemplateInputVars = tivs
+		} else {
+			plan.TemplateInputVars = types.ListNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 		}
 	}
 	return diags
