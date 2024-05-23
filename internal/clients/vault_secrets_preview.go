@@ -18,11 +18,10 @@ import (
 
 // ListVaultSecretsAppSecrets will retrieve all app secrets metadata for a Vault Secrets application.
 func ListVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20231128Secret, error) {
-	listParams := secret_service.NewListAppSecretsParams()
-	listParams.Context = ctx
-	listParams.AppName = appName
-	listParams.OrganizationID = loc.OrganizationID
-	listParams.ProjectID = loc.ProjectID
+	listParams := secret_service.NewListAppSecretsParamsWithContext(ctx).
+		WithAppName(appName).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID)
 
 	listResp, err := client.VaultSecretsPreview.ListAppSecrets(listParams, nil)
 	if err != nil {
@@ -33,12 +32,11 @@ func ListVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 
 // OpenVaultSecretsAppSecret will retrieve the latest secret for a Vault Secrets app, including it's value.
 func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20231128OpenSecret, error) {
-	getParams := secret_service.NewOpenAppSecretParams()
-	getParams.Context = ctx
-	getParams.AppName = appName
-	getParams.SecretName = secretName
-	getParams.OrganizationID = loc.OrganizationID
-	getParams.ProjectID = loc.ProjectID
+	getParams := secret_service.NewOpenAppSecretParamsWithContext(ctx).
+		WithAppName(appName).
+		WithSecretName(secretName).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID)
 
 	var getResp *secret_service.OpenAppSecretOK
 	var err error
