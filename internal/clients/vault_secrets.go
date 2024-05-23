@@ -69,23 +69,6 @@ func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 	return updateResp.Payload.App, nil
 }
 
-// ListVaultSecretsAppSecrets will retrieve all app secrets metadata for a Vault Secrets application.
-func ListVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20230613Secret, error) {
-
-	listParams := secret_service.NewListAppSecretsParams()
-	listParams.Context = ctx
-	listParams.AppName = appName
-	listParams.LocationOrganizationID = loc.OrganizationID
-	listParams.LocationProjectID = loc.ProjectID
-
-	listResp, err := client.VaultSecrets.ListAppSecrets(listParams, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return listResp.Payload.Secrets, nil
-}
-
 // DeleteVaultSecretsApp will delete a Vault Secrets application.
 func DeleteVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) error {
 
@@ -120,35 +103,6 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	}
 
 	return createResp.Payload.Secret, nil
-}
-
-// OpenVaultSecretsAppSecret will retrieve the latest secret for a Vault Secrets app, including it's value.
-func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20230613OpenSecret, error) {
-	getParams := secret_service.NewOpenAppSecretParams()
-	getParams.Context = ctx
-	getParams.AppName = appName
-	getParams.SecretName = secretName
-	getParams.LocationOrganizationID = loc.OrganizationID
-	getParams.LocationProjectID = loc.ProjectID
-
-	var getResp *secret_service.OpenAppSecretOK
-	var err error
-	for attempt := 0; attempt < retryCount; attempt++ {
-		getResp, err = client.VaultSecrets.OpenAppSecret(getParams, nil)
-		if err != nil {
-			serviceErr, ok := err.(*secret_service.OpenAppSecretDefault)
-			if !ok {
-				return nil, err
-			}
-
-			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
-				continue
-			}
-			return nil, err
-		}
-		break
-	}
-	return getResp.Payload.Secret, nil
 }
 
 func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) ([]*secretmodels.Secrets20230613OpenSecret, error) {
