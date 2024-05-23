@@ -143,7 +143,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"app_input_vars": schema.ListNestedAttribute{
+			"app_input_vars": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables set for the application.",
 				NestedObject: schema.NestedAttributeObject{
@@ -163,9 +163,8 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"template_input_vars": schema.ListNestedAttribute{
+			"template_input_vars": schema.SetNestedAttribute{
 				Computed:    true,
-				Optional:    true,
 				Description: "Input variables set by the template for the application.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
