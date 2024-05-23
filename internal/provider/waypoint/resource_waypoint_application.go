@@ -173,7 +173,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 							Description: "Variable name",
 						},
 						"variable_type": &schema.StringAttribute{
-							Required:    false,
+							Optional:    true,
 							Description: "Variable type",
 						},
 						"value": &schema.StringAttribute{
