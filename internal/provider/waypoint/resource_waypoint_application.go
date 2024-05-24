@@ -54,7 +54,13 @@ type ApplicationResourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars         types.Set `tfsdk:"app_input_vars"`
+	InputVars types.Set `tfsdk:"app_input_vars"`
+
+	// NOTE: At the time of writing this comment, TemplateInputVars is the only
+	// struct field that makes ApplicationResourceModel different from ApplicationDataSourceModel.
+	// One might see an opportunity here to use an embedded struct to avoid code duplication;
+	// however, this is not currently possible in the framework. See this issue for more details:
+	// https://github.com/hashicorp/terraform-plugin-framework/issues/242
 	TemplateInputVars types.Set `tfsdk:"template_input_vars"`
 }
 
@@ -470,14 +476,16 @@ func readInputs(
 					Value: types.StringValue(iv.Value),
 				}
 
-				// if the variable isn't in the varTypes map, it's an input
-				// variable set by the template
-				if _, ok := varTypes[iv.Name]; ok {
-					inputVar.VariableType = types.StringValue(varTypes[iv.Name])
-					aivls = append(aivls, inputVar)
-				} else {
-					inputVar.VariableType = types.StringNull()
-					tivls = append(tivls, inputVar)
+				if varTypes != nil {
+					// if the variable isn't in the varTypes map, it's an input
+					// variable set by the template
+					if _, ok := varTypes[iv.Name]; ok {
+						inputVar.VariableType = types.StringValue(varTypes[iv.Name])
+						aivls = append(aivls, inputVar)
+					} else {
+						inputVar.VariableType = types.StringNull()
+						tivls = append(tivls, inputVar)
+					}
 				}
 			}
 		}

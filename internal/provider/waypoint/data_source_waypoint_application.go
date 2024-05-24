@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -81,7 +80,7 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Internal Namespace ID.",
 			},
-			"input_vars": schema.ListNestedAttribute{
+			"app_input_vars": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables for the Application.",
 				NestedObject: schema.NestedAttributeObject{
@@ -121,8 +120,28 @@ func (d *DataSourceApplication) Configure(ctx context.Context, req datasource.Co
 	d.client = client
 }
 
+// ApplicationDataSourceModel describes the data source data model
+type ApplicationDataSourceModel struct {
+	ID                      types.String `tfsdk:"id"`
+	Name                    types.String `tfsdk:"name"`
+	ProjectID               types.String `tfsdk:"project_id"`
+	OrgID                   types.String `tfsdk:"organization_id"`
+	ReadmeMarkdown          types.String `tfsdk:"readme_markdown"`
+	ApplicationTemplateID   types.String `tfsdk:"application_template_id"`
+	ApplicationTemplateName types.String `tfsdk:"application_template_name"`
+	NamespaceID             types.String `tfsdk:"namespace_id"`
+
+	// deferred for now
+	// Tags       types.List `tfsdk:"tags"`
+
+	// deferred and probably a list or objects, but may possible be a separate
+	// ActionCfgs types.List `tfsdk:"action_cfgs"`
+
+	InputVars types.Set `tfsdk:"app_input_vars"`
+}
+
 func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ApplicationResourceModel
+	var data ApplicationDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	client := d.client
@@ -174,10 +193,22 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	resp.Diagnostics.Append(readInputs(ctx, inputVars, &data, nil)...)
-	if resp.Diagnostics.HasError() {
-		tflog.Error(ctx, "error reading application input variables")
-		return
+	if len(inputVars) > 0 {
+		aivls := make([]*InputVar, 0)
+		for _, iv := range inputVars {
+			if iv.Name != "waypoint_application" {
+				aivls = append(aivls, &InputVar{
+					Name:  types.StringValue(iv.Name),
+					Value: types.StringValue(iv.Value),
+				})
+			}
+		}
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
+		data.InputVars = aivs
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
