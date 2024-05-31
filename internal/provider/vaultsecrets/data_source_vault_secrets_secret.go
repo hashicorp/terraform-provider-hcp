@@ -109,8 +109,8 @@ func (d *DataSourceVaultSecretsSecret) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	// NOTE: for backwards compatibility purposes, if the secret is not a static secret (aka a string)
-	// encode the complex secret as a json string
+	// NOTE: for backwards compatibility purposes, if the secret is not a static secret (a string)
+	// encode the complex secret as a JSON string
 	var secretValue string
 	switch {
 	case openSecret.StaticVersion != nil:
