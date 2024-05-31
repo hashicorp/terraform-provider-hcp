@@ -19,13 +19,14 @@ type DataSourceVaultSecretsRotatingSecret struct {
 }
 
 type DataSourceVaultSecretsRotatingSecretModel struct {
-	ID            types.String `tfsdk:"id"`
-	AppName       types.String `tfsdk:"app_name"`
-	ProjectID     types.String `tfsdk:"project_id"`
-	OrgID         types.String `tfsdk:"organization_id"`
-	SecretName    types.String `tfsdk:"secret_name"`
-	SecretValues  types.Map    `tfsdk:"secret_values"`
-	SecretVersion types.Int64  `tfsdk:"secret_version"`
+	ID             types.String `tfsdk:"id"`
+	AppName        types.String `tfsdk:"app_name"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrgID          types.String `tfsdk:"organization_id"`
+	SecretName     types.String `tfsdk:"secret_name"`
+	SecretValues   types.Map    `tfsdk:"secret_values"`
+	SecretVersion  types.Int64  `tfsdk:"secret_version"`
+	SecretProvider types.String `tfsdk:"secret_provider"`
 }
 
 func NewVaultSecretsRotatingSecretDataSource() datasource.DataSource {
@@ -60,6 +61,10 @@ func (d *DataSourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ datas
 			},
 			"secret_version": schema.Int64Attribute{
 				Description: "The version of the Vault Secrets secret.",
+				Computed:    true,
+			},
+			"provider": schema.StringAttribute{
+				Description: "The name of the provider this rotating secret is for",
 				Computed:    true,
 			},
 			"organization_id": schema.StringAttribute{
@@ -137,6 +142,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Read(ctx context.Context, req dat
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.SecretValues = secretsOutput
 	data.SecretVersion = types.Int64Value(secretVersion)
+	data.SecretProvider = types.StringValue(openSecret.Provider)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
