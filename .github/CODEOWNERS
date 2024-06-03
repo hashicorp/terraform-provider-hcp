@@ -1,6 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-* @hashicorp/cloud-foundations
+* @hashicorp/cloud-core-platform-surfaces
 
 # all iam resources and clients are owned by the cloud-identity team
 *iam* @hashicorp/cloud-identity
