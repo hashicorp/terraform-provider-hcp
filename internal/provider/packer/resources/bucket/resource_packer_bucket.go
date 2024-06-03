@@ -92,7 +92,7 @@ func (r *resourcePackerBucket) Schema(_ context.Context, _ resource.SchemaReques
 // This function is required by the interface but should be unreachable
 func (r *resourcePackerBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// In-place update is not supported, the bucket must be re-created to change any user modifable fields
-	resp.Diagnostics.AddError("Unexpected provider error", "Update should not be called for hcp_packer_resource, this is always a provider bug")
+	resp.Diagnostics.AddError("Unexpected provider error", "This is an internal error, please report this issue to the provider developers")
 
 }
 
@@ -178,7 +178,7 @@ func (r *resourcePackerBucket) Read(ctx context.Context, req resource.ReadReques
 	resourceParts := strings.SplitN(resourceName, "/", 5)
 	resourceNameValid, err := regexp.MatchString(resourceNameRegex, resourceName)
 	if err != nil {
-		resp.Diagnostics.AddError("Unexpected provider error", "Failed to parse regular expression, this is always a provider bug")
+		resp.Diagnostics.AddError("Unexpected provider error", "Failed to parse regular expression, this is an internal error, please report this issue to the provider developers")
 		return
 	}
 	if !resourceNameValid || len(resourceParts) != 5 {
@@ -194,7 +194,6 @@ func (r *resourcePackerBucket) Read(ctx context.Context, req resource.ReadReques
 	bucketResp, err := r.client.PackerV2.PackerServiceGetBucket(params, nil)
 
 	projectID := resourceParts[2]
-	// TODO Does this make sense, should we use the projectID from the resource name?
 	params.SetLocationProjectID(projectID)
 	if err != nil {
 		if getBucketErr, ok := err.(*packerservice.PackerServiceGetBucketDefault); ok {
