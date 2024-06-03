@@ -80,7 +80,7 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Internal Namespace ID.",
 			},
-			"app_input_vars": schema.SetNestedAttribute{
+			"input_vars": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables for the Application.",
 				NestedObject: schema.NestedAttributeObject{
