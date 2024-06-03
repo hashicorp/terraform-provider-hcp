@@ -85,10 +85,10 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 }
 
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
-func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasApiPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasRotationIntegration, error) {
+func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasRotationIntegration, error) {
 	body := secret_service.CreateMongoDBAtlasRotationIntegrationBody{
 		IntegrationName:      integrationName,
-		MongodbAPIPublicKey:  mongodbAtlasApiPublicKey,
+		MongodbAPIPublicKey:  mongodbAtlasPublicKey,
 		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
 	}
 	params := secret_service.NewCreateMongoDBAtlasRotationIntegrationParamsWithContext(ctx).

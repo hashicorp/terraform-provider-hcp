@@ -29,7 +29,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 	mongodbAtlasPublicKey := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_API_PUBLIC_KEY")
 	mongodbAtlasPrivateKey := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_API_PRIVATE_KEY")
 	mongodbAtlasGroupID := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_GROUP_ID")
-	mongodbAtlasDbName := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_DB_NAME")
+	mongodbAtlasDBName := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_DB_NAME")
 
 	testAppName := generateRandomSlug()
 	testIntegrationName := generateRandomSlug()
@@ -69,7 +69,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 						MongodbGroupID:          mongodbAtlasGroupID,
 						MongodbRoles: []*secretmodels.Secrets20231128MongoDBRole{
 							{
-								DatabaseName:   mongodbAtlasDbName,
+								DatabaseName:   mongodbAtlasDBName,
 								RoleName:       "read",
 								CollectionName: "",
 							},
