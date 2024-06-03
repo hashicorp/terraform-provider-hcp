@@ -193,22 +193,24 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	if len(inputVars) > 0 {
-		aivls := make([]*InputVar, 0)
-		for _, iv := range inputVars {
-			if iv.Name != "waypoint_application" {
-				aivls = append(aivls, &InputVar{
-					Name:  types.StringValue(iv.Name),
-					Value: types.StringValue(iv.Value),
-				})
-			}
+	aivls := make([]*InputVar, 0)
+	for _, iv := range inputVars {
+		if iv.Name != "waypoint_application" {
+			aivls = append(aivls, &InputVar{
+				Name:  types.StringValue(iv.Name),
+				Value: types.StringValue(iv.Value),
+			})
 		}
+	}
+	if len(aivls) > 0 {
 		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
 		resp.Diagnostics.Append(diags...)
 		if diags.HasError() {
 			return
 		}
 		data.InputVars = aivs
+	} else {
+		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
