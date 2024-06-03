@@ -137,7 +137,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Read(ctx context.Context, req dat
 	resp.Diagnostics.Append(diag...)
 
 	// TODO: what is ID supposed to be?
-	//data.ID = ?
+	// data.ID = ?
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.SecretValues = secretsOutput
