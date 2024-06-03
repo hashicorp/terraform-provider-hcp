@@ -63,7 +63,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ datas
 				Description: "The version of the Vault Secrets secret.",
 				Computed:    true,
 			},
-			"provider": schema.StringAttribute{
+			"secret_provider": schema.StringAttribute{
 				Description: "The name of the provider this rotating secret is for",
 				Computed:    true,
 			},
