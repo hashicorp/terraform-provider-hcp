@@ -465,50 +465,49 @@ func readInputs(
 ) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if inputVars != nil {
-		// make app an template input vars lists
-		aivls := make([]*InputVar, 0)
-		tivls := make([]*InputVar, 0)
-		for _, iv := range inputVars {
-			if iv.Name != "waypoint_application" {
-				inputVar := &InputVar{
-					Name:  types.StringValue(iv.Name),
-					Value: types.StringValue(iv.Value),
-				}
+	// make app template input vars lists
+	aivls := make([]*InputVar, 0)
+	tivls := make([]*InputVar, 0)
+	for _, iv := range inputVars {
+		if iv.Name != "waypoint_application" {
+			inputVar := &InputVar{
+				Name:  types.StringValue(iv.Name),
+				Value: types.StringValue(iv.Value),
+			}
 
-				if varTypes != nil {
-					// if the variable isn't in the varTypes map, it's an input
-					// variable set by the template
-					if _, ok := varTypes[iv.Name]; ok {
-						inputVar.VariableType = types.StringValue(varTypes[iv.Name])
-						aivls = append(aivls, inputVar)
-					} else {
-						inputVar.VariableType = types.StringNull()
-						tivls = append(tivls, inputVar)
-					}
+			if varTypes != nil {
+				// if the variable isn't in the varTypes map, it's an input
+				// variable set by the template
+				if _, ok := varTypes[iv.Name]; ok {
+					inputVar.VariableType = types.StringValue(varTypes[iv.Name])
+					aivls = append(aivls, inputVar)
+				} else {
+					inputVar.VariableType = types.StringNull()
+					tivls = append(tivls, inputVar)
 				}
 			}
-		}
-		if len(aivls) > 0 {
-			aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
-			if diags.HasError() {
-				return diags
-			}
-			plan.InputVars = aivs
-		} else {
-			plan.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
-		}
-
-		if len(tivls) > 0 {
-			tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, tivls)
-			if diags.HasError() {
-				return diags
-			}
-			plan.TemplateInputVars = tivs
-		} else {
-			plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 		}
 	}
+	if len(aivls) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
+		if diags.HasError() {
+			return diags
+		}
+		plan.InputVars = aivs
+	} else {
+		plan.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	if len(tivls) > 0 {
+		tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, tivls)
+		if diags.HasError() {
+			return diags
+		}
+		plan.TemplateInputVars = tivs
+	} else {
+		plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
 	return diags
 }
 
