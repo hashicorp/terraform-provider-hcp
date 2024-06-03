@@ -24,7 +24,7 @@ func checkRequiredEnvVarOrFail(t *testing.T, varName string) string {
 	return value
 }
 
-func TestDataSourceVaultSecretsRotatingSecret(t *testing.T) {
+func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 
 	mongodbAtlasPublicKey := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_API_PUBLIC_KEY")
 	mongodbAtlasPrivateKey := checkRequiredEnvVarOrFail(t, "MONGODB_ATLAS_API_PRIVATE_KEY")
