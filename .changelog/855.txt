@@ -1,0 +1,3 @@
+```release-note:improvement
+Update `hcp-sdk-go` to v0.98.0
+```
