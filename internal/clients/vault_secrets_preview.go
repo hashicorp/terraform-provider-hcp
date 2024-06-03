@@ -83,3 +83,60 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 
 	return secrets.GetPayload().Secrets, nil
 }
+
+// CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
+func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasApiPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasRotationIntegration, error) {
+	body := secret_service.CreateMongoDBAtlasRotationIntegrationBody{
+		IntegrationName:      integrationName,
+		MongodbAPIPublicKey:  mongodbAtlasApiPublicKey,
+		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
+	}
+	params := secret_service.NewCreateMongoDBAtlasRotationIntegrationParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithBody(body)
+
+	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasRotationIntegration(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.GetPayload().RotationIntegration, nil
+}
+
+// DeleteMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
+func DeleteMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName string) error {
+	params := secret_service.NewDeleteMongoDBAtlasRotationIntegrationParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithIntegrationName(integrationName)
+
+	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasRotationIntegration(params, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateMongoDBAtlasRotatingSecret NOTE: currently just needed for tests
+func CreateMongoDBAtlasRotatingSecret(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	appName string,
+	requestBody secret_service.CreateMongoDBAtlasRotatingSecretBody,
+) (*secretmodels.Secrets20231128CreateMongoDBAtlasRotatingSecretResponse, error) {
+	params := secret_service.NewCreateMongoDBAtlasRotatingSecretParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithAppName(appName).
+		WithBody(requestBody)
+
+	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasRotatingSecret(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.GetPayload(), nil
+}
