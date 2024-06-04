@@ -11,6 +11,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -50,6 +51,29 @@ type ApplicationResourceModel struct {
 
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
+
+	InputVars types.Set `tfsdk:"application_input_variables"`
+
+	// NOTE: At the time of writing this comment, TemplateInputVars is the only
+	// struct field that makes ApplicationResourceModel different from ApplicationDataSourceModel.
+	// One might see an opportunity here to use an embedded struct to avoid code duplication;
+	// however, this is not currently possible in the framework. See this issue for more details:
+	// https://github.com/hashicorp/terraform-plugin-framework/issues/242
+	TemplateInputVars types.Set `tfsdk:"template_input_variables"`
+}
+
+type InputVar struct {
+	Name         types.String `tfsdk:"name"`
+	VariableType types.String `tfsdk:"variable_type"`
+	Value        types.String `tfsdk:"value"`
+}
+
+func (i InputVar) attrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":          types.StringType,
+		"variable_type": types.StringType,
+		"value":         types.StringType,
+	}
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -123,6 +147,46 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"application_input_variables": schema.SetNestedAttribute{
+				Optional:    true,
+				Description: "Input variables set for the application.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
+			"template_input_variables": schema.SetNestedAttribute{
+				Computed:    true,
+				Description: "Input variables set for the application.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Optional:    true,
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -177,11 +241,38 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API
+	varTypes := map[string]string{}
+
+	// Prepare the input variables that the user provided to the application
+	// creation request
+	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+
+	inputVarsSlice := []InputVar{}
+	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
+	if diags.HasError() {
+		return
+	}
+	for _, v := range inputVarsSlice {
+		// add the input variable to the list of input variables for the app
+		// creation API call
+		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
+			Name:         v.Name.ValueString(),
+			Value:        v.Value.ValueString(),
+			VariableType: v.VariableType.ValueString(),
+		})
+
+		// store var type for later use when fetching the input variables from the API
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
 		Name: plan.Name.ValueString(),
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.ApplicationTemplateID.ValueString(),
 		},
+		Variables: ivs,
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
@@ -217,6 +308,33 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		plan.ReadmeMarkdown = types.StringNull()
 	}
 
+	inputVars, err := clients.GetInputVariables(ctx, client, plan.Name.ValueString(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
+		return
+	}
+
+	applicationInputVars, templateInputVars := splitInputs(inputVars, varTypes)
+	if len(applicationInputVars) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, applicationInputVars)
+		if diags.HasError() {
+			return
+		}
+		plan.InputVars = aivs
+	} else {
+		plan.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	if len(templateInputVars) > 0 {
+		tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, templateInputVars)
+		if diags.HasError() {
+			return
+		}
+		plan.TemplateInputVars = tivs
+	} else {
+		plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "created application from template resource")
@@ -246,6 +364,19 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		ProjectID:      projectID,
 	}
 
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API
+	varTypes := map[string]string{}
+	inputVarsSlice := []InputVar{}
+	diags := data.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
+	if diags.HasError() {
+		return
+	}
+	for _, v := range inputVarsSlice {
+		// store var type for later use when fetching the input variables from the API
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+	}
+
 	client := r.client
 
 	application, err := clients.GetApplicationByID(ctx, client, loc, data.ID.ValueString())
@@ -272,7 +403,66 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		data.ReadmeMarkdown = types.StringNull()
 	}
 
+	inputVars, err := clients.GetInputVariables(ctx, client, data.Name.ValueString(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
+		return
+	}
+
+	applicationInputVars, templateInputVars := splitInputs(inputVars, varTypes)
+	if len(applicationInputVars) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, applicationInputVars)
+		if diags.HasError() {
+			return
+		}
+		data.InputVars = aivs
+	} else {
+		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	if len(templateInputVars) > 0 {
+		tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, templateInputVars)
+		if diags.HasError() {
+			return
+		}
+		data.TemplateInputVars = tivs
+	} else {
+		data.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// splitInputs separates the input variables into two lists: application input
+// variables and template input variables. The application input variables are
+// those that are set by the user when creating the application, and the
+// template input variables are those that are set by the template or by HCP
+// Waypoint.
+func splitInputs(
+	inputVars []*waypoint_models.HashicorpCloudWaypointInputVariable,
+	varTypes map[string]string,
+) ([]*InputVar, []*InputVar) {
+	applicationInputVars := make([]*InputVar, 0)
+	templateInputVars := make([]*InputVar, 0)
+	for _, iv := range inputVars {
+		inputVar := &InputVar{
+			Name:  types.StringValue(iv.Name),
+			Value: types.StringValue(iv.Value),
+		}
+
+		if varTypes != nil {
+			// if the variable isn't in the varTypes map, it's an input
+			// variable set by the template, or set by HCP Waypoint
+			if _, ok := varTypes[iv.Name]; ok {
+				inputVar.VariableType = types.StringValue(varTypes[iv.Name])
+				applicationInputVars = append(applicationInputVars, inputVar)
+			} else {
+				inputVar.VariableType = types.StringNull()
+				templateInputVars = append(templateInputVars, inputVar)
+			}
+		}
+	}
+
+	return applicationInputVars, templateInputVars
 }
 
 func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

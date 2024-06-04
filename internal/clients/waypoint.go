@@ -177,3 +177,21 @@ func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.Hashico
 	}
 	return getResp.GetPayload().AddOn, nil
 }
+
+func GetInputVariables(ctx context.Context, client *Client, workspaceName string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*waypoint_models.HashicorpCloudWaypointInputVariable, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetTFRunStatusParams{
+		WorkspaceName: workspaceName,
+		NamespaceID:   ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetTFRunStatus(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().InputVariables, nil
+}
