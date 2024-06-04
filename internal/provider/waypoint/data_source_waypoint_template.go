@@ -54,7 +54,7 @@ func NewApplicationTemplateDataSource() datasource.DataSource {
 }
 
 func (d *DataSourceApplicationTemplate) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_application_template"
+	resp.TypeName = req.ProviderTypeName + "_waypoint_template"
 }
 
 func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

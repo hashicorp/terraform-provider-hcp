@@ -154,7 +154,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		webhook.NewNotificationsWebhookResource,
 		// Waypoint
 		waypoint.NewApplicationResource,
-		waypoint.NewApplicationTemplateResource,
+		waypoint.TemplateResource,
 		waypoint.NewAddOnResource,
 		waypoint.NewAddOnDefinitionResource,
 		waypoint.NewTfcConfigResource,

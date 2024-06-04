@@ -24,15 +24,15 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &ApplicationTemplateResource{}
-var _ resource.ResourceWithImportState = &ApplicationTemplateResource{}
+var _ resource.Resource = &TemplateResource{}
+var _ resource.ResourceWithImportState = &TemplateResource{}
 
-func NewApplicationTemplateResource() resource.Resource {
-	return &ApplicationTemplateResource{}
+func NewTemplateResource() resource.Resource {
+	return &TemplateResource{}
 }
 
-// ApplicationTemplateResource defines the resource implementation.
-type ApplicationTemplateResource struct {
+// TemplateResource defines the resource implementation.
+type TemplateResource struct {
 	client *clients.Client
 }
 
@@ -70,36 +70,36 @@ type tfcVariableOption struct {
 	UserEditable types.Bool   `tfsdk:"user_editable"`
 }
 
-func (r *ApplicationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_application_template"
+func (r *TemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_waypoint_template"
 }
 
-func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Waypoint Application Template resource",
+		MarkdownDescription: "Waypoint Template resource",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The ID of the Application Template.",
+				Description: "The ID of the Template.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the Application Template.",
+				Description: "The name of the Template.",
 				Required:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of the HCP organization where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP organization where the Waypoint Template is located.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP project where the Waypoint Template is located.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
@@ -121,7 +121,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 			"labels": schema.ListAttribute{
 				// Computed:    true,
 				Optional:    true,
-				Description: "List of labels attached to this Application Template.",
+				Description: "List of labels attached to this Template.",
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
@@ -186,7 +186,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *ApplicationTemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *TemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -205,7 +205,7 @@ func (r *ApplicationTemplateResource) Configure(ctx context.Context, req resourc
 	r.client = client
 }
 
-func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *TemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *ApplicationTemplateResourceModel
 
 	// Read Terraform plan data into the model
@@ -291,7 +291,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 	}
 	createTplResp, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating application template", err.Error())
+		resp.Diagnostics.AddError("Error creating template", err.Error())
 		return
 	}
 
@@ -300,7 +300,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 		appTemplate = createTplResp.Payload.ApplicationTemplate
 	}
 	if appTemplate == nil {
-		resp.Diagnostics.AddError("unknown error creating application template", "empty application template returned")
+		resp.Diagnostics.AddError("unknown error creating template", "empty template returned")
 		return
 	}
 
@@ -358,7 +358,7 @@ func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.C
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "created application template resource")
+	tflog.Trace(ctx, "created template resource")
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -392,7 +392,7 @@ func readVarOpts(
 	return varOpts, nil
 }
 
-func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data *ApplicationTemplateResourceModel
 
 	// Read Terraform prior state data into the model
@@ -480,7 +480,7 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *ApplicationTemplateResourceModel
 
 	// Read Terraform plan data into the model
@@ -577,7 +577,7 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 		appTemplate = app.Payload.ApplicationTemplate
 	}
 	if appTemplate == nil {
-		resp.Diagnostics.AddError("unknown error updating application template", "empty application template returned")
+		resp.Diagnostics.AddError("unknown error updating template", "empty template returned")
 		return
 	}
 
@@ -627,13 +627,13 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "updated application template resource")
+	tflog.Trace(ctx, "updated template resource")
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *ApplicationTemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data *ApplicationTemplateResourceModel
 
 	// Read Terraform prior state data into the model
@@ -671,17 +671,17 @@ func (r *ApplicationTemplateResource) Delete(ctx context.Context, req resource.D
 	_, err = r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			tflog.Info(ctx, "Application Template not found for organization during delete call, ignoring")
+			tflog.Info(ctx, "Template not found for organization during delete call, ignoring")
 			return
 		}
 		resp.Diagnostics.AddError(
-			"Error Deleting Application Template",
+			"Error Deleting Template",
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *ApplicationTemplateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *TemplateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

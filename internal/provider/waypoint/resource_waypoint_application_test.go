@@ -123,7 +123,7 @@ func testAccCheckWaypointApplicationDestroy(t *testing.T, applicationModel *wayp
 // sufficient for now.
 func testApplicationConfig(tempName, appName string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "test" {
+resource "hcp_waypoint_template" "test" {
   name    = "%s"
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
@@ -140,6 +140,6 @@ resource "hcp_waypoint_application_template" "test" {
 
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test.id
+  template_id = hcp_waypoint_template.test.id
 }`, tempName, appName)
 }

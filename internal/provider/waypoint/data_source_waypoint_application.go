@@ -68,11 +68,11 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Instructions for using the Application (markdown format supported).",
 			},
-			"application_template_id": schema.StringAttribute{
+			"template_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "ID of the Application Template this Application is based on.",
+				Description: "ID of the Template this Application is based on.",
 			},
-			"application_template_name": schema.StringAttribute{
+			"template_name": schema.StringAttribute{
 				Computed:    true,
 				Description: "Name of the Application Template this Application is based on.",
 			},
