@@ -175,7 +175,9 @@ func (r *resourceVaultsecretsSecret) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	state.SecretValue = types.StringValue(res.Version.Value)
+	// TODO: so the resource can only create a static secret,
+	// what happens when a user tries to import a rotating/other type of secret?
+	state.SecretValue = types.StringValue(res.StaticVersion.Value)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

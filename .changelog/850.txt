@@ -1,0 +1,3 @@
+```release-note:feature
+Allows users to fetch rotating secrets using the hcp_vault_secrets_app and hcp_vault_secrets_secret data sources
+```
