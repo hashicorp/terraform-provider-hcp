@@ -171,30 +171,13 @@ func (r *resourcePackerBucket) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	resourceName := state.ResourceName.ValueString()
-	resourceNameRegex := `packer\/project\/.*\/bucket\/.*`
-	// packer/project/{project_id}/bucket/{bucket_name}
-
-	resourceParts := strings.SplitN(resourceName, "/", 5)
-	resourceNameValid, err := regexp.MatchString(resourceNameRegex, resourceName)
-	if err != nil {
-		resp.Diagnostics.AddError("Unexpected provider error", "Failed to parse regular expression, this is an internal error, please report this issue to the provider developers")
-		return
-	}
-	if !resourceNameValid || len(resourceParts) != 5 {
-		resp.Diagnostics.AddError("Invalid resource name", "Resource name expected to match packer/project/{project_id}/bucket/{bucket_name}")
-		return
-	}
 	params := packerservice.NewPackerServiceGetBucketParams()
 	params.SetLocationOrganizationID(state.OrganizationID.ValueString())
 
-	bucketName := resourceParts[4]
-
-	params.SetBucketName(bucketName)
+	params.SetBucketName(state.Name.ValueString())
 	bucketResp, err := r.client.PackerV2.PackerServiceGetBucket(params, nil)
 
-	projectID := resourceParts[2]
-	params.SetLocationProjectID(projectID)
+	params.SetLocationProjectID(state.ProjectID.ValueString())
 	if err != nil {
 		if getBucketErr, ok := err.(*packerservice.PackerServiceGetBucketDefault); ok {
 			if getBucketErr.IsCode(http.StatusNotFound) {
@@ -239,5 +222,27 @@ func (r *resourcePackerBucket) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *resourcePackerBucket) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Save Resource Name to the State
 	resource.ImportStatePassthroughID(ctx, path.Root("resource_name"), req, resp)
+	resourceName := req.ID
+	resourceNameRegex := `packer\/project\/.*\/bucket\/.*`
+	// packer/project/{project_id}/bucket/{bucket_name}
+
+	orgID := r.client.Config.OrganizationID
+	resourceParts := strings.SplitN(resourceName, "/", 5)
+
+	resourceNameValid, err := regexp.MatchString(resourceNameRegex, resourceName)
+	if err != nil {
+		resp.Diagnostics.AddError("Unexpected provider error", "Failed to parse regular expression, this is an internal error, please report this issue to the provider developers")
+		return
+	}
+	if !resourceNameValid || len(resourceParts) != 5 {
+		resp.Diagnostics.AddError("Invalid resource name", "Resource name expected to match packer/project/{project_id}/bucket/{bucket_name}")
+		return
+	}
+	projectID := resourceParts[2]
+	bucketName := resourceParts[4]
+	resp.State.SetAttribute(ctx, path.Root("name"), bucketName)
+	resp.State.SetAttribute(ctx, path.Root("project_id"), projectID)
+	resp.State.SetAttribute(ctx, path.Root("organization_id"), orgID)
 }
