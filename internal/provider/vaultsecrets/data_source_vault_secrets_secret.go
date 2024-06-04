@@ -5,6 +5,7 @@ package vaultsecrets
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -31,11 +32,11 @@ func NewVaultSecretsSecretDataSource() datasource.DataSource {
 	return &DataSourceVaultSecretsSecret{}
 }
 
-func (d *DataSourceVaultSecretsSecret) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSourceVaultSecretsSecret) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_vault_secrets_secret"
 }
 
-func (d *DataSourceVaultSecretsSecret) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSourceVaultSecretsSecret) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The Vault Secrets secret data source retrieves a singular secret and its latest version.",
 		Attributes: map[string]schema.Attribute{
@@ -107,7 +108,31 @@ func (d *DataSourceVaultSecretsSecret) Read(ctx context.Context, req datasource.
 		resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
 		return
 	}
-	secretValue := openSecret.Version.Value
+
+	// NOTE: for backwards compatibility purposes, if the secret is not a static secret (a string)
+	// encode the complex secret as a JSON string
+	var secretValue string
+	switch {
+	case openSecret.StaticVersion != nil:
+		secretValue = openSecret.StaticVersion.Value
+	case openSecret.RotatingVersion != nil:
+		secretData, err := json.Marshal(openSecret.RotatingVersion.Values)
+		if err != nil {
+			resp.Diagnostics.AddError(err.Error(), "could not encode rotating secret as json")
+			return
+		}
+		resp.Diagnostics.AddWarning(
+			"HCP Vault Secrets mismatched type",
+			"Attempted to get a rotating secret in a KV secret data source, encoding the secret values as JSON",
+		)
+		secretValue = string(secretData)
+	default:
+		resp.Diagnostics.AddError(
+			"Unsupported HCP Secret type",
+			fmt.Sprintf("HCP Secrets secret type %q is not currently supported by terraform-provider-hcp", openSecret.Type),
+		)
+		return
+	}
 
 	data.ID = data.AppName
 	data.SecretValue = types.StringValue(secretValue)
