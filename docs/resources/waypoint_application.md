@@ -21,7 +21,7 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 
 ### Optional
 
-- `app_input_vars` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--app_input_vars))
+- `applicatio_input_variables` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--applicatio_input_variables))
 - `project_id` (String) The ID of the HCP project where the Waypoint Application is located.
 - `readme_markdown` (String) Instructions for using the Application (markdown format supported). Note: this is a base64 encoded string, and can only be set in configuration after initial creation. The initial version of the README is generated from the README Template from source Application Template.
 
@@ -31,10 +31,10 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 - `id` (String) The ID of the Application.
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
-- `template_input_vars` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--template_input_vars))
+- `template_input_variables` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--template_input_variables))
 
-<a id="nestedatt--app_input_vars"></a>
-### Nested Schema for `app_input_vars`
+<a id="nestedatt--applicatio_input_variables"></a>
+### Nested Schema for `applicatio_input_variables`
 
 Required:
 
@@ -43,8 +43,8 @@ Required:
 - `variable_type` (String) Variable type
 
 
-<a id="nestedatt--template_input_vars"></a>
-### Nested Schema for `template_input_vars`
+<a id="nestedatt--template_input_variables"></a>
+### Nested Schema for `template_input_variables`
 
 Required:
 
