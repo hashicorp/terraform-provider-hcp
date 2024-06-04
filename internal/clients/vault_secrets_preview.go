@@ -85,33 +85,33 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 }
 
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
-func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasRotationIntegration, error) {
-	body := secret_service.CreateMongoDBAtlasRotationIntegrationBody{
+func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
+	body := secret_service.CreateMongoDBAtlasIntegrationBody{
 		IntegrationName:      integrationName,
 		MongodbAPIPublicKey:  mongodbAtlasPublicKey,
 		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
 	}
-	params := secret_service.NewCreateMongoDBAtlasRotationIntegrationParamsWithContext(ctx).
+	params := secret_service.NewCreateMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
 		WithBody(body)
 
-	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasRotationIntegration(params, nil)
+	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasIntegration(params, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.GetPayload().RotationIntegration, nil
+	return resp.GetPayload().Integration, nil
 }
 
 // DeleteMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func DeleteMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName string) error {
-	params := secret_service.NewDeleteMongoDBAtlasRotationIntegrationParamsWithContext(ctx).
+	params := secret_service.NewDeleteMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
 		WithIntegrationName(integrationName)
 
-	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasRotationIntegration(params, nil)
+	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(params, nil)
 	if err != nil {
 		return err
 	}
