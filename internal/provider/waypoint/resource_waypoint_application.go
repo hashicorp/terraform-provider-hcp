@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -148,7 +147,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"applicatio_input_variables": schema.SetNestedAttribute{
+			"application_input_variables": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables set for the application.",
 				NestedObject: schema.NestedAttributeObject{
@@ -211,38 +210,6 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 	r.client = client
 }
 
-type varConverter struct {
-	name         string
-	variableType string
-	value        string
-}
-
-// FromTerraform5Value implements the ValueConverter interface
-func (vc *varConverter) FromTerraform5Value(val tftypes.Value) error {
-	v := map[string]tftypes.Value{}
-	err := val.As(&v)
-	if err != nil {
-		return err
-	}
-
-	err = v["name"].As(&vc.name)
-	if err != nil {
-		return err
-	}
-
-	err = v["value"].As(&vc.value)
-	if err != nil {
-		return err
-	}
-
-	err = v["variable_type"].As(&vc.variableType)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan *ApplicationResourceModel
 
@@ -278,41 +245,26 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	// to be used later when fetching the input variables from the API
 	varTypes := map[string]string{}
 
-	// TODO: Try ElementsAs instead of value conversion
 	// Prepare the input variables that the user provided to the application
 	// creation request
 	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
-	diags := plan.InputVars.ElementsAs(ctx, &InputVar{}, false)
+
+	inputVarsSlice := []InputVar{}
+	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
 	if diags.HasError() {
 		return
 	}
-
-	for _, v := range plan.InputVars.Elements() {
-		// convert list element to a struct representing an input variable, of
-		// type varConverter
-		var iv tftypes.Value
-		iv, err = v.ToTerraformValue(ctx)
-		if err != nil {
-			tflog.Error(ctx, "error reading application input variables")
-			return
-		}
-		vc := varConverter{}
-		err = iv.As(&vc)
-		if err != nil {
-			tflog.Error(ctx, "error reading application input variables")
-			return
-		}
-
+	for _, v := range inputVarsSlice {
 		// add the input variable to the list of input variables for the app
 		// creation API call
 		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
-			Name:         vc.name,
-			Value:        vc.value,
-			VariableType: vc.variableType,
+			Name:         v.Name.ValueString(),
+			Value:        v.Value.ValueString(),
+			VariableType: v.VariableType.ValueString(),
 		})
 
 		// store var type for later use when fetching the input variables from the API
-		varTypes[vc.name] = vc.variableType
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
@@ -415,24 +367,14 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	// varTypes is used to store the variable type for each input variable
 	// to be used later when fetching the input variables from the API
 	varTypes := map[string]string{}
-
-	for _, v := range data.InputVars.Elements() {
-		// convert list element to a struct representing an input variable, of
-		// type varConverter
-		iv, err := v.ToTerraformValue(ctx)
-		if err != nil {
-			tflog.Error(ctx, "error reading application input variables")
-			return
-		}
-		vc := varConverter{}
-		err = iv.As(&vc)
-		if err != nil {
-			tflog.Error(ctx, "error reading application input variables")
-			return
-		}
-
+	inputVarsSlice := []InputVar{}
+	diags := data.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
+	if diags.HasError() {
+		return
+	}
+	for _, v := range inputVarsSlice {
 		// store var type for later use when fetching the input variables from the API
-		varTypes[vc.name] = vc.variableType
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
 	client := r.client
