@@ -80,7 +80,7 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Internal Namespace ID.",
 			},
-			"input_vars": schema.SetNestedAttribute{
+			"input_variables": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables for the Application.",
 				NestedObject: schema.NestedAttributeObject{
@@ -137,7 +137,7 @@ type ApplicationDataSourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars types.Set `tfsdk:"app_input_vars"`
+	InputVars types.Set `tfsdk:"input_variables"`
 }
 
 func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -193,17 +193,15 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	aivls := make([]*InputVar, 0)
+	inputVariables := make([]*InputVar, 0)
 	for _, iv := range inputVars {
-		if iv.Name != "waypoint_application" {
-			aivls = append(aivls, &InputVar{
-				Name:  types.StringValue(iv.Name),
-				Value: types.StringValue(iv.Value),
-			})
-		}
+		inputVariables = append(inputVariables, &InputVar{
+			Name:  types.StringValue(iv.Name),
+			Value: types.StringValue(iv.Value),
+		})
 	}
-	if len(aivls) > 0 {
-		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, aivls)
+	if len(inputVariables) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, inputVariables)
 		resp.Diagnostics.Append(diags...)
 		if diags.HasError() {
 			return
