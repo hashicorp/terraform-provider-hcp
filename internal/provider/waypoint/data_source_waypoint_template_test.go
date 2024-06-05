@@ -32,7 +32,7 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 				// resource test
 				Config: testAppTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccWaypointData_Application_template_with_variable_options(t *testing.T
 				// resource test
 				Config: testAppTemplateConfigWithVarOpts(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 				),
 			},
 			{

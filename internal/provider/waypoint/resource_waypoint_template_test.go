@@ -22,7 +22,7 @@ import (
 
 func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 	var appTemplateModel waypoint.TemplateResourceModel
-	resourceName := "hcp_waypoint_application_template.test"
+	resourceName := "hcp_waypoint_template.test"
 	name := generateRandomName()
 	updatedName := generateRandomName()
 
@@ -34,16 +34,16 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 			{
 				Config: testAppTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
 			{
 				Config: testAppTemplateConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, updatedName),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 
 func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
 	var appTemplateModel waypoint.TemplateResourceModel
-	resourceName := "hcp_waypoint_application_template.var_opts_test"
+	resourceName := "hcp_waypoint_template.var_opts_test"
 	name := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
@@ -64,8 +64,8 @@ func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
 			{
 				Config: testAppTemplateConfigWithVarOpts(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
@@ -73,22 +73,22 @@ func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
 	})
 }
 
-// simple attribute check on the application template receved from the API
-func testAccCheckWaypointAppTemplateName(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel, nameValue string) resource.TestCheckFunc {
+// simple attribute check on the template receved from the API
+func testAccCheckWaypointTemplateName(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if appTemplateModel.Name.ValueString() != nameValue {
-			return fmt.Errorf("expected application template name to be %s, but got %s", nameValue, appTemplateModel.Name.ValueString())
+			return fmt.Errorf("expected template name to be %s, but got %s", nameValue, appTemplateModel.Name.ValueString())
 		}
 		return nil
 	}
 }
 
-func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		client := acctest.HCPClients(t)
@@ -102,7 +102,7 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 			ProjectID:      projectID,
 		}
 
-		// Fetch the application template
+		// Fetch the template
 		template, err := clients.GetApplicationTemplateByID(context.Background(), client, loc, appTempID)
 		if err != nil {
 			return err
@@ -144,7 +144,7 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 		// fall through, we expect a not found above but if we get this far then
 		// the test should fail
 		if template != nil {
-			return fmt.Errorf("expected application template to be destroyed, but it still exists")
+			return fmt.Errorf("expected Template to be destroyed, but it still exists")
 		}
 
 		return fmt.Errorf("both template and error were nil in destroy check, this should not happen")
@@ -153,7 +153,7 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 
 func testAppTemplateConfig(name string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "test" {
+resource "hcp_waypoint_template" "test" {
   name                     = "%s"
   summary                  = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
@@ -171,7 +171,7 @@ resource "hcp_waypoint_application_template" "test" {
 
 func testAppTemplateConfigWithVarOpts(name string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "var_opts_test" {
+resource "hcp_waypoint_template" "var_opts_test" {
   name                     = "%s"
   summary                  = "A template with a variable with options."
   readme_markdown_template = base64encode("# Some Readme")
