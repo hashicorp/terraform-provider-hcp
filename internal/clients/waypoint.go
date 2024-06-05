@@ -47,7 +47,7 @@ func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpC
 	return getResp.GetPayload().ActionConfig, nil
 }
 
-// GetApplicationTemplateByName will retrieve an application template by name
+// GetApplicationTemplateByName will retrieve a template by name
 func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
@@ -66,7 +66,7 @@ func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *shar
 	return getResp.GetPayload().ApplicationTemplate, nil
 }
 
-// GetApplicationTemplateByID will retrieve an application template by ID
+// GetApplicationTemplateByID will retrieve a template by ID
 func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
