@@ -154,7 +154,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		webhook.NewNotificationsWebhookResource,
 		// Waypoint
 		waypoint.NewApplicationResource,
-		waypoint.NewApplicationTemplateResource,
+		waypoint.NewTemplateResource,
 		waypoint.NewAddOnResource,
 		waypoint.NewAddOnDefinitionResource,
 		waypoint.NewTfcConfigResource,
@@ -176,7 +176,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		iam.NewUserPrincipalDataSource,
 		// Waypoint
 		waypoint.NewApplicationDataSource,
-		waypoint.NewApplicationTemplateDataSource,
+		waypoint.NewTemplateDataSource,
 		waypoint.NewAddOnDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
 	}, packer.DataSourceSchemaBuilders...)

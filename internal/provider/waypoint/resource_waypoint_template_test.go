@@ -21,7 +21,7 @@ import (
 )
 
 func TestAccWaypoint_Application_Template_basic(t *testing.T) {
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.test"
 	name := generateRandomName()
 	updatedName := generateRandomName()
@@ -52,7 +52,7 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 }
 
 func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.var_opts_test"
 	name := generateRandomName()
 
@@ -74,7 +74,7 @@ func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
 }
 
 // simple attribute check on the application template receved from the API
-func testAccCheckWaypointAppTemplateName(t *testing.T, appTemplateModel *waypoint.ApplicationTemplateResourceModel, nameValue string) resource.TestCheckFunc {
+func testAccCheckWaypointAppTemplateName(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if appTemplateModel.Name.ValueString() != nameValue {
 			return fmt.Errorf("expected application template name to be %s, but got %s", nameValue, appTemplateModel.Name.ValueString())
@@ -83,7 +83,7 @@ func testAccCheckWaypointAppTemplateName(t *testing.T, appTemplateModel *waypoin
 	}
 }
 
-func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.ApplicationTemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -120,7 +120,7 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 	}
 }
 
-func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *waypoint.ApplicationTemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		id := appTemplateModel.ID.ValueString()

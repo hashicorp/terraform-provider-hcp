@@ -26,20 +26,20 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &ApplicationTemplateResource{}
-var _ resource.ResourceWithImportState = &ApplicationTemplateResource{}
+var _ resource.Resource = &TemplateResource{}
+var _ resource.ResourceWithImportState = &TemplateResource{}
 
-func NewApplicationTemplateResource() resource.Resource {
-	return &ApplicationTemplateResource{}
+func NewTemplateResource() resource.Resource {
+	return &TemplateResource{}
 }
 
-// ApplicationTemplateResource defines the resource implementation.
-type ApplicationTemplateResource struct {
+// TemplateResource defines the resource implementation.
+type TemplateResource struct {
 	client *clients.Client
 }
 
-// ApplicationTemplateResourceModel describes the resource data model.
-type ApplicationTemplateResourceModel struct {
+// TemplateResourceModel describes the resource data model.
+type TemplateResourceModel struct {
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	ProjectID              types.String `tfsdk:"project_id"`
@@ -72,11 +72,11 @@ type tfcVariableOption struct {
 	UserEditable types.Bool   `tfsdk:"user_editable"`
 }
 
-func (r *ApplicationTemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *TemplateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_waypoint_application_template"
 }
 
-func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Waypoint Application Template resource",
@@ -192,7 +192,7 @@ func (r *ApplicationTemplateResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *ApplicationTemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *TemplateResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -211,8 +211,8 @@ func (r *ApplicationTemplateResource) Configure(ctx context.Context, req resourc
 	r.client = client
 }
 
-func (r *ApplicationTemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ApplicationTemplateResourceModel
+func (r *TemplateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *TemplateResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -398,8 +398,8 @@ func readVarOpts(
 	return varOpts, nil
 }
 
-func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data *ApplicationTemplateResourceModel
+func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data *TemplateResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -486,8 +486,8 @@ func (r *ApplicationTemplateResource) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ApplicationTemplateResourceModel
+func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *TemplateResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -639,8 +639,8 @@ func (r *ApplicationTemplateResource) Update(ctx context.Context, req resource.U
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *ApplicationTemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data *ApplicationTemplateResourceModel
+func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data *TemplateResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -688,6 +688,6 @@ func (r *ApplicationTemplateResource) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *ApplicationTemplateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *TemplateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
