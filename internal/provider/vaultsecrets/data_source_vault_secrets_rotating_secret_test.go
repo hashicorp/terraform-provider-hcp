@@ -82,7 +82,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 					}
 
 					// block until the secret is done
-					timer := time.AfterFunc(10*time.Minute, func() {
+					timeout := time.AfterFunc(10*time.Minute, func() {
 						t.Fatalf("timed out waiting for mongodb rotating secret to be created")
 					})
 
@@ -96,12 +96,12 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 							case secretmodels.Secrets20231128RotatingSecretStatusERRORED:
 								t.Fatalf("error rotating secret: %q", state.ErrorMessage)
 							case secretmodels.Secrets20231128RotatingSecretStatusWAITINGFORNEXTROTATION:
-								timer.Stop()
+								timeout.Stop()
 								t.Log("secret successfully rotated")
 								return
 							default:
 								t.Log("waiting to check rotating secret state")
-								time.Sleep(30 * time.Second)
+								time.Sleep(10 * time.Second)
 							}
 						}
 					}
