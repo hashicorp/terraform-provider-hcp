@@ -87,22 +87,26 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 						t.Fatalf("timed out waiting for mongodb rotating secret to be created")
 					})
 
-					for {
-						state, err := clients.GetRotatingSecretState(ctx, client, loc, testAppName, testSecretName)
-						if err != nil {
-							t.Fatalf("could not get rotating secret state: %v", err)
-						}
-						switch *state.Status {
-						case secretmodels.Secrets20231128RotatingSecretStatusERRORED:
-							t.Fatalf("error rotating secret: %q", state.ErrorMessage)
-						case secretmodels.Secrets20231128RotatingSecretStatusWAITINGFORNEXTROTATION:
-							timer.Stop()
-							t.Log("secret successfully rotated")
-							break
-						default:
-							time.Sleep(time.Minute)
+					waitForSecret := func() {
+						for {
+							state, err := clients.GetRotatingSecretState(ctx, client, loc, testAppName, testSecretName)
+							if err != nil {
+								t.Fatalf("could not get rotating secret state: %v", err)
+							}
+							switch *state.Status {
+							case secretmodels.Secrets20231128RotatingSecretStatusERRORED:
+								t.Fatalf("error rotating secret: %q", state.ErrorMessage)
+							case secretmodels.Secrets20231128RotatingSecretStatusWAITINGFORNEXTROTATION:
+								timer.Stop()
+								t.Log("secret successfully rotated")
+								return
+							default:
+								time.Sleep(time.Minute)
+							}
 						}
 					}
+
+					waitForSecret()
 
 				},
 				Config: tfconfig,
