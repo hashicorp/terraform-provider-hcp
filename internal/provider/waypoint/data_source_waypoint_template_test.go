@@ -16,7 +16,7 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 	// this is only used to verify the app template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var appTemplateModel waypoint.TemplateResourceModel
-	resourceName := "hcp_waypoint_application_template.test"
+	resourceName := "hcp_waypoint_template.test"
 	dataSourceName := "data." + resourceName
 	name := generateRandomName()
 	updatedName := generateRandomName()
@@ -24,13 +24,13 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
 		Steps: []resource.TestStep{
 			{
 				// establish the base app template
 				// note this reuses the config method from the app template
 				// resource test
-				Config: testAppTemplateConfig(name),
+				Config: testTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 				),
@@ -54,24 +54,24 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypointData_Application_template_with_variable_options(t *testing.T) {
+func TestAccWaypointData_template_with_variable_options(t *testing.T) {
 	// this is only used to verify the app template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var appTemplateModel waypoint.TemplateResourceModel
-	resourceName := "hcp_waypoint_application_template.var_opts_test"
+	resourceName := "hcp_waypoint_template.var_opts_test"
 	dataSourceName := "data." + resourceName
 	name := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
 		Steps: []resource.TestStep{
 			{
 				// establish the base app template
 				// note this reuses the config method from the app template
 				// resource test
-				Config: testAppTemplateConfigWithVarOpts(name),
+				Config: testTemplateConfigWithVarOpts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 				),
@@ -96,13 +96,13 @@ func TestAccWaypointData_Application_template_with_variable_options(t *testing.T
 func testDataAppTemplateConfig(name string) string {
 	return fmt.Sprintf(`%s
 data "hcp_waypoint_application_template" "test" {
-  name    = hcp_waypoint_application_template.test.name
-}`, testAppTemplateConfig(name))
+  name    = hcp_waypoint_template.test.name
+}`, testTemplateConfig(name))
 }
 
 func testDataAppTemplateWithVariablesWithOptionsConfig(name string) string {
 	return fmt.Sprintf(`%s
 data "hcp_waypoint_application_template" "var_opts_test" {
-  name    = hcp_waypoint_application_template.var_opts_test.name
-}`, testAppTemplateConfigWithVarOpts(name))
+  name    = hcp_waypoint_template.var_opts_test.name
+}`, testTemplateConfigWithVarOpts(name))
 }

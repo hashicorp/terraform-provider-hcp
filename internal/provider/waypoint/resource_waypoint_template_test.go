@@ -20,7 +20,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
-func TestAccWaypoint_Application_Template_basic(t *testing.T) {
+func TestAccWaypoint_Template_basic(t *testing.T) {
 	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_template.test"
 	name := generateRandomName()
@@ -29,10 +29,10 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testAppTemplateConfig(name),
+				Config: testTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
@@ -40,7 +40,7 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAppTemplateConfig(updatedName),
+				Config: testTemplateConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, updatedName),
@@ -51,7 +51,7 @@ func TestAccWaypoint_Application_Template_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
+func TestAccWaypoint_template_with_variable_options(t *testing.T) {
 	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_template.var_opts_test"
 	name := generateRandomName()
@@ -59,10 +59,10 @@ func TestAccWaypoint_Application_template_with_variable_options(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testAppTemplateConfigWithVarOpts(name),
+				Config: testTemplateConfigWithVarOpts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
@@ -120,7 +120,7 @@ func testAccCheckWaypointTemplateExists(t *testing.T, resourceName string, appTe
 	}
 }
 
-func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointTemplateDestroy(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		id := appTemplateModel.ID.ValueString()
@@ -151,7 +151,7 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 	}
 }
 
-func testAppTemplateConfig(name string) string {
+func testTemplateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_template" "test" {
   name                     = "%s"
@@ -169,7 +169,7 @@ resource "hcp_waypoint_template" "test" {
 }`, name)
 }
 
-func testAppTemplateConfigWithVarOpts(name string) string {
+func testTemplateConfigWithVarOpts(name string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_template" "var_opts_test" {
   name                     = "%s"
