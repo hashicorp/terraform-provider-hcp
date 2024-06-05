@@ -29,7 +29,7 @@ The Waypoint Add-on Definition data source retrieves information on a given Add-
 - `summary` (String) A short summary of the Add-on Definition.
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
-- `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
+- `variable_options` (Attributes List) List of variable options for the Add-on Definition. (see [below for nested schema](#nestedatt--variable_options))
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
