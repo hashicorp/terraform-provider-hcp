@@ -15,7 +15,7 @@ import (
 func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 	// this is only used to verify the app template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.test"
 	dataSourceName := "data." + resourceName
 	name := generateRandomName()
@@ -57,7 +57,7 @@ func TestAccWaypointData_Application_Template_basic(t *testing.T) {
 func TestAccWaypointData_Application_template_with_variable_options(t *testing.T) {
 	// this is only used to verify the app template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
+	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_application_template.var_opts_test"
 	dataSourceName := "data." + resourceName
 	name := generateRandomName()

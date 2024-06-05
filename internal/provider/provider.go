@@ -157,7 +157,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Waypoint
 		waypoint.NewActionResource,
 		waypoint.NewApplicationResource,
-		waypoint.NewApplicationTemplateResource,
+		waypoint.NewTemplateResource,
 		waypoint.NewAddOnResource,
 		waypoint.NewAddOnDefinitionResource,
 		waypoint.NewTfcConfigResource,
@@ -181,7 +181,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		// Waypoint
 		waypoint.NewActionDataSource,
 		waypoint.NewApplicationDataSource,
-		waypoint.NewApplicationTemplateDataSource,
+		waypoint.NewTemplateDataSource,
 		waypoint.NewAddOnDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
 	}, packer.DataSourceSchemaBuilders...)
