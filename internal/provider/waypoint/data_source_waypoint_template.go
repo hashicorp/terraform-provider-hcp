@@ -54,29 +54,29 @@ func NewTemplateDataSource() datasource.DataSource {
 }
 
 func (d *DataSourceTemplate) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_application_template"
+	resp.TypeName = req.ProviderTypeName + "_waypoint_template"
 }
 
 func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Waypoint Template data source retrieves information on a given Application Template.",
+		MarkdownDescription: "The Waypoint Template data source retrieves information on a given Template.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "The ID of the Application Template.",
+				Description: "The ID of the Template.",
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the Application Template.",
+				Description: "The name of the Template.",
 				Computed:    true,
 				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of the HCP organization where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP organization where the Waypoint Template is located.",
 				Computed:    true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP project where the Waypoint Template is located.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -94,7 +94,7 @@ func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRe
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
-				Description: "List of labels attached to this Application Template.",
+				Description: "List of labels attached to this Template.",
 				ElementType: types.StringType,
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
