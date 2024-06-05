@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
@@ -79,6 +80,30 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 					if err != nil {
 						t.Fatalf("could not create rotating mongodb atlas secret: %v", err)
 					}
+
+					// block until the secret is done
+					// TODO: is the time amount excessive?
+					timer := time.AfterFunc(20*time.Minute, func() {
+						t.Fatalf("timed out waiting for mongodb rotating secret to be created")
+					})
+
+					for {
+						state, err := clients.GetRotatingSecretState(ctx, client, loc, testAppName, testSecretName)
+						if err != nil {
+							t.Fatalf("could not get rotating secret state: %v", err)
+						}
+						switch *state.Status {
+						case secretmodels.Secrets20231128RotatingSecretStatusERRORED:
+							t.Fatalf("error rotating secret: %q", state.ErrorMessage)
+						case secretmodels.Secrets20231128RotatingSecretStatusWAITINGFORNEXTROTATION:
+							timer.Stop()
+							t.Log("secret successfully rotated")
+							break
+						default:
+							time.Sleep(time.Minute)
+						}
+					}
+
 				},
 				Config: tfconfig,
 				Check: resource.ComposeTestCheckFunc(

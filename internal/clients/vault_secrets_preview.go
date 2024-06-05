@@ -84,6 +84,21 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 	return secrets.GetPayload().Secrets, nil
 }
 
+func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20231128RotatingSecretState, error) {
+	params := secret_service.NewGetRotatingSecretStateParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithAppName(appName).
+		WithSecretName(secretName)
+
+	resp, err := client.VaultSecretsPreview.GetRotatingSecretState(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.GetPayload().State, nil
+}
+
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
 	body := secret_service.CreateMongoDBAtlasIntegrationBody{
