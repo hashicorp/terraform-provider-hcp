@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccWaypoint_Application_DataSource_basic(t *testing.T) {
-	// this is only used to verify the app template gets cleaned up in the end
+	// this is only used to verify the template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test"
@@ -27,14 +27,14 @@ func TestAccWaypoint_Application_DataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointApplicationDestroy(t, &applicationModel),
 		Steps: []resource.TestStep{
 			{
-				// establish the base app template and application
+				// establish the base template and application
 				Config: testApplicationConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 				),
 			},
 			{
-				// add a data source config to read the app template
+				// add a data source config to read the template
 				Config: testDataApplicationConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", applicationName),
@@ -45,7 +45,7 @@ func TestAccWaypoint_Application_DataSource_basic(t *testing.T) {
 }
 
 func TestAccWaypoint_Application_DataSource_WithInputVars(t *testing.T) {
-	// this is only used to verify the app template gets cleaned up in the end
+	// this is only used to verify the template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test_var_opts"
@@ -59,14 +59,14 @@ func TestAccWaypoint_Application_DataSource_WithInputVars(t *testing.T) {
 		CheckDestroy:             testAccCheckWaypointApplicationDestroy(t, &applicationModel),
 		Steps: []resource.TestStep{
 			{
-				// establish the base app template and application
+				// establish the base template and application
 				Config: testApplicationWithInputVarsConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 				),
 			},
 			{
-				// add a data source config to read the app template
+				// add a data source config to read the template
 				Config: testDataApplicationWithInputVarsConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", applicationName),

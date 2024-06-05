@@ -42,8 +42,8 @@ type ApplicationResourceModel struct {
 	ProjectID               types.String `tfsdk:"project_id"`
 	OrgID                   types.String `tfsdk:"organization_id"`
 	ReadmeMarkdown          types.String `tfsdk:"readme_markdown"`
-	ApplicationTemplateID   types.String `tfsdk:"application_template_id"`
-	ApplicationTemplateName types.String `tfsdk:"application_template_name"`
+	ApplicationTemplateID   types.String `tfsdk:"template_id"`
+	ApplicationTemplateName types.String `tfsdk:"template_name"`
 	NamespaceID             types.String `tfsdk:"namespace_id"`
 
 	// deferred for now
@@ -115,13 +115,13 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"application_template_id": schema.StringAttribute{
+			"template_id": schema.StringAttribute{
 				Required:    true,
 				Description: "ID of the Application Template this Application is based on.",
 			},
-			// application_template_name is a computed only attribute for ease
+			// template_name is a computed only attribute for ease
 			// of reference
-			"application_template_name": schema.StringAttribute{
+			"template_name": schema.StringAttribute{
 				Computed:    true,
 				Description: "Name of the Application Template this Application is based on.",
 				PlanModifiers: []planmodifier.String{

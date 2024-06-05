@@ -140,7 +140,7 @@ resource "hcp_waypoint_application_template" "test" {
 
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test.id
+  template_id = hcp_waypoint_application_template.test.id
 }
 
 resource "hcp_waypoint_add_on_definition" "test" {

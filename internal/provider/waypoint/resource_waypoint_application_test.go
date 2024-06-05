@@ -206,7 +206,7 @@ resource "hcp_waypoint_application_template" "test" {
 
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test.id
+  template_id = hcp_waypoint_application_template.test.id
 }`, tempName, appName)
 }
 
@@ -254,7 +254,7 @@ resource "hcp_waypoint_application_template" "test_var_opts" {
 
 resource "hcp_waypoint_application" "test_var_opts" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test_var_opts.id
+  template_id = hcp_waypoint_application_template.test_var_opts.id
 
   application_input_variables = [
 	{
@@ -308,6 +308,6 @@ resource "hcp_waypoint_application_template" "test_var_opts" {
 
 resource "hcp_waypoint_application" "test_var_opts" {
   name    			      = "%s"
-  application_template_id = hcp_waypoint_application_template.test_var_opts.id
+  template_id = hcp_waypoint_application_template.test_var_opts.id
 }`, tempName, appName)
 }
