@@ -82,8 +82,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 					}
 
 					// block until the secret is done
-					// TODO: is the time amount excessive?
-					timer := time.AfterFunc(20*time.Minute, func() {
+					timer := time.AfterFunc(10*time.Minute, func() {
 						t.Fatalf("timed out waiting for mongodb rotating secret to be created")
 					})
 
@@ -101,7 +100,8 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 								t.Log("secret successfully rotated")
 								return
 							default:
-								time.Sleep(time.Minute)
+								t.Log("waiting to check rotating secret state")
+								time.Sleep(30 * time.Second)
 							}
 						}
 					}
@@ -113,7 +113,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "organization_id"),
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "project_id"),
-					resource.TestCheckResourceAttrSet(dataSourceAddress, "secret_values"),
+					resource.TestCheckResourceAttr(dataSourceAddress, "secret_values.%", "2"), // required: check the number of elements in the map
 					resource.TestCheckResourceAttr(dataSourceAddress, "app_name", testAppName),
 					resource.TestCheckResourceAttr(dataSourceAddress, "secret_provider", "mongodb-atlas"),
 				),
