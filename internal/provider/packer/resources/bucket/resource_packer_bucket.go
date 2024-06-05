@@ -173,11 +173,11 @@ func (r *resourcePackerBucket) Read(ctx context.Context, req resource.ReadReques
 
 	params := packerservice.NewPackerServiceGetBucketParams()
 	params.SetLocationOrganizationID(state.OrganizationID.ValueString())
+	params.SetLocationProjectID(state.ProjectID.ValueString())
 
 	params.SetBucketName(state.Name.ValueString())
 	bucketResp, err := r.client.PackerV2.PackerServiceGetBucket(params, nil)
 
-	params.SetLocationProjectID(state.ProjectID.ValueString())
 	if err != nil {
 		if getBucketErr, ok := err.(*packerservice.PackerServiceGetBucketDefault); ok {
 			if getBucketErr.IsCode(http.StatusNotFound) {
