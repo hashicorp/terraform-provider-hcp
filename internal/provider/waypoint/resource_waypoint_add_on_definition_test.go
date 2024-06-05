@@ -131,7 +131,7 @@ func testAccCheckWaypointAddOnDefinitionDestroy(t *testing.T, definitionModel *w
 			return fmt.Errorf("expected add-on definition to be destroyed, but it still exists")
 		}
 
-		return fmt.Errorf("Both add-on definition and error were nil in destroy check, this should not happen")
+		return fmt.Errorf("both add-on definition and error were nil in destroy check, this should not happen")
 	}
 }
 

@@ -127,7 +127,7 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 			},
 			"variable_options": schema.ListNestedAttribute{
 				Computed:    true,
-				Description: "List of variable options for the template",
+				Description: "List of variable options for the Add-on Definition.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
