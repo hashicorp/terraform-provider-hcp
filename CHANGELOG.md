@@ -1,3 +1,16 @@
+## v0.91.0 (June 06, 2024)
+
+FEATURES:
+
+* Allows users to fetch rotating secrets using the hcp_vault_secrets_app and hcp_vault_secrets_secret data sources [[GH-850](https://github.com/hashicorp/terraform-provider-hcp/pull/850)]
+* add vault_secrets_rotating_secret data source [[GH-854](https://github.com/hashicorp/terraform-provider-hcp/pull/854)]
+
+IMPROVEMENTS:
+
+* Add support for input variables to `hcp_waypoint_application` resource and
+data source. [[GH-833](https://github.com/hashicorp/terraform-provider-hcp/pull/833)]
+* Update `hcp-sdk-go` [[GH-851](https://github.com/hashicorp/terraform-provider-hcp/pull/851)]
+* Update `hcp-sdk-go` to v0.98.0 [[GH-855](https://github.com/hashicorp/terraform-provider-hcp/pull/855)]
 ## v0.90.0 (May 22, 2024)
 
 FEATURES:
