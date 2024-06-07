@@ -2,14 +2,14 @@
 page_title: "Data Source hcp_vault_secrets_rotating_secret - terraform-provider-hcp"
 subcategory: "HCP Vault Secrets"
 description: |-
-  The Vault Secrets secret data source retrieves a rotating secret with its latest version.
+  This data source retrieves a single rotating secret with its latest version.
 ---
 
 # hcp_vault_secrets_rotating_secret (Data Source)
 
 -> **Note:** This data source is currently in public beta.
 
-The Vault Secrets secret data source retrieves a rotating secret with its latest version.
+This data source retrieves a single rotating secret with its latest version.
 
 ## Example Usage
 
