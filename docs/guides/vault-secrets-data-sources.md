@@ -22,13 +22,13 @@ resource "example_resource" "example" {
 We also allow you to fetch a singular secret from Vault Secrets.
 
 ```terraform
-data "hcp_vault_secrets_secret" "secret-data" {
+data "hcp_vault_secrets_secret" "secret_data" {
   app_name    = "example-vault-secrets-app"
   secret_name = "my_secret"
 }
 
 resource "example_resource" "example" {
-  example_attr = data.hcp_vault_secrets_secret.secret_value
+  example_attr = data.hcp_vault_secrets_secret.secret_data.secret_value
 }
 ```
 
