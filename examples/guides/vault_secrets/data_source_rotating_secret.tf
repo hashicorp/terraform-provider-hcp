@@ -4,7 +4,7 @@ data "hcp_vault_secrets_rotating_secret" "secret-data" {
 }
 
 resource "example_resource" "example" {
-  example_attr1 = data.hcp_vault_secrets_secret.secret_values["username"]
-  example_attr2 = data.hcp_vault_secrets_secret.secret_values["password"]
+  example_attr1 = data.hcp_vault_secrets_rotating_secret.secret_values["username"]
+  example_attr2 = data.hcp_vault_secrets_rotating_secret.secret_values["password"]
 }
 
