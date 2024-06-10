@@ -39,7 +39,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Metadata(_ context.Context, req d
 
 func (d *DataSourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Vault Secrets secret data source retrieves a rotating secret with its latest version.",
+		MarkdownDescription: "This data source retrieves a single rotating secret with its latest version.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
