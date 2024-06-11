@@ -459,7 +459,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	ol := readOutputs(addOn.OutputValues)
 	if len(ol) > 0 {
-		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
 	} else {
 		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
@@ -621,9 +621,9 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	ol := readOutputs(addOn.OutputValues)
 	if len(ol) > 0 {
-		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
 	} else {
-		s.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -782,7 +782,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	ol := readOutputs(addOn.OutputValues)
 	if len(ol) > 0 {
-		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
 	} else {
 		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
