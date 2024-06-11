@@ -313,7 +313,7 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	ol := readOutputs(addOn.OutputValues)
 	if len(ol) > 0 {
-		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
 	} else {
 		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
