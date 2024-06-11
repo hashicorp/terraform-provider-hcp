@@ -70,7 +70,6 @@ func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccWaypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
