@@ -17,6 +17,7 @@ The Waypoint Add-on data source retrieves information on a given Add-on.
 ### Optional
 
 - `id` (String) The ID of the Add-on.
+- `input_variables` (Attributes Set) Input variables for the Add-on. (see [below for nested schema](#nestedatt--input_variables))
 - `name` (String) The name of the Add-on.
 
 ### Read-Only
@@ -34,6 +35,16 @@ The Waypoint Add-on data source retrieves information on a given Add-on.
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+
+<a id="nestedatt--input_variables"></a>
+### Nested Schema for `input_variables`
+
+Read-Only:
+
+- `name` (String) Variable name
+- `value` (String) Variable value
+- `variable_type` (String) Variable type
+
 
 <a id="nestedatt--output_values"></a>
 ### Nested Schema for `output_values`
