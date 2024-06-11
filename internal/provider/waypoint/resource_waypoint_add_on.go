@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -458,7 +457,12 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = readOutputs(ctx, addOn, plan)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -615,7 +619,12 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 	}
 
-	diags = readOutputs(ctx, addOn, state)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+	} else {
+		s.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -771,7 +780,12 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = readOutputs(ctx, addOn, plan)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -836,26 +850,15 @@ func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func readOutputs(ctx context.Context, addOn *waypoint_models.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
+func readOutputs(ovs []*waypoint_models.HashicorpCloudWaypointTFOutputValue) []*outputValue {
+	ol := make([]*outputValue, len(ovs))
+	for i, ov := range ovs {
+		ol[i] = &outputValue{
+			Name:      types.StringValue(ov.Name),
+			Type:      types.StringValue(ov.Type),
+			Value:     types.StringValue(ov.Value),
+			Sensitive: types.BoolValue(ov.Sensitive),
 		}
-		if len(outputList) > 0 {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
-	return diags
+	return ol
 }
