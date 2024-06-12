@@ -1,0 +1,4 @@
+```release-note:improvement
+waypoint: Add support for input variables to the `hcp_wapyoint_add_on` resource
+and data source.
+```
