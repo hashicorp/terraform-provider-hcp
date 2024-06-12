@@ -118,8 +118,8 @@ data "hcp_user_principal" "example" {
 }
 
 resource "hcp_group_iam_binding" "example" {
-	resource_name = hcp_group.example.resource_name
-	principal_id = hcp_user_principal.example.resource_id
+	resource_name = data.hcp_group.example.resource_name
+	principal_id = data.hcp_user_principal.example.resource_id
 	role = %q
 }
 `, resourceName, roleName)
