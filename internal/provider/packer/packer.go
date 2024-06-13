@@ -15,6 +15,8 @@ import (
 // Framework provider. To add a new resource, add a new function to this list.
 var ResourceSchemaBuilders []func() resource.Resource = []func() resource.Resource{
 	bucket.NewPackerBucketResource,
+	bucket.NewPackerBucketIAMPolicyResource,
+	bucket.NewPackerBucketAppIAMBindingResource,
 }
 
 // DataSourceSchemaBuilders is a list of all HCP Packer data sources exposed by the
