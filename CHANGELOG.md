@@ -1,3 +1,8 @@
+## v0.91.1 (June 13, 2024)
+
+BUG FIXES:
+
+* Fix the documentation for hcp_vault_secrets_rotating_secret [[GH-867](https://github.com/hashicorp/terraform-provider-hcp/pull/867)]
 ## v0.91.0 (June 06, 2024)
 
 FEATURES:
