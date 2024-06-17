@@ -1,11 +1,11 @@
 ---
 subcategory: ""
-page_title: "Managing Packer Bucket IAM Policies"
+page_title: "Managing HCP Packer Bucket IAM Policies"
 description: |-
     A guide to using HCP Packer bucket resource along with binding or policy resource to manage bucket level access.
 ---
 
-# Managing Packer Bucket IAM Policies
+# Managing HCP Packer Bucket IAM Policies
 
 You can grant specific users, service principals, or groups contributor or admin level access to a specific HCP Packer bucket using either a `hcp_packer_bucket_iam_binding` or `hcp_packer_bucket_iam_policy` resource.  Whenever a user is invited to a project they will have read level access to all resources, but you can restrict which of the principals in your project can maintain specific buckets.
 
@@ -35,8 +35,6 @@ resource "hcp_packer_bucket_iam_policy" "example" {
   policy_data   = data.hcp_iam_policy.mypolicy.policy_data
 }
 ```
-
-A resource's policy binding assigns a single role to a list of principals. The `hcp_packer_bucket_iam_binding` resource updates the Bucket IAM policy to bind a role to a new member. Existing bindings are preserved.
 
 The following example assigns role contriubtor for a service principal to the production bucket, and also preserves existing bindings.
 
