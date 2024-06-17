@@ -9,8 +9,8 @@ description: |-
 
 Updates the group's IAM policy to bind a role to a new member. Existing bindings are preserved.
 
-~> **Note:** `hcp_project_iam_policy` can not be used in conjunction with
-`hcp_project_iam_binding`.
+~> **Note:** `hcp_group_iam_policy` can not be used in conjunction with
+`hcp_group_iam_binding`.
 
 ## Example Usage
 
