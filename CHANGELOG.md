@@ -1,3 +1,9 @@
+## v0.92.0 (June 18, 2024)
+
+FEATURES:
+
+* Add `hcp_group_iam_binding` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
+* Add `hcp_group_iam_policy` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
 ## v0.91.1 (June 13, 2024)
 
 BUG FIXES:
