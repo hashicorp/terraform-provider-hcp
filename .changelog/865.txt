@@ -1,0 +1,7 @@
+```release-note:feature
+ Add `hcp_group_iam_policy` resource.
+ ```
+
+```release-note:feature
+ Add `hcp_group_iam_binding` resource.
+ ```
