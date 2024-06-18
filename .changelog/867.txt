@@ -1,0 +1,3 @@
+```release-note:bug
+Fix the documentation for hcp_vault_secrets_rotating_secret
+```
