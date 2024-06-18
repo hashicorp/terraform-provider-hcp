@@ -35,9 +35,9 @@ resource "hcp_group_members" "example" {
 
 # Add an IAM binding to a group
 resource "hcp_group_iam_binding" "example" {
-  resource_name = data.hcp_group.example.resource_name
-  principal_id  = data.hcp_user_principal.example.user_id
-  role          = "roles/iam.group-manager"
+  name         = data.hcp_group.example.resource_name
+  principal_id = data.hcp_user_principal.example.user_id
+  role         = "roles/iam.group-manager"
 }
 ```
 
@@ -46,6 +46,6 @@ resource "hcp_group_iam_binding" "example" {
 
 ### Required
 
+- `name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<group_name>`. The shortened `<group_name>` version can be used for input.
 - `principal_id` (String) The principal to bind to the given role.
-- `resource_name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<group_name>`. The shortened `<group_name>` version can be used for input.
 - `role` (String) The role name to bind to the given principal.

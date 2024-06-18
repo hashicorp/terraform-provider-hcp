@@ -47,8 +47,8 @@ data "hcp_iam_policy" "example" {
 
 # Set the IAM policy on a group
 resource "hcp_group_iam_policy" "example" {
-  resource_name = data.hcp_group.example.resource_name
-  policy_data   = data.hcp_iam_policy.example.policy_data
+  name        = data.hcp_group.example.resource_name
+  policy_data = data.hcp_iam_policy.example.policy_data
 }
 ```
 
@@ -57,8 +57,8 @@ resource "hcp_group_iam_policy" "example" {
 
 ### Required
 
+- `name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<group_name>`. The shortened `<group_name>` version can be used for input.
 - `policy_data` (String) The policy to apply.
-- `resource_name` (String) The group's resource name in format `iam/organization/<organization_id>/group/<group_name>`. The shortened `<group_name>` version can be used for input.
 
 ### Read-Only
 

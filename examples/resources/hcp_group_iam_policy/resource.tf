@@ -30,6 +30,6 @@ data "hcp_iam_policy" "example" {
 
 # Set the IAM policy on a group
 resource "hcp_group_iam_policy" "example" {
-  resource_name = data.hcp_group.example.resource_name
-  policy_data   = data.hcp_iam_policy.example.policy_data
+  name        = data.hcp_group.example.resource_name
+  policy_data = data.hcp_iam_policy.example.policy_data
 }

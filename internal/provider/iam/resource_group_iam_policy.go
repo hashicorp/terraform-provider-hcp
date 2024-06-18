@@ -6,6 +6,7 @@ package iam
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -33,7 +34,7 @@ func groupIAMSchema(binding bool) schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: d,
 		Attributes: map[string]schema.Attribute{
-			"resource_name": schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Description: fmt.Sprintf(
 					"The group's resource name in format `%s`. The shortened `%s` version can be used for input.",
 					"iam/organization/<organization_id>/group/<group_name>",
@@ -49,11 +50,11 @@ func groupIAMSchema(binding bool) schema.Schema {
 }
 
 func NewGroupIAMPolicyResource() resource.Resource {
-	return iampolicy.NewResourceIamPolicy("group", groupIAMSchema(false), "resource_name", newGroupIAMPolicyUpdater)
+	return iampolicy.NewResourceIamPolicy("group", groupIAMSchema(false), "name", newGroupIAMPolicyUpdater)
 }
 
 func NewGroupIAMBindingResource() resource.Resource {
-	return iampolicy.NewResourceIamBinding("group", groupIAMSchema(true), "resource_name", newGroupIAMPolicyUpdater)
+	return iampolicy.NewResourceIamBinding("group", groupIAMSchema(true), "name", newGroupIAMPolicyUpdater)
 }
 
 type groupIAMPolicyUpdater struct {
@@ -69,7 +70,7 @@ func newGroupIAMPolicyUpdater(
 
 	// Determine the resource name
 	var resourceName types.String
-	diags := d.GetAttribute(ctx, path.Root("resource_name"), &resourceName)
+	diags := d.GetAttribute(ctx, path.Root("name"), &resourceName)
 
 	return &groupIAMPolicyUpdater{
 		resourceName: helper.ResourceName(resourceName.ValueString(), clients.Config.OrganizationID),
@@ -87,8 +88,19 @@ func (u *groupIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mode
 	var diags diag.Diagnostics
 	params := resource_service.NewResourceServiceGetIamPolicyParams()
 	params.ResourceName = &u.resourceName
+
 	res, err := u.client.ResourceService.ResourceServiceGetIamPolicy(params, nil)
 	if err != nil {
+		serviceErr, ok := err.(*resource_service.ResourceServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast resource IAM policy error", err.Error())
+			return nil, diags
+		}
+		if serviceErr.Code() == http.StatusNotFound {
+			// Groups do not have a policy by default
+			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
+		}
+
 		diags.AddError("failed to retrieve group IAM policy", err.Error())
 		return nil, diags
 	}
