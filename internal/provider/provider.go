@@ -148,6 +148,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		iam.NewWorkloadIdentityProviderResource,
 		iam.NewGroupResource,
 		iam.NewGroupMembersResource,
+		iam.NewGroupIAMPolicyResource,
+		iam.NewGroupIAMBindingResource,
 		// Log Streaming
 		logstreaming.NewHCPLogStreamingDestinationResource,
 		// Webhook
