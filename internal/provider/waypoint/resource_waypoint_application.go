@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -60,6 +61,8 @@ type ApplicationResourceModel struct {
 	// however, this is not currently possible in the framework. See this issue for more details:
 	// https://github.com/hashicorp/terraform-plugin-framework/issues/242
 	TemplateInputVars types.Set `tfsdk:"template_input_variables"`
+
+	OutputValues types.List `tfsdk:"output_values"`
 }
 
 type InputVar struct {
@@ -183,6 +186,31 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						"value": &schema.StringAttribute{
 							Required:    true,
 							Description: "Variable value",
+						},
+					},
+				},
+			},
+			"output_values": schema.ListNestedAttribute{
+				Computed: true,
+				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
+					"and value omitted.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: "The name of the output value.",
+						},
+						"type": schema.StringAttribute{
+							Computed:    true,
+							Description: "The type of the output value.",
+						},
+						"value": schema.StringAttribute{
+							Computed:    true,
+							Description: "The value of the output value.",
+						},
+						"sensitive": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the output value is sensitive.",
 						},
 					},
 				},
@@ -335,6 +363,13 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
+	// Read the output values from the application and set them in the plan
+	diags = readAppOutputs(ctx, application, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "created application from template resource")
@@ -429,6 +464,14 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	} else {
 		data.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
+
+	// Read the output values from the application and set them in the plan
+	diags = readAppOutputs(ctx, application, data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -553,6 +596,13 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.ReadmeMarkdown = types.StringNull()
 	}
 
+	// Read the output values from the application and set them in the plan
+	diags := readAppOutputs(ctx, application, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "updated application resource")
@@ -613,4 +663,28 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func readAppOutputs(ctx context.Context, app *waypoint_models.HashicorpCloudWaypointApplication, plan *ApplicationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if app.OutputValues != nil {
+		outputList := make([]*outputValue, len(app.OutputValues))
+		for i, outputVal := range app.OutputValues {
+			output := &outputValue{
+				Name:      types.StringValue(outputVal.Name),
+				Type:      types.StringValue(outputVal.Type),
+				Value:     types.StringValue(outputVal.Value),
+				Sensitive: types.BoolValue(outputVal.Sensitive),
+			}
+			outputList[i] = output
+		}
+		if len(outputList) > 0 {
+			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
+		} else {
+			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+		}
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+	return diags
 }

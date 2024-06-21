@@ -315,6 +315,7 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 	} else {
 		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

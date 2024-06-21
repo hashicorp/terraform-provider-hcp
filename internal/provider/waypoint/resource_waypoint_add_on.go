@@ -463,6 +463,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	} else {
 		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -625,6 +626,7 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	} else {
 		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -786,6 +788,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	} else {
 		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
