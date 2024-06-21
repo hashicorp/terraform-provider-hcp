@@ -49,20 +49,15 @@ type TemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
-	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 type tfcWorkspace struct {
 	Name types.String `tfsdk:"name"`
 	// this refers to the project ID found in Terraform Cloud
 	TerraformProjectID types.String `tfsdk:"terraform_project_id"`
-}
-
-type tfcNoCodeModule struct {
-	Source  types.String `tfsdk:"source"`
-	Version types.String `tfsdk:"version"`
 }
 
 type tfcVariableOption struct {
@@ -143,18 +138,11 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-			"terraform_no_code_module": &schema.SingleNestedAttribute{
+			"terraform_no_code_module_source": schema.StringAttribute{
 				Required:    true,
-				Description: "Terraform Cloud No-Code Module details",
-				Attributes: map[string]schema.Attribute{
-					"source": &schema.StringAttribute{
-						Required:    true,
-						Description: "No-Code Module Source",
-					},
-					"version": &schema.StringAttribute{
-						Required:    true,
-						Description: "No-Code Module Version",
-					},
+				Description: "Source of the Terraform module",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"variable_options": schema.SetNestedAttribute{
@@ -279,10 +267,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			Labels:                 strLabels,
 			Description:            plan.Description.ValueString(),
 			ReadmeMarkdownTemplate: readmeBytes,
-			TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
-				Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-				Version: plan.TerraformNoCodeModule.Version.ValueString(),
-			},
+			ModuleSource:           plan.TerraformNoCodeModuleSource.ValueString(),
 			TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
@@ -315,6 +300,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	plan.Name = types.StringValue(appTemplate.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(appTemplate.Summary)
+	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -322,14 +308,6 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if appTemplate.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-		}
-		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
@@ -437,6 +415,7 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.Summary = types.StringValue(appTemplate.Summary)
+	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -444,14 +423,6 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		data.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if appTemplate.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-		}
-		data.TerraformNoCodeModule = tfcNoCode
 	}
 
 	data.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
@@ -555,10 +526,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			Labels:                 strLabels,
 			Description:            plan.Description.ValueString(),
 			ReadmeMarkdownTemplate: readmeBytes,
-			TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
-				Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-				Version: plan.TerraformNoCodeModule.Version.ValueString(),
-			},
+			ModuleSource:           plan.TerraformNoCodeModuleSource.ValueString(),
 			TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
@@ -592,6 +560,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.Name = types.StringValue(appTemplate.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(appTemplate.Summary)
+	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
 	resp.Diagnostics.Append(diags...)
@@ -606,14 +575,6 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if appTemplate.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-		}
-		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	plan.Description = types.StringValue(appTemplate.Description)

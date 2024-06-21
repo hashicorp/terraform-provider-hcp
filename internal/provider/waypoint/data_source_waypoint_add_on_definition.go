@@ -44,9 +44,9 @@ type DataSourceAddOnDefinitionModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
-	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewAddOnDefinitionDataSource() datasource.DataSource {
@@ -210,6 +210,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	state.OrgID = types.StringValue(client.Config.OrganizationID)
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
+	state.Description = types.StringValue(definition.Description)
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -217,14 +218,6 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		state.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if definition.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(definition.TerraformNocodeModule.Source),
-			Version: types.StringValue(definition.TerraformNocodeModule.Version),
-		}
-		state.TerraformNoCodeModule = tfcNoCode
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
