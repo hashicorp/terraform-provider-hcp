@@ -28,7 +28,7 @@ The Waypoint Template data source retrieves information on a given Template.
 - `readme_markdown_template` (String) Instructions for using the template (markdown format supported)
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module_source` (Attributes) Terraform No Code Module source (see [below for nested schema](#nestedatt--terraform_no_code_module_source))
 - `variable_options` (Attributes List) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
@@ -40,13 +40,8 @@ Read-Only:
 - `terraform_project_id` (String) Terraform Cloud Project ID
 
 
-<a id="nestedatt--terraform_no_code_module"></a>
-### Nested Schema for `terraform_no_code_module`
-
-Read-Only:
-
-- `source` (String) No-Code Module Source
-- `version` (String) No-Code Module Version
+<a id="nestedatt--terraform_no_code_module_source"></a>
+### Nested Schema for `terraform_no_code_module_source`
 
 
 <a id="nestedatt--variable_options"></a>

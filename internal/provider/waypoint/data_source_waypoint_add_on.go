@@ -59,7 +59,7 @@ type AddOnDataSourceModel struct {
 	DefinitionID   types.String `tfsdk:"definition_id"`
 	OutputValues   types.List   `tfsdk:"output_values"`
 
-	TerraformNoCodeModule types.Object `tfsdk:"terraform_no_code_module"`
+	TerraformNoCodeModuleSource types.String `tfsdk:"terraform_no_code_module_source"`
 
 	InputVars types.Set `tfsdk:"input_variables"`
 }
@@ -121,19 +121,9 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				Computed:    true,
 				Description: "The ID of the Application that this Add-on is created for.",
 			},
-			"terraform_no_code_module": &schema.SingleNestedAttribute{
+			"terraform_no_code_module_source": schema.StringAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud no-code Module details.",
-				Attributes: map[string]schema.Attribute{
-					"source": &schema.StringAttribute{
-						Computed:    true,
-						Description: "Terraform Cloud no-code Module Source",
-					},
-					"version": &schema.StringAttribute{
-						Computed:    true,
-						Description: "Terraform Cloud no-code Module Version",
-					},
-				},
+				Description: "The Terraform module source for the Add-on.",
 			},
 			"status": schema.Int64Attribute{
 				Computed:    true,
@@ -243,6 +233,7 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	state.Summary = types.StringValue(addOn.Summary)
+	state.TerraformNoCodeModuleSource = types.StringValue(addOn.ModuleSource)
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOn.Labels)
 	resp.Diagnostics.Append(diags...)
@@ -253,18 +244,6 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		labels = types.ListNull(types.StringType)
 	}
 	state.Labels = labels
-
-	if addOn.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(addOn.TerraformNocodeModule.Source),
-			Version: types.StringValue(addOn.TerraformNocodeModule.Version),
-		}
-		state.TerraformNoCodeModule, diags = types.ObjectValueFrom(ctx, tfcNoCode.attrTypes(), tfcNoCode)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
 
 	// set plan.description if it's not null or addOn.description is not empty
 	state.Description = types.StringValue(addOn.Description)

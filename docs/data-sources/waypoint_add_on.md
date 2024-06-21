@@ -34,7 +34,7 @@ The Waypoint Add-on data source retrieves information on a given Add-on.
 - `readme_markdown` (String) Instructions for using the Add-on (markdown format supported).
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.
-- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module_source` (String) The Terraform module source for the Add-on.
 
 <a id="nestedatt--input_variables"></a>
 ### Nested Schema for `input_variables`
@@ -55,12 +55,3 @@ Read-Only:
 - `sensitive` (Boolean) Whether the output value is sensitive.
 - `type` (String) The type of the output value.
 - `value` (String) The value of the output value.
-
-
-<a id="nestedatt--terraform_no_code_module"></a>
-### Nested Schema for `terraform_no_code_module`
-
-Read-Only:
-
-- `source` (String) Terraform Cloud no-code Module Source
-- `version` (String) Terraform Cloud no-code Module Version
