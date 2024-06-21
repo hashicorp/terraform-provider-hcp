@@ -46,9 +46,9 @@ type AddOnDefinitionResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace  *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule    *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
-	TerraformVariableOptions []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func (r *AddOnDefinitionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -122,18 +122,11 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"terraform_no_code_module": &schema.SingleNestedAttribute{
+			"terraform_no_code_module_source": &schema.StringAttribute{
 				Required:    true,
-				Description: "Terraform Cloud no-code Module details.",
-				Attributes: map[string]schema.Attribute{
-					"source": &schema.StringAttribute{
-						Required:    true,
-						Description: "Terraform Cloud no-code Module Source",
-					},
-					"version": &schema.StringAttribute{
-						Required:    true,
-						Description: "Terraform Cloud no-code Module Version",
-					},
+				Description: "Terraform No Code Module source",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"variable_options": schema.SetNestedAttribute{
@@ -258,11 +251,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypointModels.HashicorpCloudWaypointTerraformNocodeModule{
-			// verify these exist in the file
-			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-			Version: plan.TerraformNoCodeModule.Version.ValueString(),
-		},
+		ModuleSource:           plan.TerraformNoCodeModuleSource.ValueString(),
 		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
@@ -294,6 +283,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
+	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.TerraformNocodeModule.Source)
 
 	plan.Description = types.StringValue(addOnDefinition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -319,14 +309,6 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if addOnDefinition.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(addOnDefinition.TerraformNocodeModule.Source),
-			Version: types.StringValue(addOnDefinition.TerraformNocodeModule.Version),
-		}
-		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
@@ -382,6 +364,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	state.OrgID = types.StringValue(client.Config.OrganizationID)
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
+	state.TerraformNoCodeModuleSource = types.StringValue(definition.TerraformNocodeModule.Source)
 
 	state.Description = types.StringValue(definition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -407,14 +390,6 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		state.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if definition.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(definition.TerraformNocodeModule.Source),
-			Version: types.StringValue(definition.TerraformNocodeModule.Version),
-		}
-		state.TerraformNoCodeModule = tfcNoCode
 	}
 
 	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
@@ -500,11 +475,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		Description:            plan.Description.ValueString(),
 		ReadmeMarkdownTemplate: readmeBytes,
 		Labels:                 stringLabels,
-		TerraformNocodeModule: &waypointModels.HashicorpCloudWaypointTerraformNocodeModule{
-			// verify these exist in the file
-			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
-			Version: plan.TerraformNoCodeModule.Version.ValueString(),
-		},
+		ModuleSource:           plan.TerraformNoCodeModuleSource.ValueString(),
 		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
@@ -537,6 +508,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
+	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.TerraformNocodeModule.Source)
 
 	plan.Description = types.StringValue(addOnDefinition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -562,14 +534,6 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if addOnDefinition.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(addOnDefinition.TerraformNocodeModule.Source),
-			Version: types.StringValue(addOnDefinition.TerraformNocodeModule.Version),
-		}
-		plan.TerraformNoCodeModule = tfcNoCode
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
