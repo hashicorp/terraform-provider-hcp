@@ -5,6 +5,7 @@ package resourcemanager
 
 import (
 	"context"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 )
 
 // projectIAMSchema is the schema for the project IAM resources
@@ -86,7 +88,7 @@ func (u *projectIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mo
 	params.ID = u.projectID
 	res, err := u.client.Project.ProjectServiceGetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve project IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve project IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 
@@ -104,7 +106,7 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 
 	res, err := u.client.Project.ProjectServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve project IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update project IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 

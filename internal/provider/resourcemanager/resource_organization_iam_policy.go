@@ -5,6 +5,8 @@ package resourcemanager
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -64,7 +66,7 @@ func (u *orgIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*models
 	params.ID = u.client.Config.OrganizationID
 	res, err := u.client.Organization.OrganizationServiceGetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve organization IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 
@@ -82,7 +84,7 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 
 	res, err := u.client.Organization.OrganizationServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update organization IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 

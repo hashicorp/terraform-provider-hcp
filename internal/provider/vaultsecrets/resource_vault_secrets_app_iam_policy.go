@@ -7,6 +7,8 @@ import (
 	"context"
 	"net/http"
 
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 )
 
 // vaultSecretsAppIAMSchema is the schema for the vault secret resource IAM resources
@@ -92,7 +95,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx conte
 		if serviceErr.Code() == http.StatusNotFound {
 			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
 		}
-		diags.AddError("failed to retrieve resource IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve resource IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 
@@ -111,7 +114,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx conte
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve resource IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update resource IAM policy", err.Error(), status.Code(err)))
 		return nil, diags
 	}
 
