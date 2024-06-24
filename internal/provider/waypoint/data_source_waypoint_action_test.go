@@ -5,6 +5,7 @@ package waypoint_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,6 +14,13 @@ import (
 )
 
 func TestAccWaypoint_Action_DataSource_basic(t *testing.T) {
+	// Skip this test unless the appropriate environment variable is set
+	// This is to prevent running this test by default
+	if os.Getenv("HCP_WAYP_ACTION_TEST") == "" {
+		t.Skipf("Waypoint Action tests skipped unless env '%s' set",
+			"HCP_WAYP_ACTION_TEST")
+		return
+	}
 	var actionModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
 	dataSourceName := "data." + resourceName

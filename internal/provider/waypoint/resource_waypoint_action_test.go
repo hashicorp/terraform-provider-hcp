@@ -6,6 +6,7 @@ package waypoint_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -18,6 +19,13 @@ import (
 )
 
 func TestAccWaypoint_Action_basic(t *testing.T) {
+	// Skip this test unless the appropriate environment variable is set
+	// This is to prevent running this test by default
+	if os.Getenv("HCP_WAYP_ACTION_TEST") == "" {
+		t.Skipf("Waypoint Action tests skipped unless env '%s' set",
+			"HCP_WAYP_ACTION_TEST")
+		return
+	}
 	var actionCfgModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
 	actionName := generateRandomName()
