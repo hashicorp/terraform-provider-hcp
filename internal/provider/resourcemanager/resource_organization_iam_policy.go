@@ -5,7 +5,7 @@ package resourcemanager
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
+
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 )
 
 // orgIAMSchema is the schema for the organization IAM resources
