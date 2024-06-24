@@ -5,6 +5,8 @@ package iampolicy
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
+	"log"
 	"sync"
 	"time"
 
@@ -184,45 +186,68 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 		return
 	}
 
-	// Get the existing policy
-	ep, diags := u.GetResourceIamPolicy(ctx)
-	if diags.HasError() {
-		f.set(nil, diags)
-		return
-	}
+	backoff := time.Second
+	maxBackoff := 30 * time.Second
 
-	// Determine the principal's we need to lookup their type.
-	principalSet, diags := f.getPrincipals(ctx, client)
-	if diags.HasError() {
-		f.set(nil, diags)
-		return
-	}
+	for {
+		// Get the existing policy
+		ep, diags := u.GetResourceIamPolicy(ctx)
+		if diags.HasError() {
+			f.set(nil, diags)
+			return
+		}
 
-	// Remove any bindings needed
-	bindings := ToMap(ep)
-	for _, rm := range f.removers {
-		if members, ok := bindings[rm.RoleID]; ok {
-			delete(members, rm.Members[0].MemberID)
-			if len(members) == 0 {
-				delete(bindings, rm.RoleID)
+		// Determine the principal's we need to lookup their type.
+		principalSet, diags := f.getPrincipals(ctx, client)
+		if diags.HasError() {
+			f.set(nil, diags)
+			return
+		}
+
+		// Remove any bindings needed
+		bindings := ToMap(ep)
+		for _, rm := range f.removers {
+			if members, ok := bindings[rm.RoleID]; ok {
+				delete(members, rm.Members[0].MemberID)
+				if len(members) == 0 {
+					delete(bindings, rm.RoleID)
+				}
 			}
 		}
-	}
 
-	// Go through the setters and apply them
-	for _, s := range f.setters {
-		members, ok := bindings[s.RoleID]
-		if !ok {
-			members = make(map[string]*models.HashicorpCloudResourcemanagerPolicyBindingMemberType, 4)
-			bindings[s.RoleID] = members
+		// Go through the setters and apply them
+		for _, s := range f.setters {
+			members, ok := bindings[s.RoleID]
+			if !ok {
+				members = make(map[string]*models.HashicorpCloudResourcemanagerPolicyBindingMemberType, 4)
+				bindings[s.RoleID] = members
+			}
+
+			members[s.Members[0].MemberID] = principalSet[s.Members[0].MemberID]
 		}
 
-		members[s.Members[0].MemberID] = principalSet[s.Members[0].MemberID]
+		// Apply the policy
+		ep, diags = u.SetResourceIamPolicy(ctx, FromMap(ep.Etag, bindings))
+		if diags.HasError() {
+			if customdiags.HasConflictError(diags) {
+				log.Printf("[DEBUG]: Operation failed due to conflicts. Operation will be restarted after %s\n", backoff)
+				time.Sleep(backoff)
+				backoff *= 2
+				if backoff > maxBackoff {
+					log.Printf("[DEBUG]: Maximum backoff time reached. Aborting operation.\n")
+					f.set(nil, diags)
+					return
+				}
+				continue
+			}
+			f.set(nil, diags)
+			return
+		}
+
+		// Successfully applied policy
+		f.set(ep, nil)
+		return
 	}
-
-	// Apply the policy
-	f.set(u.SetResourceIamPolicy(ctx, FromMap(ep.Etag, bindings)))
-
 }
 
 // getPrincipals returns a map of principal_id to binding type. The binding type
