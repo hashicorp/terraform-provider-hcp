@@ -110,7 +110,7 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 
 	res, err := u.client.Project.ProjectServiceSetIamPolicy(params, nil)
 	if err != nil {
-		serviceErr, ok := err.(*project_service.ProjectServiceGetIamPolicyDefault)
+		serviceErr, ok := err.(*project_service.ProjectServiceSetIamPolicyDefault)
 		if !ok {
 			diags.AddError("failed to cast project IAM policy error", err.Error())
 			return nil, diags

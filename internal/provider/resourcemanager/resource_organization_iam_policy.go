@@ -88,7 +88,7 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 
 	res, err := u.client.Organization.OrganizationServiceSetIamPolicy(params, nil)
 	if err != nil {
-		serviceErr, ok := err.(*organization_service.OrganizationServiceGetIamPolicyDefault)
+		serviceErr, ok := err.(*organization_service.OrganizationServiceSetIamPolicyDefault)
 		if !ok {
 			diags.AddError("failed to cast organization IAM policy error", err.Error())
 			return nil, diags

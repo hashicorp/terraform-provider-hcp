@@ -112,7 +112,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx conte
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)
 	if err != nil {
-		serviceErr, ok := err.(*resource_service.ResourceServiceGetIamPolicyDefault)
+		serviceErr, ok := err.(*resource_service.ResourceServiceSetIamPolicyDefault)
 		if !ok {
 			diags.AddError("failed to cast resource IAM policy error", err.Error())
 			return nil, diags
