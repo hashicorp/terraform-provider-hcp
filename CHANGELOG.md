@@ -1,3 +1,13 @@
+## v0.93.0 (June 25, 2024)
+BREAKING CHANGES:
+
+* waypoint: Rename `hcp_waypoint_application_template` resource and data source to
+`hcp_waypoint_template`. [[GH-861](https://github.com/hashicorp/terraform-provider-hcp/pull/861)]
+
+FEATURES:
+
+* New resource: Add `hcp_waypoint_action_config` resource for managing Waypoint Action Configs.
+ New data-source: Add `data.hcp_waypoint_action_config` data-source for Waypoint Action Configs. [[GH-815](https://github.com/hashicorp/terraform-provider-hcp/pull/815)]
 ## v0.92.0 (June 18, 2024)
 
 FEATURES:
