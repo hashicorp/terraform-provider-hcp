@@ -1,7 +1,7 @@
 package customdiags
 
 import (
-	"google.golang.org/grpc/codes"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -10,7 +10,7 @@ import (
 type ErrorDiagnosticWithErrorCode struct {
 	detail    string
 	summary   string
-	errorCode codes.Code
+	errorCode int
 }
 
 // Detail returns the diagnostic detail.
@@ -40,7 +40,7 @@ func (d ErrorDiagnosticWithErrorCode) Severity() diag.Severity {
 }
 
 // NewErrorDiagnosticWithErrorCode returns a new error severity diagnostic with the given summary, detail and error code.
-func NewErrorDiagnosticWithErrorCode(summary string, detail string, errorCode codes.Code) ErrorDiagnosticWithErrorCode {
+func NewErrorDiagnosticWithErrorCode(summary string, detail string, errorCode int) ErrorDiagnosticWithErrorCode {
 	return ErrorDiagnosticWithErrorCode{
 		detail:    detail,
 		summary:   summary,
@@ -55,7 +55,7 @@ func HasConflictError(diags diag.Diagnostics) bool {
 		if !ok {
 			return false
 		}
-		if diag.errorCode == codes.Aborted {
+		if diag.errorCode == http.StatusConflict {
 			return true
 		}
 	}

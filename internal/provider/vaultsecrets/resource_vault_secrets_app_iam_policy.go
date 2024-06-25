@@ -7,8 +7,6 @@ import (
 	"context"
 	"net/http"
 
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -95,7 +93,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx conte
 		if serviceErr.Code() == http.StatusNotFound {
 			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve resource IAM policy", err.Error(), status.Code(err)))
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve resource IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -114,7 +112,12 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx conte
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update resource IAM policy", err.Error(), status.Code(err)))
+		serviceErr, ok := err.(*resource_service.ResourceServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast resource IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update resource IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 

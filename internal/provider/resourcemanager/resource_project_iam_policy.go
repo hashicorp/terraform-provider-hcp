@@ -6,8 +6,6 @@ package resourcemanager
 import (
 	"context"
 
-	"google.golang.org/grpc/status"
-
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -89,7 +87,12 @@ func (u *projectIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mo
 	params.ID = u.projectID
 	res, err := u.client.Project.ProjectServiceGetIamPolicy(params, nil)
 	if err != nil {
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve project IAM policy", err.Error(), status.Code(err)))
+		serviceErr, ok := err.(*project_service.ProjectServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast project IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve project IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -107,7 +110,12 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 
 	res, err := u.client.Project.ProjectServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update project IAM policy", err.Error(), status.Code(err)))
+		serviceErr, ok := err.(*project_service.ProjectServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast project IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update project IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
