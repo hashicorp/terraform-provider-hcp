@@ -58,7 +58,7 @@ func testAccCheckWaypointAddOnExists(t *testing.T, resourceName string, addOnMod
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		client := acctest.HCPClients(t)
@@ -114,7 +114,7 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 			return fmt.Errorf("expected add-on to be destroyed, but it still exists")
 		}
 
-		return fmt.Errorf("Both add-on and error were nil in destroy check, this should not happen")
+		return fmt.Errorf("both add-on and error were nil in destroy check, this should not happen")
 	}
 }
 
@@ -123,7 +123,7 @@ func testAccCheckWaypointAddOnDestroy(t *testing.T, addOnModel *waypoint.AddOnRe
 // sufficient for now.
 func testAddOnConfig(templateName string, appName string, defName string, addOnName string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "test" {
+resource "hcp_waypoint_template" "test" {
   name    = "%s"
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
@@ -140,7 +140,7 @@ resource "hcp_waypoint_application_template" "test" {
 
 resource "hcp_waypoint_application" "test" {
   name    = "%s"
-  application_template_id = hcp_waypoint_application_template.test.id
+  template_id = hcp_waypoint_template.test.id
 }
 
 resource "hcp_waypoint_add_on_definition" "test" {

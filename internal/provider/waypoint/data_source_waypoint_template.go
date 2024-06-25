@@ -18,10 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var _ datasource.DataSource = &DataSourceApplicationTemplate{}
-var _ datasource.DataSourceWithConfigValidators = &DataSourceApplicationTemplate{}
+var _ datasource.DataSource = &DataSourceTemplate{}
+var _ datasource.DataSourceWithConfigValidators = &DataSourceTemplate{}
 
-func (d DataSourceApplicationTemplate) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+func (d DataSourceTemplate) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(
 			path.MatchRoot("name"),
@@ -30,11 +30,11 @@ func (d DataSourceApplicationTemplate) ConfigValidators(ctx context.Context) []d
 	}
 }
 
-type DataSourceApplicationTemplate struct {
+type DataSourceTemplate struct {
 	client *clients.Client
 }
 
-type DataSourceApplicationTemplateModel struct {
+type DataSourceTemplateModel struct {
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	ProjectID              types.String `tfsdk:"project_id"`
@@ -49,34 +49,34 @@ type DataSourceApplicationTemplateModel struct {
 	VariableOptions         []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
-func NewApplicationTemplateDataSource() datasource.DataSource {
-	return &DataSourceApplicationTemplate{}
+func NewTemplateDataSource() datasource.DataSource {
+	return &DataSourceTemplate{}
 }
 
-func (d *DataSourceApplicationTemplate) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_waypoint_application_template"
+func (d *DataSourceTemplate) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_waypoint_template"
 }
 
-func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Waypoint Template data source retrieves information on a given Application Template.",
+		MarkdownDescription: "The Waypoint Template data source retrieves information on a given Template.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "The ID of the Application Template.",
+				Description: "The ID of the Template.",
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the Application Template.",
+				Description: "The name of the Template.",
 				Computed:    true,
 				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of the HCP organization where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP organization where the Waypoint Template is located.",
 				Computed:    true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The ID of the HCP project where the Waypoint Application Template is located.",
+				Description: "The ID of the HCP project where the Waypoint Template is located.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -94,7 +94,7 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
-				Description: "List of labels attached to this Application Template.",
+				Description: "List of labels attached to this Template.",
 				ElementType: types.StringType,
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
@@ -154,7 +154,7 @@ func (d *DataSourceApplicationTemplate) Schema(ctx context.Context, req datasour
 	}
 }
 
-func (d *DataSourceApplicationTemplate) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceTemplate) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -170,8 +170,8 @@ func (d *DataSourceApplicationTemplate) Configure(ctx context.Context, req datas
 	d.client = client
 }
 
-func (d *DataSourceApplicationTemplate) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DataSourceApplicationTemplateModel
+func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data DataSourceTemplateModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	client := d.client

@@ -138,7 +138,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"variable_options": schema.SetNestedAttribute{
 				Optional:    true,
-				Description: "List of variable options for the template",
+				Description: "List of variable options for the Add-on Definition.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{

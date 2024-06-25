@@ -37,14 +37,14 @@ type ApplicationResource struct {
 
 // ApplicationResourceModel describes the resource data model.
 type ApplicationResourceModel struct {
-	ID                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	ProjectID               types.String `tfsdk:"project_id"`
-	OrgID                   types.String `tfsdk:"organization_id"`
-	ReadmeMarkdown          types.String `tfsdk:"readme_markdown"`
-	ApplicationTemplateID   types.String `tfsdk:"application_template_id"`
-	ApplicationTemplateName types.String `tfsdk:"application_template_name"`
-	NamespaceID             types.String `tfsdk:"namespace_id"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrgID          types.String `tfsdk:"organization_id"`
+	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
+	TemplateID     types.String `tfsdk:"template_id"`
+	TemplateName   types.String `tfsdk:"template_name"`
+	NamespaceID    types.String `tfsdk:"namespace_id"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
@@ -115,15 +115,15 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"application_template_id": schema.StringAttribute{
+			"template_id": schema.StringAttribute{
 				Required:    true,
-				Description: "ID of the Application Template this Application is based on.",
+				Description: "ID of the Template this Application is based on.",
 			},
-			// application_template_name is a computed only attribute for ease
+			// template_name is a computed only attribute for ease
 			// of reference
-			"application_template_name": schema.StringAttribute{
+			"template_name": schema.StringAttribute{
 				Computed:    true,
-				Description: "Name of the Application Template this Application is based on.",
+				Description: "Name of the Template this Application is based on.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -135,7 +135,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					" format supported). Note: this is a base64 encoded string, and " +
 					"can only be set in configuration after initial creation. The" +
 					" initial version of the README is generated from the README " +
-					"Template from source Application Template.",
+					"Template from source Template.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -270,7 +270,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
 		Name: plan.Name.ValueString(),
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
-			ID: plan.ApplicationTemplateID.ValueString(),
+			ID: plan.TemplateID.ValueString(),
 		},
 		Variables: ivs,
 	}
@@ -298,7 +298,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.ProjectID = types.StringValue(projectID)
 	plan.Name = types.StringValue(application.Name)
 	plan.OrgID = types.StringValue(orgID)
-	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
+	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
 	// set plan.readme if it's not null or application.readme is not
@@ -394,7 +394,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.ProjectID = types.StringValue(projectID)
 	data.Name = types.StringValue(application.Name)
 	data.OrgID = types.StringValue(orgID)
-	data.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
+	data.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
@@ -543,7 +543,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.ProjectID = types.StringValue(projectID)
 	plan.Name = types.StringValue(application.Name)
 	plan.OrgID = types.StringValue(orgID)
-	plan.ApplicationTemplateName = types.StringValue(application.ApplicationTemplate.Name)
+	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
 	// set plan.readme if it's not null or application.readme is not

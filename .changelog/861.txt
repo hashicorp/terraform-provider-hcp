@@ -1,0 +1,4 @@
+```release-note:breaking-change
+waypoint: Rename `hcp_waypoint_application_template` resource and data source to
+`hcp_waypoint_template`.
+```
