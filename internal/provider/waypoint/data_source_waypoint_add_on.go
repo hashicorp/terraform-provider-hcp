@@ -64,7 +64,6 @@ type AddOnDataSourceModel struct {
 	InputVars types.Set `tfsdk:"input_variables"`
 }
 
-//TODO: Make sure this schema is correct (do we want to include count or output values?)
 
 func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
