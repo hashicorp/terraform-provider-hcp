@@ -93,7 +93,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx conte
 		if serviceErr.Code() == http.StatusNotFound {
 			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve resource IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve resource IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -117,7 +117,7 @@ func (u *vaultSecretsAppResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx conte
 			diags.AddError("failed to cast resource IAM policy error", err.Error())
 			return nil, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update resource IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to update resource IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 

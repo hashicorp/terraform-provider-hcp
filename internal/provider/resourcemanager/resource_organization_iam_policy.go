@@ -70,7 +70,7 @@ func (u *orgIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*models
 			diags.AddError("failed to cast organization IAM policy error", err.Error())
 			return nil, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve organization IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve organization IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -93,7 +93,7 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 			diags.AddError("failed to cast organization IAM policy error", err.Error())
 			return nil, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update organization IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to update organization IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 

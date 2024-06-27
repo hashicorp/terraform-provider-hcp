@@ -92,7 +92,7 @@ func (u *projectIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mo
 			diags.AddError("failed to cast project IAM policy error", err.Error())
 			return nil, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to retrieve project IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve project IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -115,7 +115,7 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 			diags.AddError("failed to cast project IAM policy error", err.Error())
 			return nil, diags
 		}
-		diags.Append(customdiags.NewErrorDiagnosticWithErrorCode("failed to update project IAM policy", err.Error(), serviceErr.Code()))
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to update project IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
