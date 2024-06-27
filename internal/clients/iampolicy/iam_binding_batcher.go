@@ -230,14 +230,18 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 		ep, diags = u.SetResourceIamPolicy(ctx, FromMap(ep.Etag, bindings))
 		if diags.HasError() {
 			if customdiags.HasConflictError(diags) {
-				log.Printf("[DEBUG]: Operation failed due to conflicts. Operation will be restarted after %s\n", backoff)
-				time.Sleep(backoff)
-				backoff *= 2
+				// Policy object has changed since it was last gotten and the etag is now different.
+				// Continuously retry getting and setting the policy with an increasing backoff period until the maximum backoff period is reached.
+				log.Printf("[DEBUG]: Operation failed due to conflicts. Operation will be restarted after %s", backoff)
 				if backoff > maxBackoff {
-					log.Printf("[DEBUG]: Maximum backoff time reached. Aborting operation.\n")
+					log.Printf("[DEBUG]: Maximum backoff time reached. Aborting operation.")
 					f.set(nil, diags)
 					return
 				}
+				// Pause the execution for the duration specified by the current backoff time.
+				time.Sleep(backoff)
+				// Double the backoff time to increase the delay for the next retry.
+				backoff *= 2
 				continue
 			}
 			f.set(nil, diags)
