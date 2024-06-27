@@ -26,7 +26,28 @@ func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels
 	return ns.GetPayload().Namespace, nil
 }
 
-// GetApplicationTemplateByName will retrieve an application template by name
+// GetAction will retrieve an Action using the provided ID by default
+// or by name if the ID is not provided
+func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
+	ns, err := getNamespaceByLocation(ctx, client, loc)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &waypoint_service.WaypointServiceGetActionConfigParams{
+		ActionID:    &actionID,
+		ActionName:  &actionName,
+		NamespaceID: ns.ID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetActionConfig(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().ActionConfig, nil
+}
+
+// GetApplicationTemplateByName will retrieve a template by name
 func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {
@@ -45,7 +66,7 @@ func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *shar
 	return getResp.GetPayload().ApplicationTemplate, nil
 }
 
-// GetApplicationTemplateByID will retrieve an application template by ID
+// GetApplicationTemplateByID will retrieve a template by ID
 func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
 	ns, err := getNamespaceByLocation(ctx, client, loc)
 	if err != nil {

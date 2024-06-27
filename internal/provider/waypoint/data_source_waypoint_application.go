@@ -68,13 +68,13 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Instructions for using the Application (markdown format supported).",
 			},
-			"application_template_id": schema.StringAttribute{
+			"template_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "ID of the Application Template this Application is based on.",
+				Description: "ID of the Template this Application is based on.",
 			},
-			"application_template_name": schema.StringAttribute{
+			"template_name": schema.StringAttribute{
 				Computed:    true,
-				Description: "Name of the Application Template this Application is based on.",
+				Description: "Name of the Template this Application is based on.",
 			},
 			"namespace_id": schema.StringAttribute{
 				Computed:    true,
@@ -122,14 +122,14 @@ func (d *DataSourceApplication) Configure(ctx context.Context, req datasource.Co
 
 // ApplicationDataSourceModel describes the data source data model
 type ApplicationDataSourceModel struct {
-	ID                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	ProjectID               types.String `tfsdk:"project_id"`
-	OrgID                   types.String `tfsdk:"organization_id"`
-	ReadmeMarkdown          types.String `tfsdk:"readme_markdown"`
-	ApplicationTemplateID   types.String `tfsdk:"application_template_id"`
-	ApplicationTemplateName types.String `tfsdk:"application_template_name"`
-	NamespaceID             types.String `tfsdk:"namespace_id"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrgID          types.String `tfsdk:"organization_id"`
+	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
+	TemplateID     types.String `tfsdk:"template_id"`
+	TemplateName   types.String `tfsdk:"template_name"`
+	NamespaceID    types.String `tfsdk:"namespace_id"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
