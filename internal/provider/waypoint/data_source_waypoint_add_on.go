@@ -64,7 +64,6 @@ type AddOnDataSourceModel struct {
 	InputVars types.Set `tfsdk:"input_variables"`
 }
 
-
 func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The Waypoint Add-on data source retrieves information on a given Add-on.",
