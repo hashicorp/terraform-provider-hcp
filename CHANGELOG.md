@@ -1,3 +1,37 @@
+## v0.93.0 (June 25, 2024)
+BREAKING CHANGES:
+
+* waypoint: Rename `hcp_waypoint_application_template` resource and data source to
+`hcp_waypoint_template`. [[GH-861](https://github.com/hashicorp/terraform-provider-hcp/pull/861)]
+
+FEATURES:
+
+* New resource: Add `hcp_waypoint_action_config` resource for managing Waypoint Action Configs.
+ New data-source: Add `data.hcp_waypoint_action_config` data-source for Waypoint Action Configs. [[GH-815](https://github.com/hashicorp/terraform-provider-hcp/pull/815)]
+## v0.92.0 (June 18, 2024)
+
+FEATURES:
+
+* Add `hcp_group_iam_binding` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
+* Add `hcp_group_iam_policy` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
+## v0.91.1 (June 13, 2024)
+
+BUG FIXES:
+
+* Fix the documentation for hcp_vault_secrets_rotating_secret [[GH-867](https://github.com/hashicorp/terraform-provider-hcp/pull/867)]
+## v0.91.0 (June 06, 2024)
+
+FEATURES:
+
+* Allows users to fetch rotating secrets using the hcp_vault_secrets_app and hcp_vault_secrets_secret data sources [[GH-850](https://github.com/hashicorp/terraform-provider-hcp/pull/850)]
+* add vault_secrets_rotating_secret data source [[GH-854](https://github.com/hashicorp/terraform-provider-hcp/pull/854)]
+
+IMPROVEMENTS:
+
+* Add support for input variables to `hcp_waypoint_application` resource and
+data source. [[GH-833](https://github.com/hashicorp/terraform-provider-hcp/pull/833)]
+* Update `hcp-sdk-go` [[GH-851](https://github.com/hashicorp/terraform-provider-hcp/pull/851)]
+* Update `hcp-sdk-go` to v0.98.0 [[GH-855](https://github.com/hashicorp/terraform-provider-hcp/pull/855)]
 ## v0.90.0 (May 22, 2024)
 
 FEATURES:

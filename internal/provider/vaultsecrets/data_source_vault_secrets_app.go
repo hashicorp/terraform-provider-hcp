@@ -106,8 +106,24 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 
 	openAppSecrets := map[string]string{}
 	for _, appSecret := range appSecrets {
-		secretName := appSecret.Name
-		openAppSecrets[secretName] = appSecret.Version.Value
+		switch {
+		case appSecret.StaticVersion != nil:
+			openAppSecrets[appSecret.Name] = appSecret.StaticVersion.Value
+		case appSecret.RotatingVersion != nil:
+			for name, value := range appSecret.RotatingVersion.Values {
+				openAppSecrets[appSecret.Name+"_"+name] = value
+			}
+		case appSecret.DynamicInstance != nil:
+			for name, value := range appSecret.DynamicInstance.Values {
+				openAppSecrets[appSecret.Name+"_"+name] = value
+			}
+		default:
+			resp.Diagnostics.AddError(
+				"Unsupported HCP Secret type",
+				fmt.Sprintf("HCP Secrets secret type %q is not currently supported by terraform-provider-hcp", appSecret.Type),
+			)
+			return
+		}
 	}
 
 	data.ID = data.AppName

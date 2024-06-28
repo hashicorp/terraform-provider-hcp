@@ -17,13 +17,23 @@ The Waypoint Application data source retrieves information on a given Applicatio
 ### Optional
 
 - `id` (String) The ID of the Application.
+- `input_variables` (Attributes Set) Input variables for the Application. (see [below for nested schema](#nestedatt--input_variables))
 - `name` (String) The name of the Application.
 - `project_id` (String) The ID of the HCP project where the Waypoint Application is located.
 
 ### Read-Only
 
-- `application_template_id` (String) ID of the Application Template this Application is based on.
-- `application_template_name` (String) Name of the Application Template this Application is based on.
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
 - `readme_markdown` (String) Instructions for using the Application (markdown format supported).
+- `template_id` (String) ID of the Template this Application is based on.
+- `template_name` (String) Name of the Template this Application is based on.
+
+<a id="nestedatt--input_variables"></a>
+### Nested Schema for `input_variables`
+
+Read-Only:
+
+- `name` (String) Variable name
+- `value` (String) Variable value
+- `variable_type` (String) Variable type
