@@ -155,3 +155,78 @@ func CreateMongoDBAtlasRotatingSecret(
 
 	return resp.GetPayload(), nil
 }
+
+// CreateAwsIntegration NOTE: currently just needed for tests
+func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn string) (*secretmodels.Secrets20231128AwsIntegration, error) {
+	body := secret_service.CreateAwsIntegrationBody{
+		Name: name,
+		FederatedWorkloadIdentity: &secretmodels.Secrets20231128AwsFederatedWorkloadIdentityRequest{
+			Audience: loc.OrganizationID,
+			RoleArn:  roleArn,
+		},
+	}
+	params := secret_service.NewCreateAwsIntegrationParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithBody(body)
+
+	resp, err := client.VaultSecretsPreview.CreateAwsIntegration(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.GetPayload().Integration, nil
+}
+
+// DeleteAwsIntegration NOTE: currently just needed for tests
+func DeleteAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name string) error {
+	params := secret_service.NewDeleteAwsIntegrationParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithName(name)
+
+	_, err := client.VaultSecretsPreview.DeleteAwsIntegration(params, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateAwsDynamicSecret NOTE: currently just needed for tests
+func CreateAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, integrationName, name, roleArn string) (*secretmodels.Secrets20231128AwsDynamicSecret, error) {
+	body := secret_service.CreateAwsDynamicSecretBody{
+		AssumeRole:      &secretmodels.Secrets20231128AssumeRoleRequest{RoleArn: roleArn},
+		DefaultTTL:      "3600s",
+		IntegrationName: integrationName,
+		Name:            name,
+	}
+	params := secret_service.NewCreateAwsDynamicSecretParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithAppName(appName).
+		WithBody(body)
+
+	resp, err := client.VaultSecretsPreview.CreateAwsDynamicSecret(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.GetPayload().Secret, nil
+}
+
+// DeleteAwsDynamicSecret NOTE: currently just needed for tests
+func DeleteAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, name string) error {
+	params := secret_service.NewDeleteAwsDynamicSecretParamsWithContext(ctx).
+		WithOrganizationID(loc.OrganizationID).
+		WithProjectID(loc.ProjectID).
+		WithAppName(appName).
+		WithName(name)
+
+	_, err := client.VaultSecretsPreview.DeleteAwsDynamicSecret(params, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
