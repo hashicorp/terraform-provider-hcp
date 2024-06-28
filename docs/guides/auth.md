@@ -47,7 +47,7 @@ provider "hcp" {
   client_secret = "service-principal-key-client-secret"
 }
 ```
--> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration.
+-> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration or set the HCP_PROJECT_ID environment variable.
 
 ```bash
 HCP_CLIENT_ID="..."
