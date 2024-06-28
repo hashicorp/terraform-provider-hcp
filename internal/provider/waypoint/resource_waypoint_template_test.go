@@ -20,61 +20,75 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
-func TestAccWaypoint_Application_Template_basic(t *testing.T) {
-	var appTemplateModel waypoint.ApplicationTemplateResourceModel
-	resourceName := "hcp_waypoint_application_template.test"
+func TestAccWaypoint_Template_basic(t *testing.T) {
+	var appTemplateModel waypoint.TemplateResourceModel
+	resourceName := "hcp_waypoint_template.test"
 	name := generateRandomName()
 	updatedName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckWaypointAppTemplateDestroy(t, &appTemplateModel),
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
 		Steps: []resource.TestStep{
 			{
-				Config: testAppTemplateConfig(name),
+				Config: testTemplateConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, name),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 			{
-				Config: testAppTemplateConfig(updatedName),
+				Config: testTemplateConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWaypointAppTemplateExists(t, resourceName, &appTemplateModel),
-					testAccCheckWaypointAppTemplateName(t, &appTemplateModel, updatedName),
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, updatedName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variable_options.0.options.0", "a"),
 				),
 			},
 		},
 	})
 }
 
-// simple attribute check on the application template receved from the API
-func testAccCheckWaypointAppTemplateName(t *testing.T, appTemplateModel *waypoint.ApplicationTemplateResourceModel, nameValue string) resource.TestCheckFunc {
+func TestAccWaypoint_template_with_variable_options(t *testing.T) {
+	var appTemplateModel waypoint.TemplateResourceModel
+	resourceName := "hcp_waypoint_template.var_opts_test"
+	name := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointTemplateDestroy(t, &appTemplateModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateConfigWithVarOpts(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
+		},
+	})
+}
+
+// simple attribute check on the template receved from the API
+func testAccCheckWaypointTemplateName(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if appTemplateModel.Name.ValueString() != nameValue {
-			return fmt.Errorf("expected application template name to be %s, but got %s", nameValue, appTemplateModel.Name.ValueString())
+			return fmt.Errorf("expected template name to be %s, but got %s", nameValue, appTemplateModel.Name.ValueString())
 		}
 		return nil
 	}
 }
 
-func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.ApplicationTemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointTemplateExists(t *testing.T, resourceName string, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		client := acctest.HCPClients(t)
@@ -88,7 +102,7 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 			ProjectID:      projectID,
 		}
 
-		// Fetch the application template
+		// Fetch the template
 		template, err := clients.GetApplicationTemplateByID(context.Background(), client, loc, appTempID)
 		if err != nil {
 			return err
@@ -106,7 +120,7 @@ func testAccCheckWaypointAppTemplateExists(t *testing.T, resourceName string, ap
 	}
 }
 
-func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *waypoint.ApplicationTemplateResourceModel) resource.TestCheckFunc {
+func testAccCheckWaypointTemplateDestroy(t *testing.T, appTemplateModel *waypoint.TemplateResourceModel) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		client := acctest.HCPClients(t)
 		id := appTemplateModel.ID.ValueString()
@@ -130,36 +144,63 @@ func testAccCheckWaypointAppTemplateDestroy(t *testing.T, appTemplateModel *wayp
 		// fall through, we expect a not found above but if we get this far then
 		// the test should fail
 		if template != nil {
-			return fmt.Errorf("expected application template to be destroyed, but it still exists")
+			return fmt.Errorf("expected Template to be destroyed, but it still exists")
 		}
 
 		return fmt.Errorf("both template and error were nil in destroy check, this should not happen")
 	}
 }
 
-func testAppTemplateConfig(name string) string {
+func testTemplateConfig(name string) string {
 	return fmt.Sprintf(`
-resource "hcp_waypoint_application_template" "test" {
+resource "hcp_waypoint_template" "test" {
   name                     = "%s"
   summary                  = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = {
     source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.3"
+    version = "0.0.2"
   }
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+}`, name)
+}
+
+func testTemplateConfigWithVarOpts(name string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_template" "var_opts_test" {
+  name                     = "%s"
+  summary                  = "A template with a variable with options."
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
   variable_options = [
 	{
-	  name        = "string_variable"
+	  name          = "vault_dweller_name"
+	  variable_type = "string"
+      user_editable = true
+      options       = []
+    },
+    {
+      name          = "faction"
       variable_type = "string"
-      options = [
-        "a"
+      user_editable = true
+      options       = [
+        "ncr",
+        "brotherhood-of-steel",
+        "caesars-legion",
+        "raiders",
+        "institute"
       ]
-      user_editable = false
     }
   ]
 }`, name)
