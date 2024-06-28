@@ -174,6 +174,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		vaultsecrets.NewVaultSecretsAppDataSource,
 		vaultsecrets.NewVaultSecretsSecretDataSource,
 		vaultsecrets.NewVaultSecretsRotatingSecretDataSource,
+		vaultsecrets.NewVaultSecretsDynamicSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
 		iam.NewGroupDataSource,
