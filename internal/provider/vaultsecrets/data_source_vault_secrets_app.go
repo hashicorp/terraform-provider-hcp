@@ -113,6 +113,10 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 			for name, value := range appSecret.RotatingVersion.Values {
 				openAppSecrets[appSecret.Name+"_"+name] = value
 			}
+		case appSecret.DynamicInstance != nil:
+			for name, value := range appSecret.DynamicInstance.Values {
+				openAppSecrets[appSecret.Name+"_"+name] = value
+			}
 		default:
 			resp.Diagnostics.AddError(
 				"Unsupported HCP Secret type",

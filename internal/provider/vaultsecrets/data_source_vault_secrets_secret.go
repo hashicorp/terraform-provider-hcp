@@ -126,6 +126,17 @@ func (d *DataSourceVaultSecretsSecret) Read(ctx context.Context, req datasource.
 			"Attempted to get a rotating secret in a KV secret data source, encoding the secret values as JSON",
 		)
 		secretValue = string(secretData)
+	case openSecret.DynamicInstance != nil:
+		secretData, err := json.Marshal(openSecret.DynamicInstance.Values)
+		if err != nil {
+			resp.Diagnostics.AddError(err.Error(), "could not encode dynamic secret as json")
+			return
+		}
+		resp.Diagnostics.AddWarning(
+			"HCP Vault Secrets mismatched type",
+			"Attempted to get a dynamic secret in a KV secret data source, encoding the secret values as JSON",
+		)
+		secretValue = string(secretData)
 	default:
 		resp.Diagnostics.AddError(
 			"Unsupported HCP Secret type",
