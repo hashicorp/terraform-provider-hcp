@@ -75,7 +75,6 @@ func TestAccWaypoint_Application_DataSource_WithInputVars(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testDataApplicationConfig(templateName, applicationName string) string {

@@ -10,9 +10,8 @@ import (
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypointmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -55,6 +54,9 @@ type AddOnResourceModel struct {
 	OutputValues   types.List   `tfsdk:"output_values"`
 
 	TerraformNoCodeModule types.Object `tfsdk:"terraform_no_code_module"`
+
+	InputVars                types.Set `tfsdk:"add_on_input_variables"`
+	AddOnDefinitionInputVars types.Set `tfsdk:"add_on_definition_input_variables"`
 }
 
 type outputValue struct {
@@ -197,6 +199,46 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
+			"add_on_input_variables": schema.SetNestedAttribute{
+				Optional:    true,
+				Description: "Input variables set for the add-on.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
+			"add_on_definition_input_variables": schema.SetNestedAttribute{
+				Computed:    true,
+				Description: "Input variables set for the add-on definition.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable name",
+						},
+						"variable_type": &schema.StringAttribute{
+							Optional:    true,
+							Description: "Variable type",
+						},
+						"value": &schema.StringAttribute{
+							Required:    true,
+							Description: "Variable value",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -252,6 +294,32 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API
+	varTypes := map[string]string{}
+
+	// Prepare the input variables that the user provided to the application
+	// creation request
+	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+
+	var inputVarsSlice []InputVar
+	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
+	if diags.HasError() {
+		return
+	}
+	for _, v := range inputVarsSlice {
+		// add the input variable to the list of input variables for the app
+		// creation API call
+		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
+			Name:         v.Name.ValueString(),
+			Value:        v.Value.ValueString(),
+			VariableType: v.VariableType.ValueString(),
+		})
+
+		// store var type for later use when fetching the input variables from the API
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
+	}
+
 	stringLabels := []string{}
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
 		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
@@ -267,7 +335,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// An application ref can only have one of ID or Name set,
 	// we ask for ID, so we will set ID
 	applicationID := plan.ApplicationID.ValueString()
-	applicationRefModel := &waypointmodels.HashicorpCloudWaypointRefApplication{}
+	applicationRefModel := &waypoint_models.HashicorpCloudWaypointRefApplication{}
 	if applicationID != "" {
 		applicationRefModel.ID = applicationID
 	} else {
@@ -281,7 +349,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// Similarly, a definition ref can only have one of ID or Name set,
 	// we ask for ID, so we will set ID
 	definitionID := plan.DefinitionID.ValueString()
-	definitionRefModel := &waypointmodels.HashicorpCloudWaypointRefAddOnDefinition{}
+	definitionRefModel := &waypoint_models.HashicorpCloudWaypointRefAddOnDefinition{}
 	if definitionID != "" {
 		definitionRefModel.ID = definitionID
 	} else {
@@ -292,10 +360,11 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	modelBody := &waypointmodels.HashicorpCloudWaypointWaypointServiceCreateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateAddOnBody{
 		Name:        plan.Name.ValueString(),
 		Application: applicationRefModel,
 		Definition:  definitionRefModel,
+		Variables:   ivs,
 	}
 
 	params := &waypoint_service.WaypointServiceCreateAddOnParams{
@@ -308,7 +377,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	var addOn *waypointmodels.HashicorpCloudWaypointAddOn
+	var addOn *waypoint_models.HashicorpCloudWaypointAddOn
 	if responseAddOn.Payload != nil {
 		addOn = responseAddOn.Payload.AddOn
 	}
@@ -388,10 +457,42 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = readOutputs(ctx, addOn, plan)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	inputVars, err := clients.GetInputVariables(ctx, client, plan.Name.ValueString(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch add-on's input variables.")
+		return
+	}
+
+	addOnInputVars, templateInputVars := splitInputs(inputVars, varTypes)
+	if len(addOnInputVars) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, addOnInputVars)
+		if diags.HasError() {
+			return
+		}
+		plan.InputVars = aivs
+	} else {
+		plan.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	if len(templateInputVars) > 0 {
+		tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, templateInputVars)
+		if diags.HasError() {
+			return
+		}
+		plan.AddOnDefinitionInputVars = tivs
+	} else {
+		plan.AddOnDefinitionInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
 	// Write logs using the tflog package
@@ -422,6 +523,19 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: orgID,
 		ProjectID:      projectID,
+	}
+
+	// varTypes is used to store the variable type for each input variable
+	// to be used later when fetching the input variables from the API
+	varTypes := map[string]string{}
+	inputVarsSlice := []InputVar{}
+	diags := state.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
+	if diags.HasError() {
+		return
+	}
+	for _, v := range inputVarsSlice {
+		// store var type for later use when fetching the input variables from the API
+		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
 	client := r.client
@@ -505,10 +619,42 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		}
 	}
 
-	diags = readOutputs(ctx, addOn, state)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	inputVars, err := clients.GetInputVariables(ctx, client, state.Name.ValueString(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
+		return
+	}
+
+	applicationInputVars, templateInputVars := splitInputs(inputVars, varTypes)
+	if len(applicationInputVars) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, applicationInputVars)
+		if diags.HasError() {
+			return
+		}
+		state.InputVars = aivs
+	} else {
+		state.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	if len(templateInputVars) > 0 {
+		tivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, templateInputVars)
+		if diags.HasError() {
+			return
+		}
+		state.AddOnDefinitionInputVars = tivs
+	} else {
+		state.AddOnDefinitionInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -542,7 +688,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	modelBody := &waypointmodels.HashicorpCloudWaypointWaypointServiceUpdateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnBody{
 		Name: plan.Name.ValueString(),
 	}
 
@@ -557,7 +703,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	var addOn *waypointmodels.HashicorpCloudWaypointAddOn
+	var addOn *waypoint_models.HashicorpCloudWaypointAddOn
 	if def.Payload != nil {
 		addOn = def.Payload.AddOn
 	}
@@ -634,7 +780,12 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		plan.Count = types.Int64Value(installedCount)
 	}
 
-	diags = readOutputs(ctx, addOn, plan)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -699,26 +850,15 @@ func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func readOutputs(ctx context.Context, addOn *waypointmodels.HashicorpCloudWaypointAddOn, plan *AddOnResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	if addOn.OutputValues != nil {
-		outputList := make([]*outputValue, len(addOn.OutputValues))
-		for i, outputVal := range addOn.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
+func readOutputs(ovs []*waypoint_models.HashicorpCloudWaypointTFOutputValue) []*outputValue {
+	ol := make([]*outputValue, len(ovs))
+	for i, ov := range ovs {
+		ol[i] = &outputValue{
+			Name:      types.StringValue(ov.Name),
+			Type:      types.StringValue(ov.Type),
+			Value:     types.StringValue(ov.Value),
+			Sensitive: types.BoolValue(ov.Sensitive),
 		}
-		if len(outputList) > 0 {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
 	}
-	return diags
+	return ol
 }

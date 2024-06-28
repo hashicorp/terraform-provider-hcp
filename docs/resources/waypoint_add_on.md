@@ -22,10 +22,12 @@ Waypoint Add-on resource
 
 ### Optional
 
+- `add_on_input_variables` (Attributes Set) Input variables set for the add-on. (see [below for nested schema](#nestedatt--add_on_input_variables))
 - `project_id` (String) The ID of the HCP project where the Waypoint AddOn is located.
 
 ### Read-Only
 
+- `add_on_definition_input_variables` (Attributes Set) Input variables set for the add-on definition. (see [below for nested schema](#nestedatt--add_on_definition_input_variables))
 - `created_by` (String) The user who created the Add-on.
 - `description` (String) A longer description of the Add-on.
 - `id` (String) The ID of the Add-on.
@@ -37,6 +39,29 @@ Waypoint Add-on resource
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+
+<a id="nestedatt--add_on_input_variables"></a>
+### Nested Schema for `add_on_input_variables`
+
+Required:
+
+- `name` (String) Variable name
+- `value` (String) Variable value
+- `variable_type` (String) Variable type
+
+
+<a id="nestedatt--add_on_definition_input_variables"></a>
+### Nested Schema for `add_on_definition_input_variables`
+
+Required:
+
+- `name` (String) Variable name
+- `value` (String) Variable value
+
+Optional:
+
+- `variable_type` (String) Variable type
+
 
 <a id="nestedatt--output_values"></a>
 ### Nested Schema for `output_values`

@@ -43,6 +43,69 @@ func TestAccWaypoint_Add_On_basic(t *testing.T) {
 	})
 }
 
+func TestAccWaypoint_AddOnInputVariables(t *testing.T) {
+	var addOnModel waypoint.AddOnResourceModel
+	resourceName := "hcp_waypoint_add_on.test_var_opts"
+	addOnName := generateRandomName()
+	templateName := generateRandomName()
+	appName := generateRandomName()
+	defName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointAddOnDestroy(t, &addOnModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testAddOnWithInputVarsConfig(templateName, appName, defName, addOnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
+					testAccCheckWaypointAddOnName(t, &addOnModel, addOnName),
+					resource.TestCheckResourceAttr(resourceName, "name", addOnName),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.name", "faction"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.value", "brotherhood-of-steel"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.1.name", "vault_dweller_name"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.1.value", "courier"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.1.variable_type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_definition_input_variables.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_definition_input_variables.0.name", "waypoint_add_on"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_definition_input_variables.1.name", "waypoint_add_on_definition"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_definition_input_variables.2.name", "waypoint_application"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWaypoint_AddOnInputVariables_OnDefinition(t *testing.T) {
+	var addOnModel waypoint.AddOnResourceModel
+	resourceName := "hcp_waypoint_add_on.test_var_opts"
+	addOnName := generateRandomName()
+	templateName := generateRandomName()
+	appName := generateRandomName()
+	defName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointAddOnDestroy(t, &addOnModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testAddOnWithNoInputVarsConfig(templateName, appName, defName, addOnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
+					testAccCheckWaypointAddOnName(t, &addOnModel, addOnName),
+					resource.TestCheckResourceAttr(resourceName, "name", addOnName),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_definition_input_variables.#", "5"),
+				),
+			},
+		},
+	})
+}
+
 // simple attribute check on the add-on definition received from the API
 func testAccCheckWaypointAddOnName(t *testing.T, addOnModel *waypoint.AddOnResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -162,4 +225,152 @@ resource "hcp_waypoint_add_on" "test" {
   application_id = hcp_waypoint_application.test.id
   definition_id = hcp_waypoint_add_on_definition.test.id
 }`, templateName, appName, defName, addOnName)
+}
+
+func testAddOnWithInputVarsConfig(tempName, appName, defName, addOnName string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_template" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+}
+
+resource "hcp_waypoint_application" "test" {
+  name    = "%s"
+  template_id = hcp_waypoint_template.test.id
+}
+
+resource "hcp_waypoint_add_on_definition" "test_var_opts" {
+  name    = "%s"
+  summary = "some summary for fun"
+  description = "some description for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["fallout", "vault-tec"]
+  variable_options = [
+	{
+	  name          = "vault_dweller_name"
+      variable_type = "string"
+      user_editable = true
+      options 		= [
+        "lucy",
+        "courier",
+        "lone-wanderer",
+        "sole-survivor",
+      ]
+    },
+    {
+	  name          = "faction"
+      variable_type = "string"
+      user_editable = true
+      options 		= [
+        "ncr",
+        "brotherhood-of-steel",
+        "caesars-legion",
+        "raiders",
+        "institute"
+      ]
+    },
+  ]
+}
+
+resource "hcp_waypoint_add_on" "test_var_opts" {
+  name           = "%s"
+  definition_id  = hcp_waypoint_add_on_definition.test_var_opts.id
+  application_id = hcp_waypoint_application.test.id
+
+  add_on_input_variables = [
+	{
+      name  		= "faction"
+      variable_type = "string"
+      value 		= "brotherhood-of-steel"
+    },
+    {
+      name  		= "vault_dweller_name"
+      variable_type = "string"
+	  value 		= "courier"
+    }	
+  ]
+}
+
+`, tempName, appName, defName, addOnName)
+}
+
+func testAddOnWithNoInputVarsConfig(tempName, appName, defName, addOnName string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_template" "test" {
+  name    = "%s"
+  summary = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.2"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+}
+
+resource "hcp_waypoint_application" "test" {
+  name    = "%s"
+  template_id = hcp_waypoint_template.test.id
+}
+
+resource "hcp_waypoint_add_on_definition" "test_var_opts" {
+  name        = "%s"
+  summary     = "some summary for fun"
+  description = "some description"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+    version = "0.0.1"
+  }
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["fallout", "vault-tec"]
+  variable_options = [
+	{
+	  name          = "vault_dweller_name"
+      variable_type = "string"
+      user_editable = false
+      options 		= [
+        "lone-wanderer",
+      ]
+    },
+    {
+	  name          = "faction"
+      variable_type = "string"
+      user_editable = false
+      options 		= [
+        "brotherhood-of-steel",
+      ]
+    },
+  ]
+}
+
+resource "hcp_waypoint_add_on" "test_var_opts" {
+  name    		 = "%s"
+  definition_id  = hcp_waypoint_add_on_definition.test_var_opts.id
+  application_id = hcp_waypoint_application.test.id
+}`, tempName, appName, defName, addOnName)
 }

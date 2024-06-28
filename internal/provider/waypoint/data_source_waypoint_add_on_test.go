@@ -48,9 +48,47 @@ func TestAccWaypointData_Add_On_basic(t *testing.T) {
 	})
 }
 
+func TestAccWaypoint_AddOn_DataSource_WithInputVars(t *testing.T) {
+	var addOnModel waypoint.AddOnResourceModel
+	resourceName := "hcp_waypoint_add_on.test_var_opts"
+	dataSourceName := "data." + resourceName
+	addOnName := generateRandomName()
+	templateName := generateRandomName()
+	appName := generateRandomName()
+	defName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointAddOnDestroy(t, &addOnModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testAddOnWithInputVarsConfig(templateName, appName, defName, addOnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
+				),
+			},
+			{
+				Config: testDataAddOnWithInputVarsConfig(templateName, appName, defName, addOnName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "name", addOnName),
+					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "5"),
+				),
+			},
+		},
+	})
+}
+
 func testDataAddOnConfig(templateName string, appName string, defName string, addOnName string) string {
 	return fmt.Sprintf(`%s
 data "hcp_waypoint_add_on" "test" {
   name    = hcp_waypoint_add_on.test.name
 }`, testAddOnConfig(templateName, appName, defName, addOnName))
+}
+
+func testDataAddOnWithInputVarsConfig(templateName string, appName string, defName string, addOnName string) string {
+	return fmt.Sprintf(`%s
+data "hcp_waypoint_add_on" "test_var_opts" {
+  name    = hcp_waypoint_add_on.test_var_opts.name
+}`, testAddOnWithInputVarsConfig(templateName, appName, defName, addOnName))
 }

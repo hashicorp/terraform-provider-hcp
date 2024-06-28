@@ -42,7 +42,27 @@ func (d *DataSourceAddOn) Metadata(ctx context.Context, req datasource.MetadataR
 	resp.TypeName = req.ProviderTypeName + "_waypoint_add_on"
 }
 
-//TODO: Make sure this schema is correct (do we want to include count or output values?)
+// AddOnDataSourceModel describes the data source data model.
+type AddOnDataSourceModel struct {
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrgID          types.String `tfsdk:"organization_id"`
+	Summary        types.String `tfsdk:"summary"`
+	Labels         types.List   `tfsdk:"labels"`
+	Description    types.String `tfsdk:"description"`
+	ReadmeMarkdown types.String `tfsdk:"readme_markdown"`
+	CreatedBy      types.String `tfsdk:"created_by"`
+	Count          types.Int64  `tfsdk:"install_count"`
+	Status         types.Int64  `tfsdk:"status"`
+	ApplicationID  types.String `tfsdk:"application_id"`
+	DefinitionID   types.String `tfsdk:"definition_id"`
+	OutputValues   types.List   `tfsdk:"output_values"`
+
+	TerraformNoCodeModule types.Object `tfsdk:"terraform_no_code_module"`
+
+	InputVars types.Set `tfsdk:"input_variables"`
+}
 
 func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
@@ -144,6 +164,26 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 					},
 				},
 			},
+			"input_variables": schema.SetNestedAttribute{
+				Optional:    true,
+				Description: "Input variables for the Add-on.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable name",
+						},
+						"value": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable value",
+						},
+						"variable_type": &schema.StringAttribute{
+							Computed:    true,
+							Description: "Variable type",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -166,7 +206,7 @@ func (d *DataSourceAddOn) Configure(ctx context.Context, req datasource.Configur
 
 // TODO: Output values?
 func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state AddOnResourceModel
+	var state AddOnDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 
 	client := d.client
@@ -269,10 +309,39 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		}
 	}
 
-	diags = readOutputs(ctx, addOn, &state)
+	ol := readOutputs(addOn.OutputValues)
+	if len(ol) > 0 {
+		state.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		state.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	inputVars, err := clients.GetInputVariables(ctx, client, state.Name.ValueString(), loc)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "Failed to fetch add-on's input variables.")
+		return
+	}
+
+	inputVariables := make([]*InputVar, 0)
+	for _, iv := range inputVars {
+		inputVariables = append(inputVariables, &InputVar{
+			Name:  types.StringValue(iv.Name),
+			Value: types.StringValue(iv.Value),
+		})
+	}
+	if len(inputVariables) > 0 {
+		aivs, diags := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: InputVar{}.attrTypes()}, inputVariables)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
+		state.InputVars = aivs
+	} else {
+		state.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

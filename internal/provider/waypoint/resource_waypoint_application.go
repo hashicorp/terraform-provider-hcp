@@ -249,7 +249,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	// creation request
 	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
 
-	inputVarsSlice := []InputVar{}
+	var inputVarsSlice []InputVar
 	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
 	if diags.HasError() {
 		return
