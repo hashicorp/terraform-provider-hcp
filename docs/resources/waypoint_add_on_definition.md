@@ -20,13 +20,13 @@ Waypoint Add-on Definition resource
 - `name` (String) The name of the Add-on Definition.
 - `summary` (String) A short summary of the Add-on Definition.
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. Refer to https://developer.hashicorp.com/terraform/language/modules/sources for more details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 ### Optional
 
 - `labels` (List of String) List of labels attached to this Add-on Definition.
 - `project_id` (String) The ID of the HCP project where the Waypoint Add-on Definition is located.
-- `readme_markdown_template` (String) The markdown template for the Add-on Definition README.
+- `readme_markdown_template` (String) The markdown template for the Add-on Definition README. Must be base 64 encoded.
 - `variable_options` (Attributes Set) List of variable options for the Add-on Definition. (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
@@ -39,8 +39,8 @@ Waypoint Add-on Definition resource
 
 Required:
 
-- `name` (String) Name of the Terraform Cloud Workspace
-- `terraform_project_id` (String) Tetraform Cloud Project ID
+- `name` (String) Name of the Terraform Cloud Project
+- `terraform_project_id` (String) Terraform Cloud Project ID
 
 
 <a id="nestedatt--terraform_no_code_module"></a>
@@ -63,4 +63,4 @@ Required:
 
 Optional:
 
-- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on. If options are provided, then the user may only use those options, regardless of this setting.
