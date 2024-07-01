@@ -105,7 +105,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"readme_markdown_template": schema.StringAttribute{
-				Description: "The markdown template for the Add-on Definition README.",
+				Description: "The markdown template for the Add-on Definition README. Must be base 64 encoded.",
 				Optional:    true,
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
@@ -114,17 +114,18 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Required:    true,
-						Description: "Name of the Terraform Cloud Workspace",
+						Description: "Name of the Terraform Cloud Project",
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Required:    true,
-						Description: "Tetraform Cloud Project ID",
+						Description: "Terraform Cloud Project ID",
 					},
 				},
 			},
 			"terraform_no_code_module": &schema.SingleNestedAttribute{
-				Required:    true,
-				Description: "Terraform Cloud no-code Module details.",
+				Required: true,
+				Description: "Terraform Cloud no-code Module details. Refer to " +
+					"https://developer.hashicorp.com/terraform/language/modules/sources for more details.",
 				Attributes: map[string]schema.Attribute{
 					"source": &schema.StringAttribute{
 						Required:    true,
@@ -155,9 +156,11 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 							Description: "List of options",
 						},
 						"user_editable": &schema.BoolAttribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "Whether the variable is editable by the user creating an add-on",
+							Optional: true,
+							Computed: true,
+							Description: "Whether the variable is editable by the user creating an " +
+								"add-on. If options are provided, then the user may only use those " +
+								"options, regardless of this setting.",
 						},
 					},
 				},
