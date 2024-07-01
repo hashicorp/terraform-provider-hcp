@@ -118,7 +118,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"readme_markdown_template": schema.StringAttribute{
 				Optional:    true,
-				Description: "Instructions for using the template (markdown format supported",
+				Description: "Instructions for using the template (markdown format supported). Must be base 64 encoded.",
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -135,7 +135,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Required:    true,
-						Description: "Name of the Terraform Cloud Workspace",
+						Description: "Name of the Terraform Cloud Project",
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Required:    true,
