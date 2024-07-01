@@ -55,6 +55,14 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
+			{
+				Config: testAddOnDefinitionNoWorkspaceConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
+					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
 		},
 	})
 }
@@ -149,6 +157,29 @@ resource "hcp_waypoint_add_on_definition" "test" {
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  variable_options = [
+	{
+	  name        = "string_variable"
+      variable_type = "string"
+      options = [
+        "b"
+      ]
+      user_editable = false
+    }
+  ]
+}`, name)
+}
+
+func testAddOnDefinitionNoWorkspaceConfig(name string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_add_on_definition" "test" {
+  name    = %q
+  summary = "some summary for fun"
+  description = "some description for fun"
+  terraform_no_code_module = {
+    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+    version = "0.0.3"
   }
   variable_options = [
 	{

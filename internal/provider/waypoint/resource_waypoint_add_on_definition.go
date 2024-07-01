@@ -109,8 +109,9 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				Optional:    true,
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				Required:    true,
-				Description: "Terraform Cloud Workspace details",
+				Optional: true,
+				Description: "Terraform Cloud Workspace details. If not provided, defaults to " +
+					"the HCP terraform project of the associated application.",
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Required:    true,
@@ -266,11 +267,14 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		VariableOptions: varOpts,
+	}
+
+	if plan.TerraformCloudWorkspace != nil {
+		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-		},
-		VariableOptions: varOpts,
+		}
 	}
 
 	params := &waypoint_service.WaypointServiceCreateAddOnDefinitionParams{
@@ -508,11 +512,14 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 			Version: plan.TerraformNoCodeModule.Version.ValueString(),
 		},
-		TerraformCloudWorkspaceDetails: &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		VariableOptions: varOpts,
+	}
+
+	if plan.TerraformCloudWorkspace != nil {
+		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
 			ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-		},
-		VariableOptions: varOpts,
+		}
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{
