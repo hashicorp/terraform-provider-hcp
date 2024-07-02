@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 )
 
 // orgIAMSchema is the schema for the organization IAM resources
@@ -64,7 +65,12 @@ func (u *orgIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*models
 	params.ID = u.client.Config.OrganizationID
 	res, err := u.client.Organization.OrganizationServiceGetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		serviceErr, ok := err.(*organization_service.OrganizationServiceGetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast organization IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve organization IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -82,7 +88,12 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 
 	res, err := u.client.Organization.OrganizationServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve organization IAM policy", err.Error())
+		serviceErr, ok := err.(*organization_service.OrganizationServiceSetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast organization IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to update organization IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 

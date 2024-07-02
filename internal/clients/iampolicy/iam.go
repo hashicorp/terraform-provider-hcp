@@ -20,12 +20,14 @@ import (
 // Implementations should be created per resource and should keep track of the
 // resource identifier.
 type ResourceIamUpdater interface {
-	// Fetch the existing IAM policy attached to a resource.
+	// GetResourceIamPolicy fetches the existing IAM policy attached to a resource.
 	GetResourceIamPolicy(context.Context) (*models.HashicorpCloudResourcemanagerPolicy, diag.Diagnostics)
 
-	// Replaces the existing IAM Policy attached to a resource.
+	// SetResourceIamPolicy replaces the existing IAM Policy attached to a resource.
+	// If an error occurs, a new custom ErrorHTTPStatusCode should be appended to the diagnostics.
 	SetResourceIamPolicy(ctx context.Context, policy *models.HashicorpCloudResourcemanagerPolicy) (*models.HashicorpCloudResourcemanagerPolicy, diag.Diagnostics)
 
+	// GetMutexKey gets the mutex key.
 	// A mutex guards against concurrent to call to the SetResourceIamPolicy method.
 	// The mutex key should be globally unique.
 	GetMutexKey() string
