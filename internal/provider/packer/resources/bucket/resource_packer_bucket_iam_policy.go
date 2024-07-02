@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 )
 
 // packerBucketIAMSchema is the schema for the HCP Packer bucket resource IAM resources
@@ -92,7 +93,8 @@ func (u *packerBucketResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx context.
 		if serviceErr.Code() == http.StatusNotFound {
 			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
 		}
-		diags.AddError("failed to retrieve resource IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve resource IAM policy",
+			err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -111,7 +113,12 @@ func (u *packerBucketResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx context.
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to retrieve resource IAM policy", err.Error())
+		serviceErr, ok := err.(*resource_service.ResourceServiceSetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast resource IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to update resource IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
