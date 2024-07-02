@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/iampolicy"
+	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam/helper"
 )
 
@@ -100,8 +101,7 @@ func (u *groupIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context) (*mode
 			// Groups do not have a policy by default
 			return &models.HashicorpCloudResourcemanagerPolicy{}, diags
 		}
-
-		diags.AddError("failed to retrieve group IAM policy", err.Error())
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to retrieve group IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
@@ -119,7 +119,12 @@ func (u *groupIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)
 	if err != nil {
-		diags.AddError("failed to set group IAM policy", err.Error())
+		serviceErr, ok := err.(*resource_service.ResourceServiceSetIamPolicyDefault)
+		if !ok {
+			diags.AddError("failed to cast resource IAM policy error", err.Error())
+			return nil, diags
+		}
+		diags.Append(customdiags.NewErrorHTTPStatusCode("failed to set group IAM policy", err.Error(), serviceErr.Code()))
 		return nil, diags
 	}
 
