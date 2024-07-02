@@ -49,3 +49,19 @@ func ListBuckets(ctx context.Context, client *clients.Client, loc *sharedmodels.
 		nextPage = pagination.NextPageToken
 	}
 }
+
+func CreateBucket(ctx context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation, name string) (*Bucket, error) {
+	params := packerservice.NewPackerServiceCreateBucketParams()
+	params.SetLocationOrganizationID(loc.OrganizationID)
+	params.SetLocationProjectID(loc.ProjectID)
+	params.Body = &packermodels.HashicorpCloudPacker20230101CreateBucketBody{
+		Name: name,
+	}
+
+	resp, err := client.PackerV2.PackerServiceCreateBucket(params, nil)
+
+	if err != nil {
+		return nil, formatGRPCError[*packerservice.PackerServiceGetBucketDefault](err)
+	}
+	return resp.GetPayload().Bucket, nil
+}

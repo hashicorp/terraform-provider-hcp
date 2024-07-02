@@ -1,0 +1,5 @@
+```release-note:feature
+ New resource: Add `hcp_packer_bucket` resource for managing HCP Packer buckets
+ New Resource: Add `hcp_packer_bucket_iam_policy` resource for assigning a list of policy bindings to multiple principals for a HCP Packer Bucket
+ New resource: Add `hcp_packer_bucket_iam_binding` resource for assigning a single role to a principal for a HCP Packer Bucket
+ ```
