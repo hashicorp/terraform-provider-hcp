@@ -1,3 +1,20 @@
+## v0.94.0 (July 03, 2024)
+
+FEATURES:
+
+* New resource: Add `hcp_packer_bucket` resource for managing HCP Packer buckets
+ New Resource: Add `hcp_packer_bucket_iam_policy` resource for assigning a list of policy bindings to multiple principals for a HCP Packer Bucket
+ New resource: Add `hcp_packer_bucket_iam_binding` resource for assigning a single role to a principal for a HCP Packer Bucket [[GH-852](https://github.com/hashicorp/terraform-provider-hcp/pull/852)]
+* add vault_secrets_dynamic_secret data source [[GH-868](https://github.com/hashicorp/terraform-provider-hcp/pull/868)]
+
+IMPROVEMENTS:
+
+* waypoint: Add support for input variables to the `hcp_wapyoint_add_on` resource
+and data source. [[GH-864](https://github.com/hashicorp/terraform-provider-hcp/pull/864)]
+
+BUG FIXES:
+
+* Fix intermittent conflicts during IAM policy updates [[GH-870](https://github.com/hashicorp/terraform-provider-hcp/pull/870)]
 ## v0.93.0 (June 25, 2024)
 BREAKING CHANGES:
 
