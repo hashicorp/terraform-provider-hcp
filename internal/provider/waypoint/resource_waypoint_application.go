@@ -192,7 +192,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"output_values": schema.ListNestedAttribute{
 				Computed: true,
-				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
+				Description: "The output values of the Terraform run for the Add-on, Sensitive values have type " +
 					"and value omitted.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -210,7 +210,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						},
 						"sensitive": schema.BoolAttribute{
 							Computed:    true,
-							Description: "Whether the output value is sensitive.",
+							Description: "Whether the output value is Sensitive.",
 						},
 					},
 				},
