@@ -364,7 +364,17 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Read the output values from the application and set them in the plan
-	diags = readAppOutputs(ctx, application, plan)
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -466,7 +476,13 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	// Read the output values from the application and set them in the plan
-	diags = readAppOutputs(ctx, application, data)
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		data.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		data.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -596,8 +612,16 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.ReadmeMarkdown = types.StringNull()
 	}
 
+	var diags diag.Diagnostics
+
 	// Read the output values from the application and set them in the plan
-	diags := readAppOutputs(ctx, application, plan)
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -663,28 +687,4 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func readAppOutputs(ctx context.Context, app *waypoint_models.HashicorpCloudWaypointApplication, plan *ApplicationResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	if app.OutputValues != nil {
-		outputList := make([]*outputValue, len(app.OutputValues))
-		for i, outputVal := range app.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-	}
-	return diags
 }

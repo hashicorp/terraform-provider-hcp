@@ -238,36 +238,19 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
+	var diags diag.Diagnostics
+
 	// Read the output values from the application and set them in the plan
-	diags := readAppOutputsData(ctx, application, &data)
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		data.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		data.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func readAppOutputsData(ctx context.Context, app *waypoint_models.HashicorpCloudWaypointApplication, plan *ApplicationDataSourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	if app.OutputValues != nil {
-		outputList := make([]*outputValue, len(app.OutputValues))
-		for i, outputVal := range app.OutputValues {
-			output := &outputValue{
-				Name:      types.StringValue(outputVal.Name),
-				Type:      types.StringValue(outputVal.Type),
-				Value:     types.StringValue(outputVal.Value),
-				Sensitive: types.BoolValue(outputVal.Sensitive),
-			}
-			outputList[i] = output
-		}
-		if len(outputList) > 0 {
-			plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, outputList)
-		} else {
-			plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-		}
-	} else {
-		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
-	}
-	return diags
 }
