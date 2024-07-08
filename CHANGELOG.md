@@ -1,3 +1,8 @@
+## v0.94.1 (July 08, 2024)
+
+BUG FIXES:
+
+* Fix the documentation location for hcp_packer_bucket, hcp_packer_bucket_iam_policy, and hcp_packer_bucket_iam_binding. [[GH-904](https://github.com/hashicorp/terraform-provider-hcp/pull/904)]
 ## v0.94.0 (July 03, 2024)
 
 FEATURES:
