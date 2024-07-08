@@ -1,0 +1,3 @@
+```release-note:bug
+Fix the documentation location for hcp_packer_bucket, hcp_packer_bucket_iam_policy, and hcp_packer_bucket_iam_binding.
+```

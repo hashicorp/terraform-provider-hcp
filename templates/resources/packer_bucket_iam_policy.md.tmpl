@@ -1,0 +1,25 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: "HCP Packer"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+~> **Note:** `hcp_packer_bucket_iam_policy` can not be used in conjunction with
+`hcp_packer_bucket_iam_binding`.
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_packer_bucket_iam_policy/resource.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{ codefile "shell" "examples/resources/hcp_packer_bucket_iam_policy/import.sh" }}
