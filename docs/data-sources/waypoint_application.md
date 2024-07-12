@@ -25,7 +25,7 @@ The Waypoint Application data source retrieves information on a given Applicatio
 
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
-- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
+- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, Sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
 - `readme_markdown` (String) Instructions for using the Application (markdown format supported).
 - `template_id` (String) ID of the Template this Application is based on.
 - `template_name` (String) Name of the Template this Application is based on.
@@ -46,6 +46,6 @@ Read-Only:
 Read-Only:
 
 - `name` (String) The name of the output value.
-- `sensitive` (Boolean) Whether the output value is sensitive.
+- `sensitive` (Boolean) Whether the output value is Sensitive.
 - `type` (String) The type of the output value.
 - `value` (String) The value of the output value.

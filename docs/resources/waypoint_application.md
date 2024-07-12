@@ -30,7 +30,7 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 - `id` (String) The ID of the Application.
 - `namespace_id` (String) Internal Namespace ID.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Application is located.
-- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
+- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, Sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
 - `template_input_variables` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--template_input_variables))
 - `template_name` (String) Name of the Template this Application is based on.
 
@@ -50,7 +50,7 @@ Required:
 Read-Only:
 
 - `name` (String) The name of the output value.
-- `sensitive` (Boolean) Whether the output value is sensitive.
+- `sensitive` (Boolean) Whether the output value is Sensitive.
 - `type` (String) The type of the output value.
 - `value` (String) The value of the output value.
 
