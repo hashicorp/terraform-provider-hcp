@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -100,6 +101,31 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 					},
 				},
 			},
+			"output_values": schema.ListNestedAttribute{
+				Computed: true,
+				Description: "The output values, stored by HCP Waypoint, of the Terraform run for the Add-on, Sensitive values have type " +
+					"and value omitted.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: "The name of the output value.",
+						},
+						"type": schema.StringAttribute{
+							Computed:    true,
+							Description: "The type of the output value.",
+						},
+						"value": schema.StringAttribute{
+							Computed:    true,
+							Description: "The value of the output value.",
+						},
+						"sensitive": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the output value is Sensitive.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -137,7 +163,8 @@ type ApplicationDataSourceModel struct {
 	// deferred and probably a list or objects, but may possible be a separate
 	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
-	InputVars types.Set `tfsdk:"input_variables"`
+	InputVars    types.Set  `tfsdk:"input_variables"`
+	OutputValues types.List `tfsdk:"output_values"`
 }
 
 func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -209,6 +236,20 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		data.InputVars = aivs
 	} else {
 		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
+	}
+
+	var diags diag.Diagnostics
+
+	// Read the output values from the application and set them in the plan
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		data.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		data.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
