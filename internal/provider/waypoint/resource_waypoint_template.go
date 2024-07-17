@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -60,13 +59,6 @@ type tfcWorkspace struct {
 	Name types.String `tfsdk:"name"`
 	// this refers to the project ID found in Terraform Cloud
 	TerraformProjectID types.String `tfsdk:"terraform_project_id"`
-}
-
-func (t tfcWorkspace) attrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"name":                 types.StringType,
-		"terraform_project_id": types.StringType,
-	}
 }
 
 type tfcVariableOption struct {
