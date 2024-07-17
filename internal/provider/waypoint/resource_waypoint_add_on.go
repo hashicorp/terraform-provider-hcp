@@ -176,7 +176,7 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"output_values": schema.ListNestedAttribute{
 				Computed: true,
-				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
+				Description: "The output values, stored by HCP Waypoint, of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -853,6 +853,8 @@ func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+// readOutputs accepts a list of output values in the type returned by the Waypoint API and returns a list of output
+// values in the custom outputValue type used in this provider
 func readOutputs(ovs []*waypoint_models.HashicorpCloudWaypointTFOutputValue) []*outputValue {
 	ol := make([]*outputValue, len(ovs))
 	for i, ov := range ovs {

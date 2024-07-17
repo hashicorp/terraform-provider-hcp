@@ -141,7 +141,7 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 			},
 			"output_values": schema.ListNestedAttribute{
 				Computed: true,
-				Description: "The output values of the Terraform run for the Add-on, sensitive values have type " +
+				Description: "The output values, stored by HCP Waypoint, of the Terraform run for the Add-on, sensitive values have type " +
 					"and value omitted.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
