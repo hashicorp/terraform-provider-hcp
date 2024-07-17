@@ -26,7 +26,7 @@ Waypoint Template resource
 - `description` (String) A description of the template, along with when and why it should be used, up to 500 characters
 - `labels` (List of String) List of labels attached to this Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Template is located.
-- `readme_markdown_template` (String) Instructions for using the template (markdown format supported). Must be base 64 encoded.
+- `readme_markdown_template` (String) Instructions for using the template (markdown format supported).
 - `variable_options` (Attributes Set) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
