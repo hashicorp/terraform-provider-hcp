@@ -50,6 +50,7 @@ type TemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
+	TerraformProjectId          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
@@ -132,8 +133,12 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
+			"terraform_project_id": schema.StringAttribute{
 				Required:    true,
+				Description: "The ID of the Terraform Cloud Project to create workspaces in",
+			},
+			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
+				Optional:    true,
 				Description: "Terraform Cloud Workspace details",
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
@@ -260,18 +265,27 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		})
 	}
 
+	tfProjId := plan.TerraformProjectId.ValueString()
+	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
+	if tfWsName == "" {
+		// NOTE: this field is optional anyways, so if its unset, lets just use
+		// the template name for it.
+		tfWsName = plan.Name.ValueString()
+	}
+	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		Name:      tfWsName,
+		ProjectID: tfProjId,
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-			Name:         plan.Name.ValueString(),
-			Summary:      plan.Summary.ValueString(),
-			Labels:       strLabels,
-			Description:  plan.Description.ValueString(),
-			ModuleSource: plan.TerraformNoCodeModuleSource.ValueString(),
-			TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
-				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-			},
-			VariableOptions: varOpts,
+			Name:                           plan.Name.ValueString(),
+			Summary:                        plan.Summary.ValueString(),
+			Labels:                         strLabels,
+			Description:                    plan.Description.ValueString(),
+			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+			TerraformCloudWorkspaceDetails: tfWsDetails,
+			VariableOptions:                varOpts,
 		},
 	}
 
@@ -521,18 +535,27 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		})
 	}
 
+	tfProjId := plan.TerraformProjectId.ValueString()
+	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
+	if tfWsName == "" {
+		// NOTE: this field is optional anyways, so if its unset, lets just use
+		// the template name for it.
+		tfWsName = plan.Name.ValueString()
+	}
+	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		Name:      tfWsName,
+		ProjectID: tfProjId,
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-			Name:         plan.Name.ValueString(),
-			Summary:      plan.Summary.ValueString(),
-			Labels:       strLabels,
-			Description:  plan.Description.ValueString(),
-			ModuleSource: plan.TerraformNoCodeModuleSource.ValueString(),
-			TerraformCloudWorkspaceDetails: &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-				Name:      plan.TerraformCloudWorkspace.Name.ValueString(),
-				ProjectID: plan.TerraformCloudWorkspace.TerraformProjectID.ValueString(),
-			},
-			VariableOptions: varOpts,
+			Name:                           plan.Name.ValueString(),
+			Summary:                        plan.Summary.ValueString(),
+			Labels:                         strLabels,
+			Description:                    plan.Description.ValueString(),
+			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+			TerraformCloudWorkspaceDetails: tfWsDetails,
+			VariableOptions:                varOpts,
 		},
 	}
 
