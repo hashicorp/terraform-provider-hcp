@@ -256,11 +256,11 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   }
   labels = ["fallout", "vault-tec"]
   variable_options = [
-	{
-	  name          = "vault_dweller_name"
+  {
+      name          = "vault_dweller_name"
       variable_type = "string"
       user_editable = true
-      options 		= [
+      options       = [
         "lucy",
         "courier",
         "lone-wanderer",
@@ -268,10 +268,10 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
       ]
     },
     {
-	  name          = "faction"
+      name          = "faction"
       variable_type = "string"
       user_editable = true
-      options 		= [
+      options       = [
         "ncr",
         "brotherhood-of-steel",
         "caesars-legion",
@@ -288,16 +288,16 @@ resource "hcp_waypoint_add_on" "test_var_opts" {
   application_id = hcp_waypoint_application.test.id
 
   add_on_input_variables = [
-	{
-      name  		= "faction"
+  {
+      name          = "faction"
       variable_type = "string"
-      value 		= "brotherhood-of-steel"
+      value         = "brotherhood-of-steel"
     },
     {
-      name  		= "vault_dweller_name"
+      name          = "vault_dweller_name"
       variable_type = "string"
-	  value 		= "courier"
-    }	
+      value         = "courier"
+    }
   ]
 }
 
@@ -330,26 +330,26 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   description = "some description"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["fallout", "vault-tec"]
   variable_options = [
-	{
-	  name          = "vault_dweller_name"
+  {
+      name          = "vault_dweller_name"
       variable_type = "string"
       user_editable = false
-      options 		= [
+      options       = [
         "lone-wanderer",
       ]
     },
     {
-	  name          = "faction"
+      name          = "faction"
       variable_type = "string"
       user_editable = false
-      options 		= [
+      options       = [
         "brotherhood-of-steel",
       ]
     },
@@ -357,7 +357,7 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
 }
 
 resource "hcp_waypoint_add_on" "test_var_opts" {
-  name    		 = "%s"
+  name           = "%s"
   definition_id  = hcp_waypoint_add_on_definition.test_var_opts.id
   application_id = hcp_waypoint_application.test.id
 }`, tempName, appName, defName, addOnName)
