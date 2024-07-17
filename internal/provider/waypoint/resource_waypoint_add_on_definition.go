@@ -11,7 +11,6 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypointModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -47,7 +46,7 @@ type AddOnDefinitionResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformProjectId          types.String         `tfsdk:"terraform_project_id"`
+	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
@@ -250,16 +249,16 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		})
 	}
 
-	tfProjId := plan.TerraformProjectId.ValueString()
+	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
 	if tfWsName == "" {
 		// NOTE: this field is optional anyways, so if its unset, lets just use
 		// the template name for it.
 		tfWsName = plan.Name.ValueString()
 	}
-	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
-		ProjectID: tfProjId,
+		ProjectID: tfProjID,
 	}
 
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
@@ -485,16 +484,16 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		})
 	}
 
-	tfProjId := plan.TerraformProjectId.ValueString()
+	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
 	if tfWsName == "" {
 		// NOTE: this field is optional anyways, so if its unset, lets just use
 		// the template name for it.
 		tfWsName = plan.Name.ValueString()
 	}
-	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
-		ProjectID: tfProjId,
+		ProjectID: tfProjID,
 	}
 
 	// TODO: add support for Tags

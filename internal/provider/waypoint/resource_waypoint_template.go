@@ -50,7 +50,7 @@ type TemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformProjectId          types.String         `tfsdk:"terraform_project_id"`
+	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
@@ -265,7 +265,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		})
 	}
 
-	tfProjId := plan.TerraformProjectId.ValueString()
+	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
 	if tfWsName == "" {
 		// NOTE: this field is optional anyways, so if its unset, lets just use
@@ -274,7 +274,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
-		ProjectID: tfProjId,
+		ProjectID: tfProjID,
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
@@ -535,7 +535,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		})
 	}
 
-	tfProjId := plan.TerraformProjectId.ValueString()
+	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
 	if tfWsName == "" {
 		// NOTE: this field is optional anyways, so if its unset, lets just use
@@ -544,7 +544,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
-		ProjectID: tfProjId,
+		ProjectID: tfProjID,
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
