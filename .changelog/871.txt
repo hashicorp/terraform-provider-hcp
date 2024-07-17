@@ -1,0 +1,3 @@
+```release-note:feature
+HCP Waypoint Application resource and data source can now read any output values associated with that application
+```

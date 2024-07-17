@@ -34,7 +34,7 @@ Waypoint Add-on resource
 - `install_count` (Number) The number of installed Add-ons for the same Application that share the same Add-on Definition.
 - `labels` (List of String) List of labels attached to this Add-on.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint AddOn is located.
-- `output_values` (Attributes List) The output values of the Terraform run for the Add-on, sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
+- `output_values` (Attributes List) The output values, stored by HCP Waypoint, of the Terraform run for the Add-on, sensitive values have type and value omitted. (see [below for nested schema](#nestedatt--output_values))
 - `readme_markdown` (String) The markdown for the Add-on README.
 - `status` (Number) The status of the Terraform run for the Add-on.
 - `summary` (String) A short summary of the Add-on.

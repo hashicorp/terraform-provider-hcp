@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -60,6 +61,8 @@ type ApplicationResourceModel struct {
 	// however, this is not currently possible in the framework. See this issue for more details:
 	// https://github.com/hashicorp/terraform-plugin-framework/issues/242
 	TemplateInputVars types.Set `tfsdk:"template_input_variables"`
+
+	OutputValues types.List `tfsdk:"output_values"`
 }
 
 type InputVar struct {
@@ -183,6 +186,31 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						"value": &schema.StringAttribute{
 							Required:    true,
 							Description: "Variable value",
+						},
+					},
+				},
+			},
+			"output_values": schema.ListNestedAttribute{
+				Computed: true,
+				Description: "The output values, stored by HCP Waypoint, of the Terraform run for the Add-on, Sensitive values have type " +
+					"and value omitted.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: "The name of the output value.",
+						},
+						"type": schema.StringAttribute{
+							Computed:    true,
+							Description: "The type of the output value.",
+						},
+						"value": schema.StringAttribute{
+							Computed:    true,
+							Description: "The value of the output value.",
+						},
+						"sensitive": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the output value is Sensitive.",
 						},
 					},
 				},
@@ -335,6 +363,23 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		plan.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
 
+	// Read the output values from the application and set them in the plan
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "created application from template resource")
@@ -429,6 +474,20 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	} else {
 		data.TemplateInputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
+
+	// Read the output values from the application and set them in the plan
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		data.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		data.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -551,6 +610,21 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
 		plan.ReadmeMarkdown = types.StringNull()
+	}
+
+	var diags diag.Diagnostics
+
+	// Read the output values from the application and set them in the plan
+	ol := readOutputs(application.OutputValues)
+	if len(ol) > 0 {
+		plan.OutputValues, diags = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: outputValue{}.attrTypes()}, ol)
+	} else {
+		plan.OutputValues = types.ListNull(types.ObjectType{AttrTypes: outputValue{}.attrTypes()})
+	}
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Write logs using the tflog package
