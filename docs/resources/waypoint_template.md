@@ -18,8 +18,8 @@ Waypoint Template resource
 
 - `name` (String) The name of the Template.
 - `summary` (String) A brief description of the template, up to 110 characters
-- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module_source` (String) Terraform Cloud No-Code Module details
+- `terraform_project_id` (String) The ID of the Terraform Cloud Project to create workspaces in
 
 ### Optional
 
@@ -27,6 +27,7 @@ Waypoint Template resource
 - `labels` (List of String) List of labels attached to this Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Template is located.
 - `readme_markdown_template` (String) Instructions for using the template (markdown format supported).
+- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `variable_options` (Attributes Set) List of variable options for the template (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
