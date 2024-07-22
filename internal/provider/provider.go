@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
@@ -50,7 +51,7 @@ type ProviderFrameworkModel struct {
 }
 
 type WorkloadIdentityFrameworkModel struct {
-	TokenFile    types.String `tfsdk:"token_file"`
+	Token        types.String `tfsdk:"token"`
 	ResourceName types.String `tfsdk:"resource_name"`
 }
 
@@ -99,9 +100,16 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"workload_identity": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"token_file": schema.StringAttribute{
+						//"token_file": schema.StringAttribute{
+						//	Required:    true,
+						//	Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+						//	Validators: []validator.String{
+						//		stringvalidator.LengthAtLeast(1),
+						//	},
+						//},
+						"token": schema.StringAttribute{
 							Required:    true,
-							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 							},
@@ -225,7 +233,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 			return
 		}
 
-		clientConfig.WorloadIdentityTokenFile = elements[0].TokenFile.ValueString()
+		clientConfig.WorkloadIdentityToken = elements[0].Token.ValueString()
 		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
 	}
 
