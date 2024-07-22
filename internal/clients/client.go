@@ -95,12 +95,12 @@ type ClientConfig struct {
 	ClientSecret   string
 	CredentialFile string
 
-	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
+	// WorkloadIdentityToken and WorkloadIdentityResourceName can be set to
 	// indicate that authentication should occur by using workload identity
-	// federation. WorloadIdentityTokenFile indicates a file containing the
-	// token content and WorkloadIdentityResourceName is the workload identity
-	// provider resource name to authenticate against.
-	WorloadIdentityTokenFile     string
+	// federation. WorkloadIdentityToken indicates the token and
+	// WorkloadIdentityResourceName is the workload identity provider resource
+	// name to authenticate against.
+	WorkloadIdentityToken        string
 	WorkloadIdentityResourceName string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
@@ -122,14 +122,14 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
-	} else if config.WorloadIdentityTokenFile != "" && config.WorkloadIdentityResourceName != "" {
+	} else if config.WorkloadIdentityToken != "" && config.WorkloadIdentityResourceName != "" {
 		// Build a credential file that points at the passed token file
 		cf := &auth.CredentialFile{
 			Scheme: auth.CredentialFileSchemeWorkload,
 			Workload: &workload.IdentityProviderConfig{
 				ProviderResourceName: config.WorkloadIdentityResourceName,
-				File: &workload.FileCredentialSource{
-					Path: config.WorloadIdentityTokenFile,
+				Token: &workload.CredentialTokenSource{
+					Token: config.WorkloadIdentityToken,
 				},
 			},
 		}

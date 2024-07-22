@@ -2,6 +2,9 @@ module github.com/hashicorp/terraform-provider-hcp
 
 go 1.21
 
+// TODO: Remove this once the SDK PR is merged + released.
+replace github.com/hashicorp/hcp-sdk-go => github.com/liamcervante/hcp-sdk-go v0.0.0-20240722111702-8b6fbd236593
+
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/go-openapi/runtime v0.28.0

@@ -89,10 +89,15 @@ func New() func() *schema.Provider {
 						"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"token_file": {
+							//"token_file": {
+							//	Type:        schema.TypeString,
+							//	Required:    true,
+							//	Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							//},
+							"token": {
 								Type:        schema.TypeString,
 								Required:    true,
-								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
@@ -141,8 +146,8 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// Read the workload_identity configuration
 		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
 			wi := v.([]interface{})[0].(map[string]interface{})
-			if tf, ok := wi["token_file"].(string); ok && tf != "" {
-				clientConfig.WorloadIdentityTokenFile = tf
+			if t, ok := wi["token"].(string); ok && t != "" {
+				clientConfig.WorkloadIdentityToken = t
 			}
 			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
 				clientConfig.WorkloadIdentityResourceName = rn
