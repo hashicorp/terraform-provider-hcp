@@ -137,4 +137,9 @@ Required:
 - `token_file` (String) The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
 
-For more information about HCP, please review our [documentation page](https://cloud.hashicorp.com/docs/hcp).
+## API
+The terraform provider accesses a few APIs to facilitate workflows. The main APIs are documented here: https://developer.hashicorp.com/hcp/docs/hcp/api
+
+In addition to the documentation provided, the provider also accesses: *status.hashicorp.com*
+
+For more information about HCP, please review our [documentation page](https://developer.hashicorp.com/hcp/docs/).
