@@ -140,6 +140,6 @@ Required:
 ## API
 The terraform provider accesses [HCP API](https://developer.hashicorp.com/hcp/docs/hcp/api) to facilitate workflows.
 
-In addition to the documentation provided, the provider also accesses [HashiCorp Services Status page](https://status.hashicorp.com/)
+In addition to the documentation provided, the provider also accesses [HashiCorp Services Status page](https://status.hashicorp.com/).
 
 For more information about HCP, please review our [documentation page](https://developer.hashicorp.com/hcp/docs/).
