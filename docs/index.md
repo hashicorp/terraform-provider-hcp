@@ -138,7 +138,7 @@ Required:
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
 
 ## API
-The terraform provider accesses a few APIs to facilitate workflows. The main APIs are documented here: https://developer.hashicorp.com/hcp/docs/hcp/api
+The terraform provider accesses [HCP API](https://developer.hashicorp.com/hcp/docs/hcp/api) to facilitate workflows.
 
 In addition to the documentation provided, the provider also accesses [HashiCorp Services Status page](https://status.hashicorp.com/)
 
