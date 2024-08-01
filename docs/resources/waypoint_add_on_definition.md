@@ -27,7 +27,7 @@ Waypoint Add-on Definition resource
 - `labels` (List of String) List of labels attached to this Add-on Definition.
 - `project_id` (String) The ID of the HCP project where the Waypoint Add-on Definition is located.
 - `readme_markdown_template` (String) The markdown template for the Add-on Definition README (markdown format supported).
-- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. If not provided, defaults to the HCP Terraform project of the associated application. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
+- `terraform_cloud_workspace_details` (Attributes, Deprecated) Terraform Cloud Workspace details. If not provided, defaults to the HCP Terraform project of the associated application. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `variable_options` (Attributes Set) List of variable options for the Add-on Definition. (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
