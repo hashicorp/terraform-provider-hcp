@@ -117,8 +117,9 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
+				DeprecationMessage: "terraform_cloud_workspace_details is deprecated, use terraform_project_id instead",
+				Optional:           true,
+				Computed:           true,
 				Description: "Terraform Cloud Workspace details. If not provided, defaults to " +
 					"the HCP Terraform project of the associated application.",
 				Attributes: map[string]schema.Attribute{
