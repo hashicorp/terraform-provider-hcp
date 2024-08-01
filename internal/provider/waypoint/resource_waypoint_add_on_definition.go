@@ -112,6 +112,9 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 			"terraform_project_id": schema.StringAttribute{
 				Required:    true,
 				Description: "The ID of the Terraform Cloud Project to create workspaces in",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
 				Optional: true,
