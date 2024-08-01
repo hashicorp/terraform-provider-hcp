@@ -133,8 +133,9 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				Optional:    true,
-				Description: "Terraform Cloud Workspace details",
+				DeprecationMessage: "terraform_cloud_workspace_details is deprecated, use terraform_project_id instead",
+				Optional:           true,
+				Description:        "Terraform Cloud Workspace details",
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Required:    true,
