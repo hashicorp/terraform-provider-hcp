@@ -1,0 +1,3 @@
+```release-note:improvement
+Updated documentation to communicate the APIs the provider leverages during usage.
+```
