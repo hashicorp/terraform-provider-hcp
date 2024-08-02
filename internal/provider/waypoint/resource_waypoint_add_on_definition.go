@@ -303,7 +303,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
-	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.TerraformNocodeModule.Source)
+	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.ModuleSource)
 
 	plan.Description = types.StringValue(addOnDefinition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -388,7 +388,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	state.OrgID = types.StringValue(client.Config.OrganizationID)
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
-	state.TerraformNoCodeModuleSource = types.StringValue(definition.TerraformNocodeModule.Source)
+	state.TerraformNoCodeModuleSource = types.StringValue(definition.ModuleSource)
 
 	state.Description = types.StringValue(definition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -548,7 +548,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	plan.Name = types.StringValue(addOnDefinition.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
-	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.TerraformNocodeModule.Source)
+	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.ModuleSource)
 
 	plan.Description = types.StringValue(addOnDefinition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty

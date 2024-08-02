@@ -311,7 +311,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	plan.Name = types.StringValue(appTemplate.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(appTemplate.Summary)
-	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
+	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -426,7 +426,7 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.Summary = types.StringValue(appTemplate.Summary)
-	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
+	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -573,7 +573,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.Name = types.StringValue(appTemplate.Name)
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(appTemplate.Summary)
-	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.TerraformNocodeModule.Source)
+	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
 	resp.Diagnostics.Append(diags...)
