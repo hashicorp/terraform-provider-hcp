@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -58,6 +59,13 @@ type tfcWorkspace struct {
 	Name types.String `tfsdk:"name"`
 	// this refers to the project ID found in Terraform Cloud
 	TerraformProjectID types.String `tfsdk:"terraform_project_id"`
+}
+
+func (t tfcWorkspace) attrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"name":                 types.StringType,
+		"terraform_project_id": types.StringType,
+	}
 }
 
 type tfcNoCodeModule struct {
@@ -118,7 +126,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"readme_markdown_template": schema.StringAttribute{
 				Optional:    true,
-				Description: "Instructions for using the template (markdown format supported",
+				Description: "Instructions for using the template (markdown format supported).",
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -135,7 +143,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 				Attributes: map[string]schema.Attribute{
 					"name": &schema.StringAttribute{
 						Required:    true,
-						Description: "Name of the Terraform Cloud Workspace",
+						Description: "Name of the Terraform Cloud Project",
 					},
 					"terraform_project_id": &schema.StringAttribute{
 						Required:    true,
@@ -248,14 +256,6 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error decoding the base64 file contents",
-			err.Error(),
-		)
-	}
-
 	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
@@ -274,11 +274,10 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-			Name:                   plan.Name.ValueString(),
-			Summary:                plan.Summary.ValueString(),
-			Labels:                 strLabels,
-			Description:            plan.Description.ValueString(),
-			ReadmeMarkdownTemplate: readmeBytes,
+			Name:        plan.Name.ValueString(),
+			Summary:     plan.Summary.ValueString(),
+			Labels:      strLabels,
+			Description: plan.Description.ValueString(),
 			TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 				Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 				Version: plan.TerraformNoCodeModule.Version.ValueString(),
@@ -289,6 +288,18 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			},
 			VariableOptions: varOpts,
 		},
+	}
+
+	// Decode the base64 encoded readme markdown template to see if it is encoded
+	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
+	// If there is an error, we assume that it is because the string is not encoded. This is ok and
+	// we will just use the string as is in the ReadmeTemplate field of the model.
+	// Eventually the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
+	// expect the readme to not be encoded
+	if err != nil {
+		modelBody.ApplicationTemplate.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
+	} else {
+		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
@@ -523,15 +534,6 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error decoding the base64 file contents",
-			err.Error(),
-		)
-		return
-	}
-
 	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
@@ -550,11 +552,10 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
-			Name:                   plan.Name.ValueString(),
-			Summary:                plan.Summary.ValueString(),
-			Labels:                 strLabels,
-			Description:            plan.Description.ValueString(),
-			ReadmeMarkdownTemplate: readmeBytes,
+			Name:        plan.Name.ValueString(),
+			Summary:     plan.Summary.ValueString(),
+			Labels:      strLabels,
+			Description: plan.Description.ValueString(),
 			TerraformNocodeModule: &waypoint_models.HashicorpCloudWaypointTerraformNocodeModule{
 				Source:  plan.TerraformNoCodeModule.Source.ValueString(),
 				Version: plan.TerraformNoCodeModule.Version.ValueString(),
@@ -565,6 +566,18 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			},
 			VariableOptions: varOpts,
 		},
+	}
+
+	// Decode the base64 encoded readme markdown template to see if it is encoded
+	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
+	// If there is an error, we assume that it is because the string is not encoded. This is ok and
+	// we will just use the string as is in the ReadmeTemplate field of the model.
+	// Eventually the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
+	// expect the readme to not be encoded
+	if err != nil {
+		modelBody.ApplicationTemplate.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
+	} else {
+		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{

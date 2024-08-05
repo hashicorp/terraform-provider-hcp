@@ -19,14 +19,14 @@ Waypoint Add-on Definition resource
 - `description` (String) A longer description of the Add-on Definition.
 - `name` (String) The name of the Add-on Definition.
 - `summary` (String) A short summary of the Add-on Definition.
-- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
 
 ### Optional
 
 - `labels` (List of String) List of labels attached to this Add-on Definition.
 - `project_id` (String) The ID of the HCP project where the Waypoint Add-on Definition is located.
-- `readme_markdown_template` (String) The markdown template for the Add-on Definition README.
+- `readme_markdown_template` (String) The markdown template for the Add-on Definition README (markdown format supported).
+- `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. If not provided, defaults to the HCP Terraform project of the associated application. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `variable_options` (Attributes Set) List of variable options for the Add-on Definition. (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only
@@ -34,22 +34,22 @@ Waypoint Add-on Definition resource
 - `id` (String) The ID of the Add-on Definition.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Add-on Definition is located.
 
-<a id="nestedatt--terraform_cloud_workspace_details"></a>
-### Nested Schema for `terraform_cloud_workspace_details`
-
-Required:
-
-- `name` (String) Name of the Terraform Cloud Workspace
-- `terraform_project_id` (String) Tetraform Cloud Project ID
-
-
 <a id="nestedatt--terraform_no_code_module"></a>
 ### Nested Schema for `terraform_no_code_module`
 
 Required:
 
-- `source` (String) Terraform Cloud no-code Module Source
+- `source` (String) Terraform Cloud no-code Module Source , expected to be in one of the following formats: "app.terraform.io/hcp_waypoint_example/ecs-advanced-microservice/aws" or "private/hcp_waypoint_example/ecs-advanced-microservice/aws"
 - `version` (String) Terraform Cloud no-code Module Version
+
+
+<a id="nestedatt--terraform_cloud_workspace_details"></a>
+### Nested Schema for `terraform_cloud_workspace_details`
+
+Required:
+
+- `name` (String) Name of the Terraform Cloud Project
+- `terraform_project_id` (String) Terraform Cloud Project ID
 
 
 <a id="nestedatt--variable_options"></a>
@@ -63,4 +63,4 @@ Required:
 
 Optional:
 
-- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on
+- `user_editable` (Boolean) Whether the variable is editable by the user creating an add-on. If options are provided, then the user may only use those options, regardless of this setting.
