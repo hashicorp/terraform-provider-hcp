@@ -51,6 +51,7 @@ type ProviderFrameworkModel struct {
 }
 
 type WorkloadIdentityFrameworkModel struct {
+	TokenFile    types.String `tfsdk:"token_file"`
 	Token        types.String `tfsdk:"token"`
 	ResourceName types.String `tfsdk:"resource_name"`
 }
@@ -100,16 +101,16 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"workload_identity": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						//"token_file": schema.StringAttribute{
-						//	Required:    true,
-						//	Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
-						//	Validators: []validator.String{
-						//		stringvalidator.LengthAtLeast(1),
-						//	},
-						//},
+						"token_file": schema.StringAttribute{
+							Optional:    true,
+							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+							},
+						},
 						"token": schema.StringAttribute{
-							Required:    true,
-							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							Optional:    true,
+							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 							},
@@ -233,8 +234,18 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 			return
 		}
 
+		clientConfig.WorkloadIdentityTokenFile = elements[0].TokenFile.ValueString()
 		clientConfig.WorkloadIdentityToken = elements[0].Token.ValueString()
 		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
+
+		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+			resp.Diagnostics.AddError("invalid workload_identity", "exactly one of `token_file` or `token` must be set")
+			return
+		}
+		if clientConfig.WorkloadIdentityTokenFile != "" && clientConfig.WorkloadIdentityToken != "" {
+			resp.Diagnostics.AddError("invalid workload_identity", "exactly one of `token_file` or `token` must be set")
+			return
+		}
 	}
 
 	client, err := clients.NewClient(clientConfig)

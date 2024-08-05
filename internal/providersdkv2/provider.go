@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -89,15 +90,15 @@ func New() func() *schema.Provider {
 						"token specified in the `token_file` for a HCP service principal using Workload Identity Federation.",
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							//"token_file": {
-							//	Type:        schema.TypeString,
-							//	Required:    true,
-							//	Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
-							//},
+							"token_file": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+							},
 							"token": {
 								Type:        schema.TypeString,
-								Required:    true,
-								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+								Optional:    true,
+								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
@@ -146,11 +147,33 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		// Read the workload_identity configuration
 		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
 			wi := v.([]interface{})[0].(map[string]interface{})
+			if tf, ok := wi["token_file"].(string); ok && tf != "" {
+				clientConfig.WorkloadIdentityTokenFile = tf
+			}
 			if t, ok := wi["token"].(string); ok && t != "" {
 				clientConfig.WorkloadIdentityToken = t
 			}
 			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
 				clientConfig.WorkloadIdentityResourceName = rn
+			}
+
+			if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+				diags = append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid workload_identity",
+					Detail:        "exactly one of `token_file` or `token` must be set",
+					AttributePath: cty.GetAttrPath("workload_identity"),
+				})
+				return nil, diags
+			}
+			if clientConfig.WorkloadIdentityTokenFile != "" && clientConfig.WorkloadIdentityToken != "" {
+				diags = append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid workload_identity",
+					Detail:        "exactly one of `token_file` or `token` must be set",
+					AttributePath: cty.GetAttrPath("workload_identity"),
+				})
+				return nil, diags
 			}
 		}
 

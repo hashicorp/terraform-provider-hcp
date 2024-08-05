@@ -2,10 +2,6 @@ module github.com/hashicorp/terraform-provider-hcp
 
 go 1.21
 
-// TODO: Update the following line to point to the correct version of the
-// HCP SDK once it is released.
-replace github.com/hashicorp/hcp-sdk-go => github.com/liamcervante/hcp-sdk-go v0.0.0-20240722111702-8b6fbd236593
-
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/go-openapi/runtime v0.28.0
@@ -14,7 +10,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.7.0
-	github.com/hashicorp/hcp-sdk-go v0.100.0
+	github.com/hashicorp/hcp-sdk-go v0.105.0
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-framework v1.5.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
