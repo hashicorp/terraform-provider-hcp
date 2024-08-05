@@ -11,7 +11,6 @@ import (
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -66,7 +65,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 						t.Fatalf("could not create mongodb rotation integration: %v", err)
 					}
 
-					reqBody := secret_service.CreateMongoDBAtlasRotatingSecretBody{
+					reqBody := secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody{
 						SecretName:              testSecretName,
 						RotationIntegrationName: testIntegrationName,
 						RotationPolicyName:      "built-in:30-days-2-active",
@@ -79,7 +78,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 							},
 						},
 					}
-					_, err = clients.CreateMongoDBAtlasRotatingSecret(ctx, client, loc, testAppName, reqBody)
+					_, err = clients.CreateMongoDBAtlasRotatingSecret(ctx, client, loc, testAppName, &reqBody)
 					if err != nil {
 						t.Fatalf("could not create rotating mongodb atlas secret: %v", err)
 					}

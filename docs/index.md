@@ -134,7 +134,11 @@ resource "hcp_vault_cluster" "example" {
 Required:
 
 - `resource_name` (String) The resource_name of the Workload Identity Provider to exchange the token with.
-- `token_file` (String) The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.
+
+Optional:
+
+- `token` (String) The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.
+- `token_file` (String) The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
 
 ## API
