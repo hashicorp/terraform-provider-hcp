@@ -157,10 +157,7 @@ resource "hcp_waypoint_template" "test" {
   name                     = "%s"
   summary                  = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
-  terraform_no_code_module = {
-    source  = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-    version = "0.0.2"
-  }
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
@@ -175,10 +172,7 @@ resource "hcp_waypoint_template" "var_opts_test" {
   name                     = "%s"
   summary                  = "A template with a variable with options."
   readme_markdown_template = base64encode("# Some Readme")
-  terraform_no_code_module = {
-    source  = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
-    version = "0.0.1"
-  }
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
