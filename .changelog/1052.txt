@@ -1,0 +1,5 @@
+```release-note:improvement
+Waypoint resources for templates and add-on definitions no longer require setting
+a `terraform_cloud_workspace_details` resource, and instead can be set by the
+`terraform_project_id` param.
+```

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -47,7 +46,8 @@ type AddOnDefinitionResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace     types.Object         `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
+	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 }
@@ -109,9 +109,17 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "The markdown template for the Add-on Definition README (markdown format supported).",
 				Optional:    true,
 			},
+			"terraform_project_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Terraform Cloud Project to create workspaces in",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
+				DeprecationMessage: "terraform_cloud_workspace_details is deprecated, use terraform_project_id instead",
+				Optional:           true,
+				Computed:           true,
 				Description: "Terraform Cloud Workspace details. If not provided, defaults to " +
 					"the HCP Terraform project of the associated application.",
 				Attributes: map[string]schema.Attribute{
@@ -245,13 +253,26 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		})
 	}
 
+	tfProjID := plan.TerraformProjectID.ValueString()
+	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
+	if tfWsName == "" {
+		// NOTE: this field is optional anyways, so if its unset, lets just use
+		// the template name for it.
+		tfWsName = plan.Name.ValueString()
+	}
+	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		Name:      tfWsName,
+		ProjectID: tfProjID,
+	}
+
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
-		Name:            plan.Name.ValueString(),
-		Summary:         plan.Summary.ValueString(),
-		Description:     plan.Description.ValueString(),
-		Labels:          stringLabels,
-		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
-		VariableOptions: varOpts,
+		Name:                           plan.Name.ValueString(),
+		Summary:                        plan.Summary.ValueString(),
+		Description:                    plan.Description.ValueString(),
+		Labels:                         stringLabels,
+		ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+		TerraformCloudWorkspaceDetails: tfWsDetails,
+		VariableOptions:                varOpts,
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -264,19 +285,6 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		modelBody.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
 	} else {
 		modelBody.ReadmeMarkdownTemplate = readmeBytes
-	}
-
-	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
-		workspaceDetails := &tfcWorkspace{}
-		diags := plan.TerraformCloudWorkspace.As(ctx, workspaceDetails, basetypes.ObjectAsOptions{})
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-			Name:      workspaceDetails.Name.ValueString(),
-			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
-		}
 	}
 
 	params := &waypoint_service.WaypointServiceCreateAddOnDefinitionParams{
@@ -328,11 +336,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		plan.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
+		plan.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
@@ -413,11 +417,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 			Name:               types.StringValue(definition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		state.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
+		state.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
@@ -488,14 +488,27 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		})
 	}
 
+	tfProjID := plan.TerraformProjectID.ValueString()
+	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
+	if tfWsName == "" {
+		// NOTE: this field is optional anyways, so if its unset, lets just use
+		// the template name for it.
+		tfWsName = plan.Name.ValueString()
+	}
+	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		Name:      tfWsName,
+		ProjectID: tfProjID,
+	}
+
 	// TODO: add support for Tags
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
-		Name:            plan.Name.ValueString(),
-		Summary:         plan.Summary.ValueString(),
-		Description:     plan.Description.ValueString(),
-		Labels:          stringLabels,
-		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
-		VariableOptions: varOpts,
+		Name:                           plan.Name.ValueString(),
+		Summary:                        plan.Summary.ValueString(),
+		Description:                    plan.Description.ValueString(),
+		Labels:                         stringLabels,
+		ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+		VariableOptions:                varOpts,
+		TerraformCloudWorkspaceDetails: tfWsDetails,
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -508,19 +521,6 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		modelBody.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
 	} else {
 		modelBody.ReadmeMarkdownTemplate = readmeBytes
-	}
-
-	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
-		workspaceDetails := &tfcWorkspace{}
-		diags := plan.TerraformCloudWorkspace.As(ctx, workspaceDetails, basetypes.ObjectAsOptions{})
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-			Name:      workspaceDetails.Name.ValueString(),
-			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
-		}
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{
@@ -573,11 +573,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		plan.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
+		plan.TerraformCloudWorkspace = tfcWorkspace
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
