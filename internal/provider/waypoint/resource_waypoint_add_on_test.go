@@ -329,7 +329,7 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   summary     = "some summary for fun"
   description = "some description"
   readme_markdown_template = base64encode("# Some Readme")
-  terraform_no_code_module = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
