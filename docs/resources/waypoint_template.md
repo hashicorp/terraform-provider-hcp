@@ -19,7 +19,7 @@ Waypoint Template resource
 - `name` (String) The name of the Template.
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
-- `terraform_no_code_module` (Attributes) Terraform Cloud No-Code Module details (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module_source` (String) Terraform Cloud No-Code Module details
 
 ### Optional
 
@@ -41,15 +41,6 @@ Required:
 
 - `name` (String) Name of the Terraform Cloud Project
 - `terraform_project_id` (String) Terraform Cloud Project ID
-
-
-<a id="nestedatt--terraform_no_code_module"></a>
-### Nested Schema for `terraform_no_code_module`
-
-Required:
-
-- `source` (String) No-Code Module Source
-- `version` (String) No-Code Module Version
 
 
 <a id="nestedatt--variable_options"></a>

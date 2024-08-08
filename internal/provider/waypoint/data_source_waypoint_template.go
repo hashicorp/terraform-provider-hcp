@@ -44,9 +44,9 @@ type DataSourceTemplateModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
-	TerraformCloudWorkspace *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
-	TerraformNoCodeModule   *tfcNoCodeModule     `tfsdk:"terraform_no_code_module"`
-	VariableOptions         []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	VariableOptions             []*tfcVariableOption `tfsdk:"variable_options"`
 }
 
 func NewTemplateDataSource() datasource.DataSource {
@@ -111,19 +111,9 @@ func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRe
 					},
 				},
 			},
-			"terraform_no_code_module": &schema.SingleNestedAttribute{
+			"terraform_no_code_module_source": &schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud No-Code Module details",
-				Attributes: map[string]schema.Attribute{
-					"source": &schema.StringAttribute{
-						Computed:    true,
-						Description: "No-Code Module Source",
-					},
-					"version": &schema.StringAttribute{
-						Computed:    true,
-						Description: "No-Code Module Version",
-					},
-				},
+				Description: "Terraform No Code Module source",
 			},
 			"variable_options": schema.ListNestedAttribute{
 				Computed:    true,
@@ -210,6 +200,7 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.Summary = types.StringValue(appTemplate.Summary)
+	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
@@ -217,14 +208,6 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
 		}
 		data.TerraformCloudWorkspace = tfcWorkspace
-	}
-
-	if appTemplate.TerraformNocodeModule != nil {
-		tfcNoCode := &tfcNoCodeModule{
-			Source:  types.StringValue(appTemplate.TerraformNocodeModule.Source),
-			Version: types.StringValue(appTemplate.TerraformNocodeModule.Version),
-		}
-		data.TerraformNoCodeModule = tfcNoCode
 	}
 
 	data.VariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
