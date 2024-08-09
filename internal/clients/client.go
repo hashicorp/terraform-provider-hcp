@@ -121,7 +121,19 @@ type ClientConfig struct {
 
 // NewClient creates a new Client that is capable of making HCP requests
 func NewClient(config ClientConfig) (*Client, error) {
-	hasWorkloadIdentityToken := config.WorkloadIdentityToken != "" || config.WorkloadIdentityTokenFile != ""
+	// hasWorkloadIdentityToken is true if the config specified a direct token.
+	hasWorkloadIdentityToken := config.WorkloadIdentityToken != ""
+	// hasWorkloadIdentityTokenFile is true if the config specified a path to a
+	// file that contains the token.
+	hasWorkloadIdentityTokenFile := config.WorkloadIdentityTokenFile != ""
+	// hasWorkloadIdentityResource is true if the config specified a resource
+	// name to authenticate against.
+	hasWorkloadIdentityResource := config.WorkloadIdentityResourceName != ""
+
+	// Overall, we consider workload identity authentication to be enabled if we
+	// have a token from either source (direct or within a file) and a resource
+	// name.
+	hasWorkloadIdentity := (hasWorkloadIdentityToken || hasWorkloadIdentityTokenFile) && hasWorkloadIdentityResource
 
 	// Build the HCP Config options
 	opts := []hcpConfig.HCPConfigOption{hcpConfig.FromEnv()}
@@ -129,14 +141,17 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
-	} else if hasWorkloadIdentityToken && config.WorkloadIdentityResourceName != "" {
-		if config.WorkloadIdentityToken != "" && config.WorkloadIdentityTokenFile != "" {
-			// Only one of these can be set, so if both are not empty then
-			// we'll return an error.
+	} else if hasWorkloadIdentity {
+
+		// We don't know which token to use if both token sources are set, so
+		// return an error now. This should have been validated within the
+		// configuration first, so we're just checking this as a last resource.
+		if hasWorkloadIdentityToken && hasWorkloadIdentityTokenFile {
 			return nil, errors.New("cannot set both WorkloadIdentityToken and WorkloadIdentityTokenFile")
 		}
 
-		if config.WorkloadIdentityTokenFile != "" {
+		switch {
+		case hasWorkloadIdentityTokenFile:
 			// If we have a token file, then we pass the path to that token file
 			// to the HCP config.
 			cf := &auth.CredentialFile{
@@ -149,7 +164,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 				},
 			}
 			opts = append(opts, hcpConfig.WithCredentialFile(cf))
-		} else {
+		default:
 			// Otherwise, pass in the token string that we have directly.
 			cf := &auth.CredentialFile{
 				Scheme: auth.CredentialFileSchemeWorkload,
