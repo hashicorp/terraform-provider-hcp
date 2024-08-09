@@ -93,12 +93,12 @@ func New() func() *schema.Provider {
 							"token_file": {
 								Type:        schema.TypeString,
 								Optional:    true,
-								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							},
 							"token": {
 								Type:        schema.TypeString,
 								Optional:    true,
-								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
@@ -161,16 +161,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 				diags = append(diags, diag.Diagnostic{
 					Severity:      diag.Error,
 					Summary:       "invalid workload_identity",
-					Detail:        "exactly one of `token_file` or `token` must be set",
-					AttributePath: cty.GetAttrPath("workload_identity"),
-				})
-				return nil, diags
-			}
-			if clientConfig.WorkloadIdentityTokenFile != "" && clientConfig.WorkloadIdentityToken != "" {
-				diags = append(diags, diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "invalid workload_identity",
-					Detail:        "exactly one of `token_file` or `token` must be set",
+					Detail:        "at least of one of `token_file` or `token` must be set",
 					AttributePath: cty.GetAttrPath("workload_identity"),
 				})
 				return nil, diags

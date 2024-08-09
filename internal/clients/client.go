@@ -142,36 +142,31 @@ func NewClient(config ClientConfig) (*Client, error) {
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
 	} else if hasWorkloadIdentity {
-
-		// We don't know which token to use if both token sources are set, so
-		// return an error now. This should have been validated within the
-		// configuration first, so we're just checking this as a last resource.
-		if hasWorkloadIdentityToken && hasWorkloadIdentityTokenFile {
-			return nil, errors.New("cannot set both WorkloadIdentityToken and WorkloadIdentityTokenFile")
-		}
-
 		switch {
-		case hasWorkloadIdentityTokenFile:
-			// If we have a token file, then we pass the path to that token file
-			// to the HCP config.
-			cf := &auth.CredentialFile{
-				Scheme: auth.CredentialFileSchemeWorkload,
-				Workload: &workload.IdentityProviderConfig{
-					ProviderResourceName: config.WorkloadIdentityResourceName,
-					File: &workload.FileCredentialSource{
-						Path: config.WorkloadIdentityTokenFile,
-					},
-				},
-			}
-			opts = append(opts, hcpConfig.WithCredentialFile(cf))
-		default:
-			// Otherwise, pass in the token string that we have directly.
+		case hasWorkloadIdentityToken:
+			// The direct token takes priority over the file path in case both
+			// are set, so we'll check that first.
 			cf := &auth.CredentialFile{
 				Scheme: auth.CredentialFileSchemeWorkload,
 				Workload: &workload.IdentityProviderConfig{
 					ProviderResourceName: config.WorkloadIdentityResourceName,
 					Token: &workload.CredentialTokenSource{
 						Token: config.WorkloadIdentityToken,
+					},
+				},
+			}
+			opts = append(opts, hcpConfig.WithCredentialFile(cf))
+		default:
+			// If we don't have the token directly, fall back to checking the
+			// file. We checked earlier that at least one of the two options
+			// were set, so if the token wasn't set the file information must
+			// be present.
+			cf := &auth.CredentialFile{
+				Scheme: auth.CredentialFileSchemeWorkload,
+				Workload: &workload.IdentityProviderConfig{
+					ProviderResourceName: config.WorkloadIdentityResourceName,
+					File: &workload.FileCredentialSource{
+						Path: config.WorkloadIdentityTokenFile,
 					},
 				},
 			}

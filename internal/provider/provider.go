@@ -103,15 +103,15 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 					Attributes: map[string]schema.Attribute{
 						"token_file": schema.StringAttribute{
 							Optional:    true,
-							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
-								stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("token")),
+								stringvalidator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("token")),
 							},
 						},
 						"token": schema.StringAttribute{
 							Optional:    true,
-							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. Exactly one of `token_file` or `token` must be set.",
+							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 							},
@@ -242,11 +242,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		// This should have been validated by the schema, but we'll check it
 		// here just in case.
 		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
-			resp.Diagnostics.AddError("invalid workload_identity", "exactly one of `token_file` or `token` must be set")
-			return
-		}
-		if clientConfig.WorkloadIdentityTokenFile != "" && clientConfig.WorkloadIdentityToken != "" {
-			resp.Diagnostics.AddError("invalid workload_identity", "exactly one of `token_file` or `token` must be set")
+			resp.Diagnostics.AddError("invalid workload_identity", "at least one of `token_file` or `token` must be set")
 			return
 		}
 	}
