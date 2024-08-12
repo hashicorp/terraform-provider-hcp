@@ -19,7 +19,7 @@ Waypoint Add-on Definition resource
 - `description` (String) A longer description of the Add-on Definition.
 - `name` (String) The name of the Add-on Definition.
 - `summary` (String) A short summary of the Add-on Definition.
-- `terraform_no_code_module` (Attributes) Terraform Cloud no-code Module details. (see [below for nested schema](#nestedatt--terraform_no_code_module))
+- `terraform_no_code_module_source` (String) Terraform Cloud no-code Module Source, expected to be in one of the following formats: "app.terraform.io/hcp_waypoint_example/ecs-advanced-microservice/aws" or "private/hcp_waypoint_example/ecs-advanced-microservice/aws"
 
 ### Optional
 
@@ -33,15 +33,6 @@ Waypoint Add-on Definition resource
 
 - `id` (String) The ID of the Add-on Definition.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Add-on Definition is located.
-
-<a id="nestedatt--terraform_no_code_module"></a>
-### Nested Schema for `terraform_no_code_module`
-
-Required:
-
-- `source` (String) Terraform Cloud no-code Module Source , expected to be in one of the following formats: "app.terraform.io/hcp_waypoint_example/ecs-advanced-microservice/aws" or "private/hcp_waypoint_example/ecs-advanced-microservice/aws"
-- `version` (String) Terraform Cloud no-code Module Version
-
 
 <a id="nestedatt--terraform_cloud_workspace_details"></a>
 ### Nested Schema for `terraform_cloud_workspace_details`
