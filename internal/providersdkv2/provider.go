@@ -145,25 +145,11 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		}
 
 		// Read the workload_identity configuration
-		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
-			wi := v.([]interface{})[0].(map[string]interface{})
-			if tf, ok := wi["token_file"].(string); ok && tf != "" {
-				clientConfig.WorkloadIdentityTokenFile = tf
-			}
-			if t, ok := wi["token"].(string); ok && t != "" {
-				clientConfig.WorkloadIdentityToken = t
-			}
-			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
-				clientConfig.WorkloadIdentityResourceName = rn
-			}
-
-			if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
-				diags = append(diags, diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "invalid workload_identity",
-					Detail:        "at least of one of `token_file` or `token` must be set",
-					AttributePath: cty.GetAttrPath("workload_identity"),
-				})
+		if d, ok := d.GetOk("workload_identity"); ok {
+			var moreDiags diag.Diagnostics
+			clientConfig, moreDiags = readWorkloadIdentity(d, clientConfig)
+			diags = append(diags, moreDiags...)
+			if moreDiags.HasError() {
 				return nil, diags
 			}
 		}
@@ -214,6 +200,32 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 
 		return client, diags
 	}
+}
+
+func readWorkloadIdentity(v interface{}, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
+		wi := v.([]interface{})[0].(map[string]interface{})
+		if tf, ok := wi["token_file"].(string); ok && tf != "" {
+			clientConfig.WorkloadIdentityTokenFile = tf
+		}
+		if t, ok := wi["token"].(string); ok && t != "" {
+			clientConfig.WorkloadIdentityToken = t
+		}
+		if rn, ok := wi["resource_name"].(string); ok && rn != "" {
+			clientConfig.WorkloadIdentityResourceName = rn
+		}
+
+		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "invalid workload_identity",
+				Detail:        "at least one of `token_file` or `token` must be set",
+				AttributePath: cty.GetAttrPath("workload_identity"),
+			})
+		}
+	}
+	return clientConfig, diags
 }
 
 // getProjectFromCredentials uses the configured client credentials to

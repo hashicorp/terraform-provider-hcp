@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -235,14 +236,10 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 			return
 		}
 
-		clientConfig.WorkloadIdentityTokenFile = elements[0].TokenFile.ValueString()
-		clientConfig.WorkloadIdentityToken = elements[0].Token.ValueString()
-		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
-
-		// This should have been validated by the schema, but we'll check it
-		// here just in case.
-		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
-			resp.Diagnostics.AddError("invalid workload_identity", "at least one of `token_file` or `token` must be set")
+		var diags diag.Diagnostics
+		clientConfig, diags = readWorkloadIdentity(elements[0], clientConfig)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
 			return
 		}
 	}
@@ -294,4 +291,18 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	config.Client = client
 	resp.DataSourceData = client
 	resp.ResourceData = client
+}
+
+func readWorkloadIdentity(model WorkloadIdentityFrameworkModel, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {
+	clientConfig.WorkloadIdentityTokenFile = model.TokenFile.ValueString()
+	clientConfig.WorkloadIdentityToken = model.Token.ValueString()
+	clientConfig.WorkloadIdentityResourceName = model.ResourceName.ValueString()
+
+	// This should have been validated by the schema, but we'll check it
+	// here just in case.
+	var diags diag.Diagnostics
+	if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+		diags.AddError("invalid workload_identity", "at least one of `token_file` or `token` must be set")
+	}
+	return clientConfig, diags
 }

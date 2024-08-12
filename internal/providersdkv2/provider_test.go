@@ -10,12 +10,17 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
@@ -141,4 +146,85 @@ func testConfig(res ...string) string {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
+}
+
+func Test_readWorkloadIdentity(t *testing.T) {
+	tcs := map[string]struct {
+		config    interface{}
+		want      clients.ClientConfig
+		wantDiags diag.Diagnostics
+	}{
+		"missing token and file": {
+			config: []interface{}{
+				map[string]interface{}{
+					"resource_name": "my_resource",
+				},
+			},
+			wantDiags: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "invalid workload_identity",
+					Detail:   "at least one of `token_file` or `token` must be set",
+				},
+			},
+			want: clients.ClientConfig{
+				WorkloadIdentityResourceName: "my_resource",
+			},
+		},
+		"token": {
+			config: []interface{}{
+				map[string]interface{}{
+					"resource_name": "my_resource",
+					"token":         "my_token",
+				},
+			},
+			want: clients.ClientConfig{
+				WorkloadIdentityResourceName: "my_resource",
+				WorkloadIdentityToken:        "my_token",
+			},
+		},
+		"file": {
+			config: []interface{}{
+				map[string]interface{}{
+					"resource_name": "my_resource",
+					"token_file":    "/path/to/token/file",
+				},
+			},
+			want: clients.ClientConfig{
+				WorkloadIdentityResourceName: "my_resource",
+				WorkloadIdentityTokenFile:    "/path/to/token/file",
+			},
+		},
+		"both": {
+			config: []interface{}{
+				map[string]interface{}{
+					"resource_name": "my_resource",
+					"token":         "my_token",
+					"token_file":    "/path/to/token/file",
+				},
+			},
+			want: clients.ClientConfig{
+				WorkloadIdentityResourceName: "my_resource",
+				WorkloadIdentityToken:        "my_token",
+				WorkloadIdentityTokenFile:    "/path/to/token/file",
+			},
+		},
+	}
+
+	for name, tc := range tcs {
+		t.Run(name, func(t *testing.T) {
+			// cty.Path objects are difficult to compare automatically as they
+			// contain unexported fields. We can ignore them for the purposes of
+			// this test.
+			ignoreAttributePath := cmpopts.IgnoreFields(diag.Diagnostic{}, "AttributePath")
+
+			got, gotDiags := readWorkloadIdentity(tc.config, clients.ClientConfig{})
+			if diff := cmp.Diff(tc.wantDiags, gotDiags, ignoreAttributePath); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
