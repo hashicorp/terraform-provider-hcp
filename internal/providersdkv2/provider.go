@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -91,8 +92,13 @@ func New() func() *schema.Provider {
 						Schema: map[string]*schema.Schema{
 							"token_file": {
 								Type:        schema.TypeString,
-								Required:    true,
-								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+								Optional:    true,
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
+							},
+							"token": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
@@ -139,13 +145,12 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		}
 
 		// Read the workload_identity configuration
-		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
-			wi := v.([]interface{})[0].(map[string]interface{})
-			if tf, ok := wi["token_file"].(string); ok && tf != "" {
-				clientConfig.WorloadIdentityTokenFile = tf
-			}
-			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
-				clientConfig.WorkloadIdentityResourceName = rn
+		if d, ok := d.GetOk("workload_identity"); ok {
+			var moreDiags diag.Diagnostics
+			clientConfig, moreDiags = readWorkloadIdentity(d, clientConfig)
+			diags = append(diags, moreDiags...)
+			if moreDiags.HasError() {
+				return nil, diags
 			}
 		}
 
@@ -195,6 +200,32 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 
 		return client, diags
 	}
+}
+
+func readWorkloadIdentity(v interface{}, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
+		wi := v.([]interface{})[0].(map[string]interface{})
+		if tf, ok := wi["token_file"].(string); ok && tf != "" {
+			clientConfig.WorkloadIdentityTokenFile = tf
+		}
+		if t, ok := wi["token"].(string); ok && t != "" {
+			clientConfig.WorkloadIdentityToken = t
+		}
+		if rn, ok := wi["resource_name"].(string); ok && rn != "" {
+			clientConfig.WorkloadIdentityResourceName = rn
+		}
+
+		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "invalid workload_identity",
+				Detail:        "at least one of `token_file` or `token` must be set",
+				AttributePath: cty.GetAttrPath("workload_identity"),
+			})
+		}
+	}
+	return clientConfig, diags
 }
 
 // getProjectFromCredentials uses the configured client credentials to

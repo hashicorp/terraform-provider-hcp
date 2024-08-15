@@ -13,12 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
@@ -51,6 +53,7 @@ type ProviderFrameworkModel struct {
 
 type WorkloadIdentityFrameworkModel struct {
 	TokenFile    types.String `tfsdk:"token_file"`
+	Token        types.String `tfsdk:"token"`
 	ResourceName types.String `tfsdk:"resource_name"`
 }
 
@@ -100,8 +103,16 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"token_file": schema.StringAttribute{
-							Required:    true,
-							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+							Optional:    true,
+							Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
+							Validators: []validator.String{
+								stringvalidator.LengthAtLeast(1),
+								stringvalidator.AtLeastOneOf(path.MatchRelative().AtParent().AtName("token")),
+							},
+						},
+						"token": schema.StringAttribute{
+							Optional:    true,
+							Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
 							},
@@ -225,8 +236,12 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 			return
 		}
 
-		clientConfig.WorloadIdentityTokenFile = elements[0].TokenFile.ValueString()
-		clientConfig.WorkloadIdentityResourceName = elements[0].ResourceName.ValueString()
+		var diags diag.Diagnostics
+		clientConfig, diags = readWorkloadIdentity(elements[0], clientConfig)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
 	}
 
 	client, err := clients.NewClient(clientConfig)
@@ -276,4 +291,18 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	config.Client = client
 	resp.DataSourceData = client
 	resp.ResourceData = client
+}
+
+func readWorkloadIdentity(model WorkloadIdentityFrameworkModel, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {
+	clientConfig.WorkloadIdentityTokenFile = model.TokenFile.ValueString()
+	clientConfig.WorkloadIdentityToken = model.Token.ValueString()
+	clientConfig.WorkloadIdentityResourceName = model.ResourceName.ValueString()
+
+	// This should have been validated by the schema, but we'll check it
+	// here just in case.
+	var diags diag.Diagnostics
+	if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+		diags.AddError("invalid workload_identity", "at least one of `token_file` or `token` must be set")
+	}
+	return clientConfig, diags
 }
