@@ -9,10 +9,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/hashicorp/hcp-sdk-go/auth"
 	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 
@@ -97,10 +97,15 @@ type ClientConfig struct {
 
 	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
 	// indicate that authentication should occur by using workload identity
-	// federation. WorloadIdentityTokenFile indicates a file containing the
-	// token content and WorkloadIdentityResourceName is the workload identity
-	// provider resource name to authenticate against.
-	WorloadIdentityTokenFile     string
+	// federation. WorkloadIdentityTokenFile indicates the token and
+	// WorkloadIdentityResourceName is the workload identity provider resource
+	// name to authenticate against.
+	//
+	// Alternatively, WorkloadIdentityToken can be set to the token directly. It
+	// is an error to set both WorkloadIdentityTokenFile and
+	// WorkloadIdentityToken.
+	WorkloadIdentityTokenFile    string
+	WorkloadIdentityToken        string
 	WorkloadIdentityResourceName string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
@@ -122,17 +127,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
-	} else if config.WorloadIdentityTokenFile != "" && config.WorkloadIdentityResourceName != "" {
-		// Build a credential file that points at the passed token file
-		cf := &auth.CredentialFile{
-			Scheme: auth.CredentialFileSchemeWorkload,
-			Workload: &workload.IdentityProviderConfig{
-				ProviderResourceName: config.WorkloadIdentityResourceName,
-				File: &workload.FileCredentialSource{
-					Path: config.WorloadIdentityTokenFile,
-				},
-			},
-		}
+	} else if cf := loadCredentialFile(config); cf != nil {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
 	}
 
@@ -184,6 +179,58 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	return client, nil
+}
+
+// loadCredentialFile loads the credential file from the given config. If the
+// config does not specify workload identity authentication, this function
+// returns nil.
+func loadCredentialFile(config ClientConfig) *auth.CredentialFile {
+	// hasWorkloadIdentityToken is true if the config specified a direct token.
+	hasWorkloadIdentityToken := config.WorkloadIdentityToken != ""
+	// hasWorkloadIdentityTokenFile is true if the config specified a path to a
+	// file that contains the token.
+	hasWorkloadIdentityTokenFile := config.WorkloadIdentityTokenFile != ""
+	// hasWorkloadIdentityResource is true if the config specified a resource
+	// name to authenticate against.
+	hasWorkloadIdentityResource := config.WorkloadIdentityResourceName != ""
+
+	// Overall, we consider workload identity authentication to be enabled if we
+	// have a token from either source (direct or within a file) and a resource
+	// name.
+	hasWorkloadIdentity := (hasWorkloadIdentityToken || hasWorkloadIdentityTokenFile) && hasWorkloadIdentityResource
+
+	if !hasWorkloadIdentity {
+		return nil
+	}
+
+	switch {
+	case hasWorkloadIdentityToken:
+		// The direct token takes priority over the file path in case both
+		// are set, so we'll check that first.
+		return &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				Token: &workload.CredentialTokenSource{
+					Token: config.WorkloadIdentityToken,
+				},
+			},
+		}
+	default:
+		// If we don't have the token directly, fall back to checking the
+		// file. We checked earlier that at least one of the two options
+		// were set, so if the token wasn't set the file information must
+		// be present.
+		return &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				File: &workload.FileCredentialSource{
+					Path: config.WorkloadIdentityTokenFile,
+				},
+			},
+		}
+	}
 }
 
 type providerMeta struct {

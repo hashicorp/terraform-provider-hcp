@@ -101,7 +101,7 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
-	body := secret_service.CreateMongoDBAtlasIntegrationBody{
+	body := secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
 		IntegrationName:      integrationName,
 		MongodbAPIPublicKey:  mongodbAtlasPublicKey,
 		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
@@ -109,7 +109,7 @@ func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, 
 	params := secret_service.NewCreateMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
-		WithBody(body)
+		WithBody(&body)
 
 	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasIntegration(params, nil)
 	if err != nil {
@@ -140,7 +140,7 @@ func CreateMongoDBAtlasRotatingSecret(
 	client *Client,
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	appName string,
-	requestBody secret_service.CreateMongoDBAtlasRotatingSecretBody,
+	requestBody *secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody,
 ) (*secretmodels.Secrets20231128CreateMongoDBAtlasRotatingSecretResponse, error) {
 	params := secret_service.NewCreateMongoDBAtlasRotatingSecretParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
@@ -158,7 +158,7 @@ func CreateMongoDBAtlasRotatingSecret(
 
 // CreateAwsIntegration NOTE: currently just needed for tests
 func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn string) (*secretmodels.Secrets20231128AwsIntegration, error) {
-	body := secret_service.CreateAwsIntegrationBody{
+	body := secretmodels.SecretServiceCreateAwsIntegrationBody{
 		Name: name,
 		FederatedWorkloadIdentity: &secretmodels.Secrets20231128AwsFederatedWorkloadIdentityRequest{
 			Audience: loc.OrganizationID,
@@ -168,7 +168,7 @@ func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels
 	params := secret_service.NewCreateAwsIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
-		WithBody(body)
+		WithBody(&body)
 
 	resp, err := client.VaultSecretsPreview.CreateAwsIntegration(params, nil)
 	if err != nil {
@@ -195,7 +195,7 @@ func DeleteAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels
 
 // CreateAwsDynamicSecret NOTE: currently just needed for tests
 func CreateAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, integrationName, name, roleArn string) (*secretmodels.Secrets20231128AwsDynamicSecret, error) {
-	body := secret_service.CreateAwsDynamicSecretBody{
+	body := secretmodels.SecretServiceCreateAwsDynamicSecretBody{
 		AssumeRole:      &secretmodels.Secrets20231128AssumeRoleRequest{RoleArn: roleArn},
 		DefaultTTL:      "3600s",
 		IntegrationName: integrationName,
@@ -205,7 +205,7 @@ func CreateAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmode
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
 		WithAppName(appName).
-		WithBody(body)
+		WithBody(&body)
 
 	resp, err := client.VaultSecretsPreview.CreateAwsDynamicSecret(params, nil)
 	if err != nil {
