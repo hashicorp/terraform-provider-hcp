@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -47,7 +48,7 @@ type AddOnDefinitionResourceModel struct {
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
-	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
+	TerraformCloudWorkspace     types.Object         `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 }
@@ -253,26 +254,35 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		})
 	}
 
-	tfProjID := plan.TerraformProjectID.ValueString()
-	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
-	if tfWsName == "" {
-		// NOTE: this field is optional anyways, so if its unset, lets just use
-		// the template name for it.
-		tfWsName = plan.Name.ValueString()
-	}
-	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-		Name:      tfWsName,
-		ProjectID: tfProjID,
+	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
+		Name:            plan.Name.ValueString(),
+		Summary:         plan.Summary.ValueString(),
+		Description:     plan.Description.ValueString(),
+		Labels:          stringLabels,
+		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
+		VariableOptions: varOpts,
 	}
 
-	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
-		Name:                           plan.Name.ValueString(),
-		Summary:                        plan.Summary.ValueString(),
-		Description:                    plan.Description.ValueString(),
-		Labels:                         stringLabels,
-		ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
-		TerraformCloudWorkspaceDetails: tfWsDetails,
-		VariableOptions:                varOpts,
+	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
+		workspaceDetails := &tfcWorkspace{}
+		diags := plan.TerraformCloudWorkspace.As(ctx, workspaceDetails, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+
+		if workspaceDetails.Name.IsNull() {
+			// Set a default if none provided
+			workspaceDetails.Name = plan.Name
+		}
+		if workspaceDetails.TerraformProjectID.IsNull() {
+			// Set a default if none provided
+			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
+		}
+		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+			Name:      workspaceDetails.Name.ValueString(),
+			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
+		}
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -336,7 +346,11 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
+		plan.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
@@ -417,7 +431,11 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 			Name:               types.StringValue(definition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(definition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		state.TerraformCloudWorkspace = tfcWorkspace
+		state.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 	}
 
 	state.TerraformVariableOptions, err = readVarOpts(ctx, definition.VariableOptions, &resp.Diagnostics)
@@ -488,27 +506,36 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		})
 	}
 
-	tfProjID := plan.TerraformProjectID.ValueString()
-	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
-	if tfWsName == "" {
-		// NOTE: this field is optional anyways, so if its unset, lets just use
-		// the template name for it.
-		tfWsName = plan.Name.ValueString()
-	}
-	tfWsDetails := &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
-		Name:      tfWsName,
-		ProjectID: tfProjID,
-	}
-
 	// TODO: add support for Tags
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
-		Name:                           plan.Name.ValueString(),
-		Summary:                        plan.Summary.ValueString(),
-		Description:                    plan.Description.ValueString(),
-		Labels:                         stringLabels,
-		ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
-		VariableOptions:                varOpts,
-		TerraformCloudWorkspaceDetails: tfWsDetails,
+		Name:            plan.Name.ValueString(),
+		Summary:         plan.Summary.ValueString(),
+		Description:     plan.Description.ValueString(),
+		Labels:          stringLabels,
+		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
+		VariableOptions: varOpts,
+	}
+
+	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
+		workspaceDetails := &tfcWorkspace{}
+		diags := plan.TerraformCloudWorkspace.As(ctx, workspaceDetails, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+
+		if workspaceDetails.Name.IsNull() {
+			// Set a default if none provided
+			workspaceDetails.Name = plan.Name
+		}
+		if workspaceDetails.TerraformProjectID.IsNull() {
+			// Grab the top level project ID if this was not provided
+			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
+		}
+		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+			Name:      workspaceDetails.Name.ValueString(),
+			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
+		}
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -573,7 +600,11 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			Name:               types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.Name),
 			TerraformProjectID: types.StringValue(addOnDefinition.TerraformCloudWorkspaceDetails.ProjectID),
 		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
+		plan.TerraformCloudWorkspace, diags = types.ObjectValueFrom(ctx, tfcWorkspace.attrTypes(), tfcWorkspace)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, addOnDefinition.VariableOptions, &resp.Diagnostics)
