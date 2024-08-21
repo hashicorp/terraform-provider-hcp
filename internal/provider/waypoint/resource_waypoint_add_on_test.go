@@ -191,7 +191,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
@@ -209,7 +209,7 @@ resource "hcp_waypoint_add_on_definition" "test" {
   summary = "some summary for fun"
   description = "some description for fun"
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
@@ -230,7 +230,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
@@ -249,7 +249,7 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   description = "some description for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
@@ -311,7 +311,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
-	terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
