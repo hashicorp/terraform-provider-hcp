@@ -1,3 +1,18 @@
+## v0.95.0 (August 21, 2024)
+BREAKING CHANGES:
+
+* waypoint: Remove version number from templates and add-on definition resources and data sources. [[GH-869](https://github.com/hashicorp/terraform-provider-hcp/pull/869)]
+
+FEATURES:
+
+* Allow authenticating the provider using Workload Identity Federation via a
+direct token in the provider configuration. [[GH-1053](https://github.com/hashicorp/terraform-provider-hcp/pull/1053)]
+* HCP Waypoint Application resource and data source can now read any output values associated with that application [[GH-871](https://github.com/hashicorp/terraform-provider-hcp/pull/871)]
+
+IMPROVEMENTS:
+
+* Updated documentation to communicate the APIs the provider leverages during usage. [[GH-1066](https://github.com/hashicorp/terraform-provider-hcp/pull/1066)]
+* waypoint: The `readme_markdown_template` attribute for both template and add-on definition resources now accepts unencoded strings as well as base64 encoded strings. [[GH-894](https://github.com/hashicorp/terraform-provider-hcp/pull/894)]
 ## v0.94.1 (July 08, 2024)
 
 BUG FIXES:
