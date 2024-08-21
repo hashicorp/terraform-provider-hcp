@@ -111,7 +111,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"terraform_project_id": schema.StringAttribute{
 				Required:    true,
-				Description: "The ID of the Terraform Cloud Project to create workspaces in",
+				Description: "The ID of the Terraform Cloud Project to create workspaces in. The ID is found on the Terraform Cloud Project settings page.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

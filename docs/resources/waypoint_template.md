@@ -19,7 +19,7 @@ Waypoint Template resource
 - `name` (String) The name of the Template.
 - `summary` (String) A brief description of the template, up to 110 characters
 - `terraform_no_code_module_source` (String) Terraform Cloud No-Code Module details
-- `terraform_project_id` (String) The ID of the Terraform Cloud Project to create workspaces in
+- `terraform_project_id` (String) The ID of the Terraform Cloud Project to create workspaces in. The ID is found on the Terraform Cloud Project settings page.
 
 ### Optional
 
