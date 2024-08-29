@@ -102,9 +102,14 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
 	body := secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
-		IntegrationName:      integrationName,
-		MongodbAPIPublicKey:  mongodbAtlasPublicKey,
-		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
+		Name: integrationName,
+		Capabilities: []*secretmodels.Secrets20231128Capability{
+			secretmodels.Secrets20231128CapabilityROTATION.Pointer(),
+		},
+		StaticCredentialDetails: &secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest{
+			APIPublicKey:  mongodbAtlasPublicKey,
+			APIPrivateKey: mongodbAtlasPrivateKey,
+		},
 	}
 	params := secret_service.NewCreateMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
@@ -124,7 +129,7 @@ func DeleteMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, 
 	params := secret_service.NewDeleteMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
-		WithIntegrationName(integrationName)
+		WithName(integrationName)
 
 	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(params, nil)
 	if err != nil {
