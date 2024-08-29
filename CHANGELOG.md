@@ -1,3 +1,11 @@
+## v0.95.1 (August 29, 2024)
+
+IMPROVEMENTS:
+
+* Waypoint resources for templates and add-on definitions no longer require setting
+a `terraform_cloud_workspace_details` resource, and instead can be set by the
+`terraform_project_id` param. [[GH-1052](https://github.com/hashicorp/terraform-provider-hcp/pull/1052)]
+* update hcp-sdk-go [[GH-1080](https://github.com/hashicorp/terraform-provider-hcp/pull/1080)]
 ## v0.95.0 (August 21, 2024)
 BREAKING CHANGES:
 
