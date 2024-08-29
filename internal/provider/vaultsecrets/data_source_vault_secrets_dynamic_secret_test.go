@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -19,6 +20,7 @@ var ctx = context.Background()
 
 func TestAcc_dataSourceVaultSecretsDynamicSecret(t *testing.T) {
 	integrationRoleArn := checkRequiredEnvVarOrFail(t, "AWS_INTEGRATION_ROLE_ARN")
+	integrationAudience := checkRequiredEnvVarOrFail(t, "AWS_INTEGRATION_AUDIENCE")
 	secretRoleArn := checkRequiredEnvVarOrFail(t, "AWS_SECRET_ROLE_ARN")
 
 	appName := generateRandomSlug()
@@ -38,7 +40,7 @@ func TestAcc_dataSourceVaultSecretsDynamicSecret(t *testing.T) {
 			{
 				PreConfig: func() {
 					createTestApp(t, appName)
-					createTestAwsIntegration(t, integrationName, integrationRoleArn)
+					createTestAwsIntegration(t, integrationName, integrationRoleArn, integrationAudience, []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityDYNAMIC.Pointer()})
 					createTestAwsDynamicSecret(t, appName, integrationName, secretName, secretRoleArn)
 				},
 				Config: tfconfig,
@@ -65,7 +67,7 @@ func TestAcc_dataSourceVaultSecretsDynamicSecret(t *testing.T) {
 	})
 }
 
-func createTestAwsIntegration(t *testing.T, name, roleArn string) {
+func createTestAwsIntegration(t *testing.T, name, roleArn, audience string, capabilities []*secretmodels.Secrets20231128Capability) {
 	t.Helper()
 
 	client := acctest.HCPClients(t)
@@ -74,13 +76,13 @@ func createTestAwsIntegration(t *testing.T, name, roleArn string) {
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	_, err := clients.CreateAwsIntegration(ctx, client, loc, name, roleArn)
+	_, err := clients.CreateAwsIntegration(ctx, client, loc, name, roleArn, audience, capabilities)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func deleteTestAwsIntegration(t *testing.T, name string) {
+func deleteTestAwsIntegration(t *testing.T, name string) resource.TestCheckFunc {
 	t.Helper()
 
 	client := acctest.HCPClients(t)
@@ -93,6 +95,8 @@ func deleteTestAwsIntegration(t *testing.T, name string) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	return nil
 }
 
 func createTestAwsDynamicSecret(t *testing.T, appName, secretName, integrationName, roleArn string) {

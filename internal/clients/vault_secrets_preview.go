@@ -102,9 +102,12 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
 	body := secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
-		IntegrationName:      integrationName,
-		MongodbAPIPublicKey:  mongodbAtlasPublicKey,
-		MongodbAPIPrivateKey: mongodbAtlasPrivateKey,
+		Name:         integrationName,
+		Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
+		StaticCredentialDetails: &secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest{
+			APIPrivateKey: mongodbAtlasPrivateKey,
+			APIPublicKey:  mongodbAtlasPublicKey,
+		},
 	}
 	params := secret_service.NewCreateMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
@@ -124,7 +127,7 @@ func DeleteMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, 
 	params := secret_service.NewDeleteMongoDBAtlasIntegrationParamsWithContext(ctx).
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
-		WithIntegrationName(integrationName)
+		WithName(integrationName)
 
 	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(params, nil)
 	if err != nil {
@@ -157,11 +160,12 @@ func CreateMongoDBAtlasRotatingSecret(
 }
 
 // CreateAwsIntegration NOTE: currently just needed for tests
-func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn string) (*secretmodels.Secrets20231128AwsIntegration, error) {
+func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn, audience string, capabilities []*secretmodels.Secrets20231128Capability) (*secretmodels.Secrets20231128AwsIntegration, error) {
 	body := secretmodels.SecretServiceCreateAwsIntegrationBody{
-		Name: name,
+		Name:         name,
+		Capabilities: capabilities,
 		FederatedWorkloadIdentity: &secretmodels.Secrets20231128AwsFederatedWorkloadIdentityRequest{
-			Audience: loc.OrganizationID,
+			Audience: audience,
 			RoleArn:  roleArn,
 		},
 	}
