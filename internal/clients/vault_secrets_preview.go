@@ -102,11 +102,13 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 // CreateMongoDBAtlasRotationIntegration NOTE: currently just needed for tests
 func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, integrationName, mongodbAtlasPublicKey, mongodbAtlasPrivateKey string) (*secretmodels.Secrets20231128MongoDBAtlasIntegration, error) {
 	body := secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
-		Name:         integrationName,
-		Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
+		Name: integrationName,
+		Capabilities: []*secretmodels.Secrets20231128Capability{
+			secretmodels.Secrets20231128CapabilityROTATION.Pointer(),
+		},
 		StaticCredentialDetails: &secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest{
-			APIPrivateKey: mongodbAtlasPrivateKey,
 			APIPublicKey:  mongodbAtlasPublicKey,
+			APIPrivateKey: mongodbAtlasPrivateKey,
 		},
 	}
 	params := secret_service.NewCreateMongoDBAtlasIntegrationParamsWithContext(ctx).
