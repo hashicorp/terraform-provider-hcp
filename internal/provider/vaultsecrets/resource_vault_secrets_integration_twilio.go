@@ -116,7 +116,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Read(ctx context.Context, req re
 	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "reading", func(i integration) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
 		response, err := r.client.VaultSecretsPreview.GetTwilioIntegration(
@@ -138,7 +138,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Create(ctx context.Context, req 
 	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i integration) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
 		response, err := r.client.VaultSecretsPreview.CreateTwilioIntegration(&secret_service.CreateTwilioIntegrationParams{
@@ -164,7 +164,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Update(ctx context.Context, req 
 	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i integration) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
 		response, err := r.client.VaultSecretsPreview.UpdateTwilioIntegration(&secret_service.UpdateTwilioIntegrationParams{
@@ -190,7 +190,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Delete(ctx context.Context, req 
 	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i integration) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
 		_, err := r.client.VaultSecretsPreview.DeleteTwilioIntegration(
@@ -256,7 +256,7 @@ func (i *IntegrationTwilio) fromModel(ctx context.Context, orgID, projID string,
 
 	integrationModel, ok := model.(*secretmodels.Secrets20231128TwilioIntegration)
 	if !ok {
-		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128AwsIntegration, got: %T", model))
+		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128TwilioIntegration, got: %T", model))
 		return diags
 	}
 
