@@ -37,7 +37,7 @@ jobs:
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           cache: true
           go-version-file: 'go.mod'
@@ -56,7 +56,7 @@ jobs:
         run: make test-ci
 
       - name: Upload Unit Test Coverage Artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: Test Coverage
           path: coverage.html
@@ -97,7 +97,7 @@ jobs:
           make testacc-ci TESTARGS='-run=${{ inputs.acc-test-pattern }} -test.v'
 
       - name: Upload E2E Coverage Artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
           name: Test Coverage
           path: coverage-e2e.html
