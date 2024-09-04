@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/auth"
 	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
@@ -275,4 +276,18 @@ func (cl *Client) GetProjectID() string {
 		return ""
 	}
 	return cl.Config.ProjectID
+}
+
+// Location returns the organization and project ID to use for a given resource
+// The resource project ID takes precedence over the provider project ID
+func (cl *Client) Location(resourceProjectID types.String) (string, string) {
+	orgID := cl.Config.OrganizationID
+	projID := cl.Config.ProjectID
+
+	// project ID defined in the resource schema has precedence over the project ID from the provider
+	if !resourceProjectID.IsUnknown() {
+		projID = resourceProjectID.ValueString()
+	}
+
+	return orgID, projID
 }
