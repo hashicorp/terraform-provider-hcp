@@ -162,11 +162,12 @@ func CreateMongoDBAtlasRotatingSecret(
 }
 
 // CreateAwsIntegration NOTE: currently just needed for tests
-func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn string) (*secretmodels.Secrets20231128AwsIntegration, error) {
+func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, name, roleArn, audience string, capabilities []*secretmodels.Secrets20231128Capability) (*secretmodels.Secrets20231128AwsIntegration, error) {
 	body := secretmodels.SecretServiceCreateAwsIntegrationBody{
-		Name: name,
+		Name:         name,
+		Capabilities: capabilities,
 		FederatedWorkloadIdentity: &secretmodels.Secrets20231128AwsFederatedWorkloadIdentityRequest{
-			Audience: loc.OrganizationID,
+			Audience: audience,
 			RoleArn:  roleArn,
 		},
 	}
