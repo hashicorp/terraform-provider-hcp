@@ -155,6 +155,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsAppIAMBindingResource,
 		vaultsecrets.NewVaultSecretsIntegrationAWSResource,
 		vaultsecrets.NewVaultSecretsIntegrationMongoDBAtlasResource,
+		vaultsecrets.NewVaultSecretsIntegrationTwilioResource,
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
