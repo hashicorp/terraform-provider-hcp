@@ -26,23 +26,23 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create initial integration with access keys
 			{
-				Config: config(integrationName1, publicKey, privateKey),
+				Config: mongoDBAtlasConfig(integrationName1, publicKey, privateKey),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName1, publicKey, privateKey)...,
+					mongoDBAtlasCheckFuncs(integrationName1, publicKey, privateKey)...,
 				),
 			},
 			// Changing the name forces a recreation
 			{
-				Config: config(integrationName2, publicKey, privateKey),
+				Config: mongoDBAtlasConfig(integrationName2, publicKey, privateKey),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, publicKey, privateKey)...,
+					mongoDBAtlasCheckFuncs(integrationName2, publicKey, privateKey)...,
 				),
 			},
 			// Modifying mutable fields causes an update
 			{
-				Config: config(integrationName2, publicKey, privateKey),
+				Config: mongoDBAtlasConfig(integrationName2, publicKey, privateKey),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, publicKey, privateKey)...,
+					mongoDBAtlasCheckFuncs(integrationName2, publicKey, privateKey)...,
 				),
 			},
 			// Deleting the integration out of band causes a recreation
@@ -59,9 +59,9 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: config(integrationName2, publicKey, privateKey),
+				Config: mongoDBAtlasConfig(integrationName2, publicKey, privateKey),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, publicKey, privateKey)...,
+					mongoDBAtlasCheckFuncs(integrationName2, publicKey, privateKey)...,
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -87,9 +87,9 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: config(integrationName2, publicKey, privateKey),
+				Config: mongoDBAtlasConfig(integrationName2, publicKey, privateKey),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, publicKey, privateKey)...,
+					mongoDBAtlasCheckFuncs(integrationName2, publicKey, privateKey)...,
 				),
 				ResourceName:  "hcp_vault_secrets_integration_mongodbatlas.acc_test",
 				ImportStateId: integrationName2,
@@ -108,7 +108,7 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 	})
 }
 
-func config(integrationName, apiPublicKey, apiPrivateKey string) string {
+func mongoDBAtlasConfig(integrationName, apiPublicKey, apiPrivateKey string) string {
 	return fmt.Sprintf(`
 	resource "hcp_vault_secrets_integration_mongodbatlas" "acc_test"{
         name = %q
@@ -120,7 +120,7 @@ func config(integrationName, apiPublicKey, apiPrivateKey string) string {
     }`, integrationName, apiPublicKey, apiPrivateKey)
 }
 
-func checkFuncs(integrationName, apiPublicKey, apiPrivateKey string) []resource.TestCheckFunc {
+func mongoDBAtlasCheckFuncs(integrationName, apiPublicKey, apiPrivateKey string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_mongodbatlas.acc_test", "organization_id"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
