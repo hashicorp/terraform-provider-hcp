@@ -1,6 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-* @hashicorp/cloud-core-platform-surfaces
+* @hashicorp/cloud-platform-systems
 
 # all iam resources and clients are owned by the cloud-identity team
 *iam* @hashicorp/cloud-identity
@@ -10,10 +10,10 @@
 /internal/consul/ @hashicorp/cloud-consul
 
 # all Networking resources and clients are owned by the cloud-platform-systems team
-*hvn* @hashicorp/cloud-platform-systems
-*aws* @hashicorp/cloud-platform-systems
-*azure* @hashicorp/cloud-platform-systems
-*peering* @hashicorp/cloud-platform-systems
+*hvn* @hashicorp/hcp-managed-services-ind
+*aws* @hashicorp/hcp-managed-services-ind
+*azure* @hashicorp/hcp-managed-services-ind
+*peering* @hashicorp/hcp-managed-services-ind
 
 # all Packer resources and clients are owned by the cloud-packer team
 *packer* @hashicorp/cloud-packer
