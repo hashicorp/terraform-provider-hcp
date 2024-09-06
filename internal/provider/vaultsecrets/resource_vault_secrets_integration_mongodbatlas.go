@@ -256,16 +256,9 @@ func (i *IntegrationMongoDBAtlas) fromModel(ctx context.Context, orgID, projID s
 
 	i.OrganizationID = types.StringValue(orgID)
 	i.ProjectID = types.StringValue(projID)
-	// TODO These fields are not returned by the API on updates, so we use the state value if they are blank on the model as a stopgap until it gets fixed on HVS
-	if integrationModel.ResourceID != "" {
-		i.ResourceID = types.StringValue(integrationModel.ResourceID)
-	}
-	if integrationModel.ResourceName != "" {
-		i.ResourceName = types.StringValue(integrationModel.ResourceName)
-	}
-	if integrationModel.Name != "" {
-		i.Name = types.StringValue(integrationModel.Name)
-	}
+	i.ResourceID = types.StringValue(integrationModel.ResourceID)
+	i.ResourceName = types.StringValue(integrationModel.ResourceName)
+	i.Name = types.StringValue(integrationModel.Name)
 
 	var values []attr.Value
 	for _, c := range integrationModel.Capabilities {
