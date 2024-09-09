@@ -217,8 +217,8 @@ var _ integration = &IntegrationTwilio{}
 
 func (i *IntegrationTwilio) projectID() types.String {
 	return i.ProjectID
-
 }
+
 func (i *IntegrationTwilio) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	// Init fields that depend on the Terraform provider configuration
 	i.OrganizationID = types.StringValue(orgID)
