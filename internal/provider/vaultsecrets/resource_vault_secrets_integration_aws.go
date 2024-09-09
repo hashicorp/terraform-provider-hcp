@@ -48,7 +48,7 @@ type accessKeys struct {
 	SecretAccessKey types.String `tfsdk:"secret_access_key"`
 }
 
-type federatedWorkloadIdentity struct {
+type awsFederatedWorkloadIdentity struct {
 	RoleARN  types.String `tfsdk:"role_arn"`
 	Audience types.String `tfsdk:"audience"`
 }
@@ -247,8 +247,8 @@ var _ integration = &IntegrationAWS{}
 
 func (i *IntegrationAWS) projectID() types.String {
 	return i.ProjectID
-
 }
+
 func (i *IntegrationAWS) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	// Init fields that depend on the Terraform provider configuration
 	i.OrganizationID = types.StringValue(orgID)
@@ -278,7 +278,7 @@ func (i *IntegrationAWS) initModel(ctx context.Context, orgID, projID string) di
 	}
 
 	if !i.FederatedWorkloadIdentity.IsNull() {
-		fwi := federatedWorkloadIdentity{}
+		fwi := awsFederatedWorkloadIdentity{}
 		diags = i.FederatedWorkloadIdentity.As(ctx, &fwi, basetypes.ObjectAsOptions{})
 		if diags.HasError() {
 			return diags
