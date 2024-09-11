@@ -49,6 +49,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `created_at` (String) The time that the Boundary cluster was created.
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the Boundary cluster.
+- `version` (String) The version of the Boundary cluster.
 
 <a id="nestedblock--maintenance_window_config"></a>
 ### Nested Schema for `maintenance_window_config`
