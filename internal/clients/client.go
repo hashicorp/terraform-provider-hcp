@@ -61,6 +61,9 @@ import (
 	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client/webhook_service"
 
+	cloud_vault_radar "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client"
+	radar_src_registration_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
+
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
 )
@@ -69,25 +72,26 @@ import (
 type Client struct {
 	Config ClientConfig
 
-	Billing             billing_account_service.ClientService
-	Boundary            boundary_service.ClientService
-	Consul              consul_service.ClientService
-	IAM                 iam_service.ClientService
-	Network             network_service.ClientService
-	Operation           operation_service.ClientService
-	Organization        organization_service.ClientService
-	Packer              packer_service.ClientService
-	PackerV2            packer_service_v2.ClientService
-	Project             project_service.ClientService
-	ServicePrincipals   service_principals_service.ClientService
-	Groups              groups_service.ClientService
-	Vault               vault_service.ClientService
-	VaultSecrets        secret_service.ClientService
-	VaultSecretsPreview secret_service_preview.ClientService
-	Waypoint            waypoint_service.ClientService
-	Webhook             webhook_service.ClientService
-	LogService          log_service.ClientService
-	ResourceService     resource_service.ClientService
+	Billing                        billing_account_service.ClientService
+	Boundary                       boundary_service.ClientService
+	Consul                         consul_service.ClientService
+	IAM                            iam_service.ClientService
+	Network                        network_service.ClientService
+	Operation                      operation_service.ClientService
+	Organization                   organization_service.ClientService
+	Packer                         packer_service.ClientService
+	PackerV2                       packer_service_v2.ClientService
+	Project                        project_service.ClientService
+	ServicePrincipals              service_principals_service.ClientService
+	Groups                         groups_service.ClientService
+	Vault                          vault_service.ClientService
+	VaultSecrets                   secret_service.ClientService
+	VaultSecretsPreview            secret_service_preview.ClientService
+	Waypoint                       waypoint_service.ClientService
+	Webhook                        webhook_service.ClientService
+	LogService                     log_service.ClientService
+	ResourceService                resource_service.ClientService
+	RadarSourceRegistrationService radar_src_registration_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -157,26 +161,27 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	client := &Client{
-		Config:              config,
-		Billing:             cloud_billing.New(httpClient, nil).BillingAccountService,
-		Boundary:            cloud_boundary.New(httpClient, nil).BoundaryService,
-		Consul:              cloud_consul.New(httpClient, nil).ConsulService,
-		IAM:                 cloud_iam.New(httpClient, nil).IamService,
-		Network:             cloud_network.New(httpClient, nil).NetworkService,
-		Operation:           cloud_operation.New(httpClient, nil).OperationService,
-		Organization:        cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Packer:              cloud_packer.New(httpClient, nil).PackerService,
-		PackerV2:            cloud_packer_v2.New(httpClient, nil).PackerService,
-		Project:             cloud_resource_manager.New(httpClient, nil).ProjectService,
-		ServicePrincipals:   cloud_iam.New(httpClient, nil).ServicePrincipalsService,
-		Groups:              cloud_iam.New(httpClient, nil).GroupsService,
-		Vault:               cloud_vault.New(httpClient, nil).VaultService,
-		VaultSecrets:        cloud_vault_secrets.New(httpClient, nil).SecretService,
-		VaultSecretsPreview: cloud_vault_secrets_preview.New(httpClient, nil).SecretService,
-		Waypoint:            cloud_waypoint.New(httpClient, nil).WaypointService,
-		LogService:          cloud_log_service.New(httpClient, nil).LogService,
-		Webhook:             cloud_webhook.New(httpClient, nil).WebhookService,
-		ResourceService:     cloud_resource_manager.New(httpClient, nil).ResourceService,
+		Config:                         config,
+		Billing:                        cloud_billing.New(httpClient, nil).BillingAccountService,
+		Boundary:                       cloud_boundary.New(httpClient, nil).BoundaryService,
+		Consul:                         cloud_consul.New(httpClient, nil).ConsulService,
+		IAM:                            cloud_iam.New(httpClient, nil).IamService,
+		Network:                        cloud_network.New(httpClient, nil).NetworkService,
+		Operation:                      cloud_operation.New(httpClient, nil).OperationService,
+		Organization:                   cloud_resource_manager.New(httpClient, nil).OrganizationService,
+		Packer:                         cloud_packer.New(httpClient, nil).PackerService,
+		PackerV2:                       cloud_packer_v2.New(httpClient, nil).PackerService,
+		Project:                        cloud_resource_manager.New(httpClient, nil).ProjectService,
+		ServicePrincipals:              cloud_iam.New(httpClient, nil).ServicePrincipalsService,
+		Groups:                         cloud_iam.New(httpClient, nil).GroupsService,
+		Vault:                          cloud_vault.New(httpClient, nil).VaultService,
+		VaultSecrets:                   cloud_vault_secrets.New(httpClient, nil).SecretService,
+		VaultSecretsPreview:            cloud_vault_secrets_preview.New(httpClient, nil).SecretService,
+		Waypoint:                       cloud_waypoint.New(httpClient, nil).WaypointService,
+		LogService:                     cloud_log_service.New(httpClient, nil).LogService,
+		Webhook:                        cloud_webhook.New(httpClient, nil).WebhookService,
+		ResourceService:                cloud_resource_manager.New(httpClient, nil).ResourceService,
+		RadarSourceRegistrationService: cloud_vault_radar.New(httpClient, nil).DataSourceRegistrationService,
 	}
 
 	return client, nil
