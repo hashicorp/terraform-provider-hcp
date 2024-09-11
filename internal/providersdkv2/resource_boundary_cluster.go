@@ -161,6 +161,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					},
 				},
 			},
+			"version": {
+				Description: "The version of the Boundary cluster.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
