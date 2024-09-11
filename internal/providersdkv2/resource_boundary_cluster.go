@@ -497,6 +497,10 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 	if err := d.Set("maintenance_window_config", []interface{}{mwConfig}); err != nil {
 		return err
 	}
+
+	if err := d.Set("version", cluster.BoundaryVersion); err != nil {
+		return err
+	}
 	return nil
 }
 
