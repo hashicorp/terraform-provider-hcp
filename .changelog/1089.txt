@@ -1,0 +1,3 @@
+```release-note:improvement
+Added the `version` attribute(s) to `hcp_boundary_cluster` resource and data sources. 
+```

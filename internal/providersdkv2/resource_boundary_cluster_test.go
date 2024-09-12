@@ -68,6 +68,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
 				),
 			},
 			{
@@ -96,6 +97,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
 				),
 			},
 			{
@@ -108,6 +110,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					testAccCheckFullURL(boundaryClusterDataSourceName, "cluster_url", ""),
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "state", boundaryClusterDataSourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
+					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "version", boundaryClusterDataSourceName, "version"),
 				),
 			},
 			{
@@ -125,6 +128,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.day", "TUESDAY"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.start", "2"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.end", "12"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
 				),
 			},
 		},

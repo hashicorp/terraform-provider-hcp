@@ -39,6 +39,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `maintenance_window_config` (List of Object) (see [below for nested schema](#nestedatt--maintenance_window_config))
 - `state` (String) The state of the Boundary cluster.
 - `tier` (String) The tier of the Boundary cluster.
+- `version` (String) The version of the Boundary cluster.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

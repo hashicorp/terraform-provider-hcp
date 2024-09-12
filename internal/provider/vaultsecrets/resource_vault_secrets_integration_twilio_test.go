@@ -27,23 +27,23 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create initial integration with access keys
 			{
-				Config: config(integrationName1, accountSID, apiKeySID, apiKeySecret),
+				Config: twilioConfig(integrationName1, accountSID, apiKeySID, apiKeySecret),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName1, accountSID, apiKeySID, apiKeySecret)...,
+					twilioCheckFuncs(integrationName1, accountSID, apiKeySID, apiKeySecret)...,
 				),
 			},
 			// Changing the name forces a recreation
 			{
-				Config: config(integrationName2, accountSID, apiKeySID, apiKeySecret),
+				Config: twilioConfig(integrationName2, accountSID, apiKeySID, apiKeySecret),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
+					twilioCheckFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
 				),
 			},
 			// Modifying mutable fields causes an update
 			{
-				Config: config(integrationName2, accountSID, apiKeySID, apiKeySecret),
+				Config: twilioConfig(integrationName2, accountSID, apiKeySID, apiKeySecret),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
+					twilioCheckFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
 				),
 			},
 			// Deleting the integration out of band causes a recreation
@@ -60,9 +60,9 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: config(integrationName2, accountSID, apiKeySID, apiKeySecret),
+				Config: twilioConfig(integrationName2, accountSID, apiKeySID, apiKeySecret),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
+					twilioCheckFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -89,9 +89,9 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: config(integrationName2, accountSID, apiKeySID, apiKeySecret),
+				Config: twilioConfig(integrationName2, accountSID, apiKeySID, apiKeySecret),
 				Check: resource.ComposeTestCheckFunc(
-					checkFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
+					twilioCheckFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
 				),
 				ResourceName:  "hcp_vault_secrets_integration_twilio.acc_test",
 				ImportStateId: integrationName2,
@@ -110,7 +110,7 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 	})
 }
 
-func config(integrationName, accountSID, apiKeySID, apiKeySecret string) string {
+func twilioConfig(integrationName, accountSID, apiKeySID, apiKeySecret string) string {
 	return fmt.Sprintf(`
 	resource "hcp_vault_secrets_integration_twilio" "acc_test" {
 		name = %q
@@ -123,7 +123,7 @@ func config(integrationName, accountSID, apiKeySID, apiKeySecret string) string 
     }`, integrationName, accountSID, apiKeySID, apiKeySecret)
 }
 
-func checkFuncs(integrationName, accountSID, apiKeySID, apiKeySecret string) []resource.TestCheckFunc {
+func twilioCheckFuncs(integrationName, accountSID, apiKeySID, apiKeySecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_twilio.acc_test", "organization_id"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
