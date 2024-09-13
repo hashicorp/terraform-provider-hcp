@@ -1,3 +1,15 @@
+## v0.96.0 (September 13, 2024)
+
+FEATURES:
+
+* add vault_secrets_integration_aws resource [[GH-1078](https://github.com/hashicorp/terraform-provider-hcp/pull/1078)]
+* add vault_secrets_integration_gcp resource [[GH-1085](https://github.com/hashicorp/terraform-provider-hcp/pull/1085)]
+* add vault_secrets_integration_mongodbatlas resource [[GH-1084](https://github.com/hashicorp/terraform-provider-hcp/pull/1084)]
+* add vault_secrets_integration_twilio resource [[GH-1081](https://github.com/hashicorp/terraform-provider-hcp/pull/1081)]
+
+IMPROVEMENTS:
+
+* Added the `version` attribute(s) to `hcp_boundary_cluster` resource and data sources. [[GH-1089](https://github.com/hashicorp/terraform-provider-hcp/pull/1089)]
 ## v0.95.1 (August 29, 2024)
 
 IMPROVEMENTS:
