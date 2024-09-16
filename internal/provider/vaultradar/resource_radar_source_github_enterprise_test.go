@@ -20,7 +20,7 @@ func TestRadarSourceGitHubEnterprise(t *testing.T) {
 	token := os.Getenv("RADAR_GITHUB_ENTERPRISE_TOKEN")
 
 	if projectID == "" || githubOrganization == "" || domainName == "" || token == "" {
-		t.Error("HCP_PROJECT_ID, RADAR_GITHUB_ENTERPRISE_ORGANIZATION, RADAR_GITHUB_ENTERPRISE_DOMAIN, and RADAR_GITHUB_ENTERPRISE_TOKEN must be set for acceptance tests")
+		t.Skip("HCP_PROJECT_ID, RADAR_GITHUB_ENTERPRISE_ORGANIZATION, RADAR_GITHUB_ENTERPRISE_DOMAIN, and RADAR_GITHUB_ENTERPRISE_TOKEN must be set for acceptance tests")
 	}
 
 	resource.Test(t, resource.TestCase{
