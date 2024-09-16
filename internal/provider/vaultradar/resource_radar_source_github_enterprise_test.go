@@ -12,7 +12,7 @@ import (
 func TestRadarSourceGitHubEnterprise(t *testing.T) {
 	// Requires Project already setup with Radar.
 	// Requires a Service Account with an Admin role on the Project.
-	// Requires access to a GitHub Enterprise self-managed instance.
+	// Requires access to a GitHub Enterprise Server self-managed instance.
 	// Requires the following environment variables to be set:
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	githubOrganization := os.Getenv("RADAR_GITHUB_ENTERPRISE_ORGANIZATION")

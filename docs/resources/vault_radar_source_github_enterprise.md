@@ -2,14 +2,14 @@
 page_title: "hcp_vault_radar_source_github_enterprise Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise sources.
+  This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise Server sources.
 ---
 
 # hcp_vault_radar_source_github_enterprise (Resource)
 
 -> **Note:** HCP Vault Radar Terraform resources are in preview.
 
-This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise sources.
+This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise Server sources.
 
 ## Example Usage
 

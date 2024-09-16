@@ -53,7 +53,7 @@ func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceI
 		return err
 	}
 
-	deletionConformation := func() (bool, error) {
+	deletionConfirmation := func() (bool, error) {
 		tflog.Trace(ctx, "Confirming radar source deletion.")
 		if _, err := GetRadarSource(ctx, client, projectID, sourceID); err != nil {
 			if IsResponseCodeNotFound(err) {
@@ -73,7 +73,7 @@ func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceI
 	retry := 10 * time.Second
 	timeout := 10 * time.Minute
 	maxConsecutiveErrors := 5
-	return waitFor(ctx, retry, timeout, maxConsecutiveErrors, deletionConformation)
+	return waitFor(ctx, retry, timeout, maxConsecutiveErrors, deletionConfirmation)
 }
 
 // waitFor waits for isDone to return true or retrying every retry duration until timeout.

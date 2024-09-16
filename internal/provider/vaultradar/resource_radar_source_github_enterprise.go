@@ -38,7 +38,7 @@ func (r *sourceGitHubEnterpriseResource) Metadata(_ context.Context, req resourc
 
 func (r *sourceGitHubEnterpriseResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise sources.",
+		MarkdownDescription: "This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise Server sources.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
