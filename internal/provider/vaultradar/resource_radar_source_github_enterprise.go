@@ -177,7 +177,7 @@ func (r *sourceGitHubEnterpriseResource) Read(ctx context.Context, req resource.
 	// Resource is marked as deleted on the server.
 	if res.GetPayload().Deleted {
 		// Don't update or remove the state, because its has not been fully deleted server side.
-		tflog.Warn(ctx, "Radar source marked for deletion, removing from state.")
+		tflog.Warn(ctx, "Radar source marked for deletion.")
 		return
 	}
 
