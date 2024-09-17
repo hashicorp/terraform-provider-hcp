@@ -1,5 +1,6 @@
 variable "github_enterprise_token" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 resource "hcp_vault_radar_source_github_enterprise" "example" {

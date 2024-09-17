@@ -38,7 +38,7 @@ func (r *sourceGitHubEnterpriseResource) Metadata(_ context.Context, req resourc
 
 func (r *sourceGitHubEnterpriseResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This Vault Radar resource manages HCP Cloud scans of GitHub Enterprise Server sources.",
+		MarkdownDescription: "This terraform resource manages a GitHub Enterprise Server data source lifecycle in Vault Radar.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -51,8 +51,8 @@ func (r *sourceGitHubEnterpriseResource) Schema(_ context.Context, _ resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(`^\S+$`),
-						"must not contain white space",
+					stringvalidator.RegexMatches(regexp.MustCompile(`^(?:[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\.)+[a-zA-Z]{2,}$`),
+						"must be a valid domain name",
 					),
 				},
 			},

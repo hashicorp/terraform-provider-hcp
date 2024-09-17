@@ -81,7 +81,7 @@ func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceI
 func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveErrors int, isDone func() (bool, error)) error {
 	consecutiveErrors := 0
 
-	waitCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	waitCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	ticker := time.NewTicker(retry)
