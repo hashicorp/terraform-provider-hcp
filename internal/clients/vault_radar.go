@@ -53,6 +53,10 @@ func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceI
 		return err
 	}
 
+	return WaitOnOffboardRadarSource(ctx, client, projectID, sourceID)
+}
+
+func WaitOnOffboardRadarSource(ctx context.Context, client *Client, projectID, sourceID string) error {
 	deletionConfirmation := func() (bool, error) {
 		tflog.Trace(ctx, "Confirming radar source deletion.")
 		if _, err := GetRadarSource(ctx, client, projectID, sourceID); err != nil {

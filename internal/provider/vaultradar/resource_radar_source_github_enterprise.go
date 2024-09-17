@@ -176,8 +176,8 @@ func (r *sourceGitHubEnterpriseResource) Read(ctx context.Context, req resource.
 
 	// Resource is marked as deleted on the server.
 	if res.GetPayload().Deleted {
-		tflog.Info(ctx, "Radar source marked for deletion, removing from state.")
-		resp.State.RemoveResource(ctx)
+		// Don't update or remove the state, because its has not been fully deleted server side.
+		tflog.Warn(ctx, "Radar source marked for deletion, removing from state.")
 		return
 	}
 
@@ -212,10 +212,15 @@ func (r *sourceGitHubEnterpriseResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	// Resource is already marked as being deleted on the server.
+	// Resource is already marked as being deleted on the server. Wait for it to be fully deleted.
 	if res.GetPayload().Deleted {
-		tflog.Info(ctx, "Radar source marked for deletion, removing from state.")
-		resp.State.RemoveResource(ctx)
+		tflog.Info(ctx, "Radar resource already marked for deletion, waiting for full deletion")
+		if err := clients.WaitOnOffboardRadarSource(ctx, r.client, projectID, state.ID.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Unable to delete Radar source", err.Error())
+			return
+		}
+
+		tflog.Trace(ctx, "Deleted Radar resource")
 		return
 	}
 
