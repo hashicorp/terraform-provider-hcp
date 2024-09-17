@@ -270,12 +270,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	tfProjID := plan.TerraformProjectID.ValueString()
-	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
-	if tfWsName == "" {
-		// NOTE: this field is optional anyways, so if its unset, lets just use
-		// the template name for it.
-		tfWsName = plan.Name.ValueString()
-	}
+	tfWsName := plan.Name.ValueString()
 	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
@@ -332,11 +327,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
+		plan.TerraformProjectID = types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID)
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
@@ -447,11 +438,7 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		data.TerraformCloudWorkspace = tfcWorkspace
+		data.TerraformProjectID = types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID)
 	}
 
 	data.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
@@ -540,12 +527,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	tfProjID := plan.TerraformProjectID.ValueString()
-	tfWsName := plan.TerraformCloudWorkspace.Name.ValueString()
-	if tfWsName == "" {
-		// NOTE: this field is optional anyways, so if its unset, lets just use
-		// the template name for it.
-		tfWsName = plan.Name.ValueString()
-	}
+	tfWsName := plan.Name.ValueString()
 	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
@@ -602,20 +584,16 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.Summary = types.StringValue(appTemplate.Summary)
 	plan.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
 
+	if appTemplate.TerraformCloudWorkspaceDetails != nil {
+		plan.TerraformProjectID = types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID)
+	}
+
 	labels, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.Labels)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	plan.Labels = labels
-
-	if appTemplate.TerraformCloudWorkspaceDetails != nil {
-		tfcWorkspace := &tfcWorkspace{
-			Name:               types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.Name),
-			TerraformProjectID: types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID),
-		}
-		plan.TerraformCloudWorkspace = tfcWorkspace
-	}
 
 	plan.Description = types.StringValue(appTemplate.Description)
 	if appTemplate.Description == "" {

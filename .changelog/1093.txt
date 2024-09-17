@@ -1,0 +1,3 @@
+```release-note:bug
+Waypoint: fix where using the deprecated terraform_cloud_workspace_details.name field could cause an error.
+```
