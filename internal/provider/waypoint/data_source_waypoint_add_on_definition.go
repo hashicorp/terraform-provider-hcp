@@ -111,19 +111,9 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 					},
 				},
 			},
-			"terraform_no_code_module": &schema.SingleNestedAttribute{
+			"terraform_no_code_module_source": schema.StringAttribute{
 				Computed:    true,
-				Description: "Terraform Cloud no-code Module details.",
-				Attributes: map[string]schema.Attribute{
-					"source": &schema.StringAttribute{
-						Computed:    true,
-						Description: "Terraform Cloud no-code Module Source",
-					},
-					"version": &schema.StringAttribute{
-						Computed:    true,
-						Description: "Terraform Cloud no-code Module Version",
-					},
-				},
+				Description: "Terraform No Code Module source",
 			},
 			"variable_options": schema.ListNestedAttribute{
 				Computed:    true,
@@ -211,6 +201,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
 	state.Description = types.StringValue(definition.Description)
+	state.TerraformNoCodeModuleSource = types.StringValue(definition.ModuleSource)
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
