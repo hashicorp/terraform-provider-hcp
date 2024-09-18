@@ -1,0 +1,3 @@
+```release-note:bug
+Waypoint: fix several issues that were causing both acceptance test failures and possible user facing errors.
+```
