@@ -21,6 +21,8 @@ import (
 )
 
 func TestAccWaypointTfcConfig_basic(t *testing.T) {
+	// This will need to be rewritten to delete the TFC Config before running in order to function
+	t.Skip("Skipping nonfunctional TFC Config test")
 	var tfcConfig waypoint.TfcConfigResourceModel
 	resourceName := "hcp_waypoint_tfc_config.test"
 
