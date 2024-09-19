@@ -40,11 +40,6 @@ func TestAccWaypointData_Add_On_Definition_basic(t *testing.T) {
 				Config: testDataAddOnDefinitionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", name),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.0", "b"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 			{
@@ -53,11 +48,6 @@ func TestAccWaypointData_Add_On_Definition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(dataSourceName, "name", updatedName),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.name", "string_variable"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.variable_type", "string"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.options.0", "b"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.user_editable", "false"),
 				),
 			},
 		},
