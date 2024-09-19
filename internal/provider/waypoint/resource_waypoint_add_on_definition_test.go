@@ -84,7 +84,7 @@ func testAccCheckWaypointAddOnDefinitionExists(t *testing.T, resourceName string
 		// find the corresponding state object
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		client := acctest.HCPClients(t)
@@ -158,23 +158,5 @@ resource "hcp_waypoint_add_on_definition" "test" {
     name                 = "Default Project"
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
-  variable_options = [
-  {
-    name        = "string_variable"
-      variable_type = "string"
-      options = [
-        "b"
-      ]
-      user_editable = false
-    },
-    {
-    name        = "misc_variable"
-      variable_type = "string"
-      options = [
-        "c"
-      ]
-      user_editable = false
-    }
-  ]
 }`, name)
 }
