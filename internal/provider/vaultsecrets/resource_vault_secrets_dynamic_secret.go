@@ -54,7 +54,7 @@ type DynamicSecret struct {
 	SecretProvider  types.String `tfsdk:"secret_provider"`
 	Name            types.String `tfsdk:"name"`
 	IntegrationName types.String `tfsdk:"integration_name"`
-	DefaultTtl      types.String `tfsdk:"default_ttl"`
+	DefaultTTL      types.String `tfsdk:"default_ttl"`
 
 	// Provider specific mutually exclusive fields
 	AWSAssumeRole                *awsAssumeRole                `tfsdk:"aws_assume_role"`

@@ -43,7 +43,7 @@ func (s *awsDynamicSecret) create(ctx context.Context, client secret_service.Cli
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
 			WithBody(&secretmodels.SecretServiceCreateAwsDynamicSecretBody{
-				DefaultTTL:      secret.DefaultTtl.ValueString(),
+				DefaultTTL:      secret.DefaultTTL.ValueString(),
 				IntegrationName: secret.IntegrationName.ValueString(),
 				Name:            secret.Name.ValueString(),
 				AssumeRole: &secretmodels.Secrets20231128AssumeRoleRequest{
@@ -72,7 +72,7 @@ func (s *awsDynamicSecret) update(ctx context.Context, client secret_service.Cli
 			WithAppName(secret.AppName.ValueString()).
 			WithName(secret.Name.ValueString()).
 			WithBody(&secretmodels.SecretServiceUpdateAwsDynamicSecretBody{
-				DefaultTTL: secret.DefaultTtl.ValueString(),
+				DefaultTTL: secret.DefaultTTL.ValueString(),
 				AssumeRole: &secretmodels.Secrets20231128AssumeRoleRequest{
 					RoleArn: secret.AWSAssumeRole.IAMRoleARN.ValueString(),
 				},

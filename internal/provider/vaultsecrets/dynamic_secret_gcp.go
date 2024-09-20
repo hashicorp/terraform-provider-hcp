@@ -43,7 +43,7 @@ func (s *gcpDynamicSecret) create(ctx context.Context, client secret_service.Cli
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
 			WithBody(&secretmodels.SecretServiceCreateGcpDynamicSecretBody{
-				DefaultTTL:      secret.DefaultTtl.ValueString(),
+				DefaultTTL:      secret.DefaultTTL.ValueString(),
 				IntegrationName: secret.IntegrationName.ValueString(),
 				Name:            secret.Name.ValueString(),
 				ServiceAccountImpersonation: &secretmodels.Secrets20231128ServiceAccountImpersonationRequest{
@@ -72,7 +72,7 @@ func (s *gcpDynamicSecret) update(ctx context.Context, client secret_service.Cli
 			WithAppName(secret.AppName.ValueString()).
 			WithName(secret.Name.ValueString()).
 			WithBody(&secretmodels.SecretServiceUpdateGcpDynamicSecretBody{
-				DefaultTTL: secret.DefaultTtl.ValueString(),
+				DefaultTTL: secret.DefaultTTL.ValueString(),
 				ServiceAccountImpersonation: &secretmodels.Secrets20231128ServiceAccountImpersonationRequest{
 					ServiceAccountEmail: secret.GCPImpersonateServiceAccount.ServiceAccountEmail.ValueString(),
 				},
