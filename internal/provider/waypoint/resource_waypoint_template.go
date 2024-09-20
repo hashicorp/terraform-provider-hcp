@@ -49,6 +49,7 @@ type TemplateResourceModel struct {
 	Labels                 types.List   `tfsdk:"labels"`
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
+	UseModuleReadme        types.Bool   `tfsdk:"use_module_readme"`
 
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
@@ -124,7 +125,12 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"readme_markdown_template": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Instructions for using the template (markdown format supported).",
+			},
+			"use_module_readme": schema.BoolAttribute{
+				Optional:    true,
+				Description: "If true, will auto-import the readme form the Terraform odule used. If this is set to true, users should not also set `readme_markdown_template`.",
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -302,6 +308,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),
 			TfAgentPoolID:                  plan.TerraformAgentPoolID.ValueString(),
 		},
+		UseModuleReadme: plan.UseModuleReadme.ValueBool(),
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -333,6 +340,11 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	if appTemplate == nil {
 		resp.Diagnostics.AddError("unknown error creating template", "empty template returned")
 		return
+	}
+
+	// If plan.UseModuleReadme is not set, set it to false
+	if plan.UseModuleReadme.IsUnknown() {
+		plan.UseModuleReadme = types.BoolValue(false)
 	}
 
 	plan.ID = types.StringValue(appTemplate.ID)
@@ -578,6 +590,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),
 			TfAgentPoolID:                  plan.TerraformAgentPoolID.ValueString(),
 		},
+		UseModuleReadme: plan.UseModuleReadme.ValueBool(),
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -610,6 +623,11 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	if appTemplate == nil {
 		resp.Diagnostics.AddError("unknown error updating template", "empty template returned")
 		return
+	}
+
+	// If plan.UseModuleReadme is not set, set it to false
+	if plan.UseModuleReadme.IsUnknown() {
+		plan.UseModuleReadme = types.BoolValue(false)
 	}
 
 	plan.ID = types.StringValue(appTemplate.ID)
