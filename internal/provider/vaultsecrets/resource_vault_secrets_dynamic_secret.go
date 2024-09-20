@@ -6,7 +6,8 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
-	"maps"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
@@ -14,19 +15,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
 
+const (
+	unsupportedProviderErrorFmt = "unsupported provider, expected one of %s, got '%s'"
+	invalidSecretTypeErrorFmt   = "invalid secret type, expected *DynamicSecret, got: '%T', this is a bug on the provider"
+)
+
+var exactlyOneDynamicSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
+	path.Expressions{
+		path.MatchRoot("aws_assume_role"),
+		path.MatchRoot("gcp_impersonate_service_account"),
+	}...,
+)
+
 // dynamicSecret encapsulates the HVS provider-specific logic so the Terraform resource can focus on the Terraform logic
 type dynamicSecret interface {
-	readFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
-	createFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
-	updateFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
-	// deleteFunc not necessary, all secrets use the same delete request
-	fromModel(s *DynamicSecret, model any) diag.Diagnostics
+	read(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
+	create(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
+	update(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error)
+	// delete not necessary on the interface, all secrets use the same delete request
 }
 
 // dynamicSecretsImpl is a map of all the concrete dynamic secrets implementations by provider
@@ -93,9 +104,7 @@ func (r *resourceVaultSecretsDynamicSecret) Schema(_ context.Context, _ resource
 				},
 			},
 			Validators: []validator.Object{
-				objectvalidator.ExactlyOneOf(path.Expressions{
-					path.MatchRoot("gcp_impersonate_service_account"),
-				}...),
+				exactlyOneDynamicSecretTypeFieldsValidator,
 			},
 		},
 		"gcp_impersonate_service_account": schema.SingleNestedAttribute{
@@ -108,9 +117,7 @@ func (r *resourceVaultSecretsDynamicSecret) Schema(_ context.Context, _ resource
 				},
 			},
 			Validators: []validator.Object{
-				objectvalidator.ExactlyOneOf(path.Expressions{
-					path.MatchRoot("aws_assume_role"),
-				}...),
+				exactlyOneDynamicSecretTypeFieldsValidator,
 			},
 		},
 	}
@@ -147,14 +154,14 @@ func (r *resourceVaultSecretsDynamicSecret) Read(ctx context.Context, req resour
 	resp.Diagnostics.Append(decorateOperation[*DynamicSecret](ctx, r.client, &resp.State, req.State.Get, "reading", func(s hvsResource) (any, error) {
 		secret, ok := s.(*DynamicSecret)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *DynamicSecret, got: %T, this is a bug on the provider", s)
+			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
 		dynamicSecretImpl, ok := dynamicSecretsImpl[Provider(secret.SecretProvider.ValueString())]
 		if !ok {
-			return nil, fmt.Errorf("unsupported provider, expected one of 'aws' or 'gcp', got %s", secret.SecretProvider.ValueString())
+			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(dynamicSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return dynamicSecretImpl.readFunc(ctx, r.client.VaultSecretsPreview, secret)
+		return dynamicSecretImpl.read(ctx, r.client.VaultSecretsPreview, secret)
 	})...)
 }
 
@@ -162,14 +169,14 @@ func (r *resourceVaultSecretsDynamicSecret) Create(ctx context.Context, req reso
 	resp.Diagnostics.Append(decorateOperation[*DynamicSecret](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(s hvsResource) (any, error) {
 		secret, ok := s.(*DynamicSecret)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *DynamicSecret, got: %T, this is a bug on the provider", s)
+			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
 		dynamicSecretImpl, ok := dynamicSecretsImpl[Provider(secret.SecretProvider.ValueString())]
 		if !ok {
-			return nil, fmt.Errorf("unsupported provider, expected one of 'aws' or 'gcp', got %s", secret.SecretProvider.ValueString())
+			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(dynamicSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return dynamicSecretImpl.createFunc(ctx, r.client.VaultSecretsPreview, secret)
+		return dynamicSecretImpl.create(ctx, r.client.VaultSecretsPreview, secret)
 	})...)
 }
 
@@ -177,14 +184,14 @@ func (r *resourceVaultSecretsDynamicSecret) Update(ctx context.Context, req reso
 	resp.Diagnostics.Append(decorateOperation[*DynamicSecret](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(s hvsResource) (any, error) {
 		secret, ok := s.(*DynamicSecret)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *DynamicSecret, got: %T, this is a bug on the provider", s)
+			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
 		dynamicSecretImpl, ok := dynamicSecretsImpl[Provider(secret.SecretProvider.ValueString())]
 		if !ok {
-			return nil, fmt.Errorf("unsupported provider, expected one of 'aws' or 'gcp', got %s", secret.SecretProvider.ValueString())
+			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(dynamicSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return dynamicSecretImpl.updateFunc(ctx, r.client.VaultSecretsPreview, secret)
+		return dynamicSecretImpl.update(ctx, r.client.VaultSecretsPreview, secret)
 	})...)
 }
 
@@ -192,7 +199,7 @@ func (r *resourceVaultSecretsDynamicSecret) Delete(ctx context.Context, req reso
 	resp.Diagnostics.Append(decorateOperation[*DynamicSecret](ctx, r.client, &resp.State, req.State.Get, "deleting", func(s hvsResource) (any, error) {
 		secret, ok := s.(*DynamicSecret)
 		if !ok {
-			return nil, fmt.Errorf("invalid integration type, expected *DynamicSecret, got: %T, this is a bug on the provider", s)
+			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
 		_, err := r.client.VaultSecretsPreview.DeleteAppSecret(
@@ -222,18 +229,11 @@ func (s *DynamicSecret) initModel(_ context.Context, orgID, projID string) diag.
 	return diag.Diagnostics{}
 }
 
-func (s *DynamicSecret) fromModel(_ context.Context, orgID, projID string, model any) diag.Diagnostics {
+func (s *DynamicSecret) fromModel(_ context.Context, orgID, projID string, _ any) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	s.OrganizationID = types.StringValue(orgID)
 	s.ProjectID = types.StringValue(projID)
-
-	dynamicSecretImpl, ok := dynamicSecretsImpl[Provider(s.SecretProvider.ValueString())]
-	if !ok {
-		diags.AddError("Unsupported provider, this is a bug.", fmt.Sprintf("Expected one of 'aws' or 'gcp', got: %s", s.SecretProvider))
-		return diags
-	}
-	diags.Append(dynamicSecretImpl.fromModel(s, model)...)
 
 	return diags
 }

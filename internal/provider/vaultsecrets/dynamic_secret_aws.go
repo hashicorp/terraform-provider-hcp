@@ -9,8 +9,6 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -18,7 +16,7 @@ var _ dynamicSecret = &awsDynamicSecret{}
 
 type awsDynamicSecret struct{}
 
-func (s *awsDynamicSecret) readFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
+func (s *awsDynamicSecret) read(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
 	response, err := client.GetAwsDynamicSecret(
 		secret_service.NewGetAwsDynamicSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
@@ -34,7 +32,11 @@ func (s *awsDynamicSecret) readFunc(ctx context.Context, client secret_service.C
 	return response.Payload.Secret, nil
 }
 
-func (s *awsDynamicSecret) createFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
+func (s *awsDynamicSecret) create(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
+	if secret.AWSAssumeRole == nil {
+		return nil, fmt.Errorf("missing required field 'aws_assume_role'")
+	}
+
 	response, err := client.CreateAwsDynamicSecret(
 		secret_service.NewCreateAwsDynamicSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
@@ -58,7 +60,11 @@ func (s *awsDynamicSecret) createFunc(ctx context.Context, client secret_service
 	return response.Payload.Secret, nil
 }
 
-func (s *awsDynamicSecret) updateFunc(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
+func (s *awsDynamicSecret) update(ctx context.Context, client secret_service.ClientService, secret *DynamicSecret) (any, error) {
+	if secret.AWSAssumeRole == nil {
+		return nil, fmt.Errorf("missing required field 'aws_assume_role'")
+	}
+
 	response, err := client.UpdateAwsDynamicSecret(
 		secret_service.NewUpdateAwsDynamicSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
@@ -79,21 +85,4 @@ func (s *awsDynamicSecret) updateFunc(ctx context.Context, client secret_service
 		return nil, nil
 	}
 	return response.Payload.Secret, nil
-}
-
-func (s *awsDynamicSecret) fromModel(secret *DynamicSecret, model any) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	secretModel, ok := model.(*secretmodels.Secrets20231128AwsDynamicSecret)
-	if !ok {
-		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128AwsDynamicSecret, got: %T", model))
-		return diags
-	}
-
-	secret.DefaultTtl = types.StringValue(secretModel.DefaultTTL)
-	secret.AWSAssumeRole = &awsAssumeRole{
-		IAMRoleARN: types.StringValue(secretModel.AssumeRole.RoleArn),
-	}
-
-	return diags
 }
