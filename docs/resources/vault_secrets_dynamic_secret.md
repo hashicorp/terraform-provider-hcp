@@ -48,7 +48,7 @@ resource "hcp_vault_secrets_dynamic_secret" "example_gcp" {
 
 ### Optional
 
-- `aws_assume_role` (Attributes) AWS configuration to generate dynamic credentials by assuming an IAM role. Required if `provider` is `aws`. (see [below for nested schema](#nestedatt--aws_assume_role))
+- `aws_assume_role` (Attributes) AWS configuration to generate dynamic credentials by assuming an IAM role. Required if `secret_provider` is `aws`. (see [below for nested schema](#nestedatt--aws_assume_role))
 - `default_ttl` (String) TTL the generated credentials will be valid for.
 - `gcp_impersonate_service_account` (Attributes) GCP configuration to generate dynamic credentials by impersonating a service account. Required if `secret_provider` is `gcp`. (see [below for nested schema](#nestedatt--gcp_impersonate_service_account))
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
