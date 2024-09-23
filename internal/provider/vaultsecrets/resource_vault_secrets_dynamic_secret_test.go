@@ -13,12 +13,10 @@ import (
 )
 
 func TestAccVaultSecretsResourceDynamicSecret(t *testing.T) {
-	os.Setenv("AWS_DYNAMIC_SECRET_ACC_ENABLED", "true")
 	if _, exists := os.LookupEnv("AWS_DYNAMIC_SECRET_ACC_ENABLED"); exists {
 		testAccVaultSecretsResourceDynamicSecretAWS(t)
 	}
 
-	os.Setenv("GCP_DYNAMIC_SECRET_ACC_ENABLED", "true")
 	if _, exists := os.LookupEnv("GCP_DYNAMIC_SECRET_ACC_ENABLED"); exists {
 		testAccVaultSecretsResourceDynamicSecretGCP(t)
 	}
