@@ -19,8 +19,10 @@ import (
 type Provider string
 
 const (
-	ProviderAWS Provider = "aws"
-	ProviderGCP Provider = "gcp"
+	ProviderAWS          Provider = "aws"
+	ProviderGCP          Provider = "gcp"
+	ProviderMongoDBAtlas Provider = "mongodb_atlas"
+	ProviderTwilio       Provider = "twilio"
 )
 
 func (p Provider) String() string {
