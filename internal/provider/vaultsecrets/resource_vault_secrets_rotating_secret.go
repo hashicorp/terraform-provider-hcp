@@ -6,6 +6,7 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
@@ -62,7 +63,7 @@ type RotatingSecret struct {
 	AWSAccessKeys        *awsAccessKeys        `tfsdk:"aws_access_keys"`
 	GCPServiceAccountKey *gcpServiceAccountKey `tfsdk:"gcp_service_account_key"`
 	MongoDBAtlasUser     *mongoDBAtlasUser     `tfsdk:"mongodb_atlas_user"`
-	TwilioApiKey         *twilioApiKey         `tfsdk:"twilio_api_key"`
+	TwilioAPIKey         *twilioAPIKey         `tfsdk:"twilio_api_key"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -85,7 +86,7 @@ type mongoDBAtlasUser struct {
 	Roles        []types.String `tfsdk:"roles"`
 }
 
-type twilioApiKey struct{}
+type twilioAPIKey struct{}
 
 var _ resource.Resource = &resourceVaultSecretsRotatingSecret{}
 var _ resource.ResourceWithConfigure = &resourceVaultSecretsRotatingSecret{}
