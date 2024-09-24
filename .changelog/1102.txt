@@ -1,0 +1,3 @@
+```release-note:improvement
+Update codeowners to include Vault Radar.
+```
