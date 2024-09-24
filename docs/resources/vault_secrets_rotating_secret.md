@@ -64,7 +64,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_twilio" {
 ### Required
 
 - `app_name` (String) Vault Secrets application name that owns the secret.
-- `integration_name` (String) The Vault Secrets integration name with the capability to rotate the secret.
+- `integration_name` (String) The Vault Secrets integration name with the capability to manage the secret's lifecycle.
 - `name` (String) The Vault Secrets secret name.
 - `rotation_policy_name` (String) Name of the rotation policy that governs the rotation of the secret.
 - `secret_provider` (String) The third party platform the dynamic credentials give access to. One of `aws` or `gcp`.
