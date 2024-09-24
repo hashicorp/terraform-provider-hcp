@@ -16,8 +16,6 @@ func TestAccVaultSecretsResourceRotatingSecret(t *testing.T) {
 	if _, exists := os.LookupEnv("AWS_ROTATING_SECRET_ACC_ENABLED"); exists {
 		testAccVaultSecretsResourceRotatingSecretAWS(t)
 	}
-
-	// TODO Add GCP, MongoDBAtlas & Twilio test if the rotating secret resource design is accepted
 }
 
 func testAccVaultSecretsResourceRotatingSecretAWS(t *testing.T) {

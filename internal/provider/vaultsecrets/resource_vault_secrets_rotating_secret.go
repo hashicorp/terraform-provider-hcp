@@ -24,7 +24,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.AtLeastOneOf(
+var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 	path.Expressions{
 		path.MatchRoot("aws_access_keys"),
 		path.MatchRoot("gcp_service_account_key"),
