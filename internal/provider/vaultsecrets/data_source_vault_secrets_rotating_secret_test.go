@@ -66,10 +66,10 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 					}
 
 					reqBody := secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody{
-						SecretName:              testSecretName,
-						RotationIntegrationName: testIntegrationName,
-						RotationPolicyName:      "built-in:30-days-2-active",
-						MongodbGroupID:          mongodbAtlasGroupID,
+						SecretName:         testSecretName,
+						IntegrationName:    testIntegrationName,
+						RotationPolicyName: "built-in:30-days-2-active",
+						MongodbGroupID:     mongodbAtlasGroupID,
 						MongodbRoles: []*secretmodels.Secrets20231128MongoDBRole{
 							{
 								DatabaseName:   mongodbAtlasDBName,

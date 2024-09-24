@@ -117,6 +117,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Schema(_ context.Context, _ resourc
 		},
 	}
 
+	maps.Copy(attributes, locationAttributes)
 	maps.Copy(attributes, sharedIntegrationAttributes)
 
 	resp.Schema = schema.Schema{
@@ -145,7 +146,7 @@ func (r *resourceVaultSecretsIntegrationGCP) ModifyPlan(ctx context.Context, req
 }
 
 func (r *resourceVaultSecretsIntegrationGCP) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.State.Get, "reading", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.State.Get, "reading", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationGCP)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
@@ -167,7 +168,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Read(ctx context.Context, req resou
 }
 
 func (r *resourceVaultSecretsIntegrationGCP) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationGCP)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
@@ -194,7 +195,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Create(ctx context.Context, req res
 }
 
 func (r *resourceVaultSecretsIntegrationGCP) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationGCP)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
@@ -221,7 +222,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Update(ctx context.Context, req res
 }
 
 func (r *resourceVaultSecretsIntegrationGCP) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationGCP](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationGCP)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
@@ -247,7 +248,7 @@ func (r *resourceVaultSecretsIntegrationGCP) ImportState(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), req.ID)...)
 }
 
-var _ integration = &IntegrationGCP{}
+var _ hvsResource = &IntegrationGCP{}
 
 func (i *IntegrationGCP) projectID() types.String {
 	return i.ProjectID
