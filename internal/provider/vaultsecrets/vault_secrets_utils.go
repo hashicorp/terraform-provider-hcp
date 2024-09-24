@@ -99,7 +99,7 @@ var managedSecretAttributes = map[string]schema.Attribute{
 		Required:    true,
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.RequiresReplace(),
-		}, // TODO: Add validators check its in enum
+		},
 	},
 	"name": schema.StringAttribute{
 		Description: "The Vault Secrets secret name.",
@@ -112,7 +112,7 @@ var managedSecretAttributes = map[string]schema.Attribute{
 		},
 	},
 	"integration_name": schema.StringAttribute{
-		Description: "The Vault Secrets integration name with the capability to rotate the secret.",
+		Description: "The Vault Secrets integration name with the capability to manage the secret's lifecycle.",
 		Required:    true,
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.RequiresReplace(),
