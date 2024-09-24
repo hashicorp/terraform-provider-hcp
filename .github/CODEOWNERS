@@ -42,3 +42,6 @@
 *vaultradar*  @hashicorp/vault-scanning
 *vault_radar* @hashicorp/vault-scanning
 *vault-radar*  @hashicorp/vault-scanning
+**/vaultradar/* @hashicorp/vault-scanning
+**/vaultradar* @hashicorp/vault-scanning
+**/hcp_vault_radar* @hashicorp/vault-scanning
