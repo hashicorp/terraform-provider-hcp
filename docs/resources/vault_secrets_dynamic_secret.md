@@ -42,7 +42,7 @@ resource "hcp_vault_secrets_dynamic_secret" "example_gcp" {
 ### Required
 
 - `app_name` (String) Vault Secrets application name that owns the secret.
-- `integration_name` (String) The Vault Secrets integration name with the capability to rotate the secret.
+- `integration_name` (String) The Vault Secrets integration name with the capability to manage the secret's lifecycle.
 - `name` (String) The Vault Secrets secret name.
 - `secret_provider` (String) The third party platform the dynamic credentials give access to. One of `aws` or `gcp`.
 
