@@ -85,6 +85,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Schema(_ context.Context, _ reso
 		},
 	}
 
+	maps.Copy(attributes, locationAttributes)
 	maps.Copy(attributes, sharedIntegrationAttributes)
 
 	resp.Schema = schema.Schema{
@@ -113,7 +114,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) ModifyPlan(ctx context.Context, 
 }
 
 func (r *resourceVaultSecretsIntegrationTwilio) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "reading", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "reading", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
@@ -135,7 +136,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Read(ctx context.Context, req re
 }
 
 func (r *resourceVaultSecretsIntegrationTwilio) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
@@ -161,7 +162,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Create(ctx context.Context, req 
 }
 
 func (r *resourceVaultSecretsIntegrationTwilio) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
@@ -187,7 +188,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Update(ctx context.Context, req 
 }
 
 func (r *resourceVaultSecretsIntegrationTwilio) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationTwilio](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationTwilio)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
@@ -213,7 +214,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) ImportState(ctx context.Context,
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), req.ID)...)
 }
 
-var _ integration = &IntegrationTwilio{}
+var _ hvsResource = &IntegrationTwilio{}
 
 func (i *IntegrationTwilio) projectID() types.String {
 	return i.ProjectID
