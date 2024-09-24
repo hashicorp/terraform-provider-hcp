@@ -20,7 +20,7 @@ resource "hcp_vault_secrets_dynamic_secret" "example_aws" {
   integration_name = "my-integration-1"
   default_ttl      = "900s"
   aws_assume_role = {
-    iam_role_arn = "arn:aws:iam::<account_id>>:role/<role_name>"
+    iam_role_arn = "arn:aws:iam::<account_id>:role/<role_name>"
   }
 }
 
