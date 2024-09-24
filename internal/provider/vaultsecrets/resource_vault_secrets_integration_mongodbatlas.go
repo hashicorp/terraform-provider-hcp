@@ -80,6 +80,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Schema(_ context.Context, 
 		},
 	}
 
+	maps.Copy(attributes, locationAttributes)
 	maps.Copy(attributes, sharedIntegrationAttributes)
 
 	resp.Schema = schema.Schema{
@@ -108,7 +109,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) ModifyPlan(ctx context.Con
 }
 
 func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.State.Get, "reading", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.State.Get, "reading", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationMongoDBAtlas)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
@@ -130,7 +131,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Read(ctx context.Context, 
 }
 
 func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationMongoDBAtlas)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
@@ -156,7 +157,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Create(ctx context.Context
 }
 
 func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationMongoDBAtlas)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
@@ -182,7 +183,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Update(ctx context.Context
 }
 
 func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i integration) (any, error) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationMongoDBAtlas](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i hvsResource) (any, error) {
 		integration, ok := i.(*IntegrationMongoDBAtlas)
 		if !ok {
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
@@ -208,7 +209,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) ImportState(ctx context.Co
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), req.ID)...)
 }
 
-var _ integration = &IntegrationMongoDBAtlas{}
+var _ hvsResource = &IntegrationMongoDBAtlas{}
 
 func (i *IntegrationMongoDBAtlas) projectID() types.String {
 	return i.ProjectID
