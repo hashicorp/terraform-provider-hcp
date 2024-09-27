@@ -1,0 +1,3 @@
+```release-note:feature
+Waypoint: New template resource attribute `use_module_readme` allows users to use the associated Terraform module readme in place of providing a seperate readme for the template.
+```
