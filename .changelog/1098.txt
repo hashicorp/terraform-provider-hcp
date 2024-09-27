@@ -1,0 +1,5 @@
+```release-note:feature
+waypoint: Add execution mode and agent pool ID configurations to the
+`hcp_waypoint_template` and `hcp_waypoint_add_on_definition` resources, and
+the `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources.
+```
