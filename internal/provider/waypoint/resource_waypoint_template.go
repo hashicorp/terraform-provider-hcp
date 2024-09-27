@@ -49,11 +49,14 @@ type TemplateResourceModel struct {
 	Labels                 types.List   `tfsdk:"labels"`
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
+	UseModuleReadme        types.Bool   `tfsdk:"use_module_readme"`
 
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
+	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
 }
 
 func (t tfcWorkspace) attrTypes() map[string]attr.Type {
@@ -113,7 +116,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"summary": schema.StringAttribute{
-				Description: "A brief description of the template, up to 110 characters",
+				Description: "A brief description of the template, up to 110 characters.",
 				Required:    true,
 			},
 			"description": schema.StringAttribute{
@@ -122,7 +125,12 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"readme_markdown_template": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Instructions for using the template (markdown format supported).",
+			},
+			"use_module_readme": schema.BoolAttribute{
+				Optional:    true,
+				Description: "If true, will auto-import the readme form the Terraform odule used. If this is set to true, users should not also set `readme_markdown_template`.",
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -141,7 +149,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"terraform_cloud_workspace_details": &schema.SingleNestedAttribute{
-				DeprecationMessage: "terraform_cloud_workspace_details is deprecated, use terraform_project_id instead",
+				DeprecationMessage: "terraform_cloud_workspace_details is deprecated, use terraform_project_id instead.",
 				Optional:           true,
 				Description:        "Terraform Cloud Workspace details",
 				Attributes: map[string]schema.Attribute{
@@ -164,7 +172,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"variable_options": schema.SetNestedAttribute{
 				Optional:    true,
-				Description: "List of variable options for the template",
+				Description: "List of variable options for the template.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": &schema.StringAttribute{
@@ -192,6 +200,18 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 						},
 					},
 				},
+			},
+			"terraform_execution_mode": schema.StringAttribute{
+				Optional: true,
+				Description: "The execution mode of the HCP Terraform workspaces" +
+					" created for applications using this template.",
+			},
+			"terraform_agent_pool_id": schema.StringAttribute{
+				Optional: true,
+				Description: "The ID of the agent pool to use for Terraform" +
+					" operations, for workspaces created for applications using" +
+					" this template. Required if terraform_execution_mode is " +
+					"set to 'agent'.",
 			},
 		},
 	}
@@ -253,7 +273,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags = v.Options.ElementsAs(ctx, &strOpts, false)
@@ -285,7 +305,10 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
 			TerraformCloudWorkspaceDetails: tfWsDetails,
 			VariableOptions:                varOpts,
+			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),
+			TfAgentPoolID:                  plan.TerraformAgentPoolID.ValueString(),
 		},
+		UseModuleReadme: plan.UseModuleReadme.ValueBool(),
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -317,6 +340,11 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	if appTemplate == nil {
 		resp.Diagnostics.AddError("unknown error creating template", "empty template returned")
 		return
+	}
+
+	// If plan.UseModuleReadme is not set, set it to false
+	if plan.UseModuleReadme.IsUnknown() {
+		plan.UseModuleReadme = types.BoolValue(false)
 	}
 
 	plan.ID = types.StringValue(appTemplate.ID)
@@ -352,6 +380,15 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	plan.ReadmeMarkdownTemplate = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	plan.TerraformExecutionMode = types.StringValue(appTemplate.TfExecutionMode)
+	if appTemplate.TfExecutionMode == "" {
+		plan.TerraformExecutionMode = types.StringNull()
+	}
+	plan.TerraformAgentPoolID = types.StringValue(appTemplate.TfAgentPoolID)
+	if appTemplate.TfAgentPoolID == "" {
+		plan.TerraformAgentPoolID = types.StringNull()
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
@@ -469,6 +506,14 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		data.ReadmeMarkdownTemplate = types.StringNull()
 	}
+	data.TerraformExecutionMode = types.StringValue(appTemplate.TfExecutionMode)
+	if appTemplate.TfExecutionMode == "" {
+		data.TerraformExecutionMode = types.StringNull()
+	}
+	data.TerraformAgentPoolID = types.StringValue(appTemplate.TfAgentPoolID)
+	if appTemplate.TfAgentPoolID == "" {
+		data.TerraformAgentPoolID = types.StringNull()
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -542,7 +587,10 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
 			TerraformCloudWorkspaceDetails: tfWsDetails,
 			VariableOptions:                varOpts,
+			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),
+			TfAgentPoolID:                  plan.TerraformAgentPoolID.ValueString(),
 		},
+		UseModuleReadme: plan.UseModuleReadme.ValueBool(),
 	}
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
@@ -577,6 +625,11 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// If plan.UseModuleReadme is not set, set it to false
+	if plan.UseModuleReadme.IsUnknown() {
+		plan.UseModuleReadme = types.BoolValue(false)
+	}
+
 	plan.ID = types.StringValue(appTemplate.ID)
 	plan.ProjectID = types.StringValue(projectID)
 	plan.Name = types.StringValue(appTemplate.Name)
@@ -602,6 +655,14 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.ReadmeMarkdownTemplate = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+	plan.TerraformExecutionMode = types.StringValue(appTemplate.TfExecutionMode)
+	if appTemplate.TfExecutionMode == "" {
+		plan.TerraformExecutionMode = types.StringNull()
+	}
+	plan.TerraformAgentPoolID = types.StringValue(appTemplate.TfAgentPoolID)
+	if appTemplate.TfAgentPoolID == "" {
+		plan.TerraformAgentPoolID = types.StringNull()
 	}
 
 	plan.TerraformVariableOptions, err = readVarOpts(ctx, appTemplate.VariableOptions, &resp.Diagnostics)
