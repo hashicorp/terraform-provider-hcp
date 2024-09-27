@@ -51,6 +51,8 @@ type AddOnDefinitionResourceModel struct {
 	TerraformCloudWorkspace     types.Object         `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
+	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
 }
 
 func (r *AddOnDefinitionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -138,7 +140,7 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 				Required: true,
 				Description: "Terraform Cloud no-code Module Source, expected to be in one of the following formats:" +
 					" \"app.terraform.io/hcp_waypoint_example/ecs-advanced-microservice/aws\" or " +
-					"\"private/hcp_waypoint_example/ecs-advanced-microservice/aws\"",
+					"\"private/hcp_waypoint_example/ecs-advanced-microservice/aws\".",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -170,6 +172,17 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 						},
 					},
 				},
+			},
+			"terraform_execution_mode": schema.StringAttribute{
+				Optional: true,
+				Description: "The execution mode of the HCP Terraform " +
+					"workspaces for add-ons using this add-on definition.",
+			},
+			"terraform_agent_pool_id": schema.StringAttribute{
+				Optional: true,
+				Description: "The ID of the Terraform agent pool to use for " +
+					"running Terraform operations. This is only applicable when" +
+					" the execution mode is set to 'agent'.",
 			},
 		},
 	}
@@ -225,7 +238,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	stringLabels := []string{}
+	var stringLabels []string
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
 		diagnostics := plan.Labels.ElementsAs(ctx, &stringLabels, false)
 		if diagnostics.HasError() {
@@ -237,7 +250,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
-	varOpts := []*waypointModels.HashicorpCloudWaypointTFModuleVariable{}
+	var varOpts []*waypointModels.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags := v.Options.ElementsAs(ctx, &strOpts, false)
@@ -261,6 +274,8 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		Labels:          stringLabels,
 		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
 		VariableOptions: varOpts,
+		TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
+		TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
 	}
 
 	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
@@ -332,6 +347,15 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	// set plan.readme if it's not null or addOnDefinition.readme is not empty
 	if addOnDefinition.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	plan.TerraformExecutionMode = types.StringValue(addOnDefinition.TfExecutionMode)
+	if addOnDefinition.TfExecutionMode == "" {
+		plan.TerraformExecutionMode = types.StringNull()
+	}
+	plan.TerraformAgentPoolID = types.StringValue(addOnDefinition.TfAgentPoolID)
+	if addOnDefinition.TfAgentPoolID == "" {
+		plan.TerraformAgentPoolID = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)
@@ -417,6 +441,14 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	// set plan.readme if it's not null or addOnDefinition.readme is not empty
 	if definition.ReadmeMarkdownTemplate.String() == "" {
 		state.ReadmeMarkdownTemplate = types.StringNull()
+	}
+	state.TerraformExecutionMode = types.StringValue(definition.TfExecutionMode)
+	if definition.TfExecutionMode == "" {
+		state.TerraformExecutionMode = types.StringNull()
+	}
+	state.TerraformAgentPoolID = types.StringValue(definition.TfAgentPoolID)
+	if definition.TfAgentPoolID == "" {
+		state.TerraformAgentPoolID = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, definition.Labels)
@@ -514,6 +546,8 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		Labels:          stringLabels,
 		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
 		VariableOptions: varOpts,
+		TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
+		TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
 	}
 
 	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
@@ -586,6 +620,14 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	// set plan.readme if it's not null or addOnDefinition.readme is not empty
 	if addOnDefinition.ReadmeMarkdownTemplate.String() == "" {
 		plan.ReadmeMarkdownTemplate = types.StringNull()
+	}
+	plan.TerraformExecutionMode = types.StringValue(addOnDefinition.TfExecutionMode)
+	if addOnDefinition.TfExecutionMode == "" {
+		plan.TerraformExecutionMode = types.StringNull()
+	}
+	plan.TerraformAgentPoolID = types.StringValue(addOnDefinition.TfAgentPoolID)
+	if addOnDefinition.TfAgentPoolID == "" {
+		plan.TerraformAgentPoolID = types.StringNull()
 	}
 
 	labels, diags := types.ListValueFrom(ctx, types.StringType, addOnDefinition.Labels)

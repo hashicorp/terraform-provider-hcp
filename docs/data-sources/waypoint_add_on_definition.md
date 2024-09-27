@@ -27,7 +27,9 @@ The Waypoint Add-on Definition data source retrieves information on a given Add-
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Add-on Definition is located.
 - `readme_markdown_template` (String) Instructions for using the Add-on Definition (markdown format supported).
 - `summary` (String) A short summary of the Add-on Definition.
+- `terraform_agent_pool_id` (String) The ID of the Terraform agent pool.
 - `terraform_cloud_workspace_details` (Attributes) Terraform Cloud Workspace details. (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
+- `terraform_execution_mode` (String) The execution mode for the Terraform Cloud workspace.
 - `terraform_no_code_module_source` (String) Terraform No Code Module source
 - `variable_options` (Attributes List) List of variable options for the Add-on Definition. (see [below for nested schema](#nestedatt--variable_options))
 

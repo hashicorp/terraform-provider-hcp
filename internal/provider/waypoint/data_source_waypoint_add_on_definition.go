@@ -47,6 +47,8 @@ type DataSourceAddOnDefinitionModel struct {
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
+	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
 }
 
 func NewAddOnDefinitionDataSource() datasource.DataSource {
@@ -139,6 +141,14 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 						},
 					},
 				},
+			},
+			"terraform_execution_mode": schema.StringAttribute{
+				Computed:    true,
+				Description: "The execution mode for the Terraform Cloud workspace.",
+			},
+			"terraform_agent_pool_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of the Terraform agent pool.",
 			},
 		},
 	}

@@ -47,6 +47,8 @@ type DataSourceTemplateModel struct {
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
 	VariableOptions             []*tfcVariableOption `tfsdk:"variable_options"`
+	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
+	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
 }
 
 func NewTemplateDataSource() datasource.DataSource {
@@ -139,6 +141,14 @@ func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRe
 						},
 					},
 				},
+			},
+			"terraform_execution_mode": schema.StringAttribute{
+				Computed:    true,
+				Description: "Terraform execution mode",
+			},
+			"terraform_agent_pool_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Terraform agent pool ID",
 			},
 		},
 	}
@@ -237,6 +247,15 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 	data.ReadmeMarkdownTemplate = types.StringValue(appTemplate.ReadmeMarkdownTemplate.String())
 	if appTemplate.ReadmeMarkdownTemplate.String() == "" {
 		data.ReadmeMarkdownTemplate = types.StringNull()
+	}
+
+	data.TerraformExecutionMode = types.StringValue(appTemplate.TfExecutionMode)
+	if appTemplate.TfExecutionMode == "" {
+		data.TerraformExecutionMode = types.StringNull()
+	}
+	data.TerraformAgentPoolID = types.StringValue(appTemplate.TfAgentPoolID)
+	if appTemplate.TfAgentPoolID == "" {
+		data.TerraformAgentPoolID = types.StringNull()
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

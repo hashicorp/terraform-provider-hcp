@@ -37,6 +37,7 @@ func TestAccWaypoint_Template_basic(t *testing.T) {
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "terraform_execution_mode", "remote"),
 				),
 			},
 			{
@@ -164,6 +165,7 @@ resource "hcp_waypoint_template" "test" {
     terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   }
   labels = ["one", "two"]
+  terraform_execution_mode = "remote"
 }`, name)
 }
 
