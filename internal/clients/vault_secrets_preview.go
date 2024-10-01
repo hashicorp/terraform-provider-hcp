@@ -77,6 +77,9 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 				}
 				return nil, err
 			}
+			if secrets == nil {
+				return nil, errors.New("unable to get secrets")
+			}
 			result = append(result, secrets.GetPayload().Secrets...)
 			pagination := secrets.GetPayload().Pagination
 			if pagination == nil || pagination.NextPageToken == "" {
@@ -86,12 +89,6 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 			break
 		}
 	}
-
-	if result == nil {
-		return nil, errors.New("unable to get secrets")
-	}
-
-	return result, nil
 }
 
 func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20231128RotatingSecretState, error) {
