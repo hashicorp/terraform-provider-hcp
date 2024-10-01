@@ -116,6 +116,46 @@ func TestAcc_dataSourceVaultSecretsApp(t *testing.T) {
 	})
 }
 
+func TestAcc_VaultSecretsOpenAppSecretsPagination(t *testing.T) {
+	testAppName := generateRandomSlug()
+	dataSourceAddress := "data.hcp_vault_secrets_app.foo"
+	secretCount := 12
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create 12 secrets and validate that all are returned and not just the default v2 api page size 10
+			{
+				PreConfig: func() {
+					createTestApp(t, testAppName)
+
+					for i := 1; i <= secretCount; i++ {
+						createTestAppSecret(t, testAppName, "secret"+fmt.Sprint(i), "value"+fmt.Sprint(i))
+					}
+				},
+				Config: fmt.Sprintf(`
+					data "hcp_vault_secrets_app" "foo" {
+						app_name    = %q
+					}`, testAppName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "organization_id"),
+					resource.TestCheckResourceAttrSet(dataSourceAddress, "project_id"),
+					//default page size for OpenAppSecrets v2 api is 10, validate that all secrets (pages) are retrieved and not just 1st page (10)
+					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.%", fmt.Sprintf("%v", secretCount)),
+				),
+			},
+		},
+		CheckDestroy: func(s *terraform.State) error {
+			for i := 1; i <= secretCount; i++ {
+				deleteTestAppSecret(t, testAppName, "secret"+fmt.Sprint(i))
+			}
+			deleteTestApp(t, testAppName)
+			return nil
+		},
+	})
+}
+
 func createTestApp(t *testing.T, appName string) {
 	t.Helper()
 
