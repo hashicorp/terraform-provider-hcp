@@ -62,12 +62,9 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 	var secrets *secret_service.OpenAppSecretsOK
 	var err error
 	var result []*secretmodels.Secrets20231128OpenSecret
-	nextPage := ""
-	for attempt := 0; attempt < retryCount; attempt++ {
-		for {
-			if nextPage != "" {
-				params.PaginationNextPageToken = &nextPage
-			}
+
+	for {
+		for attempt := 0; attempt < retryCount; attempt++ {
 			secrets, err = client.VaultSecretsPreview.OpenAppSecrets(params, nil)
 			if err != nil {
 				var serviceErr *secret_service.OpenAppSecretDefault
@@ -85,8 +82,7 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 			if pagination == nil || pagination.NextPageToken == "" {
 				return result, nil
 			}
-
-			nextPage = pagination.NextPageToken
+			params.PaginationNextPageToken = &pagination.NextPageToken
 			break
 		}
 	}
