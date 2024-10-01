@@ -141,7 +141,7 @@ func TestAcc_VaultSecretsOpenAppSecretsPagination(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "organization_id"),
 					resource.TestCheckResourceAttrSet(dataSourceAddress, "project_id"),
-					//default page size for OpenAppSecrets v2 api is 10, validate that all secrets (pages) are retrieved and not just 1st page (10)
+					// default page size for OpenAppSecrets v2 api is 10, validate that all secrets (pages) are retrieved and not just 1st page (10)
 					resource.TestCheckResourceAttr(dataSourceAddress, "secrets.%", fmt.Sprintf("%v", secretCount)),
 				),
 			},
