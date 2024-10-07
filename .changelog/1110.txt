@@ -1,0 +1,3 @@
+```release-note:improvement
+Upgrade the HCP SDK and fix a breaking change in the Boundary API.
+```

@@ -75,7 +75,7 @@ func SetBoundaryClusterMaintenanceWindow(
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	boundaryClusterID string,
 	mwUpdateRequest *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateRequest,
-) (*boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindowUpdateResponse, error) {
+) error {
 
 	params := boundary_service.NewBoundaryServiceMaintenanceWindowUpdateParams()
 	params.Context = ctx
@@ -85,12 +85,12 @@ func SetBoundaryClusterMaintenanceWindow(
 	params.LocationProjectID = loc.ProjectID
 	params.ClusterID = boundaryClusterID
 
-	resp, err := client.Boundary.BoundaryServiceMaintenanceWindowUpdate(params, nil)
+	_, err := client.Boundary.BoundaryServiceMaintenanceWindowUpdate(params, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return resp.Payload, nil
+	return nil
 }
 
 // GetBoundaryClusterMaintenanceWindow gets the maintenance window configuration for a Boundary cluster.
