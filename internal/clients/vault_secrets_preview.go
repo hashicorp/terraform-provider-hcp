@@ -77,17 +77,17 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 				}
 				return nil, err
 			}
-			if secrets == nil {
-				return nil, errors.New("unable to get secrets")
-			}
-			result = append(result, secrets.GetPayload().Secrets...)
-			pagination := secrets.GetPayload().Pagination
-			if pagination == nil || pagination.NextPageToken == "" {
-				return result, nil
-			}
-			params.PaginationNextPageToken = &pagination.NextPageToken
 			break
 		}
+		if secrets == nil {
+			return nil, errors.New("unable to get secrets")
+		}
+		result = append(result, secrets.GetPayload().Secrets...)
+		pagination := secrets.GetPayload().Pagination
+		if pagination == nil || pagination.NextPageToken == "" {
+			return result, nil
+		}
+		params.PaginationNextPageToken = &pagination.NextPageToken
 	}
 }
 
