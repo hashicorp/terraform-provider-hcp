@@ -86,7 +86,6 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 				return result, nil
 			}
 			params.PaginationNextPageToken = &pagination.NextPageToken
-			break
 		}
 	}
 }
