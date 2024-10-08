@@ -1,3 +1,26 @@
+## v0.97.0 (October 08, 2024)
+
+FEATURES:
+
+* Add pagination support for vault OpenAppSecrets preview api. [[GH-1109](https://github.com/hashicorp/terraform-provider-hcp/pull/1109)]
+* Add preview of vault_radar_source_github_enterprise resource. [[GH-1092](https://github.com/hashicorp/terraform-provider-hcp/pull/1092)]
+* Waypoint: New template resource attribute `use_module_readme` allows users to use the associated Terraform module readme in place of providing a seperate readme for the template. [[GH-1099](https://github.com/hashicorp/terraform-provider-hcp/pull/1099)]
+* add vault_secrets_dynamic_secret resource [[GH-1097](https://github.com/hashicorp/terraform-provider-hcp/pull/1097)]
+* add vault_secrets_rotating_secret resource [[GH-1101](https://github.com/hashicorp/terraform-provider-hcp/pull/1101)]
+* waypoint: Add execution mode and agent pool ID configurations to the
+`hcp_waypoint_template` and `hcp_waypoint_add_on_definition` resources, and
+the `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources. [[GH-1098](https://github.com/hashicorp/terraform-provider-hcp/pull/1098)]
+
+IMPROVEMENTS:
+
+* Update Vault Radar codeowners patterns. [[GH-1103](https://github.com/hashicorp/terraform-provider-hcp/pull/1103)]
+* Update codeowners to include Vault Radar. [[GH-1102](https://github.com/hashicorp/terraform-provider-hcp/pull/1102)]
+* Upgrade the HCP SDK and fix a breaking change in the Boundary API. [[GH-1110](https://github.com/hashicorp/terraform-provider-hcp/pull/1110)]
+
+BUG FIXES:
+
+* Waypoint: fix where using the deprecated terraform_cloud_workspace_details.name field could cause an error. [[GH-1093](https://github.com/hashicorp/terraform-provider-hcp/pull/1093)]
+* waypoint: Fix `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources. [[GH-1094](https://github.com/hashicorp/terraform-provider-hcp/pull/1094)]
 ## v0.96.0 (September 13, 2024)
 
 FEATURES:
