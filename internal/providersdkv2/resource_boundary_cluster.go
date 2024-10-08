@@ -264,8 +264,7 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 		mwReq.ClusterID = cluster.ClusterID
 		mwReq.Location = cluster.Location
 
-		_, err := clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq)
-		if err != nil {
+		if err = clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq); err != nil {
 			return diag.Errorf("error setting maintenance window configuration for Boundary cluster (%s): %v", clusterID, err)
 		}
 		currentMaintenanceWindow = maintenanceWindow
@@ -325,8 +324,7 @@ func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 		mwReq.ClusterID = cluster.ClusterID
 		mwReq.Location = cluster.Location
 
-		_, err := clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq)
-		if err != nil {
+		if err = clients.SetBoundaryClusterMaintenanceWindow(ctx, client, loc, clusterID, &mwReq); err != nil {
 			return diag.Errorf("error setting maintenance window configuration for Boundary cluster (%s): %v", clusterID, err)
 		}
 		currentMaintenanceWindow = maintenanceWindow
