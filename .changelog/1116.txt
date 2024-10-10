@@ -1,5 +1,5 @@
 ```release-note:feature
-Add preview of the following Vault Radar connection and subscriptions:
+Add preview of the following Vault Radar connections and subscriptions:
 hcp_vault_radar_integration_jira_connection
 hcp_vault_radar_integration_jira_subscription
 hcp_vault_radar_integration_slack_connection
