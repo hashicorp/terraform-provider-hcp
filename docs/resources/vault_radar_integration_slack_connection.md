@@ -32,7 +32,7 @@ resource "hcp_vault_radar_integration_slack_connection" "slack_connection" {
 ### Required
 
 - `name` (String) Name of connection. Name must be unique.
-- `token` (String, Sensitive) Slack bot user oAuth token. Example: Bot token strings begin with 'xoxb'.
+- `token` (String, Sensitive) Slack bot user OAuth token. Example: Bot token strings begin with 'xoxb'.
 
 ### Optional
 

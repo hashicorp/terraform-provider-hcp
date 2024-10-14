@@ -51,7 +51,7 @@ var integrationSlackConnectionSchema = schema.Schema{
 			},
 		},
 		"token": schema.StringAttribute{
-			Description: "Slack bot user oAuth token. Example: Bot token strings begin with 'xoxb'.",
+			Description: "Slack bot user OAuth token. Example: Bot token strings begin with 'xoxb'.",
 			Required:    true,
 			Sensitive:   true,
 			PlanModifiers: []planmodifier.String{
