@@ -1,0 +1,19 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+-> **Note:** HCP Vault Radar Terraform resources are in preview.
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_vault_radar_integration_jira_connection/resource.tf" }}
+
+
+{{ .SchemaMarkdown | trimspace }}
