@@ -17,11 +17,6 @@ import (
 )
 
 func TestAccVaultSecretsResourceApp(t *testing.T) {
-	os.Setenv("TF_ACC", "true")
-	os.Setenv("HCP_CLIENT_ID", "kcbQQ0IaPpiloGRDQsdzyRAFVI1CtasA")
-	os.Setenv("HCP_CLIENT_SECRET", "V3vRqbbEQnAOGN2P0tGHtHVhuqcMVeRH0jpeafJjSjadZ46xq76p2lSkfEkyKAC2")
-	os.Setenv("HCP_PROJECT_ID", "884e8064-4b19-42c8-88ac-06596f8606a4")
-
 	appName1 := generateRandomSlug()
 	appName2 := generateRandomSlug()
 
