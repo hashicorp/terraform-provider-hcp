@@ -8,35 +8,48 @@ import (
 	"fmt"
 	"regexp"
 
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
 
-var _ resource.Resource = &resourceVaultsecretsApp{}
-var _ resource.ResourceWithConfigure = &resourceVaultsecretsApp{}
-var _ resource.ResourceWithModifyPlan = &resourceVaultsecretsApp{}
-
-func NewVaultSecretsAppResource() resource.Resource {
-	return &resourceVaultsecretsApp{}
+type App struct {
+	ID             types.String `tfsdk:"id"`
+	AppName        types.String `tfsdk:"app_name"`
+	Description    types.String `tfsdk:"description"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	ResourceName   types.String `tfsdk:"resource_name"`
 }
 
-type resourceVaultsecretsApp struct {
+var _ resource.Resource = &resourceVaultSecretsApp{}
+var _ resource.ResourceWithConfigure = &resourceVaultSecretsApp{}
+var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsApp{}
+var _ resource.ResourceWithImportState = &resourceVaultSecretsApp{}
+
+func NewVaultSecretsAppResource() resource.Resource {
+	return &resourceVaultSecretsApp{}
+}
+
+type resourceVaultSecretsApp struct {
 	client *clients.Client
 }
 
-func (r *resourceVaultsecretsApp) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceVaultSecretsApp) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_vault_secrets_app"
 }
 
-func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "The Vault Secrets app resource manages an application.",
 		Attributes: map[string]schema.Attribute{
@@ -47,6 +60,9 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 			"app_name": schema.StringAttribute{
 				Required:    true,
 				Description: "The Vault Secrets App name.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`),
 						"must contain only letters, numbers or hyphens",
@@ -78,7 +94,7 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 	}
 }
 
-func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *resourceVaultSecretsApp) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -93,142 +109,133 @@ func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.Conf
 	r.client = client
 }
 
-func (r *resourceVaultsecretsApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *resourceVaultSecretsApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
 }
 
-type VaultSecretsApp struct {
-	ID             types.String `tfsdk:"id"`
-	AppName        types.String `tfsdk:"app_name"`
-	Description    types.String `tfsdk:"description"`
-	ProjectID      types.String `tfsdk:"project_id"`
-	OrganizationID types.String `tfsdk:"organization_id"`
-	ResourceName   types.String `tfsdk:"resource_name"`
+func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	resp.Diagnostics.Append(decorateOperation[*App](ctx, r.client, &resp.State, req.Plan.Get, "creating", func(i hvsResource) (any, error) {
+		app, ok := i.(*App)
+		if !ok {
+			return nil, fmt.Errorf("invalid resource type, expected *App, got: %T, this is a bug on the provider", i)
+		}
+
+		response, err := r.client.VaultSecretsPreview.CreateApp(&secret_service.CreateAppParams{
+			Body: &secretmodels.SecretServiceCreateAppBody{
+				Name:        app.AppName.ValueString(),
+				Description: app.Description.ValueString(),
+			},
+			OrganizationID: app.OrganizationID.ValueString(),
+			ProjectID:      app.ProjectID.ValueString(),
+		}, nil)
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
+			return nil, err
+		}
+		if response == nil || response.Payload == nil {
+			return nil, nil
+		}
+		return response.Payload.App, nil
+	})...)
 }
 
-func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan VaultSecretsApp
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+func (r *resourceVaultSecretsApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	resp.Diagnostics.Append(decorateOperation[*App](ctx, r.client, &resp.State, req.State.Get, "reading", func(i hvsResource) (any, error) {
+		app, ok := i.(*App)
+		if !ok {
+			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
+		}
 
-	projectID := r.client.Config.ProjectID
-	if !plan.ProjectID.IsUnknown() {
-		projectID = plan.ProjectID.ValueString()
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating Vault Secrets App", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(res.Name)
-	plan.AppName = types.StringValue(res.Name)
-	plan.Description = types.StringValue(res.Description)
-	plan.OrganizationID = types.StringValue(loc.OrganizationID)
-	plan.ProjectID = types.StringValue(loc.ProjectID)
-	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		response, err := r.client.VaultSecretsPreview.GetApp(
+			secret_service.NewGetAppParamsWithContext(ctx).
+				WithOrganizationID(app.OrganizationID.ValueString()).
+				WithProjectID(app.ProjectID.ValueString()).
+				WithName(app.AppName.ValueString()), nil)
+		if err != nil && !clients.IsResponseForbidden(err) { // The HVS API returns 403 if the app doesn't exist even if the principal has the correct permissions.
+			return nil, err
+		}
+		if response == nil || response.Payload == nil {
+			return nil, nil
+		}
+		return response.Payload.App, nil
+	})...)
 }
 
-func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state VaultSecretsApp
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+func (r *resourceVaultSecretsApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	resp.Diagnostics.Append(decorateOperation[*App](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i hvsResource) (any, error) {
+		app, ok := i.(*App)
+		if !ok {
+			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
+		}
 
-	projectID := r.client.Config.ProjectID
-	if !state.ProjectID.IsUnknown() {
-		projectID = state.ProjectID.ValueString()
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
-		return
-	}
-
-	state.AppName = types.StringValue(res.Name)
-	state.Description = types.StringValue(res.Description)
-	state.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		response, err := r.client.VaultSecretsPreview.UpdateApp(&secret_service.UpdateAppParams{
+			Body: &secretmodels.SecretServiceUpdateAppBody{
+				Description: app.Description.ValueString(),
+			},
+			Name:           app.AppName.ValueString(),
+			OrganizationID: app.OrganizationID.ValueString(),
+			ProjectID:      app.ProjectID.ValueString(),
+		}, nil)
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
+			return nil, err
+		}
+		if response == nil || response.Payload == nil {
+			return nil, nil
+		}
+		return response.Payload.App, nil
+	})...)
 }
 
-func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan VaultSecretsApp
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+func (r *resourceVaultSecretsApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	resp.Diagnostics.Append(decorateOperation[*App](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i hvsResource) (any, error) {
+		app, ok := i.(*App)
+		if !ok {
+			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
+		}
 
-	projectID := r.client.Config.ProjectID
-	if !plan.ProjectID.IsUnknown() {
-		projectID = plan.ProjectID.ValueString()
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), "Unable to get app")
-		return
-	}
-
-	plan.ID = types.StringValue(res.Name)
-	plan.AppName = types.StringValue(res.Name)
-	plan.Description = types.StringValue(res.Description)
-	plan.OrganizationID = types.StringValue(loc.OrganizationID)
-	plan.ProjectID = types.StringValue(loc.ProjectID)
-	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		_, err := r.client.VaultSecretsPreview.DeleteApp(
+			secret_service.NewDeleteAppParamsWithContext(ctx).
+				WithOrganizationID(app.OrganizationID.ValueString()).
+				WithProjectID(app.ProjectID.ValueString()).
+				WithName(app.AppName.ValueString()), nil)
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
+			return nil, err
+		}
+		return nil, nil
+	})...)
 }
 
-func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state VaultSecretsApp
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	projectID := r.client.Config.ProjectID
-	if !state.ProjectID.IsUnknown() {
-		projectID = state.ProjectID.ValueString()
-	}
-
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-
-	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting app", err.Error())
-		return
-	}
+func (r *resourceVaultSecretsApp) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), r.client.Config.OrganizationID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), r.client.Config.ProjectID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("app_name"), req.ID)...)
 }
 
-func generateResourceName(projectID, appName string) string {
-	return fmt.Sprintf("secrets/project/%s/app/%s", projectID, appName)
+var _ hvsResource = &App{}
+
+func (a *App) projectID() types.String {
+	return a.ProjectID
+}
+
+func (a *App) initModel(_ context.Context, orgID, projID string) diag.Diagnostics {
+	a.OrganizationID = types.StringValue(orgID)
+	a.ProjectID = types.StringValue(projID)
+
+	return diag.Diagnostics{}
+}
+
+func (a *App) fromModel(_ context.Context, orgID, projID string, model any) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	appModel, ok := model.(*secretmodels.Secrets20231128App)
+	if !ok {
+		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128App, got: %T", model))
+		return diags
+	}
+
+	a.OrganizationID = types.StringValue(orgID)
+	a.ProjectID = types.StringValue(projID)
+	a.ID = types.StringValue(appModel.ResourceID)
+	a.ResourceName = types.StringValue(appModel.ResourceName)
+
+	return diags
 }

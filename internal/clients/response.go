@@ -32,6 +32,17 @@ func IsResponseCodeInternalError(erro error) bool {
 	}
 }
 
+// IsResponseForbidden takes an error returned from a client service
+// request, and returns true if the response code was 403 forbidden
+func IsResponseForbidden(err error) bool {
+	var apiErr *runtime.APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.Code == http.StatusForbidden
+	} else {
+		return strings.Contains(err.Error(), fmt.Sprintf("[%d]", http.StatusForbidden))
+	}
+}
+
 // ErrorWithCode is an interface wrapping the error interface
 // to also return the response status code.
 type ErrorWithCode interface {
