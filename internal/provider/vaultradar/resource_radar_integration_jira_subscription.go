@@ -19,12 +19,12 @@ func NewIntegrationJiraSubscriptionResource() resource.Resource {
 	return &integrationSubscriptionResource{
 		TypeName:           "_vault_radar_integration_jira_subscription",
 		SubscriptionSchema: integrationJiraSubscriptionSchema,
-		GetPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics) {
+		GetSubscriptionFromPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics) {
 			var sub jiraSubscriptionResourceData
 			diags := plan.Get(ctx, &sub)
 			return &sub, diags
 		},
-		GetState: func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics) {
+		GetSubscriptionFromState: func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics) {
 			var sub jiraSubscriptionResourceData
 			diags := state.Get(ctx, &sub)
 			return &sub, diags
@@ -67,7 +67,7 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 			},
 		},
 		"issue_type": schema.StringAttribute{
-			Description: "The type of issue to be created from the alert(s). Example: Task",
+			Description: "The type of issue to be created from the event(s). Example: Task",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
@@ -79,7 +79,7 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 
 		// Optional inputs
 		"assignee": schema.StringAttribute{
-			Description: "The identifier of the Jira user who will be assigned the ticket. Example: 1e25fbc8895d5b0c9703c19c",
+			Description: "The identifier of the Jira user who will be assigned the ticket. In case of Jira Cloud, this will be the Atlassian Account ID of the user. Example: 71509:11bb945b-c0de-4bac-9d57-9f09db2f7bc9",
 			Optional:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),

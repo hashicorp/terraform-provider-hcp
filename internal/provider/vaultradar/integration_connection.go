@@ -25,12 +25,12 @@ var (
 // Examples: hcp_vault_radar_integration_jira_connection and hcp_vault_radar_integration_slack_connection make use of
 // this implementation to define resources with specific schemas, validation, and state details related to their types.
 type integrationConnectionResource struct {
-	client           *clients.Client
-	TypeName         string
-	IntegrationType  string
-	ConnectionSchema schema.Schema
-	GetPlan          func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics)
-	GetState         func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics)
+	client                 *clients.Client
+	TypeName               string
+	IntegrationType        string
+	ConnectionSchema       schema.Schema
+	GetConnectionFromPlan  func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics)
+	GetConnectionFromState func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics)
 }
 
 // integrationConnection is the minimal plan/state that a connection must have.
@@ -75,36 +75,36 @@ func (r *integrationConnectionResource) ModifyPlan(ctx context.Context, req reso
 }
 
 func (r *integrationConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	plan, diags := r.GetPlan(ctx, req.Plan)
+	conn, diags := r.GetConnectionFromPlan(ctx, req.Plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !plan.GetProjectID().IsUnknown() {
-		projectID = plan.GetProjectID().ValueString()
+	if !conn.GetProjectID().IsUnknown() {
+		projectID = conn.GetProjectID().ValueString()
 	}
 
 	errSummary := "Error creating Radar Integration Connection"
 
 	// Check for an existing connection with the same name.
-	existing, err := clients.GetIntegrationConnectionByName(ctx, r.client, projectID, plan.GetName().ValueString())
+	existing, err := clients.GetIntegrationConnectionByName(ctx, r.client, projectID, conn.GetName().ValueString())
 	if err != nil && !clients.IsResponseCodeNotFound(err) {
 		resp.Diagnostics.AddError(errSummary, err.Error())
 	}
 	if existing != nil {
-		resp.Diagnostics.AddError(errSummary, fmt.Sprintf("Connection with name: %q already exists.", plan.GetName().ValueString()))
+		resp.Diagnostics.AddError(errSummary, fmt.Sprintf("Connection with name: %q already exists.", conn.GetName().ValueString()))
 		return
 	}
 
-	authKey, diags := plan.GetAuthKey()
+	authKey, diags := conn.GetAuthKey()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	details, diags := plan.GetDetails()
+	details, diags := conn.GetDetails()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,7 +114,7 @@ func (r *integrationConnectionResource) Create(ctx context.Context, req resource
 		IntegrationType: r.IntegrationType,
 		IsSink:          true,
 		IsSource:        false,
-		Name:            plan.GetName().ValueString(),
+		Name:            conn.GetName().ValueString(),
 		AuthKey:         authKey,
 		Details:         details,
 	})
@@ -123,24 +123,24 @@ func (r *integrationConnectionResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	plan.SetID(types.StringValue(res.GetPayload().ID))
-	plan.SetProjectID(types.StringValue(projectID))
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	conn.SetID(types.StringValue(res.GetPayload().ID))
+	conn.SetProjectID(types.StringValue(projectID))
+	resp.Diagnostics.Append(resp.State.Set(ctx, conn)...)
 }
 
 func (r *integrationConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	state, diags := r.GetState(ctx, req.State)
+	conn, diags := r.GetConnectionFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.GetProjectID().IsUnknown() {
-		projectID = state.GetProjectID().ValueString()
+	if !conn.GetProjectID().IsUnknown() {
+		projectID = conn.GetProjectID().ValueString()
 	}
 
-	res, err := clients.GetIntegrationConnectionByID(ctx, r.client, projectID, state.GetID().ValueString())
+	res, err := clients.GetIntegrationConnectionByID(ctx, r.client, projectID, conn.GetID().ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// Resource is no longer on the server.
@@ -152,30 +152,30 @@ func (r *integrationConnectionResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state.SetName(types.StringValue(res.GetPayload().Name))
-	diags = state.SetDetails(res.GetPayload().Details)
+	conn.SetName(types.StringValue(res.GetPayload().Name))
+	diags = conn.SetDetails(res.GetPayload().Details)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &conn)...)
 }
 
 func (r *integrationConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	state, diags := r.GetState(ctx, req.State)
+	conn, diags := r.GetConnectionFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.GetProjectID().IsUnknown() {
-		projectID = state.GetProjectID().ValueString()
+	if !conn.GetProjectID().IsUnknown() {
+		projectID = conn.GetProjectID().ValueString()
 	}
 
 	// Assert resource still exists.
-	if _, err := clients.GetIntegrationConnectionByID(ctx, r.client, projectID, state.GetID().ValueString()); err != nil {
+	if _, err := clients.GetIntegrationConnectionByID(ctx, r.client, projectID, conn.GetID().ValueString()); err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// Resource is no longer on the server.
 			tflog.Info(ctx, "Radar integration connection not found, removing from state.")
@@ -186,7 +186,7 @@ func (r *integrationConnectionResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	if err := clients.DeleteIntegrationConnection(ctx, r.client, projectID, state.GetID().ValueString()); err != nil {
+	if err := clients.DeleteIntegrationConnection(ctx, r.client, projectID, conn.GetID().ValueString()); err != nil {
 		resp.Diagnostics.AddError("Unable to delete Radar integration connection", err.Error())
 		return
 	}

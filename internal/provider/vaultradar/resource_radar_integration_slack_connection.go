@@ -20,12 +20,12 @@ func NewIntegrationSlackConnectionResource() resource.Resource {
 		TypeName:         "_vault_radar_integration_slack_connection",
 		IntegrationType:  "slack",
 		ConnectionSchema: integrationSlackConnectionSchema,
-		GetPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics) {
+		GetConnectionFromPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics) {
 			var conn slackConnectionResourceData
 			diags := plan.Get(ctx, &conn)
 			return &conn, diags
 		},
-		GetState: func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics) {
+		GetConnectionFromState: func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics) {
 			var conn slackConnectionResourceData
 			diags := state.Get(ctx, &conn)
 			return &conn, diags

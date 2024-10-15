@@ -21,12 +21,12 @@ func NewIntegrationJiraConnectionResource() resource.Resource {
 		TypeName:         "_vault_radar_integration_jira_connection",
 		IntegrationType:  "jira",
 		ConnectionSchema: integrationJiraConnectionSchema,
-		GetPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics) {
+		GetConnectionFromPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationConnection, diag.Diagnostics) {
 			var conn jiraConnectionResourceData
 			diags := plan.Get(ctx, &conn)
 			return &conn, diags
 		},
-		GetState: func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics) {
+		GetConnectionFromState: func(ctx context.Context, state tfsdk.State) (integrationConnection, diag.Diagnostics) {
 			var conn jiraConnectionResourceData
 			diags := state.Get(ctx, &conn)
 			return &conn, diags
@@ -54,6 +54,7 @@ var integrationJiraConnectionSchema = schema.Schema{
 		"email": schema.StringAttribute{
 			Description: `Jira user's email.`,
 			Required:    true,
+			Sensitive:   true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},

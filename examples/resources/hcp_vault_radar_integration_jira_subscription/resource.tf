@@ -16,6 +16,6 @@ resource "hcp_vault_radar_integration_jira_subscription" "jira_subscription" {
   connection_id    = hcp_vault_radar_integration_jira_connection.jira_connection.id
   jira_project_key = "SEC"
   issue_type       = "Task"
-  assignee         = "id-of-assignee"
+  assignee         = "71509:11bb945b-c0de-4bac-9d57-9f09db2f7bc9"
   message          = "Example message"
 }

@@ -34,7 +34,7 @@ resource "hcp_vault_radar_integration_jira_connection" "jira_connection" {
 ### Required
 
 - `base_url` (String) The Jira base URL. Example: https://acme.atlassian.net
-- `email` (String) Jira user's email.
+- `email` (String, Sensitive) Jira user's email.
 - `name` (String) Name of connection. Name must be unique.
 - `token` (String, Sensitive) A Jira API token.
 

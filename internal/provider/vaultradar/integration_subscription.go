@@ -25,11 +25,11 @@ var (
 // Examples: hcp_vault_radar_integration_jira_subscription and hcp_vault_radar_integration_slack_subscription make use of
 // this implementation to define resources with specific schemas, validation, and state details related to their types.
 type integrationSubscriptionResource struct {
-	client             *clients.Client
-	TypeName           string
-	SubscriptionSchema schema.Schema
-	GetPlan            func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics)
-	GetState           func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics)
+	client                   *clients.Client
+	TypeName                 string
+	SubscriptionSchema       schema.Schema
+	GetSubscriptionFromPlan  func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics)
+	GetSubscriptionFromState func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics)
 }
 
 // integrationSubscription is the minimal plan/state that a subscription must have.
@@ -75,38 +75,38 @@ func (r *integrationSubscriptionResource) ModifyPlan(ctx context.Context, req re
 }
 
 func (r *integrationSubscriptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	plan, diags := r.GetPlan(ctx, req.Plan)
+	subscription, diags := r.GetSubscriptionFromPlan(ctx, req.Plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !plan.GetProjectID().IsUnknown() {
-		projectID = plan.GetProjectID().ValueString()
+	if !subscription.GetProjectID().IsUnknown() {
+		projectID = subscription.GetProjectID().ValueString()
 	}
 
 	errSummary := "Error creating Radar Integration Subscription"
 
 	// Check for an existing subscription with the same name.
-	existing, err := clients.GetIntegrationSubscriptionByName(ctx, r.client, projectID, plan.GetName().ValueString())
+	existing, err := clients.GetIntegrationSubscriptionByName(ctx, r.client, projectID, subscription.GetName().ValueString())
 	if err != nil && !clients.IsResponseCodeNotFound(err) {
 		resp.Diagnostics.AddError(errSummary, err.Error())
 	}
 	if existing != nil {
-		resp.Diagnostics.AddError(errSummary, fmt.Sprintf("Subscription with name: %q already exists.", plan.GetName().ValueString()))
+		resp.Diagnostics.AddError(errSummary, fmt.Sprintf("Subscription with name: %q already exists.", subscription.GetName().ValueString()))
 		return
 	}
 
-	details, diags := plan.GetDetails()
+	details, diags := subscription.GetDetails()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	res, err := clients.CreateIntegrationSubscription(ctx, r.client, projectID, service.CreateIntegrationSubscriptionBody{
-		Name:         plan.GetName().ValueString(),
-		ConnectionID: plan.GetConnectionID().ValueString(),
+		Name:         subscription.GetName().ValueString(),
+		ConnectionID: subscription.GetConnectionID().ValueString(),
 		Details:      details,
 	})
 	if err != nil {
@@ -114,24 +114,24 @@ func (r *integrationSubscriptionResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	plan.SetID(types.StringValue(res.GetPayload().ID))
-	plan.SetProjectID(types.StringValue(projectID))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	subscription.SetID(types.StringValue(res.GetPayload().ID))
+	subscription.SetProjectID(types.StringValue(projectID))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &subscription)...)
 }
 
 func (r *integrationSubscriptionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	state, diags := r.GetState(ctx, req.State)
+	subscription, diags := r.GetSubscriptionFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.GetProjectID().IsUnknown() {
-		projectID = state.GetProjectID().ValueString()
+	if !subscription.GetProjectID().IsUnknown() {
+		projectID = subscription.GetProjectID().ValueString()
 	}
 
-	res, err := clients.GetIntegrationSubscriptionByID(ctx, r.client, projectID, state.GetID().ValueString())
+	res, err := clients.GetIntegrationSubscriptionByID(ctx, r.client, projectID, subscription.GetID().ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// Resource is no longer on the server.
@@ -144,35 +144,35 @@ func (r *integrationSubscriptionResource) Read(ctx context.Context, req resource
 	}
 
 	payload := res.GetPayload()
-	state.SetName(types.StringValue(payload.Name))
-	state.SetConnectionID(types.StringValue(payload.ConnectionID))
+	subscription.SetName(types.StringValue(payload.Name))
+	subscription.SetConnectionID(types.StringValue(payload.ConnectionID))
 
-	diags = state.SetDetails(res.GetPayload().Details)
+	diags = subscription.SetDetails(res.GetPayload().Details)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &subscription)...)
 }
 
 func (r *integrationSubscriptionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	state, diags := r.GetState(ctx, req.State)
+	subscription, diags := r.GetSubscriptionFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !state.GetProjectID().IsUnknown() {
-		projectID = state.GetProjectID().ValueString()
+	if !subscription.GetProjectID().IsUnknown() {
+		projectID = subscription.GetProjectID().ValueString()
 	}
 
 	// Assert resource still exists.
-	if _, err := clients.GetIntegrationSubscriptionByID(ctx, r.client, projectID, state.GetID().ValueString()); err != nil {
+	if _, err := clients.GetIntegrationSubscriptionByID(ctx, r.client, projectID, subscription.GetID().ValueString()); err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			// Resource is no longer on the server.
-			tflog.Info(ctx, "Radar integration subscription not found, removing from state.")
+			tflog.Info(ctx, "Radar integration subscription not found, removing from subscription.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -180,7 +180,7 @@ func (r *integrationSubscriptionResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	if err := clients.DeleteIntegrationSubscription(ctx, r.client, projectID, state.GetID().ValueString()); err != nil {
+	if err := clients.DeleteIntegrationSubscription(ctx, r.client, projectID, subscription.GetID().ValueString()); err != nil {
 		resp.Diagnostics.AddError("Unable to delete Radar integration subscription", err.Error())
 		return
 	}

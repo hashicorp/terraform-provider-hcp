@@ -19,12 +19,12 @@ func NewIntegrationSlackSubscriptionResource() resource.Resource {
 	return &integrationSubscriptionResource{
 		TypeName:           "_vault_radar_integration_slack_subscription",
 		SubscriptionSchema: integrationSlackSubscriptionSchema,
-		GetPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics) {
+		GetSubscriptionFromPlan: func(ctx context.Context, plan tfsdk.Plan) (integrationSubscription, diag.Diagnostics) {
 			var sub slackSubscriptionResourceData
 			diags := plan.Get(ctx, &sub)
 			return &sub, diags
 		},
-		GetState: func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics) {
+		GetSubscriptionFromState: func(ctx context.Context, state tfsdk.State) (integrationSubscription, diag.Diagnostics) {
 			var sub slackSubscriptionResourceData
 			diags := state.Get(ctx, &sub)
 			return &sub, diags
@@ -57,7 +57,7 @@ var integrationSlackSubscriptionSchema = schema.Schema{
 			},
 		},
 		"channel": schema.StringAttribute{
-			Description: "Slack channel that messages will be sent to. Note that HashiCorp Vault Radar will send a test message to verify channel's name. Example: dev-ops-team",
+			Description: "Name of the Slack channel that messages should be sent to. Note that HashiCorp Vault Radar will send a test message to verify the channel. Example: dev-ops-team",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),

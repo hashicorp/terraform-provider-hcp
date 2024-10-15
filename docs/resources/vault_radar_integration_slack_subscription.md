@@ -38,7 +38,7 @@ resource "hcp_vault_radar_integration_slack_subscription" "slack_subscription" {
 
 ### Required
 
-- `channel` (String) Slack channel that messages will be sent to. Note that HashiCorp Vault Radar will send a test message to verify channel's name. Example: dev-ops-team
+- `channel` (String) Name of the Slack channel that messages should be sent to. Note that HashiCorp Vault Radar will send a test message to verify the channel. Example: dev-ops-team
 - `connection_id` (String) id of the integration slack connection to use for the subscription.
 - `name` (String) Name of subscription. Name must be unique.
 
