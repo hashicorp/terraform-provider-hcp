@@ -4,23 +4,24 @@
 package providersdkv2
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"
 )
 
 func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentSimpleSetUnset")
 	channelSlug := bucketSlug // No need for a different slug
-	iterationFingerprint := "1"
+	versionFingerprint := "1"
 
-	var iteration *models.HashicorpCloudPackerIteration
+	var version *models.HashicorpCloudPacker20230101Version
 
 	baseAssignment := testAccPackerAssignmentBuilderBase("SimpleSetUnset", fmt.Sprintf("%q", bucketSlug), fmt.Sprintf("%q", channelSlug))
 
@@ -29,8 +30,8 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			upsertChannel(t, bucketSlug, channelSlug, "")
-			iteration, _ = upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
+			createOrUpdateChannel(t, bucketSlug, channelSlug, "")
+			version, _ = upsertCompleteVersion(t, bucketSlug, versionFingerprint, nil)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -41,14 +42,14 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			return nil
 		},
 		Steps: []resource.TestStep{
-			{ // Set channel assignment to the iteration
+			{ // Set channel assignment to the version
 				Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilderFromAssignment(
 					baseAssignment,
-					``, fmt.Sprintf("%q", iterationFingerprint), ``,
+					fmt.Sprintf("%q", versionFingerprint),
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.BlockName(), bucketSlug, channelSlug),
-					testAccCheckAssignmentStateMatchesIteration(baseAssignment.BlockName(), &iteration),
+					testAccCheckAssignmentStateMatchesVersion(baseAssignment.BlockName(), &version),
 					testAccCheckAssignmentStateMatchesAPI(baseAssignment.BlockName()),
 				),
 			},
@@ -61,11 +62,11 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 			{ // Set channel assignment to null
 				Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilderFromAssignment(
 					baseAssignment,
-					``, fmt.Sprintf("%q", unassignString), ``,
+					fmt.Sprintf("%q", unassignString),
 				))),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssignmentStateBucketAndChannelName(baseAssignment.BlockName(), bucketSlug, channelSlug),
-					testAccCheckAssignmentStateMatchesIteration(baseAssignment.BlockName(), nil),
+					testAccCheckAssignmentStateMatchesVersion(baseAssignment.BlockName(), nil),
 					testAccCheckAssignmentStateMatchesAPI(baseAssignment.BlockName()),
 				),
 			},
@@ -85,7 +86,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 	uniqueName := "AssignLatest"
 
 	// This config creates a data source that is read before apply time
-	beforeIteration := testAccPackerDataIterationBuilder(
+	beforeVersion := testAccPackerDataVersionBuilder(
 		uniqueName,
 		fmt.Sprintf("%q", bucketSlug),
 		`"latest"`,
@@ -93,12 +94,12 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 	beforeChannel := testAccPackerChannelBuilderBase(
 		uniqueName,
 		fmt.Sprintf("%q", channelSlug),
-		beforeIteration.AttributeRef("bucket_name"),
+		beforeVersion.AttributeRef("bucket_name"),
 	)
 	beforeAssignment := testAccPackerAssignmentBuilderWithChannelReference(
 		uniqueName,
 		beforeChannel,
-		beforeIteration.AttributeRef("id"), ``, ``,
+		beforeVersion.AttributeRef("fingerprint"),
 	)
 
 	// This config creates a data source that is read after apply time,
@@ -108,7 +109,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 		fmt.Sprintf("%q", channelSlug),
 		fmt.Sprintf("%q", bucketSlug),
 	)
-	afterIteration := testAccPackerDataIterationBuilder(
+	afterVersion := testAccPackerDataVersionBuilder(
 		uniqueName,
 		afterChannel.AttributeRef("bucket_name"),
 		`"latest"`,
@@ -116,17 +117,17 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 	afterAssignment := testAccPackerAssignmentBuilderWithChannelReference(
 		uniqueName,
 		afterChannel,
-		afterIteration.AttributeRef("id"), ``, ``,
+		afterVersion.AttributeRef("fingerprint"),
 	)
 
-	var iteration *models.HashicorpCloudPackerIteration
+	var version *models.HashicorpCloudPacker20230101Version
 
-	generateStep := func(iterationData, channelResource, assignmentResource testAccConfigBuilderInterface) resource.TestStep {
+	generateStep := func(versionData, channelResource, assignmentResource testAccConfigBuilderInterface) resource.TestStep {
 		return resource.TestStep{
-			Config: testConfig(testAccConfigBuildersToString(iterationData, channelResource, assignmentResource)),
+			Config: testConfig(testAccConfigBuildersToString(versionData, channelResource, assignmentResource)),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckAssignmentStateBucketAndChannelName(assignmentResource.BlockName(), bucketSlug, channelSlug),
-				testAccCheckAssignmentStateMatchesIteration(assignmentResource.BlockName(), &iteration),
+				testAccCheckAssignmentStateMatchesVersion(assignmentResource.BlockName(), &version),
 				testAccCheckAssignmentStateMatchesChannelState(assignmentResource.BlockName(), channelResource.BlockName()),
 				testAccCheckAssignmentStateMatchesAPI(assignmentResource.BlockName()),
 			),
@@ -138,7 +139,7 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			iteration, _ = upsertCompleteIteration(t, bucketSlug, "abc", nil)
+			version, _ = upsertCompleteVersion(t, bucketSlug, "abc", nil)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -146,11 +147,11 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 			return nil
 		},
 		Steps: []resource.TestStep{
-			generateStep(beforeIteration, beforeChannel, beforeAssignment),
+			generateStep(beforeVersion, beforeChannel, beforeAssignment),
 			{ // Remove any resources and data sources completely
 				Config: testConfig(""),
 			},
-			generateStep(afterIteration, afterChannel, afterAssignment),
+			generateStep(afterVersion, afterChannel, afterAssignment),
 		},
 	})
 }
@@ -159,13 +160,13 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentInvalidInputs")
 	channelSlug := bucketSlug // No need for a different slug
 
-	generateStep := func(iterID string, iterFingerprint string, iterVersion string, errorRegex string) resource.TestStep {
+	generateStep := func(fingerprint string, errorRegex string) resource.TestStep {
 		return resource.TestStep{
 			Config: testConfig(testAccConfigBuildersToString(testAccPackerAssignmentBuilder(
 				"InvalidInputs",
 				fmt.Sprintf("%q", bucketSlug),
 				fmt.Sprintf("%q", channelSlug),
-				iterID, iterFingerprint, iterVersion,
+				fingerprint,
 			))),
 			ExpectError: regexp.MustCompile(errorRegex),
 		}
@@ -176,7 +177,7 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			upsertChannel(t, bucketSlug, channelSlug, "")
+			createOrUpdateChannel(t, bucketSlug, channelSlug, "")
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -185,37 +186,16 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			generateStep(
-				`""`, ``, ``,
-				`.*expected "iteration_id" to not be an empty string.*`,
+				`""`,
+				`.*expected "version_fingerprint" to not be an empty string.*`,
 			),
 			generateStep(
-				``, `""`, ``,
-				`.*expected "iteration_fingerprint" to not be an empty string.*`,
+				`"doesNotExist"`,
+				`.*version with fingerprint \(fingerprint: doesNotExist\) does not exist.*`,
 			),
-			generateStep(
-				`"abcd"`, `"efgh"`, ``,
-				`.*only one of.*\n.*can be specified.*`,
-			),
-			generateStep(
-				`"1234"`, ``, `5678`,
-				`.*only one of.*\n.*can be specified.*`,
-			),
-			generateStep(
-				``, `"jamesBond"`, `007`,
-				`.*only one of.*\n.*can be specified.*`,
-			),
-			generateStep(
-				`"doesNotExist"`, ``, ``,
-				`.*iteration with attributes \(id: doesNotExist\) does not exist.*`,
-			),
-			generateStep(
-				``, `"alsoDoesNotExist"`, ``,
-				`.*iteration with attributes \(fingerprint: alsoDoesNotExist\) does not exist.*`,
-			),
-			generateStep(
-				``, ``, `99`,
-				`.*iteration with attributes \(incremental_version: 99\) does not exist.*`,
-			),
+			{ // Create a dummy non-empty state so that `CheckDestroy` will run.
+				Config: testAccConfigDummyNonemptyState,
+			},
 		},
 	})
 }
@@ -223,7 +203,7 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentCreateFailPreassign")
 	channelSlug := bucketSlug // No need for a different slug
-	iterationFingerprint := "1"
+	versionFingerprint := "1"
 
 	channel := testAccPackerChannelBuilderBase(
 		channelSlug,
@@ -234,7 +214,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 	assignment := testAccPackerAssignmentBuilderWithChannelReference(
 		"CreateFailsWhenPreassigned",
 		channel,
-		``, ``, `0`,
+		`"2"`,
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -242,7 +222,7 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)
 			upsertBucket(t, bucketSlug)
-			upsertCompleteIteration(t, bucketSlug, iterationFingerprint, nil)
+			upsertCompleteVersion(t, bucketSlug, versionFingerprint, nil)
 		},
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy: func(state *terraform.State) error {
@@ -258,11 +238,11 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 					updateChannelAssignment(t,
 						bucketSlug,
 						channelSlug,
-						&models.HashicorpCloudPackerIteration{Fingerprint: iterationFingerprint},
+						versionFingerprint,
 					)
 				},
 				Config:      testConfig(testAccConfigBuildersToString(channel, assignment)),
-				ExpectError: regexp.MustCompile(".*channel with.*already has an assigned iteration.*"),
+				ExpectError: regexp.MustCompile(".*channel with.*already has an assigned version.*"),
 			},
 		},
 	})
@@ -276,7 +256,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 		"HCPManagedChannelErrors",
 		fmt.Sprintf("%q", bucketSlug),
 		fmt.Sprintf("%q", channelSlug),
-		``, ``, `0`,
+		`1`,
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -309,7 +289,7 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 }
 
 // Test that all attributes generate and successfully apply plans to fix
-// the assignment when it is changed OOB from null to a non-null iteration
+// the assignment when it is changed OOB from null to a non-null version
 func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 	bucketSlug := testAccCreateSlug("AssignmentEnforceNull")
 	channelSlug := bucketSlug // No need for a different slug
@@ -319,27 +299,41 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 		fmt.Sprintf("%q", bucketSlug),
 	)
 
-	var iteration1 *models.HashicorpCloudPackerIteration
-	var iteration2 *models.HashicorpCloudPackerIteration
+	var version1 *models.HashicorpCloudPacker20230101Version
+	var version2 *models.HashicorpCloudPacker20230101Version
 
 	baseAssignment := testAccPackerAssignmentBuilderBaseWithChannelReference("EnforceNull", channel)
 
-	generateEnforceNullCheckSteps := func(iterID string, iterFingerprint string, iterVersion string) []resource.TestStep {
-		assignment := testAccPackerAssignmentBuilderFromAssignment(
-			baseAssignment,
-			iterID, iterFingerprint, iterVersion,
-		)
+	assignment := testAccPackerAssignmentBuilderFromAssignment(
+		baseAssignment,
+		fmt.Sprintf("%q", unassignString),
+	)
 
-		config := testConfig(testAccConfigBuildersToString(channel, assignment))
+	config := testConfig(testAccConfigBuildersToString(channel, assignment))
 
-		checks := resource.ComposeAggregateTestCheckFunc(
-			testAccCheckAssignmentStateBucketAndChannelName(assignment.BlockName(), bucketSlug, channelSlug),
-			testAccCheckAssignmentStateMatchesIteration(assignment.BlockName(), nil),
-			testAccCheckAssignmentStateMatchesChannelState(assignment.BlockName(), channel.BlockName()),
-			testAccCheckAssignmentStateMatchesAPI(assignment.BlockName()),
-		)
+	checks := resource.ComposeAggregateTestCheckFunc(
+		testAccCheckAssignmentStateBucketAndChannelName(assignment.BlockName(), bucketSlug, channelSlug),
+		testAccCheckAssignmentStateMatchesVersion(assignment.BlockName(), nil),
+		testAccCheckAssignmentStateMatchesChannelState(assignment.BlockName(), channel.BlockName()),
+		testAccCheckAssignmentStateMatchesAPI(assignment.BlockName()),
+	)
 
-		return []resource.TestStep{
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
+			upsertRegistry(t)
+			upsertBucket(t, bucketSlug)
+			// Pushing two versions so that we can also implicitly verify that
+			// nullifying the assignment doesn't actually result in a rollback to version1
+			version1, _ = upsertCompleteVersion(t, bucketSlug, "1", nil)
+			version2, _ = upsertCompleteVersion(t, bucketSlug, "2", nil)
+		},
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		CheckDestroy: func(state *terraform.State) error {
+			deleteBucket(t, bucketSlug, true)
+			return nil
+		},
+		Steps: []resource.TestStep{
 			{ // Set up channel and set the assignment using Terraform
 				// This should be a no-op unless it is the first step, where the channel and null assignment are
 				// initially created. However, this step is included every time to make sure we've applied the
@@ -349,50 +343,24 @@ func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
 			},
 			{ // Change assignment OOB, then test with assignment set by Terraform
 				PreConfig: func() {
-					updateChannelAssignment(t, bucketSlug, channelSlug, &models.HashicorpCloudPackerIteration{ID: iteration1.ID})
-					updateChannelAssignment(t, bucketSlug, channelSlug, &models.HashicorpCloudPackerIteration{ID: iteration2.ID})
+					updateChannelAssignment(t, bucketSlug, channelSlug, version1.Fingerprint)
+					updateChannelAssignment(t, bucketSlug, channelSlug, version2.Fingerprint)
 				},
 				Config: config,
 				Check:  checks,
 			},
-		}
-	}
-
-	var generatedSteps []resource.TestStep
-	// Add null ID steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(fmt.Sprintf("%q", unassignString), ``, ``)...)
-	// Add null Fingerprint steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, fmt.Sprintf("%q", unassignString), ``)...)
-	// Add null Version steps
-	generatedSteps = append(generatedSteps, generateEnforceNullCheckSteps(``, ``, `0`)...)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
-			upsertRegistry(t)
-			upsertBucket(t, bucketSlug)
-			// Pushing two iterations so that we can also implicitly verify that
-			// nullifying the assignment doesn't actually result in a rollback to iteration1
-			iteration1, _ = upsertCompleteIteration(t, bucketSlug, "1", nil)
-			iteration2, _ = upsertCompleteIteration(t, bucketSlug, "2", nil)
 		},
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		CheckDestroy: func(state *terraform.State) error {
-			deleteBucket(t, bucketSlug, true)
-			return nil
-		},
-		Steps: generatedSteps,
 	})
 }
 
-// An AssignmentBuilder without any iteration fields set.
+// An AssignmentBuilder without any version fields set.
 // To be used downstream by other assignments to ensure core settings aren't changed.
 func testAccPackerAssignmentBuilderBase(uniqueName string, bucketName string, channelName string) testAccConfigBuilderInterface {
 	return testAccPackerAssignmentBuilder(
 		uniqueName,
 		bucketName,
 		channelName,
-		``, ``, ``,
+		``,
 	)
 }
 
@@ -404,37 +372,33 @@ func testAccPackerAssignmentBuilderBaseWithChannelReference(uniqueName string, c
 	)
 }
 
-func testAccPackerAssignmentBuilder(uniqueName string, bucketName string, channelName string, iterID string, iterFingerprint string, iterVersion string) testAccConfigBuilderInterface {
+func testAccPackerAssignmentBuilder(uniqueName string, bucketName string, channelName string, fingerprint string) testAccConfigBuilderInterface {
 	return &testAccResourceConfigBuilder{
 		resourceType: "hcp_packer_channel_assignment",
 		uniqueName:   uniqueName,
 		attributes: map[string]string{
-			"bucket_name":           bucketName,
-			"channel_name":          channelName,
-			"iteration_id":          iterID,
-			"iteration_fingerprint": iterFingerprint,
-			"iteration_version":     iterVersion,
+			"bucket_name":         bucketName,
+			"channel_name":        channelName,
+			"version_fingerprint": fingerprint,
 		},
 	}
 }
 
-func testAccPackerAssignmentBuilderFromAssignment(oldAssignment testAccConfigBuilderInterface, iterID string, iterFingerprint string, iterVersion string) testAccConfigBuilderInterface {
+func testAccPackerAssignmentBuilderFromAssignment(oldAssignment testAccConfigBuilderInterface, fingerprint string) testAccConfigBuilderInterface {
 	return testAccPackerAssignmentBuilder(
 		oldAssignment.UniqueName(),
 		oldAssignment.Attributes()["bucket_name"],
 		oldAssignment.Attributes()["channel_name"],
-		iterID,
-		iterFingerprint,
-		iterVersion,
+		fingerprint,
 	)
 }
 
-func testAccPackerAssignmentBuilderWithChannelReference(uniqueName string, channel testAccConfigBuilderInterface, iterID string, iterFingerprint string, iterVersion string) testAccConfigBuilderInterface {
+func testAccPackerAssignmentBuilderWithChannelReference(uniqueName string, channel testAccConfigBuilderInterface, fingerprint string) testAccConfigBuilderInterface {
 	return testAccPackerAssignmentBuilder(
 		uniqueName,
 		channel.AttributeRef("bucket_name"),
 		channel.AttributeRef("name"),
-		iterID, iterFingerprint, iterVersion,
+		fingerprint,
 	)
 }
 
@@ -454,36 +418,29 @@ func testAccCheckAssignmentStateMatchesChannelState(assignmentResourceName strin
 	)
 }
 
-func testAccCheckAssignmentStateMatchesIteration(resourceName string, iterationPtr **models.HashicorpCloudPackerIteration) resource.TestCheckFunc {
+func testAccCheckAssignmentStateMatchesVersion(resourceName string, versionPtr **models.HashicorpCloudPacker20230101Version) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		var iteration *models.HashicorpCloudPackerIteration
-		if iterationPtr != nil {
-			iteration = *iterationPtr
+		var version *models.HashicorpCloudPacker20230101Version
+		if versionPtr != nil {
+			version = *versionPtr
 		}
 
-		if iteration == nil {
-			iteration = &models.HashicorpCloudPackerIteration{}
+		if version == nil {
+			version = &models.HashicorpCloudPacker20230101Version{}
 		}
 
-		iterID := iteration.ID
-		if iterID == "" {
-			iterID = unassignString
-		}
-
-		iterFingerprint := iteration.Fingerprint
-		if iterFingerprint == "" {
-			iterFingerprint = unassignString
+		versionFingerprint := version.Fingerprint
+		if versionFingerprint == "" {
+			versionFingerprint = unassignString
 		}
 
 		return resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr(resourceName, "iteration_id", iterID),
-			resource.TestCheckResourceAttr(resourceName, "iteration_fingerprint", iterFingerprint),
-			resource.TestCheckResourceAttr(resourceName, "iteration_version", fmt.Sprintf("%d", iteration.IncrementalVersion)),
+			resource.TestCheckResourceAttr(resourceName, "version_fingerprint", versionFingerprint),
 		)(state)
 	}
 }
 
-func testAccPullIterationFromAPIWithAssignmentState(resourceName string, state *terraform.State) (*models.HashicorpCloudPackerIteration, error) {
+func testAccPullVersionFromAPIWithAssignmentState(resourceName string, state *terraform.State) (*models.HashicorpCloudPacker20230101Version, error) {
 	client := testAccProvider.Meta().(*clients.Client)
 
 	loc, _ := testAccGetLocationFromState(resourceName, state)
@@ -497,33 +454,52 @@ func testAccPullIterationFromAPIWithAssignmentState(resourceName string, state *
 		return nil, err
 	}
 
-	channel, err := clients.GetPackerChannelBySlug(context.Background(), client, loc, *bucketName, *channelName)
+	bucketLocation := location.GenericBucketLocation{
+		Location: location.GenericLocation{
+			OrganizationID: loc.OrganizationID,
+			ProjectID:      loc.ProjectID,
+		},
+		BucketName: *bucketName,
+	}
+	channel, err := packerv2.GetChannelByName(client, bucketLocation, *channelName)
 	if err != nil {
 		return nil, err
 	}
 
-	return channel.Iteration, nil
+	return channel.Version, nil
 }
 
 func testAccCheckAssignmentStateMatchesAPI(resourceName string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		iteration, err := testAccPullIterationFromAPIWithAssignmentState(resourceName, state)
+		version, err := testAccPullVersionFromAPIWithAssignmentState(resourceName, state)
 		if err != nil {
 			return err
 		}
-		return testAccCheckAssignmentStateMatchesIteration(resourceName, &iteration)(state)
+		return testAccCheckAssignmentStateMatchesVersion(resourceName, &version)(state)
 	}
 }
 
 func testAccCheckAssignmentDestroyed(resourceName string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		iteration, err := testAccPullIterationFromAPIWithAssignmentState(resourceName, state)
+		version, err := testAccPullVersionFromAPIWithAssignmentState(resourceName, state)
 		if err != nil {
 			return fmt.Errorf("Unexpected error while validating channel assignment destruction. Got %v", err)
-		} else if iteration != nil && (iteration.ID != "" || iteration.Fingerprint != "" || iteration.IncrementalVersion != 0) {
+		} else if version != nil && (version.ID != "" || version.Fingerprint != "" || getVersionNumber(version.Name) != 0) {
 			return fmt.Errorf("Resource %q not properly destroyed", resourceName)
 		}
 
 		return nil
+	}
+}
+
+func testAccPackerDataVersionBuilder(uniqueName string, bucketName string, channelName string) testAccConfigBuilderInterface {
+	return &testAccResourceConfigBuilder{
+		isData:       true,
+		resourceType: "hcp_packer_version",
+		uniqueName:   uniqueName,
+		attributes: map[string]string{
+			"bucket_name":  bucketName,
+			"channel_name": channelName,
+		},
 	}
 }

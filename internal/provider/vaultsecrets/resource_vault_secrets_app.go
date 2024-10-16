@@ -12,10 +12,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
+
+var _ resource.Resource = &resourceVaultsecretsApp{}
+var _ resource.ResourceWithConfigure = &resourceVaultsecretsApp{}
+var _ resource.ResourceWithModifyPlan = &resourceVaultsecretsApp{}
 
 func NewVaultSecretsAppResource() resource.Resource {
 	return &resourceVaultsecretsApp{}
@@ -53,10 +60,19 @@ func (r *resourceVaultsecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project where the HCP Vault Secrets app is located.",
 				Computed:    true,
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the HCP organization where the project the HCP Vault Secrets app is located.",
 				Computed:    true,
+			},
+			"resource_name": schema.StringAttribute{
+				Computed:    true,
+				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
 			},
 		},
 	}
@@ -77,12 +93,17 @@ func (r *resourceVaultsecretsApp) Configure(_ context.Context, req resource.Conf
 	r.client = client
 }
 
+func (r *resourceVaultsecretsApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
+}
+
 type VaultSecretsApp struct {
 	ID             types.String `tfsdk:"id"`
 	AppName        types.String `tfsdk:"app_name"`
 	Description    types.String `tfsdk:"description"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
+	ResourceName   types.String `tfsdk:"resource_name"`
 }
 
 func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -93,9 +114,14 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	res, err := clients.CreateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
@@ -109,6 +135,7 @@ func (r *resourceVaultsecretsApp) Create(ctx context.Context, req resource.Creat
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 	plan.ProjectID = types.StringValue(loc.ProjectID)
+	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -121,9 +148,14 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	projectID := r.client.Config.ProjectID
+	if !state.ProjectID.IsUnknown() {
+		projectID = state.ProjectID.ValueString()
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	res, err := clients.GetVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
@@ -134,6 +166,7 @@ func (r *resourceVaultsecretsApp) Read(ctx context.Context, req resource.ReadReq
 
 	state.AppName = types.StringValue(res.Name)
 	state.Description = types.StringValue(res.Description)
+	state.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -145,9 +178,14 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	projectID := r.client.Config.ProjectID
+	if !plan.ProjectID.IsUnknown() {
+		projectID = plan.ProjectID.ValueString()
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	res, err := clients.UpdateVaultSecretsApp(ctx, r.client, loc, plan.AppName.ValueString(), plan.Description.ValueString())
@@ -161,6 +199,7 @@ func (r *resourceVaultsecretsApp) Update(ctx context.Context, req resource.Updat
 	plan.Description = types.StringValue(res.Description)
 	plan.OrganizationID = types.StringValue(loc.OrganizationID)
 	plan.ProjectID = types.StringValue(loc.ProjectID)
+	plan.ResourceName = types.StringValue(generateResourceName(loc.ProjectID, res.Name))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -173,9 +212,14 @@ func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
+	projectID := r.client.Config.ProjectID
+	if !state.ProjectID.IsUnknown() {
+		projectID = state.ProjectID.ValueString()
+	}
+
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
+		ProjectID:      projectID,
 	}
 
 	err := clients.DeleteVaultSecretsApp(ctx, r.client, loc, state.AppName.ValueString())
@@ -183,4 +227,8 @@ func (r *resourceVaultsecretsApp) Delete(ctx context.Context, req resource.Delet
 		resp.Diagnostics.AddError("Error deleting app", err.Error())
 		return
 	}
+}
+
+func generateResourceName(projectID, appName string) string {
+	return fmt.Sprintf("secrets/project/%s/app/%s", projectID, appName)
 }

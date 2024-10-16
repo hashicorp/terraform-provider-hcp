@@ -38,6 +38,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `created_at` (String) The time that the Vault cluster was created.
 - `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
+- `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
 - `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
 - `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
@@ -81,10 +82,29 @@ Read-Only:
 - `elasticsearch_user` (String) ElasticSearch user for streaming audit logs
 - `grafana_endpoint` (String) Grafana endpoint for streaming audit logs
 - `grafana_user` (String) Grafana user for streaming audit logs
+- `http_basic_password` (String) HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided
+- `http_basic_user` (String) HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided
+- `http_bearer_token` (String) HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming audit logs, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming audit logs
+- `http_headers` (Map of String) HTTP headers for streaming audit logs
+- `http_method` (String) HTTP payload method for streaming audit logs, allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming audit logs
+- `http_payload_suffix` (String) HTTP payload suffix for streaming audit logs
+- `http_uri` (String) HTTP URI for streaming audit logs
 - `newrelic_account_id` (String) NewRelic Account ID for streaming audit logs
 - `newrelic_license_key` (String) NewRelic license key for streaming audit logs
 - `newrelic_region` (String) NewRelic region for streaming audit logs, allowed values are "US" and "EU"
 - `splunk_hecendpoint` (String) Splunk endpoint for streaming audit logs
+
+
+<a id="nestedatt--ip_allowlist"></a>
+### Nested Schema for `ip_allowlist`
+
+Read-Only:
+
+- `address` (String)
+- `description` (String)
 
 
 <a id="nestedatt--major_version_upgrade_config"></a>
@@ -113,6 +133,16 @@ Read-Only:
 - `elasticsearch_user` (String) ElasticSearch user for streaming metrics
 - `grafana_endpoint` (String) Grafana endpoint for streaming metrics
 - `grafana_user` (String) Grafana user for streaming metrics
+- `http_basic_password` (String) HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also provided
+- `http_basic_user` (String) HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also provided
+- `http_bearer_token` (String) HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided
+- `http_codec` (String) HTTP codec for streaming metrics, allowed values are JSON and NDJSON
+- `http_compression` (Boolean) HTTP compression flag for streaming metrics
+- `http_headers` (Map of String) HTTP headers for streaming metrics
+- `http_method` (String) HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT
+- `http_payload_prefix` (String) HTTP payload prefix for streaming metrics
+- `http_payload_suffix` (String) HTTP payload suffix for streaming metrics
+- `http_uri` (String) HTTP URI for streaming metrics
 - `newrelic_account_id` (String) NewRelic Account ID for streaming metrics
 - `newrelic_license_key` (String) NewRelic license key for streaming metrics
 - `newrelic_region` (String) NewRelic region for streaming metrics, allowed values are "US" and "EU"

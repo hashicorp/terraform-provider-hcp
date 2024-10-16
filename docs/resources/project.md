@@ -34,7 +34,7 @@ resource "hcp_project" "example" {
 
 ### Read-Only
 
-- `resource_id` (String) The project's unique identitier
+- `resource_id` (String) The project's unique identifier
 - `resource_name` (String) The project's resource name in format "project/<resource_id>"
 
 ## Import

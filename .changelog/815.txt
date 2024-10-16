@@ -1,0 +1,4 @@
+```release-note:feature
+ New resource: Add `hcp_waypoint_action_config` resource for managing Waypoint Action Configs.
+ New data-source: Add `data.hcp_waypoint_action_config` data-source for Waypoint Action Configs.
+ ```

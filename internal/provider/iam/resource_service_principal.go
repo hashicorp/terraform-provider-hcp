@@ -42,11 +42,11 @@ func (r *resourceServicePrincipal) Schema(_ context.Context, _ resource.SchemaRe
 		MarkdownDescription: fmt.Sprintf(`The service principal resource manages a HCP Service Principal.
 
 The user or service account that is running Terraform when creating a %s resource must have %s on the parent resource; either the project or organization.`,
-			"`hcp_service_principal`", "`roles/Admin`"),
+			"`hcp_service_principal`", "`roles/admin`"),
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The service principal's unique identitier",
+				Description: "The service principal's unique identifier",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

@@ -7,8 +7,6 @@ description: |-
 
 # hcp_vault_secrets_app (Data Source)
 
--> **Note:** This data source is currently in public beta.
-
 The Vault Secrets app data source retrieves secrets and their latest version values for a given application.
 
 ## Example Usage

@@ -72,10 +72,10 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 				},
 			},
 			"description": schema.StringAttribute{
-				Optional:    true,
 				Description: "A description for the workload identity provider.",
+				Computed:    true,
+				Optional:    true,
 				Validators: []validator.String{
-					hcpvalidator.ResourceNamePart(),
 					stringvalidator.LengthBetween(0, 255),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -141,7 +141,7 @@ func (r *resourceWorkloadIdentityProvider) Schema(_ context.Context, _ resource.
 			},
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The workload identity providers's unique identitier",
+				Description: "The workload identity provider's unique identifier",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

@@ -1,0 +1,3 @@
+```release-note:bug
+Fixing a panic on errors when opening secrets from HCP Vault Secrets.
+```

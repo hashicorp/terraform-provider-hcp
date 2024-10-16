@@ -6,11 +6,19 @@ on:
       acc-test-pattern:
         type: string
         default: 'Test.*'
+      skip-e2e-tests:
+        description: "Skip the E2E test suite"
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       acc-test-pattern:
         type: string
         default: 'Test.*'
+      skip-e2e-tests:
+        description: "Skip the E2E test suite"
+        type: boolean
+        default: false
 
 concurrency: acceptance-testing-environment
 
@@ -23,13 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           cache: true
           go-version-file: 'go.mod'
@@ -48,7 +56,7 @@ jobs:
         run: make test-ci
 
       - name: Upload Unit Test Coverage Artifact
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: Test Coverage
           path: coverage.html
@@ -60,6 +68,7 @@ jobs:
           echo "The default acceptance test pattern is \`Test.*\`, but it was overridden with \`${{ inputs.acc-test-pattern }}\`." >> $GITHUB_STEP_SUMMARY
 
       - name: Run E2E Tests
+        if: ${{ !inputs.skip-e2e-tests }}
         env:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
@@ -88,7 +97,7 @@ jobs:
           make testacc-ci TESTARGS='-run=${{ inputs.acc-test-pattern }} -test.v'
 
       - name: Upload E2E Coverage Artifact
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: Test Coverage
           path: coverage-e2e.html

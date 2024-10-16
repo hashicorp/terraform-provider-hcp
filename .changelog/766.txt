@@ -1,0 +1,4 @@
+```release-note:feature
+ New resource: Add `hcp_waypoint_tfc_config` resource for managing the TFC
+ Configuration used by Waypoint.
+ ```

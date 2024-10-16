@@ -145,6 +145,80 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 			),
 		},
 		{
+			// add an http audit log provider
+			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+			resource "hcp_vault_cluster" "c1" {
+				cluster_id      = "{{ .VaultClusterName }}"
+				hvn_id          = hcp_hvn.hvn1.hvn_id
+				tier            = "{{ .Tier }}"
+				public_endpoint = true
+				audit_log_config {
+					http_endpoint = "https://http-input-splunkcloud.com"
+					http_codec		= "INVALID"
+					http_method		= "POST"
+				}
+			}
+			`, in)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckVaultClusterExists(primaryVaultResourceName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", in.VaultClusterName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "hvn_id", in.HvnName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", in.Tier),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cloud_provider", in.CloudProvider),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "region", in.Region),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "public_endpoint", "true"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "namespace", "admin"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_version"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "organization_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "project_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_public_endpoint_url"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "self_link"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
+				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_endpoint"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
+			),
+			ExpectError: regexp.MustCompile(`http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"`),
+		},
+		{
+			// add an http audit log provider
+			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+			resource "hcp_vault_cluster" "c1" {
+				cluster_id      = "{{ .VaultClusterName }}"
+				hvn_id          = hcp_hvn.hvn1.hvn_id
+				tier            = "{{ .Tier }}"
+				public_endpoint = true
+				audit_log_config {
+					http_endpoint = "https://http-input-splunkcloud.com"
+					http_codec		= "JSON"
+					http_method		= "POST"
+				}
+			}
+			`, in)),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckVaultClusterExists(primaryVaultResourceName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", in.VaultClusterName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "hvn_id", in.HvnName),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "tier", in.Tier),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "cloud_provider", in.CloudProvider),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "region", in.Region),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "public_endpoint", "true"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "namespace", "admin"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_version"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "organization_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "project_id"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_public_endpoint_url"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "self_link"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
+				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_endpoint"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
+			),
+		},
+		{
 			// secondary cluster creation failed as tier doesn't match the tier of primary
 			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
 			resource "hcp_vault_cluster" "c1" {
@@ -213,7 +287,6 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				hvn_id       = hcp_hvn.hvn1.hvn_id
 				tier         = lower(hcp_vault_cluster.c1.tier)
 				primary_link = hcp_vault_cluster.c1.self_link
-				paths_filter = ["path/a", "path/b"]
 			}
 			`, in)),
 			Check: resource.ComposeTestCheckFunc(
@@ -224,8 +297,6 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttr(secondaryVaultResourceName, "cloud_provider", in.CloudProvider), // same as primary
 				resource.TestCheckResourceAttr(secondaryVaultResourceName, "region", in.Region),                // samae as primary
 				resource.TestCheckResourceAttr(secondaryVaultResourceName, "public_endpoint", "false"),
-				resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.0", "path/a"),
-				resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.1", "path/b"),
 				resource.TestCheckResourceAttr(secondaryVaultResourceName, "namespace", "admin"),
 				resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "vault_version"),
 				resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "organization_id"),
@@ -235,48 +306,6 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "vault_private_endpoint_url"),
 				testAccCheckFullURL(secondaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(secondaryVaultResourceName, "created_at"),
-			),
-		},
-		{
-			// update paths filter
-			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
-			resource "hcp_vault_cluster" "c1" {
-				cluster_id      = "{{ .VaultClusterName }}"
-				hvn_id          = hcp_hvn.hvn1.hvn_id
-				tier            = "{{ .Tier }}"
-				public_endpoint = true
-			}
-			resource "hcp_vault_cluster" "c2" {
-				cluster_id   = "{{ .Secondary.VaultClusterName }}"
-				hvn_id       = hcp_hvn.hvn1.hvn_id
-				tier         = hcp_vault_cluster.c1.tier
-				primary_link = hcp_vault_cluster.c1.self_link
-				paths_filter = ["path/a", "path/c"]
-			}
-			`, in)),
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.0", "path/a"),
-				resource.TestCheckResourceAttr(secondaryVaultResourceName, "paths_filter.1", "path/c"),
-			),
-		},
-		{
-			// delete paths filter
-			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
-			resource "hcp_vault_cluster" "c1" {
-				cluster_id      = "{{ .VaultClusterName }}"
-				hvn_id          = hcp_hvn.hvn1.hvn_id
-				tier            = "{{ .Tier }}"
-				public_endpoint = true
-			}
-			resource "hcp_vault_cluster" "c2" {
-				cluster_id   = "{{ .Secondary.VaultClusterName }}"
-				hvn_id       = hcp_hvn.hvn1.hvn_id
-				tier         = hcp_vault_cluster.c1.tier
-				primary_link = hcp_vault_cluster.c1.self_link
-			}
-			`, in)),
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckNoResourceAttr(secondaryVaultResourceName, "paths_filter.0"),
 			),
 		},
 		{

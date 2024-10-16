@@ -1,0 +1,3 @@
+```release-note:bug
+waypoint: Fix `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources.
+```

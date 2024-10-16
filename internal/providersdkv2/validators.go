@@ -17,6 +17,7 @@ import (
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-hcp/internal/input"
 )
 
 var (
@@ -114,16 +115,12 @@ func matchesID(id string) bool {
 	return regexp.MustCompile(`/project/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/hashicorp\.consul\.cluster/.*`).MatchString(id)
 }
 
-func matchesSlugID(slugID string) bool {
-	return regexp.MustCompile(`^[-\da-zA-Z]{3,36}$`).MatchString(slugID)
-}
-
 // validateSlugIDOrID validates that the string value matches the HCP requirements for
 // an id or slug id.
 func validateSlugIDOrID(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	if !matchesID(v.(string)) && !matchesSlugID(v.(string)) {
+	if !matchesID(v.(string)) && !input.IsSlug(v.(string)) {
 		msg := "must be between 3 and 36 characters in length and contains only letters, numbers or hyphens OR must match /project/uuid/hashicorp.consul.cluster/id format"
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -141,7 +138,7 @@ func validateSlugIDOrID(v interface{}, path cty.Path) diag.Diagnostics {
 func validateSlugID(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	if !matchesSlugID(v.(string)) {
+	if !input.IsSlug(v.(string)) {
 		msg := "must be between 3 and 36 characters in length and contains only letters, numbers or hyphens"
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -212,7 +209,7 @@ func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
+func validateCIDRRange(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	addr := v.(string)
@@ -232,7 +229,7 @@ func validateConsulClusterCIDR(v interface{}, path cty.Path) diag.Diagnostics {
 	return diagnostics
 }
 
-func validateConsulClusterCIDRDescription(v interface{}, path cty.Path) diag.Diagnostics {
+func validateCIDRRangeDescription(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 	description := v.(string)
 	if len(description) > 255 {

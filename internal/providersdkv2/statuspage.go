@@ -21,6 +21,7 @@ var hcpComponentIds = map[string]string{
 	"0mbkqnrzg33w": "HCP Packer",
 	"mgv1p2j9x444": "HCP Portal",
 	"mb7xrbx9gjnq": "HCP Vault",
+	"9gzfhnxdsf93": "HCP Boundary",
 }
 
 type statuspage struct {

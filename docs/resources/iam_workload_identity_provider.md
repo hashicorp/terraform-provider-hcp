@@ -17,6 +17,7 @@ resource "hcp_service_principal" "workload_sp" {
 }
 
 resource "hcp_iam_workload_identity_provider" "example" {
+  name              = "aws-example"
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on AWS to act as my-app-runtime service principal"
 
@@ -38,6 +39,7 @@ resource "hcp_service_principal" "workload_sp" {
 }
 
 resource "hcp_iam_workload_identity_provider" "example" {
+  name              = "azure-example"
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on Azure to act as my-app-runtime service principal"
 
@@ -67,6 +69,7 @@ resource "hcp_service_principal" "workload_sp" {
 }
 
 resource "hcp_iam_workload_identity_provider" "example" {
+  name              = "gcp-example"
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on GCP to act as my-app-runtime service principal"
 
@@ -98,7 +101,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
 
 ### Read-Only
 
-- `resource_id` (String) The workload identity providers's unique identitier
+- `resource_id` (String) The workload identity provider's unique identifier
 - `resource_name` (String) The workload identity providers's resource name in the format `iam/project/<project_id>/service-principal/<sp_name>/workload-identity-provider/<name>`
 
 <a id="nestedatt--aws"></a>

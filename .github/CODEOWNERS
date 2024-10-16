@@ -1,9 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-# *
-
-# all resource-manager resources and clients are owned by the cloud-foundations team
-*resourcemanager* @hashicorp/cloud-foundations
+* @hashicorp/cloud-core-platform-surfaces
 
 # all iam resources and clients are owned by the cloud-identity team
 *iam* @hashicorp/cloud-identity
@@ -21,15 +18,30 @@
 # all Packer resources and clients are owned by the cloud-packer team
 *packer* @hashicorp/cloud-packer
 
-# all Vault resources and clients are owned by the vault-cloud team
-*vault* @hashicorp/vault-cloud
+# all Vault resources and clients are owned by the vault-cloud team.
+**/vault*  @hashicorp/vault-cloud
 
 # all Vault Secrets resources and clients are owned by cloud-vault-secrets team
-*vaultsecrets* @hashicorp/vault-devex
+# Don't move these vault secret patterns above the vault patterns. Because, the vault patterns matches
+# vault secrets ones and that only selects vault-cloud team as the code owner.
+*vaultsecrets*  @hashicorp/cloud-vault-secrets
+*vault_secrets* @hashicorp/cloud-vault-secrets
+*vault-secrets* @hashicorp/cloud-vault-secrets
 
 # all Boundary resources and clients are owned by the boundary-cloud team
 *boundary* @hashicorp/boundary-cloud
 
+# all Waypoint resources and clients are owned by the waypoint team
+**/waypoint @hashicorp/cloud-waypoint
+
 # Statuspage.io configuration is owned by the Core SRE team
 /internal/provider/statuspage.go @hashicorp/core-sre
 /internal/providersdkv2/statuspage.go @hashicorp/core-sre
+
+# all Vault Radar resources and clients are owned by the vault-scanning team
+*vaultradar*  @hashicorp/vault-scanning
+*vault_radar* @hashicorp/vault-scanning
+*vault-radar*  @hashicorp/vault-scanning
+**/vaultradar/* @hashicorp/vault-scanning
+**/vaultradar* @hashicorp/vault-scanning
+**/hcp_vault_radar* @hashicorp/vault-scanning

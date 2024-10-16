@@ -9,6 +9,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/hcp-sdk-go/auth"
+	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
@@ -21,6 +24,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-consul-service/stable/2021-02-04/client/consul_service"
 
 	cloud_iam "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/iam_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 
@@ -31,17 +35,36 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
 
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+	packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+
+	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client"
+	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
-
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
+	cloud_vault_secrets_preview "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client"
+	secret_service_preview "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
+
+	cloud_waypoint "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
+
+	cloud_log_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
+
+	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client/webhook_service"
+
+	cloud_vault_radar "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client"
+	radar_src_registration_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
+	radar_connection_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
+	radar_subscription_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
 
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
@@ -51,18 +74,28 @@ import (
 type Client struct {
 	Config ClientConfig
 
-	Billing           billing_account_service.ClientService
-	Boundary          boundary_service.ClientService
-	Consul            consul_service.ClientService
-	IAM               iam_service.ClientService
-	Network           network_service.ClientService
-	Operation         operation_service.ClientService
-	Organization      organization_service.ClientService
-	Packer            packer_service.ClientService
-	Project           project_service.ClientService
-	ServicePrincipals service_principals_service.ClientService
-	Vault             vault_service.ClientService
-	VaultSecrets      secret_service.ClientService
+	Billing                        billing_account_service.ClientService
+	Boundary                       boundary_service.ClientService
+	Consul                         consul_service.ClientService
+	IAM                            iam_service.ClientService
+	Network                        network_service.ClientService
+	Operation                      operation_service.ClientService
+	Organization                   organization_service.ClientService
+	Packer                         packer_service.ClientService
+	PackerV2                       packer_service_v2.ClientService
+	Project                        project_service.ClientService
+	ServicePrincipals              service_principals_service.ClientService
+	Groups                         groups_service.ClientService
+	Vault                          vault_service.ClientService
+	VaultSecrets                   secret_service.ClientService
+	VaultSecretsPreview            secret_service_preview.ClientService
+	Waypoint                       waypoint_service.ClientService
+	Webhook                        webhook_service.ClientService
+	LogService                     log_service.ClientService
+	ResourceService                resource_service.ClientService
+	RadarSourceRegistrationService radar_src_registration_service.ClientService
+	RadarConnectionService         radar_connection_service.ClientService
+	RadarSubscriptionService       radar_subscription_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -70,6 +103,19 @@ type ClientConfig struct {
 	ClientID       string
 	ClientSecret   string
 	CredentialFile string
+
+	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
+	// indicate that authentication should occur by using workload identity
+	// federation. WorkloadIdentityTokenFile indicates the token and
+	// WorkloadIdentityResourceName is the workload identity provider resource
+	// name to authenticate against.
+	//
+	// Alternatively, WorkloadIdentityToken can be set to the token directly. It
+	// is an error to set both WorkloadIdentityTokenFile and
+	// WorkloadIdentityToken.
+	WorkloadIdentityTokenFile    string
+	WorkloadIdentityToken        string
+	WorkloadIdentityResourceName string
 
 	// OrganizationID (optional) is the organization unique identifier to launch resources in.
 	OrganizationID string
@@ -90,6 +136,8 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithClientCredentials(config.ClientID, config.ClientSecret))
 	} else if config.CredentialFile != "" {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
+	} else if cf := loadCredentialFile(config); cf != nil {
+		opts = append(opts, hcpConfig.WithCredentialFile(cf))
 	}
 
 	// Create the HCP Config
@@ -117,22 +165,84 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	client := &Client{
-		Config:            config,
-		Billing:           cloud_billing.New(httpClient, nil).BillingAccountService,
-		Boundary:          cloud_boundary.New(httpClient, nil).BoundaryService,
-		Consul:            cloud_consul.New(httpClient, nil).ConsulService,
-		IAM:               cloud_iam.New(httpClient, nil).IamService,
-		Network:           cloud_network.New(httpClient, nil).NetworkService,
-		Operation:         cloud_operation.New(httpClient, nil).OperationService,
-		Organization:      cloud_resource_manager.New(httpClient, nil).OrganizationService,
-		Packer:            cloud_packer.New(httpClient, nil).PackerService,
-		Project:           cloud_resource_manager.New(httpClient, nil).ProjectService,
-		ServicePrincipals: cloud_iam.New(httpClient, nil).ServicePrincipalsService,
-		Vault:             cloud_vault.New(httpClient, nil).VaultService,
-		VaultSecrets:      cloud_vault_secrets.New(httpClient, nil).SecretService,
+		Config:                         config,
+		Billing:                        cloud_billing.New(httpClient, nil).BillingAccountService,
+		Boundary:                       cloud_boundary.New(httpClient, nil).BoundaryService,
+		Consul:                         cloud_consul.New(httpClient, nil).ConsulService,
+		IAM:                            cloud_iam.New(httpClient, nil).IamService,
+		Network:                        cloud_network.New(httpClient, nil).NetworkService,
+		Operation:                      cloud_operation.New(httpClient, nil).OperationService,
+		Organization:                   cloud_resource_manager.New(httpClient, nil).OrganizationService,
+		Packer:                         cloud_packer.New(httpClient, nil).PackerService,
+		PackerV2:                       cloud_packer_v2.New(httpClient, nil).PackerService,
+		Project:                        cloud_resource_manager.New(httpClient, nil).ProjectService,
+		ServicePrincipals:              cloud_iam.New(httpClient, nil).ServicePrincipalsService,
+		Groups:                         cloud_iam.New(httpClient, nil).GroupsService,
+		Vault:                          cloud_vault.New(httpClient, nil).VaultService,
+		VaultSecrets:                   cloud_vault_secrets.New(httpClient, nil).SecretService,
+		VaultSecretsPreview:            cloud_vault_secrets_preview.New(httpClient, nil).SecretService,
+		Waypoint:                       cloud_waypoint.New(httpClient, nil).WaypointService,
+		LogService:                     cloud_log_service.New(httpClient, nil).LogService,
+		Webhook:                        cloud_webhook.New(httpClient, nil).WebhookService,
+		ResourceService:                cloud_resource_manager.New(httpClient, nil).ResourceService,
+		RadarSourceRegistrationService: cloud_vault_radar.New(httpClient, nil).DataSourceRegistrationService,
+		RadarConnectionService:         cloud_vault_radar.New(httpClient, nil).IntegrationConnectionService,
+		RadarSubscriptionService:       cloud_vault_radar.New(httpClient, nil).IntegrationSubscriptionService,
 	}
 
 	return client, nil
+}
+
+// loadCredentialFile loads the credential file from the given config. If the
+// config does not specify workload identity authentication, this function
+// returns nil.
+func loadCredentialFile(config ClientConfig) *auth.CredentialFile {
+	// hasWorkloadIdentityToken is true if the config specified a direct token.
+	hasWorkloadIdentityToken := config.WorkloadIdentityToken != ""
+	// hasWorkloadIdentityTokenFile is true if the config specified a path to a
+	// file that contains the token.
+	hasWorkloadIdentityTokenFile := config.WorkloadIdentityTokenFile != ""
+	// hasWorkloadIdentityResource is true if the config specified a resource
+	// name to authenticate against.
+	hasWorkloadIdentityResource := config.WorkloadIdentityResourceName != ""
+
+	// Overall, we consider workload identity authentication to be enabled if we
+	// have a token from either source (direct or within a file) and a resource
+	// name.
+	hasWorkloadIdentity := (hasWorkloadIdentityToken || hasWorkloadIdentityTokenFile) && hasWorkloadIdentityResource
+
+	if !hasWorkloadIdentity {
+		return nil
+	}
+
+	switch {
+	case hasWorkloadIdentityToken:
+		// The direct token takes priority over the file path in case both
+		// are set, so we'll check that first.
+		return &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				Token: &workload.CredentialTokenSource{
+					Token: config.WorkloadIdentityToken,
+				},
+			},
+		}
+	default:
+		// If we don't have the token directly, fall back to checking the
+		// file. We checked earlier that at least one of the two options
+		// were set, so if the token wasn't set the file information must
+		// be present.
+		return &auth.CredentialFile{
+			Scheme: auth.CredentialFileSchemeWorkload,
+			Workload: &workload.IdentityProviderConfig{
+				ProviderResourceName: config.WorkloadIdentityResourceName,
+				File: &workload.FileCredentialSource{
+					Path: config.WorkloadIdentityTokenFile,
+				},
+			},
+		}
+	}
 }
 
 type providerMeta struct {
@@ -163,4 +273,32 @@ func (cl *Client) UpdateSourceChannel(d *schema.ResourceData) (*Client, error) {
 	}
 
 	return cl, nil
+}
+
+func (cl *Client) GetOrganizationID() string {
+	if cl == nil {
+		return ""
+	}
+	return cl.Config.OrganizationID
+}
+
+func (cl *Client) GetProjectID() string {
+	if cl == nil {
+		return ""
+	}
+	return cl.Config.ProjectID
+}
+
+// Location returns the organization and project ID to use for a given resource
+// The resource project ID takes precedence over the provider project ID
+func (cl *Client) Location(resourceProjectID types.String) (string, string) {
+	orgID := cl.Config.OrganizationID
+	projID := cl.Config.ProjectID
+
+	// project ID defined in the resource schema has precedence over the project ID from the provider
+	if !resourceProjectID.IsUnknown() {
+		projID = resourceProjectID.ValueString()
+	}
+
+	return orgID, projID
 }

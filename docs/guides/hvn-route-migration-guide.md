@@ -1,13 +1,13 @@
 ---
 subcategory: ""
-page_title: "HVN Route Migration Guide - HCP Provider"
+page_title: "HVN Route Migration Guide"
 description: |-
     An guide to migrating HCP networking resources to use HVN routes.
 ---
 
 # Introducing HVN routes
 
-The HVN route is a new resource that belongs to an HVN. It contains a CIDR block and targets a networking connection: 
+The HVN route is a new resource that belongs to an HVN. It contains a CIDR block and targets a networking connection:
 either a peering or transit gateway attachment.
 
 HVN routes provide a general view on how an HVN's traffic is routed across all networking connections and create a flexible way of managing these routing rules.
@@ -20,7 +20,7 @@ There are two ways to migrate existing peerings and transit gateway attachments 
     * This option is quicker but will result in downtime and possible data loss. Best for test environments. Will allow you to specify human-readable ids for the resources.
     * Comment out all `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resources.
     * Run `terraform apply` to destroy currently existing connections.
-    * Uncomment and update all `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resource definitions to match the new schema. 
+    * Uncomment and update all `hcp_aws_network_peering` and `hcp_aws_transit_gateway_attachment` resource definitions to match the new schema.
     * Add corresponding `hcp_hvn_route` resources for each CIDR targeting corresponding peering connections or transit gateway attachment.
     * Run `terraform apply` to recreate connections.
 

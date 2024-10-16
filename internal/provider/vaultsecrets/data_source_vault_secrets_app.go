@@ -98,7 +98,7 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	appSecrets, err := clients.ListVaultSecretsAppSecrets(ctx, client, loc, data.AppName.ValueString())
+	appSecrets, err := clients.OpenVaultSecretsAppSecrets(ctx, client, loc, data.AppName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
@@ -106,14 +106,24 @@ func (d *DataSourceVaultSecretsApp) Read(ctx context.Context, req datasource.Rea
 
 	openAppSecrets := map[string]string{}
 	for _, appSecret := range appSecrets {
-		secretName := appSecret.Name
-
-		openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), secretName)
-		if err != nil {
-			resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
+		switch {
+		case appSecret.StaticVersion != nil:
+			openAppSecrets[appSecret.Name] = appSecret.StaticVersion.Value
+		case appSecret.RotatingVersion != nil:
+			for name, value := range appSecret.RotatingVersion.Values {
+				openAppSecrets[appSecret.Name+"_"+name] = value
+			}
+		case appSecret.DynamicInstance != nil:
+			for name, value := range appSecret.DynamicInstance.Values {
+				openAppSecrets[appSecret.Name+"_"+name] = value
+			}
+		default:
+			resp.Diagnostics.AddError(
+				"Unsupported HCP Secret type",
+				fmt.Sprintf("HCP Secrets secret type %q is not currently supported by terraform-provider-hcp", appSecret.Type),
+			)
 			return
 		}
-		openAppSecrets[secretName] = openSecret.Version.Value
 	}
 
 	data.ID = data.AppName

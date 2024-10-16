@@ -56,6 +56,25 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"ip_allowlist": {
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time.",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description: "IP address range in CIDR notation.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"description": {
+							Description: "Description to help identify source (maximum 255 chars).",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 			"min_vault_version": {
 				Description: "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:        schema.TypeString,
@@ -201,6 +220,56 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming metrics",
+							Type:        schema.TypeMap,
+							Computed:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming metrics, allowed values are JSON and NDJSON",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming metrics",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming metrics",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 						"newrelic_account_id": {
 							Description: "NewRelic Account ID for streaming metrics",
 							Type:        schema.TypeString,
@@ -288,6 +357,56 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"elasticsearch_password": {
 							Description: "ElasticSearch password for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming audit logs",
+							Type:        schema.TypeMap,
+							Computed:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming audit logs, allowed values are JSON and NDJSON",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming audit logs",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming audit logs, allowed values are PATCH, POST, or PUT",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming audit logs",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming audit logs",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},

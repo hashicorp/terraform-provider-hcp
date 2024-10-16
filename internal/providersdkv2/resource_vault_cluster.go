@@ -66,7 +66,7 @@ func resourceVaultCluster() *schema.Resource {
 			// Optional fields
 			"project_id": {
 				Description: `
-The ID of the HCP project where the Vault cluster is located. 
+The ID of the HCP project where the Vault cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.`,
 				Type:         schema.TypeString,
@@ -100,6 +100,28 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
+			},
+			"ip_allowlist": {
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description:      "IP address range in CIDR notation.",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateCIDRRange,
+						},
+						"description": {
+							Description:      "Description to help identify source (maximum 255 chars).",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateCIDRRangeDescription,
+						},
+					},
+				},
+				MaxItems: 50,
 			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
@@ -232,6 +254,57 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_password is also specified",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user is also specified",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming metrics, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming metrics",
+							Type:        schema.TypeMap,
+							Optional:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming metrics, allowed values are JSON and NDJSON",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming metrics",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming metrics, allowed values are PATCH, POST, or PUT",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming metrics",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 						"newrelic_account_id": {
 							Description: "NewRelic Account ID for streaming metrics",
 							Type:        schema.TypeString,
@@ -343,6 +416,53 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 							Optional:    true,
 							Sensitive:   true,
 						},
+						"http_basic_password": {
+							Description: "HTTP basic authentication password for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user is also provided",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_bearer_token": {
+							Description: "HTTP bearer authentication token for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_user and http_basic_password are not provided",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+						},
+						"http_headers": {
+							Description: "HTTP headers for streaming audit logs",
+							Type:        schema.TypeMap,
+							Optional:    true,
+						},
+						"http_codec": {
+							Description: "HTTP codec for streaming audit logs, allowed values are JSON and NDJSON",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_compression": {
+							Description: "HTTP compression flag for streaming audit logs",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+						"http_method": {
+							Description: "HTTP payload method for streaming audit logs, , allowed values are PATCH, POST, or PUT",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_prefix": {
+							Description: "HTTP payload prefix for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_payload_suffix": {
+							Description: "HTTP payload suffix for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_uri": {
+							Description: "HTTP URI for streaming audit logs",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
 						"newrelic_account_id": {
 							Description: "NewRelic Account ID for streaming audit logs",
 							Type:        schema.TypeString,
@@ -356,6 +476,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 						},
 						"newrelic_region": {
 							Description: "NewRelic region for streaming audit logs, allowed values are \"US\" and \"EU\"",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+						"http_basic_user": {
+							Description: "HTTP basic authentication username for streaming audit logs, one of the two available authentication methods, can be specified only if http_basic_password is also provided",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -515,6 +640,12 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		httpProxyOption = vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(proxyEndpoint.(string))).Pointer()
 	}
 
+	cidrs := d.Get("ip_allowlist").([]interface{})
+	ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
+	if err != nil {
+		return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+	}
+
 	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
@@ -554,6 +685,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
@@ -595,6 +727,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
@@ -741,7 +874,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
+	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "ip_allowlist", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
 		return nil
 	}
 
@@ -751,7 +884,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("ip_allowlist") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
@@ -859,6 +992,10 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
 	httpProxyOption := getHTTPProxyOption(d)
+	ipAllowlist, diagErr := getIPAllowlist(d, clusterID)
+	if diagErr != nil {
+		return diagErr
+	}
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -890,7 +1027,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
 					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -916,7 +1053,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		auditConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -953,6 +1090,19 @@ func getHTTPProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault
 		return &httpProxyOption
 	}
 	return nil
+}
+
+func getIPAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, diag.Diagnostics) {
+	// If we don't change the ip_allowlist_endpoint, return nil so we don't pass ip_allowlist to the update.
+	if d.HasChange("ip_allowlist") {
+		cidrs := d.Get("ip_allowlist").([]interface{})
+		ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
+		if err != nil {
+			return nil, diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+		}
+		return ipAllowlist, nil
+	}
+	return nil, nil
 }
 
 // setVaultClusterResourceData sets the KV pairs of the Vault cluster resource schema.
@@ -1044,6 +1194,20 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 
 	if err := d.Set("created_at", cluster.CreatedAt.String()); err != nil {
 		return err
+	}
+
+	if cluster.Config.NetworkConfig != nil {
+		ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+		for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+			cidr := map[string]interface{}{
+				"description": cidrRange.Description,
+				"address":     cidrRange.Address,
+			}
+			ipAllowlist[i] = cidr
+		}
+		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
+			return err
+		}
 	}
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -1189,6 +1353,42 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 			}
 		}
 
+		if http := config.HTTP; http != nil {
+			configMap["http_headers"] = http.Headers
+			configMap["http_codec"] = http.Codec
+			configMap["http_compression"] = http.Compression
+			configMap["http_method"] = http.Method
+			configMap["http_payload_prefix"] = http.PayloadPrefix
+			configMap["http_payload_suffix"] = http.PayloadSuffix
+			configMap["http_uri"] = http.URI
+
+			if http.Basic != nil {
+				configMap["http_basic_user"] = http.Basic.User
+
+				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+				if http.Basic.Password != "redacted" {
+					configMap["http_basic_password"] = http.Basic.Password
+				} else {
+					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+						config := configParam.([]interface{})[0].(map[string]interface{})
+						configMap["http_basic_password"] = config["http_basic_password"].(string)
+					}
+				}
+			}
+
+			if http.Bearer != nil {
+				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+				if http.Bearer.Token != "redacted" {
+					configMap["http_bearer_token"] = http.Bearer.Token
+				} else {
+					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+						config := configParam.([]interface{})[0].(map[string]interface{})
+						configMap["http_bearer_token"] = config["http_bearer_token"].(string)
+					}
+				}
+			}
+		}
+
 		if newrelic := config.Newrelic; newrelic != nil {
 			configMap["newrelic_account_id"] = newrelic.AccountID
 			configMap["newrelic_region"] = newrelic.Region
@@ -1220,6 +1420,7 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 		Cloudwatch:    &vaultmodels.HashicorpCloudVault20201125CloudWatch{},
 		Elasticsearch: &vaultmodels.HashicorpCloudVault20201125Elasticsearch{},
 		Newrelic:      &vaultmodels.HashicorpCloudVault20201125NewRelic{},
+		HTTP:          &vaultmodels.HashicorpCloudVault20201125HTTP{},
 	}
 
 	// If we don't find the property we return the empty object to be updated and delete the configuration.
@@ -1239,6 +1440,36 @@ func getObservabilityConfig(propertyName string, d *schema.ResourceData) (*vault
 	return getValidObservabilityConfig(config)
 }
 
+// if http observability information is provided, this function ensures that authentication fields are valid and returns the authentication method used
+func validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken string) (*vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth, *vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth, diag.Diagnostics) {
+	// only one of basic or bearer authentication should be submitted
+	if httpBearerToken != "" && (httpBasicUser != "" || httpBasicPassword != "") {
+		return nil, nil, diag.Errorf("http configuration is invalid: either the basic or bearer authentication method can be submitted, but not both")
+	}
+	if httpBasicUser != "" && httpBasicPassword == "" || httpBasicUser == "" && httpBasicPassword != "" {
+		// http basic requires both the username and password to be filled
+		return nil, nil, diag.Errorf("http configuration is invalid: basic authentication requires username and password")
+	}
+
+	if httpBearerToken != "" {
+		httpBearerAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBearerAuth{
+			Token: httpBearerToken,
+		}
+		return httpBearerAuth, nil, nil
+	}
+
+	if httpBasicUser != "" || httpBasicPassword != "" {
+		httpBasicAuth := &vaultmodels.HashicorpCloudVault20201125HTTPBasicAuth{
+			User:     httpBasicUser,
+			Password: httpBasicPassword,
+		}
+
+		return nil, httpBasicAuth, nil
+	}
+
+	return nil, nil, nil
+}
+
 func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, diag.Diagnostics) {
 	grafanaEndpoint, _ := config["grafana_endpoint"].(string)
 	grafanaUser, _ := config["grafana_user"].(string)
@@ -1253,18 +1484,28 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 	elasticsearchEndpoint, _ := config["elasticsearch_endpoint"].(string)
 	elasticsearchUser, _ := config["elasticsearch_user"].(string)
 	elasticsearchPassword, _ := config["elasticsearch_password"].(string)
+	httpBasicUser, _ := config["http_basic_user"].(string)
+	httpBasicPassword, _ := config["http_basic_password"].(string)
+	httpBearerToken, _ := config["http_bearer_token"].(string)
+	httpHeaders, _ := config["http_headers"].(map[string]interface{})
+	httpCodec, _ := config["http_codec"].(string)
+	httpCompression, _ := config["http_compression"].(bool)
+	httpMethod, _ := config["http_method"].(string)
+	httpPayloadPrefix, _ := config["http_payload_prefix"].(string)
+	httpPayloadSuffix, _ := config["http_payload_suffix"].(string)
+	httpURI, _ := config["http_uri"].(string)
 	newrelicAccountID, _ := config["newrelic_account_id"].(string)
 	newrelicLicenseKey, _ := config["newrelic_license_key"].(string)
 	newrelicRegion, _ := config["newrelic_region"].(string)
 
 	var observabilityConfig *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig
 	// only return an error about a missing field for a specific provider after ensuring there's a single provider
-	var missingParamErr diag.Diagnostics
+	var invalidProviderConfigError diag.Diagnostics
 	tooManyProvidersErr := diag.Errorf("multiple configurations found: must contain configuration for only one provider")
 
 	if grafanaEndpoint != "" || grafanaUser != "" || grafanaPassword != "" {
 		if grafanaEndpoint == "" || grafanaUser == "" || grafanaPassword == "" {
-			missingParamErr = diag.Errorf("grafana configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("grafana configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
@@ -1281,7 +1522,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if splunkEndpoint == "" || splunkToken == "" {
-			missingParamErr = diag.Errorf("splunk configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("splunk configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Splunk: &vaultmodels.HashicorpCloudVault20201125Splunk{
@@ -1296,7 +1537,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if datadogAPIKey == "" || datadogRegion == "" {
-			missingParamErr = diag.Errorf("datadog configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("datadog configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Datadog: &vaultmodels.HashicorpCloudVault20201125Datadog{
@@ -1311,7 +1552,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			return nil, tooManyProvidersErr
 		}
 		if cloudwatchAccessKeyID == "" || cloudwatchAccessKeySecret == "" || cloudwatchRegion == "" {
-			missingParamErr = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("cloudwatch configuration is invalid: configuration information missing")
 		}
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
 			Cloudwatch: &vaultmodels.HashicorpCloudVault20201125CloudWatch{
@@ -1329,7 +1570,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 
 		if elasticsearchEndpoint == "" || elasticsearchUser == "" || elasticsearchPassword == "" {
-			missingParamErr = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("elasticsearch configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
@@ -1341,13 +1582,47 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 	}
 
+	if httpURI != "" || httpMethod != "" || httpCodec != "" {
+		if strings.ToUpper(httpMethod) != "POST" && strings.ToUpper(httpMethod) != "PUT" && strings.ToUpper(httpMethod) != "PATCH" {
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
+		}
+
+		if strings.ToUpper(httpCodec) != "JSON" && strings.ToUpper(httpCodec) != "NDJSON" {
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
+		}
+
+		if httpURI == "" || httpMethod == "" || httpCodec == "" {
+			invalidProviderConfigError = diag.Errorf("http configuration is invalid: configuration information missing")
+		}
+
+		httpBearerAuth, httpBasicAuth, httpConfigError := validateHTTPAuth(httpBasicUser, httpBasicPassword, httpBearerToken)
+
+		if httpConfigError != nil {
+			invalidProviderConfigError = httpConfigError
+		}
+
+		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
+			HTTP: &vaultmodels.HashicorpCloudVault20201125HTTP{
+				Headers:       httpHeaders,
+				Bearer:        httpBearerAuth,
+				Basic:         httpBasicAuth,
+				Codec:         (*vaultmodels.HashicorpCloudVault20201125HTTPEncodingCodec)(&httpCodec),
+				Compression:   httpCompression,
+				PayloadPrefix: httpPayloadPrefix,
+				PayloadSuffix: httpPayloadSuffix,
+				Method:        httpMethod,
+				URI:           httpURI,
+			},
+		}
+	}
+
 	if newrelicAccountID != "" || newrelicLicenseKey != "" || newrelicRegion != "" {
 		if observabilityConfig != nil {
 			return nil, tooManyProvidersErr
 		}
 
 		if newrelicAccountID == "" || newrelicLicenseKey == "" || newrelicRegion == "" {
-			missingParamErr = diag.Errorf("newrelic configuration is invalid: configuration information missing")
+			invalidProviderConfigError = diag.Errorf("newrelic configuration is invalid: configuration information missing")
 		}
 
 		observabilityConfig = &vaultmodels.HashicorpCloudVault20201125ObservabilityConfig{
@@ -1359,8 +1634,8 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 		}
 	}
 
-	if missingParamErr != nil {
-		return nil, missingParamErr
+	if invalidProviderConfigError != nil {
+		return nil, invalidProviderConfigError
 	}
 
 	return observabilityConfig, nil
@@ -1563,4 +1838,24 @@ func getPathStrings(pathFilter interface{}) []string {
 
 func printPlusScalingWarningMsg() {
 	log.Printf("[WARN] When scaling Plus-tier Vault clusters, be sure to keep the size of all clusters in a replication group in sync")
+}
+
+// buildIPAllowlistVaultCluster returns a vault model for the IP allowlist.
+func buildIPAllowlistVaultCluster(cidrs []interface{}) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, error) {
+	ipAllowList := make([]*vaultmodels.HashicorpCloudVault20201125CidrRange, len(cidrs))
+
+	for i, cidr := range cidrs {
+		cidrMap := cidr.(map[string]interface{})
+		address := cidrMap["address"].(string)
+		description := cidrMap["description"].(string)
+
+		cidrRange := &vaultmodels.HashicorpCloudVault20201125CidrRange{
+			Address:     address,
+			Description: description,
+		}
+
+		ipAllowList[i] = cidrRange
+	}
+
+	return ipAllowList, nil
 }

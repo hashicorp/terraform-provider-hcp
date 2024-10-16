@@ -1,0 +1,26 @@
+---
+page_title: "{{.Type}} {{.Name}} - {{.ProviderName}}"
+subcategory: "HCP Log Streaming"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+-> **Note:** This resource is currently in public beta.
+
+{{ .Description | trimspace }}
+
+## Example Usage: CloudWatch
+
+{{ tffile "examples/resources/hcp_log_streaming_destination/resource_cloudwatch.tf" }}
+
+## Example Usage: DataDog
+
+{{ tffile "examples/resources/hcp_log_streaming_destination/resource_datadog.tf" }}
+
+## Example Usage: SplunkCloud
+
+{{ tffile "examples/resources/hcp_log_streaming_destination/resource_splunk_cloud.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

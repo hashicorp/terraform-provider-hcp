@@ -21,7 +21,8 @@ func CreateHVNRoute(ctx context.Context, client *Client,
 	hvn *sharedmodels.HashicorpCloudLocationLink,
 	destination string,
 	target *sharedmodels.HashicorpCloudLocationLink,
-	location *sharedmodels.HashicorpCloudLocationLocation) (*networkmodels.HashicorpCloudNetwork20200907CreateHVNRouteResponse, error) {
+	location *sharedmodels.HashicorpCloudLocationLocation,
+	azRoute *networkmodels.HashicorpCloudNetwork20200907AzureRoute) (*networkmodels.HashicorpCloudNetwork20200907CreateHVNRouteResponse, error) {
 
 	hvnRouteParams := network_service.NewCreateHVNRouteParams()
 	hvnRouteParams.Context = ctx
@@ -36,6 +37,11 @@ func CreateHVNRoute(ctx context.Context, client *Client,
 			HvnConnection: target,
 		},
 	}
+
+	if azRoute != nil {
+		hvnRouteParams.Body.AzureRoute = azRoute
+	}
+
 	log.Printf("[INFO] Creating HVN route for HVN (%s) with destination CIDR %s", hvn.ID, destination)
 	hvnRouteResp, err := client.Network.CreateHVNRoute(hvnRouteParams, nil)
 	if err != nil {

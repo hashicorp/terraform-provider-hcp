@@ -115,7 +115,7 @@ func testAccCreateSlug(testName string) string {
 type testAccConfigBuilderInterface interface {
 	// The fully-qualified name of a block that can be referenced, like
 	// `hcp_packer_channel.prod` (a resource) or
-	// `data.hcp_packer_iteration.latest` (a data source).
+	// `data.hcp_packer_version.latest` (a data source).
 	// Panics if the block cannot be referenced.
 	BlockName() string
 	// Unquoted Block identifier, like `resource`, `data`, or `output`
@@ -127,7 +127,6 @@ type testAccConfigBuilderInterface interface {
 	// Unquoted unique name for resources/data sources/inputs/outputs.
 	// Panics if HasUniqueName is false.
 	UniqueName() string
-	HasUniqueName() bool
 
 	Attributes() map[string]string
 	// Should return `BlockName()+"."+attributeName` for blocks that can be
@@ -162,17 +161,6 @@ func testAccConfigBuildersToString(builders ...testAccConfigBuilderInterface) st
 		)
 	}
 	return config
-}
-
-func testAccOutputBuilder(uniqueName string, value string) testAccConfigBuilderInterface {
-	return &testAccGenericNamedBlockConfigBuilder{
-		canReference:    false,
-		blockIdentifier: "output",
-		uniqueName:      uniqueName,
-		attributes: map[string]string{
-			"value": value,
-		},
-	}
 }
 
 // Generic ConfigBuilder for Blocks that have a UniqueName and no other labels
