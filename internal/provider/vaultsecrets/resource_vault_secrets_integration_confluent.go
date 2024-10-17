@@ -64,15 +64,15 @@ func (r *resourceVaultSecretsIntegrationConfluent) Metadata(_ context.Context, r
 func (r *resourceVaultSecretsIntegrationConfluent) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attributes := map[string]schema.Attribute{
 		"static_credential_details": schema.SingleNestedAttribute{
-			Description: "Confluent API key used to authenticate against the target project.",
+			Description: "Confluent API key used to authenticate for cloud apis.",
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"cloud_api_key_id": schema.StringAttribute{
-					Description: "Public key used alongside the private key to authenticate against the target project.",
+					Description: "Public key used alongside the private key to authenticate for cloud apis.",
 					Required:    true,
 				},
 				"cloud_api_secret": schema.StringAttribute{
-					Description: "Private key used alongside the public key to authenticate against the target project.",
+					Description: "Private key used alongside the public key to authenticate for cloud apis.",
 					Required:    true,
 					Sensitive:   true,
 				},
