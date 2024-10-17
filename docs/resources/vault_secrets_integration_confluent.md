@@ -33,7 +33,7 @@ resource "hcp_vault_secrets_integration_confluent" "example" {
 ### Optional
 
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
-- `static_credential_details` (Attributes) Confluent API key used to authenticate against the target project. (see [below for nested schema](#nestedatt--static_credential_details))
+- `static_credential_details` (Attributes) Confluent API key used to authenticate for cloud apis. (see [below for nested schema](#nestedatt--static_credential_details))
 
 ### Read-Only
 
@@ -46,8 +46,8 @@ resource "hcp_vault_secrets_integration_confluent" "example" {
 
 Required:
 
-- `cloud_api_key_id` (String) Public key used alongside the private key to authenticate against the target project.
-- `cloud_api_secret` (String, Sensitive) Private key used alongside the public key to authenticate against the target project.
+- `cloud_api_key_id` (String) Public key used alongside the private key to authenticate for cloud apis.
+- `cloud_api_secret` (String, Sensitive) Private key used alongside the public key to authenticate for cloud apis.
 
 ## Import
 
