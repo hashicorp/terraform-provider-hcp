@@ -60,10 +60,11 @@ type RotatingSecret struct {
 	RotationPolicyName types.String `tfsdk:"rotation_policy_name"`
 
 	// Provider specific mutually exclusive fields
-	AWSAccessKeys        *awsAccessKeys        `tfsdk:"aws_access_keys"`
-	GCPServiceAccountKey *gcpServiceAccountKey `tfsdk:"gcp_service_account_key"`
-	MongoDBAtlasUser     *mongoDBAtlasUser     `tfsdk:"mongodb_atlas_user"`
-	TwilioAPIKey         *twilioAPIKey         `tfsdk:"twilio_api_key"`
+	AWSAccessKeys           *awsAccessKeys           `tfsdk:"aws_access_keys"`
+	GCPServiceAccountKey    *gcpServiceAccountKey    `tfsdk:"gcp_service_account_key"`
+	MongoDBAtlasUser        *mongoDBAtlasUser        `tfsdk:"mongodb_atlas_user"`
+	TwilioAPIKey            *twilioAPIKey            `tfsdk:"twilio_api_key"`
+	ConfluentServiceAccount *confluentServiceAccount `tfsdk:"confluent_service_account"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -84,6 +85,10 @@ type mongoDBAtlasUser struct {
 	ProjectID    types.String   `tfsdk:"project_id"`
 	DatabaseName types.String   `tfsdk:"database_name"`
 	Roles        []types.String `tfsdk:"roles"`
+}
+
+type confluentServiceAccount struct {
+	ServiceAccountID types.String `tfsdk:"service_account_id"`
 }
 
 type twilioAPIKey struct{}
