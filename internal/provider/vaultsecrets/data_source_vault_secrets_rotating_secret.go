@@ -23,7 +23,7 @@ type DataSourceVaultSecretsRotatingSecretModel struct {
 	AppName        types.String `tfsdk:"app_name"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrgID          types.String `tfsdk:"organization_id"`
-	SecretName     types.String `tfsdk:"secret_name"`
+	Name           types.String `tfsdk:"name"`
 	SecretValues   types.Map    `tfsdk:"secret_values"`
 	SecretVersion  types.Int64  `tfsdk:"secret_version"`
 	SecretProvider types.String `tfsdk:"secret_provider"`
@@ -113,7 +113,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Read(ctx context.Context, req dat
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), data.SecretName.ValueString())
+	openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), data.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
 		return

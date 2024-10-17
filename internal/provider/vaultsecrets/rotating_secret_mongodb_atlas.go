@@ -49,7 +49,7 @@ func (s *mongoDBAtlasRotatingSecret) create(ctx context.Context, client secret_s
 					MongodbGroupID: secret.MongoDBAtlasUser.ProjectID.ValueString(),
 					MongodbRoles:   secret.mongoDBRoles,
 				},
-				SecretName: secret.Name.ValueString(),
+				Name: secret.Name.ValueString(),
 			}),
 		nil)
 	if err != nil {

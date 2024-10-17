@@ -40,7 +40,7 @@ func (s *twilioRotatingSecret) create(ctx context.Context, client secret_service
 			WithBody(&secretmodels.SecretServiceCreateTwilioRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				IntegrationName:    secret.IntegrationName.ValueString(),
-				SecretName:         secret.Name.ValueString(),
+				Name:               secret.Name.ValueString(),
 			}),
 		nil)
 	if err != nil {
