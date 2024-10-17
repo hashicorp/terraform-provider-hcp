@@ -21,7 +21,7 @@ func (s *twilioRotatingSecret) read(ctx context.Context, client secret_service.C
 			WithOrganizationID(secret.OrganizationID.ValueString()).
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
-			WithSecretName(secret.Name.ValueString()), nil)
+			WithName(secret.Name.ValueString()), nil)
 	if err != nil && !clients.IsResponseCodeNotFound(err) {
 		return nil, err
 	}
