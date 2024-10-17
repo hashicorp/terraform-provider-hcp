@@ -14,8 +14,8 @@ import (
 )
 
 func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
-	cloudApiKeyID := checkRequiredEnvVarOrFail(t, "CONFLUENT_API_KEY_ID")
-	cloudApiKeySecret := checkRequiredEnvVarOrFail(t, "CONFLUENT_API_SECRET")
+	cloudAPIKeyID := checkRequiredEnvVarOrFail(t, "CONFLUENT_API_KEY_ID")
+	cloudAPISecret := checkRequiredEnvVarOrFail(t, "CONFLUENT_API_SECRET")
 
 	integrationName1 := generateRandomSlug()
 	integrationName2 := generateRandomSlug()
@@ -26,23 +26,23 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create initial integration with access keys
 			{
-				Config: confluentConfig(integrationName1, cloudApiKeyID, cloudApiKeySecret),
+				Config: confluentConfig(integrationName1, cloudAPIKeyID, cloudAPISecret),
 				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName1, cloudApiKeyID, cloudApiKeySecret)...,
+					confluentCheckFuncs(integrationName1, cloudAPIKeyID, cloudAPISecret)...,
 				),
 			},
 			// Changing the name forces a recreation
 			{
-				Config: confluentConfig(integrationName2, cloudApiKeyID, cloudApiKeySecret),
+				Config: confluentConfig(integrationName2, cloudAPIKeyID, cloudAPISecret),
 				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName2, cloudApiKeyID, cloudApiKeySecret)...,
+					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
 			},
 			// Modifying mutable fields causes an update
 			{
-				Config: confluentConfig(integrationName2, cloudApiKeyID, cloudApiKeySecret),
+				Config: confluentConfig(integrationName2, cloudAPIKeyID, cloudAPISecret),
 				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName2, cloudApiKeyID, cloudApiKeySecret)...,
+					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
 			},
 			// Deleting the integration out of band causes a recreation
@@ -59,9 +59,9 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: confluentConfig(integrationName2, cloudApiKeyID, cloudApiKeySecret),
+				Config: confluentConfig(integrationName2, cloudAPIKeyID, cloudAPISecret),
 				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName2, cloudApiKeyID, cloudApiKeySecret)...,
+					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -75,8 +75,8 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 						Body: &secretmodels.SecretServiceCreateConfluentIntegrationBody{
 							Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
 							StaticCredentialDetails: &secretmodels.Secrets20231128ConfluentStaticCredentialsRequest{
-								CloudAPIKeyID:  cloudApiKeyID,
-								CloudAPISecret: cloudApiKeySecret,
+								CloudAPIKeyID:  cloudAPIKeyID,
+								CloudAPISecret: cloudAPISecret,
 							},
 							Name: integrationName2,
 						},
@@ -87,9 +87,9 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: confluentConfig(integrationName2, cloudApiKeyID, cloudApiKeySecret),
+				Config: confluentConfig(integrationName2, cloudAPIKeyID, cloudAPISecret),
 				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName2, cloudApiKeyID, cloudApiKeySecret)...,
+					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
 				ResourceName:  "hcp_vault_secrets_integration_confluent.acc_test",
 				ImportStateId: integrationName2,
@@ -108,7 +108,7 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 	})
 }
 
-func confluentConfig(integrationName, cloudApiKeyID, cloudApiSecret string) string {
+func confluentConfig(integrationName, cloudAPIKeyID, cloudAPISecret string) string {
 	return fmt.Sprintf(`
 	resource "hcp_vault_secrets_integration_confluent" "acc_test" {
 		name = %q
@@ -117,10 +117,10 @@ func confluentConfig(integrationName, cloudApiKeyID, cloudApiSecret string) stri
 			cloud_api_key_id = %q
 			cloud_api_secret = %q
 	   }
-    }`, integrationName, cloudApiKeyID, cloudApiSecret)
+    }`, integrationName, cloudAPIKeyID, cloudAPISecret)
 }
 
-func confluentCheckFuncs(integrationName, cloudApiKeyID, cloudApiKeySecret string) []resource.TestCheckFunc {
+func confluentCheckFuncs(integrationName, cloudAPIKeyID, cloudAPISecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_confluent.acc_test", "organization_id"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
@@ -129,8 +129,8 @@ func confluentCheckFuncs(integrationName, cloudApiKeyID, cloudApiKeySecret strin
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "name", integrationName),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "capabilities.#", "1"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_secret", cloudApiKeySecret),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_key_id", cloudApiKeyID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_secret", cloudAPISecret),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_key_id", cloudAPIKeyID),
 	}
 }
 

@@ -272,14 +272,14 @@ func (i *IntegrationConfluent) fromModel(ctx context.Context, orgID, projID stri
 
 	if integrationModel.StaticCredentialDetails != nil {
 		// The secret key is not returned by the API, so we use an empty value (e.g. for imports) or the state value (e.g. for updates)
-		cloudApiSecret := ""
+		cloudAPISecret := ""
 		if i.staticCredentialDetails != nil {
-			cloudApiSecret = i.staticCredentialDetails.CloudAPISecret
+			cloudAPISecret = i.staticCredentialDetails.CloudAPISecret
 		}
 
 		i.StaticCredentialDetails, diags = types.ObjectValue(i.StaticCredentialDetails.AttributeTypes(ctx), map[string]attr.Value{
 			"cloud_api_key_id": types.StringValue(integrationModel.StaticCredentialDetails.CloudAPIKeyID),
-			"cloud_api_secret": types.StringValue(cloudApiSecret),
+			"cloud_api_secret": types.StringValue(cloudAPISecret),
 		})
 		if diags.HasError() {
 			return diags
