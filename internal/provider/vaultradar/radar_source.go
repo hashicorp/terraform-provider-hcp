@@ -22,7 +22,7 @@ var (
 )
 
 // radarSourceResource is an implementation for configuring specific types Radar data sources.
-// Examples: hcp_vault_radar_source_github_cloud and hcp__vault_radar_source_github_enterprise make use of
+// Examples: hcp_vault_radar_source_github_cloud and hcp_vault_radar_source_github_enterprise make use of
 // this implementation to define resources with specific schemas, validation, and state details related to their types.
 type radarSourceResource struct {
 	client             *clients.Client
