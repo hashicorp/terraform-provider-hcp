@@ -33,8 +33,8 @@ func (s *confluentRotatingSecret) read(ctx context.Context, client secret_servic
 }
 
 func (s *confluentRotatingSecret) create(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.MongoDBAtlasUser == nil {
-		return nil, fmt.Errorf("missing required field 'mongodb_atlas_user'")
+	if secret.ConfluentServiceAccount == nil {
+		return nil, fmt.Errorf("missing required field 'confluent_service_account'")
 	}
 
 	response, err := client.CreateConfluentCloudAPIKeyRotatingSecret(
@@ -61,6 +61,9 @@ func (s *confluentRotatingSecret) create(ctx context.Context, client secret_serv
 }
 
 func (s *confluentRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
+	if secret.ConfluentServiceAccount == nil {
+		return nil, fmt.Errorf("missing required field 'confluent_service_account'")
+	}
 	response, err := client.UpdateConfluentCloudAPIKeyRotatingSecret(
 		secret_service.NewUpdateConfluentCloudAPIKeyRotatingSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
