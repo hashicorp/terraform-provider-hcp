@@ -58,7 +58,7 @@ type resourceVaultSecretsIntegrationConfluent struct {
 }
 
 func (r *resourceVaultSecretsIntegrationConfluent) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_vault_secrets_integration_Confluent"
+	resp.TypeName = req.ProviderTypeName + "_vault_secrets_integration_confluent"
 }
 
 func (r *resourceVaultSecretsIntegrationConfluent) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
