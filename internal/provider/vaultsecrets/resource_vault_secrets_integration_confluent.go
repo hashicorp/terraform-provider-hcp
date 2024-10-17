@@ -40,7 +40,7 @@ type IntegrationConfluent struct {
 
 // Helper structs to help populate concrete targets from types.Object fields
 type confluentStaticCredentialDetails struct {
-	CloudAPIKeyId  types.String `tfsdk:"cloud_api_key_id"`
+	CloudAPIKeyID  types.String `tfsdk:"cloud_api_key_id"`
 	CloudAPISecret types.String `tfsdk:"cloud_api_secret"`
 }
 
@@ -238,7 +238,7 @@ func (i *IntegrationConfluent) initModel(ctx context.Context, orgID, projID stri
 		}
 
 		i.staticCredentialDetails = &secretmodels.Secrets20231128ConfluentStaticCredentialsRequest{
-			CloudAPIKeyID:  scd.CloudAPIKeyId.ValueString(),
+			CloudAPIKeyID:  scd.CloudAPIKeyID.ValueString(),
 			CloudAPISecret: scd.CloudAPISecret.ValueString(),
 		}
 	}

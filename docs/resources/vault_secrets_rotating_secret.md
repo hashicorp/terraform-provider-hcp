@@ -71,6 +71,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_twilio" {
 ### Optional
 
 - `aws_access_keys` (Attributes) AWS configuration to manage the access key rotation for the given IAM user. Required if `secret_provider` is `aws`. (see [below for nested schema](#nestedatt--aws_access_keys))
+- `confluent_service_account` (Attributes) Confluent configuration to manage the cloud api key rotation for the given service account. Required if `secret_provider` is `confluent`. (see [below for nested schema](#nestedatt--confluent_service_account))
 - `gcp_service_account_key` (Attributes) GCP configuration to manage the service account key rotation for the given service account. Required if `secret_provider` is `gcp`. (see [below for nested schema](#nestedatt--gcp_service_account_key))
 - `mongodb_atlas_user` (Attributes) MongoDB Atlas configuration to manage the user password rotation on the given database. Required if `secret_provider` is `mongodb_atlas`. (see [below for nested schema](#nestedatt--mongodb_atlas_user))
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
@@ -86,6 +87,14 @@ resource "hcp_vault_secrets_rotating_secret" "example_twilio" {
 Required:
 
 - `iam_username` (String) AWS IAM username to rotate the access keys for.
+
+
+<a id="nestedatt--confluent_service_account"></a>
+### Nested Schema for `confluent_service_account`
+
+Required:
+
+- `service_account_id` (String) Confluent service account to rotate the cloud api key for.
 
 
 <a id="nestedatt--gcp_service_account_key"></a>
