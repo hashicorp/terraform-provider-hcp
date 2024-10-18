@@ -1,0 +1,3 @@
+```release-note:feature
+Add preview of vault_radar_source_github_cloud resource.
+```
