@@ -182,6 +182,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		waypoint.NewTfcConfigResource,
 		// Radar
 		vaultradar.NewSourceGitHubEnterpriseResource,
+		vaultradar.NewSourceGitHubCloudResource,
 		vaultradar.NewIntegrationJiraConnectionResource,
 		vaultradar.NewIntegrationJiraSubscriptionResource,
 		vaultradar.NewIntegrationSlackConnectionResource,
