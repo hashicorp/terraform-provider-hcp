@@ -113,7 +113,7 @@ func (d *DataSourceVaultSecretsRotatingSecret) Read(ctx context.Context, req dat
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), data.Name.ValueString())
+	openSecret, err := clients.OpenVaultSecretsAppSecret(ctx, client, loc, data.AppName.ValueString(), data.SecretName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "Unable to open secret")
 		return
