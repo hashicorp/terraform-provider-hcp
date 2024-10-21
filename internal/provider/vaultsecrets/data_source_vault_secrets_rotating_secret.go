@@ -23,7 +23,7 @@ type DataSourceVaultSecretsRotatingSecretModel struct {
 	AppName        types.String `tfsdk:"app_name"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrgID          types.String `tfsdk:"organization_id"`
-	Name           types.String `tfsdk:"name"`
+	SecretName     types.String `tfsdk:"secret_name"`
 	SecretValues   types.Map    `tfsdk:"secret_values"`
 	SecretVersion  types.Int64  `tfsdk:"secret_version"`
 	SecretProvider types.String `tfsdk:"secret_provider"`
