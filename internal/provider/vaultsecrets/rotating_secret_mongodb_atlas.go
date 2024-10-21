@@ -44,10 +44,10 @@ func (s *mongoDBAtlasRotatingSecret) create(ctx context.Context, client secret_s
 			WithAppName(secret.AppName.ValueString()).
 			WithBody(&secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody{
 				IntegrationName:    secret.IntegrationName.ValueString(),
-				MongodbGroupID:     secret.MongoDBAtlasUser.ProjectID.ValueString(), // Group ID must be at this level, not in the secret details
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				SecretDetails: &secretmodels.Secrets20231128MongoDBAtlasSecretDetails{
-					MongodbRoles: secret.mongoDBRoles,
+					MongodbGroupID: secret.MongoDBAtlasUser.ProjectID.ValueString(),
+					MongodbRoles:   secret.mongoDBRoles,
 				},
 				SecretName: secret.Name.ValueString(),
 			}),

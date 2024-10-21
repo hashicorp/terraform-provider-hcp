@@ -63,6 +63,8 @@ import (
 
 	cloud_vault_radar "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client"
 	radar_src_registration_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
+	radar_connection_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
+	radar_subscription_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
 
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
@@ -92,6 +94,8 @@ type Client struct {
 	LogService                     log_service.ClientService
 	ResourceService                resource_service.ClientService
 	RadarSourceRegistrationService radar_src_registration_service.ClientService
+	RadarConnectionService         radar_connection_service.ClientService
+	RadarSubscriptionService       radar_subscription_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -182,6 +186,8 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Webhook:                        cloud_webhook.New(httpClient, nil).WebhookService,
 		ResourceService:                cloud_resource_manager.New(httpClient, nil).ResourceService,
 		RadarSourceRegistrationService: cloud_vault_radar.New(httpClient, nil).DataSourceRegistrationService,
+		RadarConnectionService:         cloud_vault_radar.New(httpClient, nil).IntegrationConnectionService,
+		RadarSubscriptionService:       cloud_vault_radar.New(httpClient, nil).IntegrationSubscriptionService,
 	}
 
 	return client, nil
