@@ -1,3 +1,3 @@
 ```release-note:improvement
-Upgrade the HCP SDK and fix breaking change w/ Vault Secrets
+Upgrade the HCP SDK for Vault Secrets
 ```
