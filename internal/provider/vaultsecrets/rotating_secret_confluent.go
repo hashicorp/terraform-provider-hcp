@@ -69,6 +69,7 @@ func (s *confluentRotatingSecret) update(ctx context.Context, client secret_serv
 			WithOrganizationID(secret.OrganizationID.ValueString()).
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
+			WithName(secret.Name.ValueString()).
 			WithBody(&secretmodels.SecretServiceUpdateConfluentCloudAPIKeyRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				ConfluentCloudAPIKeyParams: &secretmodels.Secrets20231128ConfluentCloudAPIKeyParams{
