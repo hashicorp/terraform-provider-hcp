@@ -38,13 +38,6 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
 			},
-			// Modifying mutable fields causes an update
-			{
-				Config: confluentConfig(integrationName2, cloudAPIKeyID, cloudAPISecret),
-				Check: resource.ComposeTestCheckFunc(
-					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
-				),
-			},
 			// Deleting the integration out of band causes a recreation
 			{
 				PreConfig: func() {
