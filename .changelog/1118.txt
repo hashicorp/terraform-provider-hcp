@@ -1,0 +1,3 @@
+```release-note:improvement
+Fixed issues where the HVS App resource would behave improperly such as returning an error if using an empty description.
+```
