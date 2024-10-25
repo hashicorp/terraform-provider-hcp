@@ -36,6 +36,7 @@ data:
 // resourceConsulClusterRootToken represents an HCP Consul cluster.
 func resourceConsulClusterRootToken() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
 		Description: "The cluster root token resource is the token used to bootstrap the cluster's ACL system. " +
 			"You can also generate this root token from the HCP Consul UI.",
 		CreateContext: resourceConsulClusterRootTokenCreate,

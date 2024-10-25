@@ -67,7 +67,8 @@ connectInject:
 
 func dataSourceConsulAgentHelmConfig() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Consul agent Helm config data source provides Helm values for a Consul agent running in Kubernetes.",
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
+		Description:        "The Consul agent Helm config data source provides Helm values for a Consul agent running in Kubernetes.",
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultConsulAgentHelmConfigTimeoutDuration,
 		},
