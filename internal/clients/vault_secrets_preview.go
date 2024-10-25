@@ -96,7 +96,7 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
 		WithAppName(appName).
-		WithSecretName(secretName)
+		WithName(secretName)
 
 	resp, err := client.VaultSecretsPreview.GetRotatingSecretState(params, nil)
 	if err != nil {

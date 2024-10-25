@@ -30,6 +30,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("gcp_service_account_key"),
 		path.MatchRoot("mongodb_atlas_user"),
 		path.MatchRoot("twilio_api_key"),
+		path.MatchRoot("confluent_service_account"),
 	}...,
 )
 
@@ -48,6 +49,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderGCP:          &gcpRotatingSecret{},
 	ProviderMongoDBAtlas: &mongoDBAtlasRotatingSecret{},
 	ProviderTwilio:       &twilioRotatingSecret{},
+	ProviderConfluent:    &confluentRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -60,10 +62,11 @@ type RotatingSecret struct {
 	RotationPolicyName types.String `tfsdk:"rotation_policy_name"`
 
 	// Provider specific mutually exclusive fields
-	AWSAccessKeys        *awsAccessKeys        `tfsdk:"aws_access_keys"`
-	GCPServiceAccountKey *gcpServiceAccountKey `tfsdk:"gcp_service_account_key"`
-	MongoDBAtlasUser     *mongoDBAtlasUser     `tfsdk:"mongodb_atlas_user"`
-	TwilioAPIKey         *twilioAPIKey         `tfsdk:"twilio_api_key"`
+	AWSAccessKeys           *awsAccessKeys           `tfsdk:"aws_access_keys"`
+	GCPServiceAccountKey    *gcpServiceAccountKey    `tfsdk:"gcp_service_account_key"`
+	MongoDBAtlasUser        *mongoDBAtlasUser        `tfsdk:"mongodb_atlas_user"`
+	TwilioAPIKey            *twilioAPIKey            `tfsdk:"twilio_api_key"`
+	ConfluentServiceAccount *confluentServiceAccount `tfsdk:"confluent_service_account"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -84,6 +87,10 @@ type mongoDBAtlasUser struct {
 	ProjectID    types.String   `tfsdk:"project_id"`
 	DatabaseName types.String   `tfsdk:"database_name"`
 	Roles        []types.String `tfsdk:"roles"`
+}
+
+type confluentServiceAccount struct {
+	ServiceAccountID types.String `tfsdk:"service_account_id"`
 }
 
 type twilioAPIKey struct{}
@@ -178,6 +185,22 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 			Optional:    true,
 			Attributes:  map[string]schema.Attribute{
 				// Twilio does not have rotating-secret-specific fields for the moment, this block is to preserve future backwards compatibility
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
+		"confluent_service_account": schema.SingleNestedAttribute{
+			Description: "Confluent configuration to manage the cloud api key rotation for the given service account. Required if `secret_provider` is `confluent`.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"service_account_id": schema.StringAttribute{
+					Description: "Confluent service account to rotate the cloud api key for.",
+					Required:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 			Validators: []validator.Object{
 				exactlyOneRotatingSecretTypeFieldsValidator,
