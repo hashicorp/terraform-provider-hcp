@@ -1,0 +1,4 @@
+partition: hcp
+schema: 1.1
+summary:
+  owner: team-cloud-core-platform
