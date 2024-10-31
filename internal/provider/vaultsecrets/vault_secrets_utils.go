@@ -24,6 +24,7 @@ const (
 	ProviderMongoDBAtlas Provider = "mongodb_atlas"
 	ProviderTwilio       Provider = "twilio"
 	ProviderConfluent    Provider = "confluent"
+	ProviderPostgres     Provider = "postgres"
 )
 
 func (p Provider) String() string {

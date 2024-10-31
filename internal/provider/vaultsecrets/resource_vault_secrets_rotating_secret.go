@@ -31,6 +31,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("mongodb_atlas_user"),
 		path.MatchRoot("twilio_api_key"),
 		path.MatchRoot("confluent_service_account"),
+		path.MatchRoot("postgres_usernames"),
 	}...,
 )
 
@@ -50,6 +51,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderMongoDBAtlas: &mongoDBAtlasRotatingSecret{},
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
+	ProviderPostgres:     &postgresRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -67,6 +69,7 @@ type RotatingSecret struct {
 	MongoDBAtlasUser        *mongoDBAtlasUser        `tfsdk:"mongodb_atlas_user"`
 	TwilioAPIKey            *twilioAPIKey            `tfsdk:"twilio_api_key"`
 	ConfluentServiceAccount *confluentServiceAccount `tfsdk:"confluent_service_account"`
+	PostgresUsernames       *postgresUsernames       `tfsdk:"postgres_usernames"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -94,6 +97,10 @@ type confluentServiceAccount struct {
 }
 
 type twilioAPIKey struct{}
+
+type postgresUsernames struct {
+	Usernames []types.String `tfsdk:"usernames"`
+}
 
 var _ resource.Resource = &resourceVaultSecretsRotatingSecret{}
 var _ resource.ResourceWithConfigure = &resourceVaultSecretsRotatingSecret{}
