@@ -41,3 +41,15 @@ resource "hcp_vault_secrets_rotating_secret" "example_twilio" {
   rotation_policy_name = "built-in:60-days-2-active"
   twilio_api_key       = {}
 }
+
+resource "hcp_vault_secrets_rotating_secret" "example_confluent" {
+  app_name             = "my-app-1"
+  secret_provider      = "confluent"
+  name                 = "my_confluent_1"
+  integration_name     = "my-confluent-1"
+  rotation_policy_name = "built-in:60-days-2-active"
+  confluent_service_account = {
+    service_account_id = "<service-account-id>"
+  }
+}
+

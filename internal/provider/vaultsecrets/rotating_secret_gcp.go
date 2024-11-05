@@ -61,7 +61,7 @@ func (s *gcpRotatingSecret) create(ctx context.Context, client secret_service.Cl
 }
 
 func (s *gcpRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.AWSAccessKeys == nil {
+	if secret.GCPServiceAccountKey == nil {
 		return nil, fmt.Errorf("missing required field 'gcp_service_account_key'")
 	}
 
