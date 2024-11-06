@@ -86,7 +86,7 @@ func UpdatePackerChannel(
 	channel, err := client.PackerV2.PackerServiceUpdateChannel(params, nil)
 	if err != nil {
 		if err, ok := err.(*packerservice.PackerServiceUpdateChannelDefault); ok {
-			return nil, fmt.Errorf(err.Payload.Message)
+			return nil, errors.New(err.Payload.Message)
 		}
 		return nil, fmt.Errorf("unexpected error format received by UpdatePackerChannel. Got: %v", err)
 	}
