@@ -1,0 +1,3 @@
+```release-note:bug
+creating a mongodb rotating secret should create a mongodb rotating secret not a twilio one
+```
