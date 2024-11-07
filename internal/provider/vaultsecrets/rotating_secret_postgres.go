@@ -50,8 +50,10 @@ func (p *postgresRotatingSecret) create(ctx context.Context, client secret_servi
 			WithBody(&secretmodels.SecretServiceCreatePostgresRotatingSecretBody{
 				IntegrationName:    secret.IntegrationName.ValueString(),
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
-				Usernames:          usernames,
-				Name:               secret.Name.ValueString(),
+				PostgresParams: &secretmodels.Secrets20231128PostgresParams{
+					Usernames: usernames,
+				},
+				Name: secret.Name.ValueString(),
 			}),
 		nil)
 	if err != nil {
@@ -64,5 +66,31 @@ func (p *postgresRotatingSecret) create(ctx context.Context, client secret_servi
 }
 
 func (p *postgresRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	return nil, nil
+	if secret.PostgresUsernames == nil {
+		return nil, fmt.Errorf("missing required field 'postgres_usernames'")
+	}
+
+	usernames := make([]string, 0, len(secret.PostgresUsernames.Usernames))
+	for _, username := range secret.PostgresUsernames.Usernames {
+		usernames = append(usernames, username.ValueString())
+	}
+
+	response, err := client.UpdatePostgresRotatingSecret(
+		secret_service.NewUpdatePostgresRotatingSecretParamsWithContext(ctx).
+			WithOrganizationID(secret.OrganizationID.ValueString()).
+			WithProjectID(secret.ProjectID.ValueString()).
+			WithAppName(secret.AppName.ValueString()).
+			WithBody(&secretmodels.SecretServiceUpdatePostgresRotatingSecretBody{
+				PostgresParams: &secretmodels.Secrets20231128PostgresParams{
+					Usernames: usernames,
+				},
+				RotationPolicyName: secret.RotationPolicyName.ValueString(),
+			}), nil)
+	if err != nil {
+		return nil, err
+	}
+	if response == nil || response.Payload == nil {
+		return nil, nil
+	}
+	return response.Payload.Config, nil
 }
