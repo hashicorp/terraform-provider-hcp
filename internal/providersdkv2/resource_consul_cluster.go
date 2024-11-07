@@ -337,7 +337,7 @@ func resourceConsulClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	if ok {
 		primary, err = parseLinkURL(primaryLink.(string), ConsulClusterResourceType)
 		if err != nil {
-			return diag.Errorf(err.Error())
+			return diag.FromErr(err)
 		}
 		primaryOrgID, err := clients.GetParentOrganizationIDByProjectID(ctx, client, primary.Location.ProjectID)
 		if err != nil {

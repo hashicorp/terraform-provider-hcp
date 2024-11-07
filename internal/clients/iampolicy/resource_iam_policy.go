@@ -111,7 +111,7 @@ func (r *resourcePolicy) Schema(_ context.Context, _ resource.SchemaRequest, res
 		Attributes:          r.parentSchema.Attributes,
 	}
 
-	if resp.Schema.Attributes == nil || len(resp.Schema.Attributes) == 0 {
+	if len(resp.Schema.Attributes) == 0 {
 		resp.Schema.Attributes = basePolicySchema
 	} else {
 		for k, v := range basePolicySchema {
