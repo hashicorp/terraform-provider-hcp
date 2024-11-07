@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,6 +41,11 @@ type IntegrationPostgres struct {
 type connectionString struct {
 	ConnectionString types.String `tfsdk:"connection_string"`
 }
+
+var _ resource.Resource = &resourceVaultSecretsIntegrationPostgres{}
+var _ resource.ResourceWithConfigure = &resourceVaultSecretsIntegrationPostgres{}
+var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsIntegrationPostgres{}
+var _ resource.ResourceWithImportState = &resourceVaultSecretsIntegrationPostgres{}
 
 type resourceVaultSecretsIntegrationPostgres struct {
 	client *clients.Client
@@ -139,6 +145,59 @@ func (r *resourceVaultSecretsIntegrationPostgres) Create(ctx context.Context, re
 		}
 		return response.Payload.Integration, nil
 	})...)
+}
+
+func (r *resourceVaultSecretsIntegrationPostgres) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationPostgres](ctx, r.client, &resp.State, req.Plan.Get, "updating", func(i hvsResource) (any, error) {
+		integration, ok := i.(*IntegrationPostgres)
+		if !ok {
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
+		}
+
+		response, err := r.client.VaultSecretsPreview.UpdatePostgresIntegration(&secret_service.UpdatePostgresIntegrationParams{
+			Body: &secretmodels.SecretServiceUpdatePostgresIntegrationBody{
+				Capabilities:            integration.capabilities,
+				StaticCredentialDetails: integration.staticCredentialDetails,
+			},
+			Name:           integration.Name.ValueString(),
+			OrganizationID: integration.OrganizationID.ValueString(),
+			ProjectID:      integration.ProjectID.ValueString(),
+		}, nil)
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
+			return nil, err
+		}
+		if response == nil || response.Payload == nil {
+			return nil, nil
+		}
+		return response.Payload.Integration, nil
+	})...)
+}
+
+func (r *resourceVaultSecretsIntegrationPostgres) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	resp.Diagnostics.Append(decorateOperation[*IntegrationPostgres](ctx, r.client, &resp.State, req.State.Get, "deleting", func(i hvsResource) (any, error) {
+		integration, ok := i.(*IntegrationPostgres)
+		if !ok {
+			return nil, fmt.Errorf("invalid integration type, expected *IntegrationPostgres, got: %T, this is a bug on the provider", i)
+		}
+
+		_, err := r.client.VaultSecretsPreview.DeletePostgresIntegration(
+			secret_service.NewDeletePostgresIntegrationParamsWithContext(ctx).
+				WithOrganizationID(integration.OrganizationID.ValueString()).
+				WithProjectID(integration.ProjectID.ValueString()).
+				WithName(integration.Name.ValueString()), nil)
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
+			return nil, err
+		}
+		return nil, nil
+	})...)
+}
+
+func (r *resourceVaultSecretsIntegrationPostgres) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// The Vault Secrets API does not return sensitive values like the secret access key, so they will be initialized to an empty value
+	// It means the first plan/apply after a successful import will always show a diff for the secret access key
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), r.client.Config.OrganizationID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), r.client.Config.ProjectID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), req.ID)...)
 }
 
 var _ hvsResource = &IntegrationPostgres{}
