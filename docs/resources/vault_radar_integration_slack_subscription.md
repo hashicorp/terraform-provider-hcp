@@ -1,13 +1,13 @@
 ---
 page_title: "hcp_vault_radar_integration_slack_subscription Resource - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault Radar"
 description: |-
   This terraform resource manages an Integration Slack Subscription in Vault Radar.
 ---
 
 # hcp_vault_radar_integration_slack_subscription (Resource)
 
--> **Note:** HCP Vault Radar Terraform resources are in preview.
+-> **Note:** This feature is currently in private beta.
 
 This terraform resource manages an Integration Slack Subscription in Vault Radar.
 

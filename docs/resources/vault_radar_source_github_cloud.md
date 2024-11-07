@@ -1,13 +1,13 @@
 ---
 page_title: "hcp_vault_radar_source_github_cloud Resource - terraform-provider-hcp"
-subcategory: ""
+subcategory: "HCP Vault Radar"
 description: |-
   This terraform resource manages a GitHub Cloud data source lifecycle in Vault Radar.
 ---
 
 # hcp_vault_radar_source_github_cloud (Resource)
 
--> **Note:** HCP Vault Radar Terraform resources are in preview.
+-> **Note:** This feature is currently in private beta.
 
 This terraform resource manages a GitHub Cloud data source lifecycle in Vault Radar.
 

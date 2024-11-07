@@ -1,0 +1,3 @@
+```release-note:bug
+HCP Vault Radar resource documents did not have the subcategory set correctly.
+```
