@@ -213,6 +213,23 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 				exactlyOneRotatingSecretTypeFieldsValidator,
 			},
 		},
+		"postgres_usernames": schema.SingleNestedAttribute{
+			Description: "",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"usernames": schema.ListAttribute{
+					Description: "Postgres usernames to rotate passwords for.",
+					Required:    true,
+					ElementType: types.StringType,
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
