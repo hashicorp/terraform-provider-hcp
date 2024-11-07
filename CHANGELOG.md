@@ -1,3 +1,8 @@
+## v0.98.1 (November 07, 2024)
+
+BUG FIXES:
+
+* HCP Vault Radar resource documents did not have the subcategory set correctly. [[GH-1129](https://github.com/hashicorp/terraform-provider-hcp/pull/1129)]
 ## v0.98.0 (November 06, 2024)
 
 FEATURES:
