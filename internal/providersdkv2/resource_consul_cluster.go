@@ -36,11 +36,12 @@ var deleteConsulClusterTimeout = time.Minute * 35
 // resourceConsulCluster represents an HCP Consul cluster.
 func resourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The Consul cluster resource allows you to manage an HCP Consul cluster.",
-		CreateContext: resourceConsulClusterCreate,
-		ReadContext:   resourceConsulClusterRead,
-		UpdateContext: resourceConsulClusterUpdate,
-		DeleteContext: resourceConsulClusterDelete,
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
+		Description:        "The Consul cluster resource allows you to manage an HCP Consul cluster.",
+		CreateContext:      resourceConsulClusterCreate,
+		ReadContext:        resourceConsulClusterRead,
+		UpdateContext:      resourceConsulClusterUpdate,
+		DeleteContext:      resourceConsulClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultConsulClusterTimeout,
 			Create:  &createUpdateConsulClusterTimeout,
