@@ -202,11 +202,11 @@ func (r *resourceVaultSecretsIntegrationPostgres) ImportState(ctx context.Contex
 
 var _ hvsResource = &IntegrationPostgres{}
 
-func (i IntegrationPostgres) projectID() types.String {
+func (i *IntegrationPostgres) projectID() types.String {
 	return i.ProjectID
 }
 
-func (i IntegrationPostgres) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
+func (i *IntegrationPostgres) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	// Init fields that depend on the Terraform provider configuration
 	i.OrganizationID = types.StringValue(orgID)
 	i.ProjectID = types.StringValue(projID)
@@ -236,7 +236,7 @@ func (i IntegrationPostgres) initModel(ctx context.Context, orgID, projID string
 	return diag.Diagnostics{}
 }
 
-func (i IntegrationPostgres) fromModel(ctx context.Context, orgID, projID string, model any) diag.Diagnostics {
+func (i *IntegrationPostgres) fromModel(ctx context.Context, orgID, projID string, model any) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	integrationModel, ok := model.(*secretmodels.Secrets20231128PostgresIntegration)
