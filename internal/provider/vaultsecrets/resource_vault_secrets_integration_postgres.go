@@ -47,6 +47,10 @@ var _ resource.ResourceWithConfigure = &resourceVaultSecretsIntegrationPostgres{
 var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsIntegrationPostgres{}
 var _ resource.ResourceWithImportState = &resourceVaultSecretsIntegrationPostgres{}
 
+func NewVaultSecretsIntegrationPostgresResource() resource.Resource {
+	return &resourceVaultSecretsIntegrationPostgres{}
+}
+
 type resourceVaultSecretsIntegrationPostgres struct {
 	client *clients.Client
 }
