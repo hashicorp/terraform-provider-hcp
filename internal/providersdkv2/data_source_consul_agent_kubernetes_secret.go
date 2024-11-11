@@ -34,8 +34,9 @@ data:
 
 func dataSourceConsulAgentKubernetesSecret() *schema.Resource {
 	return &schema.Resource{
-		Description: "The agent config Kubernetes secret data source provides Consul agents running in Kubernetes the configuration needed to connect to the Consul cluster.",
-		ReadContext: dataSourceConsulAgentKubernetesSecretRead,
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
+		Description:        "The agent config Kubernetes secret data source provides Consul agents running in Kubernetes the configuration needed to connect to the Consul cluster.",
+		ReadContext:        dataSourceConsulAgentKubernetesSecretRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultAgentConfigKubernetesSecretTimeoutDuration,
 		},

@@ -32,6 +32,7 @@ var snapshotCreateUpdateDeleteTimeoutDuration = time.Minute * 15
 
 func resourceConsulSnapshot() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
 		Description: "The Consul snapshot resource allows users to manage Consul snapshots of an HCP Consul cluster. " +
 			"Snapshots currently have a retention policy of 30 days.",
 		CreateContext: resourceConsulSnapshotCreate,

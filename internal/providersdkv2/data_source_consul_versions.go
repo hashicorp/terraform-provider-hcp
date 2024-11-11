@@ -23,7 +23,8 @@ var defaultConsulVersionsTimeoutDuration = time.Minute * 5
 // dataSourceConsulVersions is the data source for the Consul versions supported by HCP.
 func dataSourceConsulVersions() *schema.Resource {
 	return &schema.Resource{
-		Description: "The Consul versions data source provides the Consul versions supported by HCP.",
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
+		Description:        "The Consul versions data source provides the Consul versions supported by HCP.",
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultConsulVersionsTimeoutDuration,
 		},
