@@ -53,3 +53,14 @@ resource "hcp_vault_secrets_rotating_secret" "example_confluent" {
   }
 }
 
+resource "hcp_vault_secrets_rotating_secret" "example_postgres" {
+  app_name             = "my-app-1"
+  secret_provider      = "confluent"
+  name                 = "my_confluent_1"
+  integration_name     = "my-confluent-1"
+  rotation_policy_name = "built-in:60-days-2-active"
+  postgres_usernames = {
+    usernames = ["user1", "user2"]
+  }
+}
+
