@@ -42,12 +42,16 @@ var githubEnterpriseSourceSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"domain_name": schema.StringAttribute{
 			Description: "Fully qualified domain name of the server. (Example: myserver.acme.com)",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.RegexMatches(regexp.MustCompile(`^(?:[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\.)+[a-zA-Z]{2,}$`),
@@ -60,6 +64,7 @@ var githubEnterpriseSourceSchema = schema.Schema{
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9-_.]+$`),
@@ -71,9 +76,6 @@ var githubEnterpriseSourceSchema = schema.Schema{
 			Description: "GitHub personal access token.",
 			Required:    true,
 			Sensitive:   true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
 		},
 		// Optional inputs
 		"project_id": schema.StringAttribute{
