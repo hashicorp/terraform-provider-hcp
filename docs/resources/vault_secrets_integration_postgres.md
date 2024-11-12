@@ -13,7 +13,7 @@ The Vault Secrets Twilio integration resource manages a Twilio integration.
 ## Example Usage
 
 ```terraform
-resource "hcp_vault_secrets_integration_confluent" "example" {
+resource "hcp_vault_secrets_integration_postgres" "example" {
   name         = "my-postgres-1"
   capabilities = ["ROTATION"]
   static_credential_details = {
