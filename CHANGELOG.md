@@ -1,3 +1,9 @@
+## v0.99.0 (November 12, 2024)
+
+DEPRECATIONS:
+
+* Added a Deprecation message for the following resources: `hcp_consul_agent_helm_config`,`hcp_consul_agent_kubernetes_secret`,`hcp_consul_cluster`,`hcp_consul_versions` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
+* Added a Deprecation message for the following resources: `hcp_consul_cluster`,`hcp_consul_cluster_root_token`,`hcp_consul_snapshot` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
 ## v0.98.1 (November 07, 2024)
 
 BUG FIXES:
