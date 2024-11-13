@@ -180,6 +180,19 @@ func DeleteIntegrationConnection(ctx context.Context, client *Client, projectID,
 	return nil
 }
 
+func UpdateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.UpdateIntegrationConnectionBody) error {
+	params := ics.NewUpdateIntegrationConnectionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = connection
+
+	if _, err := client.RadarConnectionService.UpdateIntegrationConnection(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateIntegrationSubscription(ctx context.Context, client *Client, projectID string, connection iss.CreateIntegrationSubscriptionBody) (*iss.CreateIntegrationSubscriptionOK, error) {
 	params := iss.NewCreateIntegrationSubscriptionParams()
 	params.Context = ctx
