@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package clients
 
 import (
@@ -5,13 +8,15 @@ import (
 	"errors"
 	"time"
 
-	radar_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
+	dsrs "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
+	ics "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
+	iss "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func OnboardRadarSource(ctx context.Context, client *Client, projectID string, source radar_service.OnboardDataSourceBody) (*radar_service.OnboardDataSourceOK, error) {
-	onboardParams := radar_service.NewOnboardDataSourceParams()
+func OnboardRadarSource(ctx context.Context, client *Client, projectID string, source dsrs.OnboardDataSourceBody) (*dsrs.OnboardDataSourceOK, error) {
+	onboardParams := dsrs.NewOnboardDataSourceParams()
 	onboardParams.Context = ctx
 	onboardParams.LocationProjectID = projectID
 	onboardParams.Body = source
@@ -24,8 +29,8 @@ func OnboardRadarSource(ctx context.Context, client *Client, projectID string, s
 	return onboardResp, nil
 }
 
-func GetRadarSource(ctx context.Context, client *Client, projectID, sourceID string) (*radar_service.GetDataSourceByIDOK, error) {
-	getParams := radar_service.NewGetDataSourceByIDParams()
+func GetRadarSource(ctx context.Context, client *Client, projectID, sourceID string) (*dsrs.GetDataSourceByIDOK, error) {
+	getParams := dsrs.NewGetDataSourceByIDParams()
 	getParams.Context = ctx
 	getParams.ID = sourceID
 	getParams.LocationProjectID = projectID
@@ -41,10 +46,10 @@ func GetRadarSource(ctx context.Context, client *Client, projectID, sourceID str
 func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceID string) error {
 	tflog.SetField(ctx, "radar_source_id", sourceID)
 
-	deleteParams := radar_service.NewOffboardDataSourceParams()
+	deleteParams := dsrs.NewOffboardDataSourceParams()
 	deleteParams.Context = ctx
 	deleteParams.LocationProjectID = projectID
-	deleteParams.Body = radar_service.OffboardDataSourceBody{
+	deleteParams.Body = dsrs.OffboardDataSourceBody{
 		ID: sourceID,
 	}
 
@@ -116,4 +121,118 @@ func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveEr
 			return errors.New("context canceled while waiting")
 		}
 	}
+}
+
+func CreateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.CreateIntegrationConnectionBody) (*ics.CreateIntegrationConnectionOK, error) {
+	params := ics.NewCreateIntegrationConnectionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = connection
+
+	resp, err := client.RadarConnectionService.CreateIntegrationConnection(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func GetIntegrationConnectionByID(ctx context.Context, client *Client, projectID, connectionID string) (*ics.GetIntegrationConnectionByIDOK, error) {
+	params := ics.NewGetIntegrationConnectionByIDParams()
+	params.Context = ctx
+	params.ID = connectionID
+	params.LocationProjectID = projectID
+
+	resp, err := client.RadarConnectionService.GetIntegrationConnectionByID(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func GetIntegrationConnectionByName(ctx context.Context, client *Client, projectID, connectionName string) (*ics.GetIntegrationConnectionByNameOK, error) {
+	params := ics.NewGetIntegrationConnectionByNameParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = ics.GetIntegrationConnectionByNameBody{
+		Name: connectionName,
+	}
+
+	resp, err := client.RadarConnectionService.GetIntegrationConnectionByName(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func DeleteIntegrationConnection(ctx context.Context, client *Client, projectID, connectionID string) error {
+	params := ics.NewDeleteIntegrationConnectionParams()
+	params.Context = ctx
+	params.ID = connectionID
+	params.LocationProjectID = projectID
+
+	if _, err := client.RadarConnectionService.DeleteIntegrationConnection(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateIntegrationSubscription(ctx context.Context, client *Client, projectID string, connection iss.CreateIntegrationSubscriptionBody) (*iss.CreateIntegrationSubscriptionOK, error) {
+	params := iss.NewCreateIntegrationSubscriptionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = connection
+
+	resp, err := client.RadarSubscriptionService.CreateIntegrationSubscription(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func GetIntegrationSubscriptionByID(ctx context.Context, client *Client, projectID, connectionID string) (*iss.GetIntegrationSubscriptionByIDOK, error) {
+	params := iss.NewGetIntegrationSubscriptionByIDParams()
+	params.Context = ctx
+	params.ID = connectionID
+	params.LocationProjectID = projectID
+
+	resp, err := client.RadarSubscriptionService.GetIntegrationSubscriptionByID(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func GetIntegrationSubscriptionByName(ctx context.Context, client *Client, projectID, connectionName string) (*iss.GetIntegrationSubscriptionByNameOK, error) {
+	params := iss.NewGetIntegrationSubscriptionByNameParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = iss.GetIntegrationSubscriptionByNameBody{
+		Name: connectionName,
+	}
+
+	resp, err := client.RadarSubscriptionService.GetIntegrationSubscriptionByName(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func DeleteIntegrationSubscription(ctx context.Context, client *Client, projectID, connectionID string) error {
+	params := iss.NewDeleteIntegrationSubscriptionParams()
+	params.Context = ctx
+	params.ID = connectionID
+	params.LocationProjectID = projectID
+
+	if _, err := client.RadarSubscriptionService.DeleteIntegrationSubscription(params, nil); err != nil {
+		return err
+	}
+
+	return nil
 }

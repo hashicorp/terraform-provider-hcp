@@ -61,27 +61,34 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 
 	var secrets *secret_service.OpenAppSecretsOK
 	var err error
-	for attempt := 0; attempt < retryCount; attempt++ {
-		secrets, err = client.VaultSecretsPreview.OpenAppSecrets(params, nil)
-		if err != nil {
-			var serviceErr *secret_service.OpenAppSecretDefault
-			ok := errors.As(err, &serviceErr)
-			if !ok {
+	var result []*secretmodels.Secrets20231128OpenSecret
+
+	for {
+		for attempt := 0; attempt < retryCount; attempt++ {
+			secrets, err = client.VaultSecretsPreview.OpenAppSecrets(params, nil)
+			if err != nil {
+				var serviceErr *secret_service.OpenAppSecretDefault
+				ok := errors.As(err, &serviceErr)
+				if !ok {
+					return nil, err
+				}
+				if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
+					continue
+				}
 				return nil, err
 			}
-			if shouldRetryWithSleep(ctx, serviceErr, attempt, []int{http.StatusTooManyRequests}) {
-				continue
-			}
-			return nil, err
+			break
 		}
-		break
+		if secrets == nil {
+			return nil, errors.New("unable to get secrets")
+		}
+		result = append(result, secrets.GetPayload().Secrets...)
+		pagination := secrets.GetPayload().Pagination
+		if pagination == nil || pagination.NextPageToken == "" {
+			return result, nil
+		}
+		params.PaginationNextPageToken = &pagination.NextPageToken
 	}
-
-	if secrets == nil {
-		return nil, errors.New("unable to get secrets")
-	}
-
-	return secrets.GetPayload().Secrets, nil
 }
 
 func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName string) (*secretmodels.Secrets20231128RotatingSecretState, error) {
@@ -89,7 +96,7 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 		WithOrganizationID(loc.OrganizationID).
 		WithProjectID(loc.ProjectID).
 		WithAppName(appName).
-		WithSecretName(secretName)
+		WithName(secretName)
 
 	resp, err := client.VaultSecretsPreview.GetRotatingSecretState(params, nil)
 	if err != nil {

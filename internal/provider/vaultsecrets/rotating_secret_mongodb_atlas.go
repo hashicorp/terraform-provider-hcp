@@ -22,7 +22,7 @@ func (s *mongoDBAtlasRotatingSecret) read(ctx context.Context, client secret_ser
 			WithOrganizationID(secret.OrganizationID.ValueString()).
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
-			WithSecretName(secret.Name.ValueString()), nil)
+			WithName(secret.Name.ValueString()), nil)
 	if err != nil && !clients.IsResponseCodeNotFound(err) {
 		return nil, err
 	}
@@ -44,12 +44,12 @@ func (s *mongoDBAtlasRotatingSecret) create(ctx context.Context, client secret_s
 			WithAppName(secret.AppName.ValueString()).
 			WithBody(&secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody{
 				IntegrationName:    secret.IntegrationName.ValueString(),
-				MongodbGroupID:     secret.MongoDBAtlasUser.ProjectID.ValueString(), // Group ID must be at this level, not in the secret details
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				SecretDetails: &secretmodels.Secrets20231128MongoDBAtlasSecretDetails{
-					MongodbRoles: secret.mongoDBRoles,
+					MongodbGroupID: secret.MongoDBAtlasUser.ProjectID.ValueString(),
+					MongodbRoles:   secret.mongoDBRoles,
 				},
-				SecretName: secret.Name.ValueString(),
+				Name: secret.Name.ValueString(),
 			}),
 		nil)
 	if err != nil {
@@ -62,13 +62,17 @@ func (s *mongoDBAtlasRotatingSecret) create(ctx context.Context, client secret_s
 }
 
 func (s *mongoDBAtlasRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	response, err := client.UpdateTwilioRotatingSecret(
-		secret_service.NewUpdateTwilioRotatingSecretParamsWithContext(ctx).
+	response, err := client.UpdateMongoDBAtlasRotatingSecret(
+		secret_service.NewUpdateMongoDBAtlasRotatingSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
-			WithBody(&secretmodels.SecretServiceUpdateTwilioRotatingSecretBody{
+			WithBody(&secretmodels.SecretServiceUpdateMongoDBAtlasRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
+				SecretDetails: &secretmodels.Secrets20231128MongoDBAtlasSecretDetails{
+					MongodbGroupID: secret.MongoDBAtlasUser.ProjectID.ValueString(),
+					MongodbRoles:   secret.mongoDBRoles,
+				},
 			}),
 		nil)
 	if err != nil {

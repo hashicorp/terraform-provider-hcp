@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultsecrets
 
 import (
@@ -23,6 +26,7 @@ const (
 	ProviderGCP          Provider = "gcp"
 	ProviderMongoDBAtlas Provider = "mongodb_atlas"
 	ProviderTwilio       Provider = "twilio"
+	ProviderConfluent    Provider = "confluent"
 )
 
 func (p Provider) String() string {

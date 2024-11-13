@@ -18,8 +18,9 @@ import (
 
 func dataSourceConsulCluster() *schema.Resource {
 	return &schema.Resource{
-		Description: "The cluster data source provides information about an existing HCP Consul cluster.",
-		ReadContext: dataSourceConsulClusterRead,
+		DeprecationMessage: "HashiCorp plans to sunset HashiCorp Consul Dedicated (HCD) in November 2025, more information about the EOL will be provided to existing customers directly",
+		Description:        "The cluster data source provides information about an existing HCP Consul cluster.",
+		ReadContext:        dataSourceConsulClusterRead,
 		Timeouts: &schema.ResourceTimeout{
 			Default: &defaultConsulClusterTimeout,
 		},
