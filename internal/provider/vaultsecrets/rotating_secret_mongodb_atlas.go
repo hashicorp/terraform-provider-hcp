@@ -62,13 +62,17 @@ func (s *mongoDBAtlasRotatingSecret) create(ctx context.Context, client secret_s
 }
 
 func (s *mongoDBAtlasRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	response, err := client.UpdateTwilioRotatingSecret(
-		secret_service.NewUpdateTwilioRotatingSecretParamsWithContext(ctx).
+	response, err := client.UpdateMongoDBAtlasRotatingSecret(
+		secret_service.NewUpdateMongoDBAtlasRotatingSecretParamsWithContext(ctx).
 			WithOrganizationID(secret.OrganizationID.ValueString()).
 			WithProjectID(secret.ProjectID.ValueString()).
 			WithAppName(secret.AppName.ValueString()).
-			WithBody(&secretmodels.SecretServiceUpdateTwilioRotatingSecretBody{
+			WithBody(&secretmodels.SecretServiceUpdateMongoDBAtlasRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
+				SecretDetails: &secretmodels.Secrets20231128MongoDBAtlasSecretDetails{
+					MongodbGroupID: secret.MongoDBAtlasUser.ProjectID.ValueString(),
+					MongodbRoles:   secret.mongoDBRoles,
+				},
 			}),
 		nil)
 	if err != nil {
