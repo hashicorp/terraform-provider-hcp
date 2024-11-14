@@ -123,6 +123,19 @@ func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveEr
 	}
 }
 
+func UpdateRadarDataSourceToken(ctx context.Context, client *Client, projectID string, tokenBody dsrs.UpdateDataSourceTokenBody) error {
+	params := dsrs.NewUpdateDataSourceTokenParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = tokenBody
+
+	if _, err := client.RadarSourceRegistrationService.UpdateDataSourceToken(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.CreateIntegrationConnectionBody) (*ics.CreateIntegrationConnectionOK, error) {
 	params := ics.NewCreateIntegrationConnectionParams()
 	params.Context = ctx
