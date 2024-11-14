@@ -21,9 +21,11 @@ func TestRadarSourceGitHubEnterprise(t *testing.T) {
 	githubOrganization := os.Getenv("RADAR_GITHUB_ENTERPRISE_ORGANIZATION")
 	domainName := os.Getenv("RADAR_GITHUB_ENTERPRISE_DOMAIN")
 	token := os.Getenv("RADAR_GITHUB_ENTERPRISE_TOKEN")
+	updateToken := os.Getenv("RADAR_GITHUB_ENTERPRISE_TOKEN_2")
 
-	if projectID == "" || githubOrganization == "" || domainName == "" || token == "" {
-		t.Skip("HCP_PROJECT_ID, RADAR_GITHUB_ENTERPRISE_ORGANIZATION, RADAR_GITHUB_ENTERPRISE_DOMAIN, and RADAR_GITHUB_ENTERPRISE_TOKEN must be set for acceptance tests")
+	if projectID == "" || githubOrganization == "" || domainName == "" || token == "" || updateToken == "" {
+		t.Skip("HCP_PROJECT_ID, RADAR_GITHUB_ENTERPRISE_ORGANIZATION, RADAR_GITHUB_ENTERPRISE_DOMAIN, " +
+			"RADAR_GITHUB_ENTERPRISE_TOKEN and RADAR_GITHUB_ENTERPRISE_TOKEN_2 must be set for acceptance tests")
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -46,7 +48,26 @@ func TestRadarSourceGitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttrSet("hcp_vault_radar_source_github_enterprise.example", "id"),
 				),
 			},
-			// UPDATE not supported at this time.
+			// Update Token
+			{
+				Config: fmt.Sprintf(`
+					resource "hcp_vault_radar_source_github_enterprise" "example" {
+						project_id = %q
+						github_organization = %q
+						domain_name = %q
+						token = %q
+					}				
+				`, projectID, githubOrganization, domainName, updateToken),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("hcp_vault_radar_source_github_enterprise.example", "token", func(value string) error {
+						if value != updateToken {
+							// Avoid outputting the token in the error message.
+							return fmt.Errorf("expected token to be updated")
+						}
+						return nil
+					}),
+				),
+			},
 			// DELETE happens automatically.
 		},
 	})

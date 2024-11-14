@@ -187,8 +187,35 @@ func (r *radarSourceResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *radarSourceResource) Update(_ context.Context, _ resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// In-place update is not supported.
-	// Plans to support updating the token will be in a future iteration.
-	resp.Diagnostics.AddError("Unexpected provider error", "This is an internal error, please report this issue to the provider developers")
+func (r *radarSourceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	plan, planDiags := r.GetSourceFromPlan(ctx, req.Plan)
+	resp.Diagnostics.Append(planDiags...)
+
+	state, stateDiags := r.GetSourceFromState(ctx, req.State)
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	projectID := r.client.Config.ProjectID
+	if !plan.GetProjectID().IsUnknown() {
+		projectID = plan.GetProjectID().ValueString()
+	}
+
+	// Check if the token was updated
+	if !plan.GetToken().Equal(state.GetToken()) {
+		body := service.UpdateDataSourceTokenBody{
+			ID:    plan.GetID().ValueString(),
+			Token: plan.GetToken().ValueString(),
+		}
+
+		if err := clients.UpdateRadarDataSourceToken(ctx, r.client, projectID, body); err != nil {
+			resp.Diagnostics.AddError("Error Updating Radar source token", err.Error())
+			return
+		}
+	}
+
+	// Store the updated plan values
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
