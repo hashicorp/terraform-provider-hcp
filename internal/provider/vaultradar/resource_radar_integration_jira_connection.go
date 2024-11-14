@@ -43,12 +43,15 @@ var integrationJiraConnectionSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			Description: "Name of connection. Name must be unique.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -59,7 +62,7 @@ var integrationJiraConnectionSchema = schema.Schema{
 			Required:    true,
 			Sensitive:   true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"token": schema.StringAttribute{
@@ -67,14 +70,14 @@ var integrationJiraConnectionSchema = schema.Schema{
 			Required:    true,
 			Sensitive:   true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"base_url": schema.StringAttribute{
 			Description: "The Jira base URL. Example: https://acme.atlassian.net",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				hcpvalidator.URL(),

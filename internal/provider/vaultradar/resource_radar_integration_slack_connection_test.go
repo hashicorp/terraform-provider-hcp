@@ -19,10 +19,15 @@ func TestRadarIntegrationSlackConnection(t *testing.T) {
 	// Requires the following environment variables to be set:
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	token := os.Getenv("RADAR_INTEGRATION_SLACK_TOKEN")
+	updateToken := os.Getenv("RADAR_INTEGRATION_SLACK_TOKEN_2")
 
-	if projectID == "" || token == "" {
-		t.Skip("HCP_PROJECT_ID and RADAR_INTEGRATION_SLACK_TOKEN must be set for acceptance tests")
+	if projectID == "" || token == "" || updateToken == "" {
+		t.Skip("HCP_PROJECT_ID, RADAR_INTEGRATION_SLACK_TOKEN and RADAR_INTEGRATION_SLACK_TOKEN_2 " +
+			"must be set for acceptance tests")
 	}
+
+	name := "AC Test of Creating Slack Connect from TF"
+	updatedName := "AC Test of Updating Slack Connect from TF"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
@@ -32,16 +37,48 @@ func TestRadarIntegrationSlackConnection(t *testing.T) {
 				Config: fmt.Sprintf(`
 					resource "hcp_vault_radar_integration_slack_connection" "example" {
 						project_id = %q
-						name = "AC Test of Slack Connect from TF"
+						name = %q
 						token = %q	
 					}
-				`, projectID, token),
+				`, projectID, name, token),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_slack_connection.example", "project_id", projectID),
+					resource.TestCheckResourceAttr("hcp_vault_radar_integration_slack_connection.example", "name", name),
 					resource.TestCheckResourceAttrSet("hcp_vault_radar_integration_slack_connection.example", "id"),
 				),
 			},
-			// UPDATE not supported at this time.
+			// Update name.
+			{
+				Config: fmt.Sprintf(`
+					resource "hcp_vault_radar_integration_slack_connection" "example" {
+						project_id = %q
+						name = %q
+						token = %q	
+					}
+				`, projectID, updatedName, token),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_vault_radar_integration_slack_connection.example", "name", updatedName),
+				),
+			},
+			// Update token. This effectively cause an update in the auth_key of the connection.
+			{
+				Config: fmt.Sprintf(`
+					resource "hcp_vault_radar_integration_slack_connection" "example" {
+						project_id = %q
+						name = %q
+						token = %q	
+					}
+				`, projectID, updatedName, updateToken),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("hcp_vault_radar_integration_slack_connection.example", "token", func(value string) error {
+						if value != updateToken {
+							// Avoid outputting the token in the error message.
+							return fmt.Errorf("expected token to be updated")
+						}
+						return nil
+					}),
+				),
+			},
 			// DELETE happens automatically.
 		},
 	})
