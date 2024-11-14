@@ -53,5 +53,5 @@ Required:
 Import is supported using the following syntax:
 
 ```shell
-terraform import hcp_vault_secrets_integration_confluent.example my-postgres-1
+terraform import hcp_vault_secrets_integration_postgres.example my-postgres-1
 ```
