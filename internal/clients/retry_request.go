@@ -115,7 +115,7 @@ func RetryBillingServiceUpdate(client *Client, params *billing.BillingAccountSer
 	resp, err := client.Billing.BillingAccountServiceUpdate(params, nil)
 
 	if err != nil {
-		serviceErr, ok := err.(*project_service.ProjectServiceGetDefault)
+		serviceErr, ok := err.(*billing.BillingAccountServiceUpdateDefault)
 		if !ok {
 			return nil, err
 		}
