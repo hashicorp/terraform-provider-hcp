@@ -126,6 +126,8 @@ func (r *integrationConnectionResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	tflog.Info(ctx, "Radar integration connection created.")
+
 	conn.SetID(types.StringValue(res.GetPayload().ID))
 	conn.SetProjectID(types.StringValue(projectID))
 	resp.Diagnostics.Append(resp.State.Set(ctx, conn)...)
@@ -196,7 +198,71 @@ func (r *integrationConnectionResource) Delete(ctx context.Context, req resource
 }
 
 func (r *integrationConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// In-place update is not supported.
-	// Plans to support updating the token will be in a future iteration.
-	resp.Diagnostics.AddError("Unexpected provider error", "This is an internal error, please report this issue to the provider developers")
+	plan, planDiags := r.GetConnectionFromPlan(ctx, req.Plan)
+	resp.Diagnostics.Append(planDiags...)
+
+	state, stateDiags := r.GetConnectionFromState(ctx, req.State)
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	projectID := r.client.Config.ProjectID
+	if !plan.GetProjectID().IsUnknown() {
+		projectID = plan.GetProjectID().ValueString()
+	}
+
+	// Initialize the update body with the connection ID.
+	update := service.UpdateIntegrationConnectionBody{
+		ID: plan.GetID().ValueString(),
+	}
+
+	// Check if the name was updated
+	if !plan.GetName().Equal(state.GetName()) {
+		tflog.Trace(ctx, "Radar integration connection name changed.")
+		update.Name = plan.GetName().ValueString()
+	}
+
+	planDetails, planDiags := plan.GetDetails()
+	resp.Diagnostics.Append(planDiags...)
+
+	stateDetails, stateDiags := state.GetDetails()
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Check if the details were updated
+	if planDetails != stateDetails {
+		tflog.Trace(ctx, "Radar integration connection details changed.")
+		update.Details = planDetails
+	}
+
+	planAuthKey, planDiags := plan.GetAuthKey()
+	resp.Diagnostics.Append(planDiags...)
+
+	stateAuthKey, stateDiags := state.GetAuthKey()
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Check if the auth key was updated
+	if planAuthKey != stateAuthKey {
+		tflog.Trace(ctx, "Radar integration connection auth key changed.")
+		update.AuthKey = planAuthKey
+	}
+
+	if err := clients.UpdateIntegrationConnection(ctx, r.client, projectID, update); err != nil {
+		resp.Diagnostics.AddError("Error Updating Radar connection", err.Error())
+		return
+	}
+
+	tflog.Info(ctx, "Radar integration connection updated.")
+
+	// Store the updated plan values
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
