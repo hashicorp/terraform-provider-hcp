@@ -262,3 +262,16 @@ func DeleteIntegrationSubscription(ctx context.Context, client *Client, projectI
 
 	return nil
 }
+
+func UpdateIntegrationSubscription(ctx context.Context, client *Client, projectID string, subscription iss.UpdateIntegrationSubscriptionBody) error {
+	params := iss.NewUpdateIntegrationSubscriptionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = subscription
+
+	if _, err := client.RadarSubscriptionService.UpdateIntegrationSubscription(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}

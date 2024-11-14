@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
@@ -58,6 +59,11 @@ func TestRadarSourceGitHubEnterprise(t *testing.T) {
 						token = %q
 					}				
 				`, projectID, githubOrganization, domainName, updateToken),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_source_github_enterprise.example", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith("hcp_vault_radar_source_github_enterprise.example", "token", func(value string) error {
 						if value != updateToken {

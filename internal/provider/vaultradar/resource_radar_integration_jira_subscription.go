@@ -41,12 +41,15 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			Description: "Name of subscription. Name must be unique.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -56,14 +59,14 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 			Description: "id of the integration jira connection to use for the subscription.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"jira_project_key": schema.StringAttribute{
 			Description: "The name of the project under which the jira issue will be created. Example: OPS",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -73,7 +76,7 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 			Description: "The type of issue to be created from the event(s). Example: Task",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -85,7 +88,7 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 			Description: "The identifier of the Jira user who will be assigned the ticket. In case of Jira Cloud, this will be the Atlassian Account ID of the user. Example: 71509:11bb945b-c0de-4bac-9d57-9f09db2f7bc9",
 			Optional:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -95,7 +98,7 @@ var integrationJiraSubscriptionSchema = schema.Schema{
 			Description: "This message will be included in the ticket description.",
 			Optional:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
