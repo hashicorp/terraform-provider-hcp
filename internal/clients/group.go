@@ -123,9 +123,9 @@ func newBackoffOp(op func() error, getCode func(error) (int, error)) func() erro
 			return nil
 		}
 
-		code, err := getCode(err)
-		if err != nil {
-			return backoff.Permanent(err)
+		code, codeErr := getCode(err)
+		if codeErr != nil {
+			return backoff.Permanent(codeErr)
 		}
 
 		if !shouldRetryErrorCode(code, groupErrorCodesToRetry[:]) {
