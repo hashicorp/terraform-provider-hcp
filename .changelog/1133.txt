@@ -1,0 +1,3 @@
+```release-note:improvement
+Enable updates to Vault Radar integration connections.
+```

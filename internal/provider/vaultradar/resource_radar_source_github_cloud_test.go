@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
@@ -20,9 +21,11 @@ func TestRadarSourceGitHubCloud(t *testing.T) {
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	githubOrganization := os.Getenv("RADAR_GITHUB_CLOUD_ORGANIZATION")
 	token := os.Getenv("RADAR_GITHUB_CLOUD_TOKEN")
+	updateToken := os.Getenv("RADAR_GITHUB_CLOUD_TOKEN_2")
 
-	if projectID == "" || githubOrganization == "" || token == "" {
-		t.Skip("HCP_PROJECT_ID, RADAR_GITHUB_CLOUD_ORGANIZATION, and RADAR_GITHUB_CLOUD_TOKEN must be set for acceptance tests")
+	if projectID == "" || githubOrganization == "" || token == "" || updateToken == "" {
+		t.Skip("HCP_PROJECT_ID, RADAR_GITHUB_CLOUD_ORGANIZATION, RADAR_GITHUB_CLOUD_TOKEN and " +
+			"RADAR_GITHUB_CLOUD_TOKEN_2 must be set for acceptance tests")
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -41,9 +44,33 @@ func TestRadarSourceGitHubCloud(t *testing.T) {
 					resource.TestCheckResourceAttr("hcp_vault_radar_source_github_cloud.example", "project_id", projectID),
 					resource.TestCheckResourceAttr("hcp_vault_radar_source_github_cloud.example", "github_organization", githubOrganization),
 					resource.TestCheckResourceAttrSet("hcp_vault_radar_source_github_cloud.example", "id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_radar_source_github_cloud.example", "token"),
 				),
 			},
-			// UPDATE not supported at this time.
+			// UPDATE token
+			{
+				Config: fmt.Sprintf(`
+					resource "hcp_vault_radar_source_github_cloud" "example" {
+						project_id = %q
+						github_organization = %q
+						token = %q
+					}				
+				`, projectID, githubOrganization, updateToken),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_source_github_cloud.example", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith("hcp_vault_radar_source_github_cloud.example", "token", func(value string) error {
+						if value != updateToken {
+							// Avoid outputting the token in the error message.
+							return fmt.Errorf("expected token to be updated")
+						}
+						return nil
+					}),
+				),
+			},
 			// DELETE happens automatically.
 		},
 	})
