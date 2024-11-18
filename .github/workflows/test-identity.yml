@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'internal/provider/iam/**'
+      - 'internal/clients/group.go'
+      - 'internal/clients/iam.go'
 
 jobs:
   identity_tests:

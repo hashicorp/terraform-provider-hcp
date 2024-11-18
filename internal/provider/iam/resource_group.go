@@ -117,7 +117,7 @@ func (r *resourceGroup) Create(ctx context.Context, req resource.CreateRequest, 
 		Description: plan.Description.ValueString(),
 	}
 
-	res, err := r.client.Groups.GroupsServiceCreateGroup(createParams, nil)
+	res, err := clients.CreateGroupRetry(r.client, createParams)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating group", err.Error())
@@ -198,7 +198,7 @@ func (r *resourceGroup) Update(ctx context.Context, req resource.UpdateRequest, 
 	updateMaskStr := strings.Join(updateMask, ",")
 	updateParams.SetUpdateMask(&updateMaskStr)
 
-	_, err := r.client.Groups.GroupsServiceUpdateGroup2(updateParams, nil)
+	_, err := clients.UpdateGroupRetry(r.client, updateParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating group", err.Error())
 		return
@@ -217,7 +217,8 @@ func (r *resourceGroup) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	deleteParams := groups_service.NewGroupsServiceDeleteGroupParams().WithContext(ctx)
 	deleteParams.ResourceName = state.ResourceName.ValueString()
-	_, err := r.client.Groups.GroupsServiceDeleteGroup(deleteParams, nil)
+
+	_, err := clients.DeleteGroupRetry(r.client, deleteParams)
 
 	if err != nil {
 		var getErr *groups_service.GroupsServiceDeleteGroupDefault
