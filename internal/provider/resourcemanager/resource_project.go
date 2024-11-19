@@ -168,7 +168,7 @@ func (r *resourceProject) addToBillingAccount(ctx context.Context, projectID str
 
 	updateReq.Body.ProjectIds = append(updateReq.Body.ProjectIds, projectID)
 
-	_, err = r.client.Billing.BillingAccountServiceUpdate(updateReq, nil)
+	_, err = clients.RetryBillingServiceUpdate(r.client, updateReq)
 	if err != nil {
 		return fmt.Errorf("updating billing account failed: %v", err.Error())
 	}

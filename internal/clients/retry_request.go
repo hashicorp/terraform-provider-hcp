@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 )
@@ -101,6 +102,33 @@ func RetryProjectServiceGet(client *Client, params *project_service.ProjectServi
 			// Avoid wasting time if we're not going to retry next loop cycle
 			if (counter + 1) != retryCount {
 				fmt.Printf("Error trying to get configured project. Retrying in %d seconds...", retryDelay*counter)
+				time.Sleep(time.Duration(retryDelay*counter) * time.Second)
+			}
+			counter++
+		}
+	}
+	return resp, err
+}
+
+// Wraps the BillingServiceUpdate function in a loop that supports retrying the PUT request
+func RetryBillingServiceUpdate(client *Client, params *billing.BillingAccountServiceUpdateParams) (*billing.BillingAccountServiceUpdateOK, error) {
+	resp, err := client.Billing.BillingAccountServiceUpdate(params, nil)
+
+	if err != nil {
+		serviceErr, ok := err.(*billing.BillingAccountServiceUpdateDefault)
+		if !ok {
+			return nil, err
+		}
+
+		counter := counterStart
+		for shouldRetryErrorCode(serviceErr.Code(), []int{503}) && counter < retryCount {
+			resp, err = client.Billing.BillingAccountServiceUpdate(params, nil)
+			if err == nil {
+				break
+			}
+			// Avoid wasting time if we're not going to retry next loop cycle
+			if (counter + 1) != retryCount {
+				fmt.Printf("Error trying to update billing account. Retrying in %d seconds...", retryDelay*counter)
 				time.Sleep(time.Duration(retryDelay*counter) * time.Second)
 			}
 			counter++
