@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
@@ -74,6 +75,11 @@ func TestRadarIntegrationJiraConnection(t *testing.T) {
 						token = %q	
 					}
 				`, projectID, updatedName, baseURL, email, token),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.example", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_connection.example", "name", updatedName),
 				),
@@ -89,6 +95,11 @@ func TestRadarIntegrationJiraConnection(t *testing.T) {
 						token = %q	
 					}
 				`, projectID, updatedName, updatedBaseURL, email, token),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.example", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_connection.example", "base_url", updatedBaseURL),
 				),
@@ -104,6 +115,11 @@ func TestRadarIntegrationJiraConnection(t *testing.T) {
 						token = %q	
 					}
 				`, projectID, updatedName, updatedBaseURL, updateEmail, token),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.example", plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_connection.example", "email", updateEmail),
 				),

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
@@ -36,6 +37,9 @@ func TestRadarIntegrationJiraSubscription(t *testing.T) {
 	}
 
 	message := "AC test message"
+	updatedMessage := "AC test message updated"
+	name := "AC Test of Jira Subscription From TF"
+	updatedName := "AC Test of Updating Jira Subscription From TF"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
@@ -55,7 +59,7 @@ func TestRadarIntegrationJiraSubscription(t *testing.T) {
 
 					resource "hcp_vault_radar_integration_jira_subscription" "jira_subscription" {
 						project_id = hcp_vault_radar_integration_jira_connection.jira_connection.project_id
-						name = "AC Test of Jira Subscription From TF"
+						name = %q
 						connection_id = hcp_vault_radar_integration_jira_connection.jira_connection.id
 						jira_project_key = %q
 						issue_type = %q
@@ -64,16 +68,129 @@ func TestRadarIntegrationJiraSubscription(t *testing.T) {
 					}
 						
 				`, projectID, baseURL, email, token,
-					jiraProjectKey, issueType, assignee, message),
+					name, jiraProjectKey, issueType, assignee, message),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_vault_radar_integration_jira_subscription.jira_subscription", "connection_id"),
+					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "name", name),
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "jira_project_key", jiraProjectKey),
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "issue_type", issueType),
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "assignee", assignee),
 					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "message", message),
 				),
 			},
-			// UPDATE not supported at this time.
+			// Update Name
+			{
+				Config: fmt.Sprintf(`
+					# An integration_jira_subscription is required to create a hcp_vault_radar_integration_jira_subscription.
+					resource "hcp_vault_radar_integration_jira_connection" "jira_connection" {
+						project_id = %q
+						name = "AC Test of Jira Connect from TF"
+						base_url = %q
+						email = %q
+						token = %q	
+					}
+
+					resource "hcp_vault_radar_integration_jira_subscription" "jira_subscription" {
+						project_id = hcp_vault_radar_integration_jira_connection.jira_connection.project_id
+						name = %q
+						connection_id = hcp_vault_radar_integration_jira_connection.jira_connection.id
+						jira_project_key = %q
+						issue_type = %q
+						assignee = %q
+						message = %q
+					}
+						
+				`, projectID, baseURL, email, token,
+					updatedName, jiraProjectKey, issueType, assignee, message),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.jira_connection", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_subscription.jira_subscription", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "name", updatedName),
+				),
+			},
+			// Update Message. This effectively cause an update in the details of the connection.
+			{
+				Config: fmt.Sprintf(`
+					# An integration_jira_subscription is required to create a hcp_vault_radar_integration_jira_subscription.
+					resource "hcp_vault_radar_integration_jira_connection" "jira_connection" {
+						project_id = %q
+						name = "AC Test of Jira Connect from TF"
+						base_url = %q
+						email = %q
+						token = %q	
+					}
+
+					resource "hcp_vault_radar_integration_jira_subscription" "jira_subscription" {
+						project_id = hcp_vault_radar_integration_jira_connection.jira_connection.project_id
+						name = %q
+						connection_id = hcp_vault_radar_integration_jira_connection.jira_connection.id
+						jira_project_key = %q
+						issue_type = %q
+						assignee = %q
+						message = %q
+					}
+						
+				`, projectID, baseURL, email, token,
+					updatedName, jiraProjectKey, issueType, assignee, updatedMessage),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.jira_connection", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_subscription.jira_subscription", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_vault_radar_integration_jira_subscription.jira_subscription", "message", updatedMessage),
+				),
+			},
+			// UPDATE Connection ID.
+			{
+				Config: fmt.Sprintf(`
+					# An integration_jira_subscription is required to create a hcp_vault_radar_integration_jira_subscription.
+					resource "hcp_vault_radar_integration_jira_connection" "jira_connection" {
+						project_id = %q
+						name = "AC Test of Jira Connect from TF"
+						base_url = %q
+						email = %q
+						token = %q	
+					}
+
+					# Create another integration_jira_subscription to connect to.
+					resource "hcp_vault_radar_integration_jira_connection" "jira_connection_2" {
+						project_id = %q
+						name = "AC Test of Jira Connect from TF 2"
+						base_url = %q
+						email = %q
+						token = %q	
+					}
+
+					resource "hcp_vault_radar_integration_jira_subscription" "jira_subscription" {
+						project_id = hcp_vault_radar_integration_jira_connection.jira_connection.project_id
+						name = %q
+						connection_id = hcp_vault_radar_integration_jira_connection.jira_connection_2.id
+						jira_project_key = %q
+						issue_type = %q
+						assignee = %q
+						message = %q
+					}
+						
+				`, projectID, baseURL, email, token, // For the first connection.
+					projectID, baseURL, email, token, // For the second connection.
+					updatedName, jiraProjectKey, issueType, assignee, updatedMessage),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.jira_connection", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_connection.jira_connection_2", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("hcp_vault_radar_integration_jira_subscription.jira_subscription", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("hcp_vault_radar_integration_jira_subscription.jira_subscription", "connection_id"),
+				),
+			},
 			// DELETE happens automatically.
 		},
 	})

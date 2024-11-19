@@ -105,7 +105,7 @@ func (r *resourceGroupMembers) Create(ctx context.Context, req resource.CreateRe
 		MemberPrincipalIdsToAdd: members,
 	})
 
-	_, err = r.client.Groups.GroupsServiceUpdateGroupMembers(updateParams, nil)
+	_, err = clients.UpdateGroupMembersRetry(r.client, updateParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to update group members", err.Error())
 		return
@@ -187,7 +187,7 @@ func (r *resourceGroupMembers) Update(ctx context.Context, req resource.UpdateRe
 			MemberPrincipalIdsToRemove: membersToRemove,
 		})
 
-		_, err := r.client.Groups.GroupsServiceUpdateGroupMembers(updateParams, nil)
+		_, err := clients.UpdateGroupMembersRetry(r.client, updateParams)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to update group members", err.Error())
 			return
@@ -216,7 +216,7 @@ func (r *resourceGroupMembers) Delete(ctx context.Context, req resource.DeleteRe
 		MemberPrincipalIdsToRemove: members,
 	})
 
-	_, err := r.client.Groups.GroupsServiceUpdateGroupMembers(updateParams, nil)
+	_, err := clients.UpdateGroupMembersRetry(r.client, updateParams)
 	if err != nil {
 		var errResp *groups_service.GroupsServiceUpdateGroupMembersDefault
 		if errors.As(err, &errResp) && !errResp.IsCode(http.StatusNotFound) {
