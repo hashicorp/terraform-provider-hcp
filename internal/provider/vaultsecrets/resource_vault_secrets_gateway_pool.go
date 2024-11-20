@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
@@ -30,10 +32,9 @@ type GatewayPool struct {
 }
 
 var _ resource.Resource = &resourceVaultSecretsGatewayPool{}
-
-//var _ resource.ResourceWithConfigure = &resourceVaultSecretsGatewayPool{}
-//var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsGatewayPool{}
-//var _ resource.ResourceWithImportState = &resourceVaultSecretsGatewayPool{}
+var _ resource.ResourceWithConfigure = &resourceVaultSecretsGatewayPool{}
+var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsGatewayPool{}
+var _ resource.ResourceWithImportState = &resourceVaultSecretsGatewayPool{}
 
 type resourceVaultSecretsGatewayPool struct {
 	client *clients.Client
@@ -51,9 +52,28 @@ func (r *resourceVaultSecretsGatewayPool) Schema(_ context.Context, _ resource.S
 		"description": schema.StringAttribute{
 			Description: `Description of the gateway pool`,
 		},
+		"resource_name": schema.StringAttribute{
+			Computed: true,
+		},
+		"resource_id": schema.StringAttribute{
+			Computed: true,
+		},
+		"client_id": schema.StringAttribute{
+			Computed: true,
+		},
+		"client_secret": schema.StringAttribute{
+			Computed: true,
+		},
+		"cert_pem": schema.StringAttribute{
+			Computed: true,
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
+
+	resp.Schema = schema.Schema{
+		Attributes: attributes,
+	}
 }
 
 func (r *resourceVaultSecretsGatewayPool) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -155,6 +175,31 @@ func (r *resourceVaultSecretsGatewayPool) Delete(ctx context.Context, req resour
 		}
 		return nil, nil
 	})...)
+}
+
+func (r *resourceVaultSecretsGatewayPool) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	client, ok := req.ProviderData.(*clients.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *clients.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.client = client
+}
+
+func (r *resourceVaultSecretsGatewayPool) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
+}
+
+func (r *resourceVaultSecretsGatewayPool) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), r.client.Config.OrganizationID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), r.client.Config.ProjectID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gateway_name"), req.ID)...)
 }
 
 var _ hvsResource = &GatewayPool{}
