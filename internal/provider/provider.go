@@ -161,6 +161,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsIntegrationsConfluentResource,
 		vaultsecrets.NewVaultSecretsDynamicSecretResource,
 		vaultsecrets.NewVaultSecretsRotatingSecretResource,
+		vaultsecrets.NewVaultSecretsGatewayPoolResource,
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,

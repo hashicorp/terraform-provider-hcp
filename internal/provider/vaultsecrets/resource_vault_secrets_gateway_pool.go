@@ -36,6 +36,10 @@ var _ resource.ResourceWithConfigure = &resourceVaultSecretsGatewayPool{}
 var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsGatewayPool{}
 var _ resource.ResourceWithImportState = &resourceVaultSecretsGatewayPool{}
 
+func NewVaultSecretsGatewayPoolResource() resource.Resource {
+	return &resourceVaultSecretsGatewayPool{}
+}
+
 type resourceVaultSecretsGatewayPool struct {
 	client *clients.Client
 }
