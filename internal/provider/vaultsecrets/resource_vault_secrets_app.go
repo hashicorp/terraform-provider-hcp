@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -120,7 +120,7 @@ func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.Creat
 			return nil, fmt.Errorf("invalid resource type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateApp(&secret_service.CreateAppParams{
+		response, err := r.client.VaultSecrets.CreateApp(&secret_service.CreateAppParams{
 			Body: &secretmodels.SecretServiceCreateAppBody{
 				Name:        app.AppName.ValueString(),
 				Description: app.Description.ValueString(),
@@ -145,7 +145,7 @@ func (r *resourceVaultSecretsApp) Read(ctx context.Context, req resource.ReadReq
 			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetApp(
+		response, err := r.client.VaultSecrets.GetApp(
 			secret_service.NewGetAppParamsWithContext(ctx).
 				WithOrganizationID(app.OrganizationID.ValueString()).
 				WithProjectID(app.ProjectID.ValueString()).
@@ -167,7 +167,7 @@ func (r *resourceVaultSecretsApp) Update(ctx context.Context, req resource.Updat
 			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateApp(&secret_service.UpdateAppParams{
+		response, err := r.client.VaultSecrets.UpdateApp(&secret_service.UpdateAppParams{
 			Body: &secretmodels.SecretServiceUpdateAppBody{
 				Description: app.Description.ValueString(),
 			},
@@ -192,7 +192,7 @@ func (r *resourceVaultSecretsApp) Delete(ctx context.Context, req resource.Delet
 			return nil, fmt.Errorf("invalid integration type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteApp(
+		_, err := r.client.VaultSecrets.DeleteApp(
 			secret_service.NewDeleteAppParamsWithContext(ctx).
 				WithOrganizationID(app.OrganizationID.ValueString()).
 				WithProjectID(app.ProjectID.ValueString()).

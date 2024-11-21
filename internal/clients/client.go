@@ -47,10 +47,8 @@ import (
 	cloud_vault "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/client/vault_service"
 
-	cloud_vault_secrets_preview "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client"
-	secret_service_preview "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
+	cloud_vault_secrets "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 
 	cloud_waypoint "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
@@ -88,7 +86,6 @@ type Client struct {
 	Groups                         groups_service.ClientService
 	Vault                          vault_service.ClientService
 	VaultSecrets                   secret_service.ClientService
-	VaultSecretsPreview            secret_service_preview.ClientService
 	Waypoint                       waypoint_service.ClientService
 	Webhook                        webhook_service.ClientService
 	LogService                     log_service.ClientService
@@ -180,7 +177,6 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Groups:                         cloud_iam.New(httpClient, nil).GroupsService,
 		Vault:                          cloud_vault.New(httpClient, nil).VaultService,
 		VaultSecrets:                   cloud_vault_secrets.New(httpClient, nil).SecretService,
-		VaultSecretsPreview:            cloud_vault_secrets_preview.New(httpClient, nil).SecretService,
 		Waypoint:                       cloud_waypoint.New(httpClient, nil).WaypointService,
 		LogService:                     cloud_log_service.New(httpClient, nil).LogService,
 		Webhook:                        cloud_webhook.New(httpClient, nil).WebhookService,

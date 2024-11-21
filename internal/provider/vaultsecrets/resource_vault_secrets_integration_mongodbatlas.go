@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -115,7 +115,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Read(ctx context.Context, 
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetMongoDBAtlasIntegration(
+		response, err := r.client.VaultSecrets.GetMongoDBAtlasIntegration(
 			secret_service.NewGetMongoDBAtlasIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -137,7 +137,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Create(ctx context.Context
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateMongoDBAtlasIntegration(&secret_service.CreateMongoDBAtlasIntegrationParams{
+		response, err := r.client.VaultSecrets.CreateMongoDBAtlasIntegration(&secret_service.CreateMongoDBAtlasIntegrationParams{
 			Body: &secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
 				Capabilities:            integration.capabilities,
 				Name:                    integration.Name.ValueString(),
@@ -163,7 +163,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Update(ctx context.Context
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateMongoDBAtlasIntegration(&secret_service.UpdateMongoDBAtlasIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdateMongoDBAtlasIntegration(&secret_service.UpdateMongoDBAtlasIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdateMongoDBAtlasIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -189,7 +189,7 @@ func (r *resourceVaultSecretsIntegrationMongoDBAtlas) Delete(ctx context.Context
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationMongoDBAtlas, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(
+		_, err := r.client.VaultSecrets.DeleteMongoDBAtlasIntegration(
 			secret_service.NewDeleteMongoDBAtlasIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).

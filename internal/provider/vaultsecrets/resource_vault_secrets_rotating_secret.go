@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -247,7 +247,7 @@ func (r *resourceVaultSecretsRotatingSecret) Read(ctx context.Context, req resou
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.read(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.read(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -262,7 +262,7 @@ func (r *resourceVaultSecretsRotatingSecret) Create(ctx context.Context, req res
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.create(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.create(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -277,7 +277,7 @@ func (r *resourceVaultSecretsRotatingSecret) Update(ctx context.Context, req res
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.update(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.update(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -288,7 +288,7 @@ func (r *resourceVaultSecretsRotatingSecret) Delete(ctx context.Context, req res
 			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteAppSecret(
+		_, err := r.client.VaultSecrets.DeleteAppSecret(
 			secret_service.NewDeleteAppSecretParamsWithContext(ctx).
 				WithOrganizationID(secret.OrganizationID.ValueString()).
 				WithProjectID(secret.ProjectID.ValueString()).

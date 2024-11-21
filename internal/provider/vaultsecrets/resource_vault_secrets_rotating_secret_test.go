@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -52,7 +52,7 @@ func testAccVaultSecretsResourceRotatingSecretAWS(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
+					_, err := client.VaultSecrets.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 						AppName:        appName,
@@ -114,7 +114,7 @@ func awsRotatingSecretExists(t *testing.T, appName, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetAwsIAMUserAccessKeyRotatingSecretConfig(
+	response, err := client.VaultSecrets.GetAwsIAMUserAccessKeyRotatingSecretConfig(
 		secret_service.NewGetAwsIAMUserAccessKeyRotatingSecretConfigParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).

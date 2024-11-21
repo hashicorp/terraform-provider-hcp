@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -53,7 +53,7 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(&secret_service.DeleteMongoDBAtlasIntegrationParams{
+					_, err := client.VaultSecrets.DeleteMongoDBAtlasIntegration(&secret_service.DeleteMongoDBAtlasIntegrationParams{
 						Name:           integrationName2,
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
@@ -74,7 +74,7 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.CreateMongoDBAtlasIntegration(&secret_service.CreateMongoDBAtlasIntegrationParams{
+					_, err := client.VaultSecrets.CreateMongoDBAtlasIntegration(&secret_service.CreateMongoDBAtlasIntegrationParams{
 						Body: &secretmodels.SecretServiceCreateMongoDBAtlasIntegrationBody{
 							Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
 							StaticCredentialDetails: &secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest{
@@ -142,7 +142,7 @@ func mongoDBAtlasIntegrationExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetMongoDBAtlasIntegration(
+	response, err := client.VaultSecrets.GetMongoDBAtlasIntegration(
 		secret_service.NewGetMongoDBAtlasIntegrationParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).

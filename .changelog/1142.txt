@@ -1,0 +1,3 @@
+```release-note:improvement
+Upgrade the HCP SDK and update Vault Secrets to use API V2 (stable/2023-11-28)
+```

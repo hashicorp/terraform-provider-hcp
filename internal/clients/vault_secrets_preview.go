@@ -11,8 +11,8 @@ import (
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -27,7 +27,7 @@ func OpenVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedm
 	var getResp *secret_service.OpenAppSecretOK
 	var err error
 	for attempt := 0; attempt < retryCount; attempt++ {
-		getResp, err = client.VaultSecretsPreview.OpenAppSecret(getParams, nil)
+		getResp, err = client.VaultSecrets.OpenAppSecret(getParams, nil)
 		if err != nil {
 			var serviceErr *secret_service.OpenAppSecretDefault
 			ok := errors.As(err, &serviceErr)
@@ -65,7 +65,7 @@ func OpenVaultSecretsAppSecrets(ctx context.Context, client *Client, loc *shared
 
 	for {
 		for attempt := 0; attempt < retryCount; attempt++ {
-			secrets, err = client.VaultSecretsPreview.OpenAppSecrets(params, nil)
+			secrets, err = client.VaultSecrets.OpenAppSecrets(params, nil)
 			if err != nil {
 				var serviceErr *secret_service.OpenAppSecretDefault
 				ok := errors.As(err, &serviceErr)
@@ -98,7 +98,7 @@ func GetRotatingSecretState(ctx context.Context, client *Client, loc *sharedmode
 		WithAppName(appName).
 		WithName(secretName)
 
-	resp, err := client.VaultSecretsPreview.GetRotatingSecretState(params, nil)
+	resp, err := client.VaultSecrets.GetRotatingSecretState(params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func CreateMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, 
 		WithProjectID(loc.ProjectID).
 		WithBody(&body)
 
-	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasIntegration(params, nil)
+	resp, err := client.VaultSecrets.CreateMongoDBAtlasIntegration(params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func DeleteMongoDBAtlasRotationIntegration(ctx context.Context, client *Client, 
 		WithProjectID(loc.ProjectID).
 		WithName(integrationName)
 
-	_, err := client.VaultSecretsPreview.DeleteMongoDBAtlasIntegration(params, nil)
+	_, err := client.VaultSecrets.DeleteMongoDBAtlasIntegration(params, nil)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func CreateMongoDBAtlasRotatingSecret(
 		WithAppName(appName).
 		WithBody(requestBody)
 
-	resp, err := client.VaultSecretsPreview.CreateMongoDBAtlasRotatingSecret(params, nil)
+	resp, err := client.VaultSecrets.CreateMongoDBAtlasRotatingSecret(params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func CreateAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels
 		WithProjectID(loc.ProjectID).
 		WithBody(&body)
 
-	resp, err := client.VaultSecretsPreview.CreateAwsIntegration(params, nil)
+	resp, err := client.VaultSecrets.CreateAwsIntegration(params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func DeleteAwsIntegration(ctx context.Context, client *Client, loc *sharedmodels
 		WithProjectID(loc.ProjectID).
 		WithName(name)
 
-	_, err := client.VaultSecretsPreview.DeleteAwsIntegration(params, nil)
+	_, err := client.VaultSecrets.DeleteAwsIntegration(params, nil)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func CreateAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmode
 		WithAppName(appName).
 		WithBody(&body)
 
-	resp, err := client.VaultSecretsPreview.CreateAwsDynamicSecret(params, nil)
+	resp, err := client.VaultSecrets.CreateAwsDynamicSecret(params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func DeleteAwsDynamicSecret(ctx context.Context, client *Client, loc *sharedmode
 		WithAppName(appName).
 		WithName(name)
 
-	_, err := client.VaultSecretsPreview.DeleteAwsDynamicSecret(params, nil)
+	_, err := client.VaultSecrets.DeleteAwsDynamicSecret(params, nil)
 	if err != nil {
 		return err
 	}
