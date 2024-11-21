@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -46,7 +46,7 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteConfluentIntegration(&secret_service.DeleteConfluentIntegrationParams{
+					_, err := client.VaultSecrets.DeleteConfluentIntegration(&secret_service.DeleteConfluentIntegrationParams{
 						Name:           integrationName2,
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
@@ -67,7 +67,7 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.CreateConfluentIntegration(&secret_service.CreateConfluentIntegrationParams{
+					_, err := client.VaultSecrets.CreateConfluentIntegration(&secret_service.CreateConfluentIntegrationParams{
 						Body: &secretmodels.SecretServiceCreateConfluentIntegrationBody{
 							Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
 							StaticCredentialDetails: &secretmodels.Secrets20231128ConfluentStaticCredentialsRequest{
@@ -135,7 +135,7 @@ func confluentIntegrationExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetConfluentIntegration(
+	response, err := client.VaultSecrets.GetConfluentIntegration(
 		secret_service.NewGetConfluentIntegrationParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).

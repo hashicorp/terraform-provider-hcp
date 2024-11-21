@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -175,7 +175,7 @@ func awsIntegrationExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetAwsIntegration(
+	response, err := client.VaultSecrets.GetAwsIntegration(
 		secret_service.NewGetAwsIntegrationParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).
