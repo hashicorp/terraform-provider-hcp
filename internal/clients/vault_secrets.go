@@ -14,19 +14,19 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-06-13/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 )
 
 // CreateVaultSecretsApp will create a Vault Secrets application.
-func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20230613App, error) {
+func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20231128App, error) {
 
 	createParams := secret_service.NewCreateAppParams()
 	createParams.Context = ctx
 	createParams.Body.Name = appName
 	createParams.Body.Description = description
-	createParams.LocationOrganizationID = loc.OrganizationID
-	createParams.LocationProjectID = loc.ProjectID
+	createParams.OrganizationID = loc.OrganizationID
+	createParams.ProjectID = loc.ProjectID
 
 	createResp, err := client.VaultSecrets.CreateApp(createParams, nil)
 	if err != nil {
@@ -37,12 +37,12 @@ func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 }
 
 // GetVaultSecretsApp will read a Vault Secrets application
-func GetVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*secretmodels.Secrets20230613App, error) {
+func GetVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*secretmodels.Secrets20231128App, error) {
 	getParams := secret_service.NewGetAppParams()
 	getParams.Context = ctx
 	getParams.Name = appName
-	getParams.LocationOrganizationID = loc.OrganizationID
-	getParams.LocationProjectID = loc.ProjectID
+	getParams.OrganizationID = loc.OrganizationID
+	getParams.ProjectID = loc.ProjectID
 
 	getResp, err := client.VaultSecrets.GetApp(getParams, nil)
 	if err != nil {
@@ -53,13 +53,13 @@ func GetVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.H
 }
 
 // UpdateVaultSecretsApp will update an app's description
-func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20230613App, error) {
+func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string, description string) (*secretmodels.Secrets20231128App, error) {
 	updateParams := secret_service.NewUpdateAppParams()
 	updateParams.Context = ctx
 	updateParams.Name = appName
 	updateParams.Body.Description = description
-	updateParams.LocationOrganizationID = loc.OrganizationID
-	updateParams.LocationProjectID = loc.ProjectID
+	updateParams.OrganizationID = loc.OrganizationID
+	updateParams.ProjectID = loc.ProjectID
 
 	updateResp, err := client.VaultSecrets.UpdateApp(updateParams, nil)
 	if err != nil {
@@ -75,8 +75,8 @@ func DeleteVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 	deleteParams := secret_service.NewDeleteAppParams()
 	deleteParams.Context = ctx
 	deleteParams.Name = appName
-	deleteParams.LocationOrganizationID = loc.OrganizationID
-	deleteParams.LocationProjectID = loc.ProjectID
+	deleteParams.OrganizationID = loc.OrganizationID
+	deleteParams.ProjectID = loc.ProjectID
 
 	_, err := client.VaultSecrets.DeleteApp(deleteParams, nil)
 	if err != nil {
@@ -87,15 +87,15 @@ func DeleteVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 }
 
 // CreateVaultSecretsAppSecret will create a Vault Secrets application secret.
-func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName, secretValue string) (*secretmodels.Secrets20230613Secret, error) {
+func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName, secretName, secretValue string) (*secretmodels.Secrets20231128Secret, error) {
 
 	createParams := secret_service.NewCreateAppKVSecretParams()
 	createParams.Context = ctx
 	createParams.AppName = appName
 	createParams.Body.Name = secretName
 	createParams.Body.Value = secretValue
-	createParams.LocationOrganizationID = loc.OrganizationID
-	createParams.LocationProjectID = loc.ProjectID
+	createParams.OrganizationID = loc.OrganizationID
+	createParams.ProjectID = loc.ProjectID
 
 	createResp, err := client.VaultSecrets.CreateAppKVSecret(createParams, nil)
 	if err != nil {
@@ -112,8 +112,8 @@ func DeleteVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	deleteParams.Context = ctx
 	deleteParams.AppName = appName
 	deleteParams.SecretName = secretName
-	deleteParams.LocationOrganizationID = loc.OrganizationID
-	deleteParams.LocationProjectID = loc.ProjectID
+	deleteParams.OrganizationID = loc.OrganizationID
+	deleteParams.ProjectID = loc.ProjectID
 
 	_, err := client.VaultSecrets.DeleteAppSecret(deleteParams, nil)
 	if err != nil {

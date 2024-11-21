@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -152,7 +152,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Read(ctx context.Context, req resou
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetGcpIntegration(
+		response, err := r.client.VaultSecrets.GetGcpIntegration(
 			secret_service.NewGetGcpIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -174,7 +174,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Create(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateGcpIntegration(&secret_service.CreateGcpIntegrationParams{
+		response, err := r.client.VaultSecrets.CreateGcpIntegration(&secret_service.CreateGcpIntegrationParams{
 			Body: &secretmodels.SecretServiceCreateGcpIntegrationBody{
 				Capabilities:              integration.capabilities,
 				FederatedWorkloadIdentity: integration.federatedWorkloadIdentity,
@@ -201,7 +201,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Update(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateGcpIntegration(&secret_service.UpdateGcpIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdateGcpIntegration(&secret_service.UpdateGcpIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdateGcpIntegrationBody{
 				Capabilities:              integration.capabilities,
 				FederatedWorkloadIdentity: integration.federatedWorkloadIdentity,
@@ -228,7 +228,7 @@ func (r *resourceVaultSecretsIntegrationGCP) Delete(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationGCP, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteGcpIntegration(
+		_, err := r.client.VaultSecrets.DeleteGcpIntegration(
 			secret_service.NewDeleteGcpIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
