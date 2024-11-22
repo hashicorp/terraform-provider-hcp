@@ -53,3 +53,14 @@ resource "hcp_vault_secrets_rotating_secret" "example_confluent" {
   }
 }
 
+resource "hcp_vault_secrets_rotating_secret" "example_azure" {
+  app_name             = "my-app-1"
+  secret_provider      = "azure"
+  name                 = "my_azure_1_secret"
+  integration_name     = "my-azure-1"
+  rotation_policy_name = "built-in:60-days-2-active"
+  azure_application_password = {
+    app_object_id = "4f5b0da8-4c31-4b32-96d3-095e49a211f2"
+    app_client_id = "9de073f9-1d14-4392-8153-7039fedc4bd5"
+  }
+}
