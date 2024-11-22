@@ -28,7 +28,7 @@ type IntegrationAzure struct {
 	ProjectID                 types.String `tfsdk:"project_id"`
 	Name                      types.String `tfsdk:"name"`
 	Capabilities              types.Set    `tfsdk:"capabilities"`
-	ClientSecret              types.Object `tfsdk:"service_account_key"`
+	ClientSecret              types.Object `tfsdk:"client_secret"`
 	FederatedWorkloadIdentity types.Object `tfsdk:"federated_workload_identity"`
 
 	// Computed fields
@@ -84,11 +84,11 @@ func (r *resourceVaultSecretsIntegrationAzure) Schema(_ context.Context, _ resou
 				},
 				"client_id": schema.StringAttribute{
 					Description: "Azure client ID corresponding to the Azure application.",
-					Computed:    true,
+					Required:    true,
 				},
 				"client_secret": schema.StringAttribute{
 					Description: "Secret value corresponding to the Azure client secret.",
-					Computed:    true,
+					Required:    true,
 				},
 			},
 			Validators: []validator.Object{
@@ -107,7 +107,7 @@ func (r *resourceVaultSecretsIntegrationAzure) Schema(_ context.Context, _ resou
 				},
 				"client_id": schema.StringAttribute{
 					Description: "Azure client ID corresponding to the Azure application.",
-					Computed:    true,
+					Required:    true,
 				},
 				"audience": schema.StringAttribute{
 					Description: "Audience configured on the Azure federated identity credentials to federate access with HCP.",
@@ -116,7 +116,7 @@ func (r *resourceVaultSecretsIntegrationAzure) Schema(_ context.Context, _ resou
 			},
 			Validators: []validator.Object{
 				objectvalidator.ExactlyOneOf(path.Expressions{
-					path.MatchRoot("service_account_key"),
+					path.MatchRoot("client_secret"),
 				}...),
 			},
 		},
