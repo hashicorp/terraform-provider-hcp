@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 
@@ -65,10 +67,18 @@ func (r *resourceVaultSecretsGatewayPool) Schema(_ context.Context, _ resource.S
 		},
 		"client_id": schema.StringAttribute{
 			Computed: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"client_secret": schema.StringAttribute{
 			Computed:  true,
 			Sensitive: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 	}
 
@@ -236,6 +246,8 @@ func (g *GatewayPool) fromModel(_ context.Context, orgID, projID string, model a
 	case *secretmodels.Secrets20231128GatewayPool:
 		g.Name = types.StringValue(v.Name)
 		g.Description = types.StringValue(v.Description)
+		g.ResourceID = types.StringValue(v.ResourceID)
+		g.ResourceName = types.StringValue(v.ResourceName)
 	default:
 		diags.AddError("fromModel", fmt.Sprintf("invalid model type: %T", model))
 	}
