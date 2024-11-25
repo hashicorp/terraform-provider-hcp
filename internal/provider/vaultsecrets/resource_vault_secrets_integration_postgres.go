@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -110,7 +110,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Read(ctx context.Context, req 
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetPostgresIntegration(
+		response, err := r.client.VaultSecrets.GetPostgresIntegration(
 			secret_service.NewGetPostgresIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -132,7 +132,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Create(ctx context.Context, re
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationPostgres, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreatePostgresIntegration(&secret_service.CreatePostgresIntegrationParams{
+		response, err := r.client.VaultSecrets.CreatePostgresIntegration(&secret_service.CreatePostgresIntegrationParams{
 			Body: &secretmodels.SecretServiceCreatePostgresIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -158,7 +158,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Update(ctx context.Context, re
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdatePostgresIntegration(&secret_service.UpdatePostgresIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdatePostgresIntegration(&secret_service.UpdatePostgresIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdatePostgresIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -184,7 +184,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Delete(ctx context.Context, re
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationPostgres, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeletePostgresIntegration(
+		_, err := r.client.VaultSecrets.DeletePostgresIntegration(
 			secret_service.NewDeletePostgresIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
