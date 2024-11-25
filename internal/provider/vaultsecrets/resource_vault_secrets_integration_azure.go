@@ -281,14 +281,8 @@ func (i *IntegrationAzure) initModel(ctx context.Context, orgID, projID string) 
 			return diags
 		}
 
-		// The service account key is not returned by the API, so we use an empty value (e.g. for imports) or the state value (e.g. for updates)
-		clientSecret := ""
-		if i.clientSecret != nil {
-			clientSecret = i.clientSecret.ClientSecret
-		}
-
 		i.clientSecret = &secretmodels.Secrets20231128AzureClientSecretRequest{
-			TenantID:     clientSecret,
+			TenantID:     cs.TenantID.ValueString(),
 			ClientID:     cs.ClientID.ValueString(),
 			ClientSecret: cs.ClientSecret.ValueString(),
 		}
@@ -336,9 +330,14 @@ func (i *IntegrationAzure) fromModel(ctx context.Context, orgID, projID string, 
 	}
 
 	if integrationModel.ClientSecret != nil {
+		clientSecret := ""
+		if i.clientSecret != nil {
+			clientSecret = i.clientSecret.ClientSecret
+		}
 		i.ClientSecret, diags = types.ObjectValue(i.ClientSecret.AttributeTypes(ctx), map[string]attr.Value{
-			"tenant_id": types.StringValue(integrationModel.ClientSecret.TenantID),
-			"client_id": types.StringValue(integrationModel.ClientSecret.ClientID),
+			"tenant_id":     types.StringValue(integrationModel.ClientSecret.TenantID),
+			"client_id":     types.StringValue(integrationModel.ClientSecret.ClientID),
+			"client_secret": types.StringValue(clientSecret),
 		})
 		if diags.HasError() {
 			return diags

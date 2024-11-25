@@ -100,6 +100,7 @@ func TestAccVaultSecretsResourceIntegrationAzure(t *testing.T) {
 				ResourceName:  "hcp_vault_secrets_integration_azure.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
+				PlanOnly:      true,
 			},
 		},
 		CheckDestroy: func(_ *terraform.State) error {

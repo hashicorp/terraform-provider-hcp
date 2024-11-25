@@ -46,8 +46,8 @@ func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.
 				IntegrationName:    secret.IntegrationName.ValueString(),
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				AzureApplicationPasswordParams: &secretmodels.Secrets20231128AzureApplicationPasswordParams{
-					AppClientID: secret.AzureApplicationPassword.AppClientID.ValueString(),
-					AppObjectID: secret.AzureApplicationPassword.AppObjectID.ValueString(),
+					AppClientID: secret.AzureApplicationPasswordParams.AppClientID.ValueString(),
+					AppObjectID: secret.AzureApplicationPasswordParams.AppObjectID.ValueString(),
 				},
 				Name: secret.Name.ValueString(),
 			}),
@@ -74,8 +74,8 @@ func (s *azureRotatingSecret) update(ctx context.Context, client secret_service.
 			WithBody(&secretmodels.SecretServiceUpdateAzureApplicationPasswordRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				AzureApplicationPasswordParams: &secretmodels.Secrets20231128AzureApplicationPasswordParams{
-					AppClientID: secret.AzureApplicationPassword.AppClientID.ValueString(),
-					AppObjectID: secret.AzureApplicationPassword.AppObjectID.ValueString(),
+					AppClientID: secret.AzureApplicationPasswordParams.AppClientID.ValueString(),
+					AppObjectID: secret.AzureApplicationPasswordParams.AppObjectID.ValueString(),
 				},
 			}),
 		nil)
