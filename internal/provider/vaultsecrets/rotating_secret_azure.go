@@ -33,8 +33,8 @@ func (s *azureRotatingSecret) read(ctx context.Context, client secret_service.Cl
 }
 
 func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.ConfluentServiceAccount == nil {
-		return nil, fmt.Errorf("missing required field 'azure_application_password'")
+	if secret.AzureApplicationPasswordParams == nil {
+		return nil, fmt.Errorf("missing required field 'azure_application_password_params'")
 	}
 
 	response, err := client.CreateAzureApplicationPasswordRotatingSecret(
@@ -62,8 +62,8 @@ func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.
 }
 
 func (s *azureRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.ConfluentServiceAccount == nil {
-		return nil, fmt.Errorf("missing required field 'azure_applicartion_password'")
+	if secret.AzureApplicationPasswordParams == nil {
+		return nil, fmt.Errorf("missing required field 'azure_application_password_params'")
 	}
 	response, err := client.UpdateAzureApplicationPasswordRotatingSecret(
 		secret_service.NewUpdateAzureApplicationPasswordRotatingSecretParamsWithContext(ctx).
