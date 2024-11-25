@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -92,7 +92,7 @@ func (r *resourceVaultSecretsGatewayPool) Create(ctx context.Context, req resour
 			return nil, fmt.Errorf("invalid resource type, expected *GatewayPool, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateGatewayPool(
+		response, err := r.client.VaultSecrets.CreateGatewayPool(
 			secret_service.NewCreateGatewayPoolParamsWithContext(ctx).
 				WithOrganizationID(gatewayPool.OrganizationID.ValueString()).
 				WithProjectID(gatewayPool.ProjectID.ValueString()).
@@ -120,7 +120,7 @@ func (r *resourceVaultSecretsGatewayPool) Read(ctx context.Context, req resource
 			return nil, fmt.Errorf("invalid resource type, expected *GatewayPool, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetGatewayPool(
+		response, err := r.client.VaultSecrets.GetGatewayPool(
 			secret_service.NewGetGatewayPoolParamsWithContext(ctx).
 				WithOrganizationID(gatewayPool.OrganizationID.ValueString()).
 				WithProjectID(gatewayPool.ProjectID.ValueString()).
@@ -144,7 +144,7 @@ func (r *resourceVaultSecretsGatewayPool) Update(ctx context.Context, req resour
 			return nil, fmt.Errorf("invalid resource type, expected *GatewayPool, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateGatewayPool(
+		response, err := r.client.VaultSecrets.UpdateGatewayPool(
 			secret_service.NewUpdateGatewayPoolParamsWithContext(ctx).
 				WithOrganizationID(gatewayPool.OrganizationID.ValueString()).
 				WithProjectID(gatewayPool.ProjectID.ValueString()).
@@ -172,7 +172,7 @@ func (r *resourceVaultSecretsGatewayPool) Delete(ctx context.Context, req resour
 			return nil, fmt.Errorf("invalid resource type, expected *GatewayPool, got %T", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteGatewayPool(
+		_, err := r.client.VaultSecrets.DeleteGatewayPool(
 			secret_service.NewDeleteGatewayPoolParamsWithContext(ctx).
 				WithOrganizationID(gatewayPool.OrganizationID.ValueString()).
 				WithProjectID(gatewayPool.ProjectID.ValueString()).
