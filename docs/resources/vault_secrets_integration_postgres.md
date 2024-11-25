@@ -3,12 +3,12 @@
 page_title: "hcp_vault_secrets_integration_postgres Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The Vault Secrets Twilio integration resource manages a Twilio integration.
+  The Vault Secrets Postgres integration resource manages a Postgres integration.
 ---
 
 # hcp_vault_secrets_integration_postgres (Resource)
 
-The Vault Secrets Twilio integration resource manages a Twilio integration.
+The Vault Secrets Postgres integration resource manages a Postgres integration.
 
 ## Example Usage
 

@@ -79,7 +79,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Schema(_ context.Context, _ re
 	maps.Copy(attributes, sharedIntegrationAttributes)
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "The Vault Secrets Twilio integration resource manages a Twilio integration.",
+		MarkdownDescription: "The Vault Secrets Postgres integration resource manages a Postgres integration.",
 		Attributes:          attributes,
 	}
 }
