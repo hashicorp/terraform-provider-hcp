@@ -73,7 +73,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_azure" {
   name                 = "my_azure_1_secret"
   integration_name     = "my-azure-1"
   rotation_policy_name = "built-in:60-days-2-active"
-  azure_application_password = {
+  azure_application_password_params = {
     app_object_id = "4f5b0da8-4c31-4b32-96d3-095e49a211f2"
     app_client_id = "9de073f9-1d14-4392-8153-7039fedc4bd5"
   }
@@ -94,7 +94,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_azure" {
 ### Optional
 
 - `aws_access_keys` (Attributes) AWS configuration to manage the access key rotation for the given IAM user. Required if `secret_provider` is `aws`. (see [below for nested schema](#nestedatt--aws_access_keys))
-- `azure_application_password` (Attributes) Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `confluent`. (see [below for nested schema](#nestedatt--azure_application_password))
+- `azure_application_password_params` (Attributes) Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `confluent`. (see [below for nested schema](#nestedatt--azure_application_password_params))
 - `confluent_service_account` (Attributes) Confluent configuration to manage the cloud api key rotation for the given service account. Required if `secret_provider` is `confluent`. (see [below for nested schema](#nestedatt--confluent_service_account))
 - `gcp_service_account_key` (Attributes) GCP configuration to manage the service account key rotation for the given service account. Required if `secret_provider` is `gcp`. (see [below for nested schema](#nestedatt--gcp_service_account_key))
 - `mongodb_atlas_user` (Attributes) MongoDB Atlas configuration to manage the user password rotation on the given database. Required if `secret_provider` is `mongodb_atlas`. (see [below for nested schema](#nestedatt--mongodb_atlas_user))
@@ -113,8 +113,8 @@ Required:
 - `iam_username` (String) AWS IAM username to rotate the access keys for.
 
 
-<a id="nestedatt--azure_application_password"></a>
-### Nested Schema for `azure_application_password`
+<a id="nestedatt--azure_application_password_params"></a>
+### Nested Schema for `azure_application_password_params`
 
 Required:
 

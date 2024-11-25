@@ -49,12 +49,9 @@ resource "hcp_vault_secrets_integration_azure" "example" {
 
 Required:
 
-- `tenant_id` (String) Azure tenant ID corresponding to the Azure application.
-
-Read-Only:
-
 - `client_id` (String) Azure client ID corresponding to the Azure application.
 - `client_secret` (String) Secret value corresponding to the Azure client secret.
+- `tenant_id` (String) Azure tenant ID corresponding to the Azure application.
 
 
 <a id="nestedatt--federated_workload_identity"></a>
@@ -63,11 +60,8 @@ Read-Only:
 Required:
 
 - `audience` (String) Audience configured on the Azure federated identity credentials to federate access with HCP.
-- `tenant_id` (String) Azure tenant ID corresponding to the Azure application.
-
-Read-Only:
-
 - `client_id` (String) Azure client ID corresponding to the Azure application.
+- `tenant_id` (String) Azure tenant ID corresponding to the Azure application.
 
 ## Import
 
