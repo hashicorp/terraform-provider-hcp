@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -148,7 +148,7 @@ func (r *resourceVaultSecretsIntegrationAWS) Read(ctx context.Context, req resou
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetAwsIntegration(
+		response, err := r.client.VaultSecrets.GetAwsIntegration(
 			secret_service.NewGetAwsIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -170,7 +170,7 @@ func (r *resourceVaultSecretsIntegrationAWS) Create(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateAwsIntegration(&secret_service.CreateAwsIntegrationParams{
+		response, err := r.client.VaultSecrets.CreateAwsIntegration(&secret_service.CreateAwsIntegrationParams{
 			Body: &secretmodels.SecretServiceCreateAwsIntegrationBody{
 				AccessKeys:                integration.accessKeys,
 				Capabilities:              integration.capabilities,
@@ -197,7 +197,7 @@ func (r *resourceVaultSecretsIntegrationAWS) Update(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateAwsIntegration(&secret_service.UpdateAwsIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdateAwsIntegration(&secret_service.UpdateAwsIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdateAwsIntegrationBody{
 				AccessKeys:                integration.accessKeys,
 				Capabilities:              integration.capabilities,
@@ -224,7 +224,7 @@ func (r *resourceVaultSecretsIntegrationAWS) Delete(ctx context.Context, req res
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationAWS, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteAwsIntegration(
+		_, err := r.client.VaultSecrets.DeleteAwsIntegration(
 			secret_service.NewDeleteAwsIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).

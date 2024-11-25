@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -52,7 +52,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteApp(&secret_service.DeleteAppParams{
+					_, err := client.VaultSecrets.DeleteApp(&secret_service.DeleteAppParams{
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 						Name:           appName2,
@@ -73,7 +73,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.CreateApp(&secret_service.CreateAppParams{
+					_, err := client.VaultSecrets.CreateApp(&secret_service.CreateAppParams{
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 						Body: &models.SecretServiceCreateAppBody{
@@ -130,7 +130,7 @@ func appExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetApp(
+	response, err := client.VaultSecrets.GetApp(
 		secret_service.NewGetAppParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).
