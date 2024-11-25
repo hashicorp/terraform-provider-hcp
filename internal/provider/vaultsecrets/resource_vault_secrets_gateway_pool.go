@@ -22,14 +22,12 @@ type GatewayPool struct {
 	Description    types.String `tfsdk:"description"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
-
-	//ResourceName   types.String `tfsdk:"resource_name"`
-	//ResourceID     types.String `tfsdk:"resource_id"`
+	ResourceName   types.String `tfsdk:"resource_name"`
+	ResourceID     types.String `tfsdk:"resource_id"`
 
 	// other fields in the response
 	ClientID     types.String `tfsdk:"client_id"`
 	ClientSecret types.String `tfsdk:"client_secret"`
-	CertPem      types.String `tfsdk:"cert_pem"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsGatewayPool{}
@@ -59,20 +57,16 @@ func (r *resourceVaultSecretsGatewayPool) Schema(_ context.Context, _ resource.S
 			Description: `Description of the gateway pool`,
 			Optional:    true,
 		},
-		//"resource_name": schema.StringAttribute{
-		//	Computed: true,
-		//},
-		//"resource_id": schema.StringAttribute{
-		//	Computed: true,
-		//},
+		"resource_name": schema.StringAttribute{
+			Computed: true,
+		},
+		"resource_id": schema.StringAttribute{
+			Computed: true,
+		},
 		"client_id": schema.StringAttribute{
 			Computed: true,
 		},
 		"client_secret": schema.StringAttribute{
-			Computed:  true,
-			Sensitive: true,
-		},
-		"cert_pem": schema.StringAttribute{
 			Computed:  true,
 			Sensitive: true,
 		},
@@ -235,7 +229,8 @@ func (g *GatewayPool) fromModel(_ context.Context, orgID, projID string, model a
 		// create pool gives different values that we want
 		g.Name = types.StringValue(v.GatewayPool.Name)
 		g.Description = types.StringValue(v.GatewayPool.Description)
-		g.CertPem = types.StringValue(v.CertPem)
+		g.ResourceID = types.StringValue(v.GatewayPool.ResourceID)
+		g.ResourceName = types.StringValue(v.GatewayPool.ResourceName)
 		g.ClientID = types.StringValue(v.ClientID)
 		g.ClientSecret = types.StringValue(v.ClientSecret)
 	case *secretmodels.Secrets20231128GatewayPool:
