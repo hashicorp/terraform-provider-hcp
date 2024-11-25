@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -115,7 +115,7 @@ func (r *resourceVaultSecretsIntegrationConfluent) Read(ctx context.Context, req
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationConfluent, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetConfluentIntegration(
+		response, err := r.client.VaultSecrets.GetConfluentIntegration(
 			secret_service.NewGetConfluentIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -137,7 +137,7 @@ func (r *resourceVaultSecretsIntegrationConfluent) Create(ctx context.Context, r
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationConfluent, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateConfluentIntegration(&secret_service.CreateConfluentIntegrationParams{
+		response, err := r.client.VaultSecrets.CreateConfluentIntegration(&secret_service.CreateConfluentIntegrationParams{
 			Body: &secretmodels.SecretServiceCreateConfluentIntegrationBody{
 				Capabilities:            integration.capabilities,
 				Name:                    integration.Name.ValueString(),
@@ -163,7 +163,7 @@ func (r *resourceVaultSecretsIntegrationConfluent) Update(ctx context.Context, r
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationConfluent, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateConfluentIntegration(&secret_service.UpdateConfluentIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdateConfluentIntegration(&secret_service.UpdateConfluentIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdateConfluentIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -189,7 +189,7 @@ func (r *resourceVaultSecretsIntegrationConfluent) Delete(ctx context.Context, r
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationConfluent, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteConfluentIntegration(
+		_, err := r.client.VaultSecrets.DeleteConfluentIntegration(
 			secret_service.NewDeleteConfluentIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).

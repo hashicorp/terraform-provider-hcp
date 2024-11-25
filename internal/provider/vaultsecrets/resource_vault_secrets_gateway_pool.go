@@ -22,8 +22,9 @@ type GatewayPool struct {
 	Description    types.String `tfsdk:"description"`
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
-	ResourceName   types.String `tfsdk:"resource_name"`
-	ResourceID     types.String `tfsdk:"resource_id"`
+
+	//ResourceName   types.String `tfsdk:"resource_name"`
+	//ResourceID     types.String `tfsdk:"resource_id"`
 
 	// other fields in the response
 	ClientID     types.String `tfsdk:"client_id"`
@@ -52,24 +53,28 @@ func (r *resourceVaultSecretsGatewayPool) Schema(_ context.Context, _ resource.S
 	attributes := map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			Description: `Name of the gateway pool`,
+			Required:    true,
 		},
 		"description": schema.StringAttribute{
 			Description: `Description of the gateway pool`,
+			Optional:    true,
 		},
-		"resource_name": schema.StringAttribute{
-			Computed: true,
-		},
-		"resource_id": schema.StringAttribute{
-			Computed: true,
-		},
+		//"resource_name": schema.StringAttribute{
+		//	Computed: true,
+		//},
+		//"resource_id": schema.StringAttribute{
+		//	Computed: true,
+		//},
 		"client_id": schema.StringAttribute{
 			Computed: true,
 		},
 		"client_secret": schema.StringAttribute{
-			Computed: true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"cert_pem": schema.StringAttribute{
-			Computed: true,
+			Computed:  true,
+			Sensitive: true,
 		},
 	}
 
@@ -212,13 +217,33 @@ func (g *GatewayPool) projectID() types.String {
 	return g.ProjectID
 }
 
-func (g *GatewayPool) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
+func (g *GatewayPool) initModel(_ context.Context, orgID, projID string) diag.Diagnostics {
 	g.OrganizationID = types.StringValue(orgID)
 	g.ProjectID = types.StringValue(projID)
 
-	return nil
+	return diag.Diagnostics{}
 }
 
 func (g *GatewayPool) fromModel(_ context.Context, orgID, projID string, model any) diag.Diagnostics {
-	return nil
+	diags := diag.Diagnostics{}
+
+	g.OrganizationID = types.StringValue(orgID)
+	g.ProjectID = types.StringValue(projID)
+
+	switch v := model.(type) {
+	case *secretmodels.Secrets20231128CreateGatewayPoolResponse:
+		// create pool gives different values that we want
+		g.Name = types.StringValue(v.GatewayPool.Name)
+		g.Description = types.StringValue(v.GatewayPool.Description)
+		g.CertPem = types.StringValue(v.CertPem)
+		g.ClientID = types.StringValue(v.ClientID)
+		g.ClientSecret = types.StringValue(v.ClientSecret)
+	case *secretmodels.Secrets20231128GatewayPool:
+		g.Name = types.StringValue(v.Name)
+		g.Description = types.StringValue(v.Description)
+	default:
+		diags.AddError("fromModel", fmt.Sprintf("invalid model type: %T", model))
+	}
+
+	return diags
 }

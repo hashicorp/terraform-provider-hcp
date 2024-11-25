@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -120,7 +120,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Read(ctx context.Context, req re
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.GetTwilioIntegration(
+		response, err := r.client.VaultSecrets.GetTwilioIntegration(
 			secret_service.NewGetTwilioIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
@@ -142,7 +142,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Create(ctx context.Context, req 
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.CreateTwilioIntegration(&secret_service.CreateTwilioIntegrationParams{
+		response, err := r.client.VaultSecrets.CreateTwilioIntegration(&secret_service.CreateTwilioIntegrationParams{
 			Body: &secretmodels.SecretServiceCreateTwilioIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -168,7 +168,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Update(ctx context.Context, req 
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		response, err := r.client.VaultSecretsPreview.UpdateTwilioIntegration(&secret_service.UpdateTwilioIntegrationParams{
+		response, err := r.client.VaultSecrets.UpdateTwilioIntegration(&secret_service.UpdateTwilioIntegrationParams{
 			Body: &secretmodels.SecretServiceUpdateTwilioIntegrationBody{
 				Capabilities:            integration.capabilities,
 				StaticCredentialDetails: integration.staticCredentialDetails,
@@ -194,7 +194,7 @@ func (r *resourceVaultSecretsIntegrationTwilio) Delete(ctx context.Context, req 
 			return nil, fmt.Errorf("invalid integration type, expected *IntegrationTwilio, got: %T, this is a bug on the provider", i)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteTwilioIntegration(
+		_, err := r.client.VaultSecrets.DeleteTwilioIntegration(
 			secret_service.NewDeleteTwilioIntegrationParamsWithContext(ctx).
 				WithOrganizationID(integration.OrganizationID.ValueString()).
 				WithProjectID(integration.ProjectID.ValueString()).
