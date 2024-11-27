@@ -10,6 +10,8 @@ import (
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -237,4 +239,75 @@ func (r *resourceVaultsecretsSecret) Delete(ctx context.Context, req resource.De
 		resp.Diagnostics.AddError("Error deleting secret", err.Error())
 		return
 	}
+}
+
+func (r *resourceVaultsecretsSecret) Open(ctx context.Context, req ephemeral.OpenRequest, res *ephemeral.OpenResponse) {
+	var data VaultSecretsSecret
+	payload := req.Config.Get(ctx, &data)
+	res.Diagnostics.Append(payload...)
+	if res.Diagnostics.HasError() {
+		return
+	}
+
+	projectID := r.client.Config.ProjectID
+	if !data.ProjectID.IsUnknown() {
+		projectID = data.ProjectID.ValueString()
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: r.client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
+
+	appSecret, err := clients.OpenVaultSecretsAppSecret(ctx, r.client, loc, data.AppName.ValueString(), data.SecretName.ValueString())
+	if err != nil {
+		res.Diagnostics.AddError(err.Error(), "Error reading secret")
+		return
+	}
+
+	var secretValue interface{}
+
+	// Handle non-static secrets differently, since they are multi-value
+	if appSecret.StaticVersion != nil {
+		secretValue = types.StringValue(appSecret.StaticVersion.Value)
+	} else if appSecret.RotatingVersion != nil {
+		openAppSecrets := map[string]string{}
+		for name, value := range appSecret.RotatingVersion.Values {
+			openAppSecrets[appSecret.Name+"_"+name] = value
+		}
+
+		var diagnostics diag.Diagnostics
+		secretValue, diagnostics = types.MapValueFrom(ctx, types.StringType, openAppSecrets)
+		res.Diagnostics.Append(diagnostics...)
+	} else if appSecret.DynamicInstance != nil {
+		openAppSecrets := map[string]string{}
+		for name, value := range appSecret.DynamicInstance.Values {
+			openAppSecrets[appSecret.Name+"_"+name] = value
+		}
+
+		var diagnostics diag.Diagnostics
+		secretValue, diagnostics = types.MapValueFrom(ctx, types.StringType, openAppSecrets)
+		res.Diagnostics.Append(diagnostics...)
+	} else {
+		res.Diagnostics.AddError(
+			"Unsupported HCP Secret type",
+			fmt.Sprintf("HCP Secrets secret type %q is not currently supported as an ephemeral value by terraform-provider-hcp", appSecret.Type),
+		)
+		return
+	}
+
+	// TODO: set the RenewAt time where applicable
+	res.Diagnostics.Append(res.Result.Set(ctx, &secretValue)...)
+}
+
+func (r *resourceVaultsecretsSecret) Close(_ context.Context, _ ephemeral.CloseRequest, _ *ephemeral.CloseResponse) {
+	// TODO: implement for dynamic secrets
+}
+
+func (r *resourceVaultsecretsSecret) Renew(_ context.Context, _ ephemeral.RenewRequest, _ *ephemeral.RenewResponse) {
+	// TODO: perhaps this will apply only to rotating secrets?
+}
+
+func (r *resourceVaultsecretsSecret) ConfigValidators(_ context.Context) []ephemeral.ConfigValidator {
+	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -214,6 +215,18 @@ func (r *resourceVaultSecretsDynamicSecret) Delete(ctx context.Context, req reso
 		}
 		return nil, nil
 	})...)
+}
+
+func (f *resourceVaultSecretsDynamicSecret) Open(_ context.Context, _ ephemeral.OpenRequest, _ *ephemeral.OpenResponse) {
+	// TODO: implement
+}
+
+func (f *resourceVaultSecretsDynamicSecret) Close(_ context.Context, _ ephemeral.CloseRequest, _ *ephemeral.CloseResponse) {
+	// TODO: implement
+}
+
+func (f *resourceVaultSecretsDynamicSecret) Renew(_ context.Context, _ ephemeral.RenewRequest, _ *ephemeral.RenewResponse) {
+	// TODO: implement
 }
 
 var _ hvsResource = &DynamicSecret{}
