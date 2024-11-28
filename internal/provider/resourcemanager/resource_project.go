@@ -52,7 +52,7 @@ The user or service account that is running Terraform when creating a %s resourc
 		Attributes: map[string]schema.Attribute{
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The project's unique identitier",
+				Description: "The project's unique identifier",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -160,17 +160,15 @@ func (r *resourceProject) addToBillingAccount(ctx context.Context, projectID str
 	updateReq := billing.NewBillingAccountServiceUpdateParams()
 	updateReq.OrganizationID = ba.OrganizationID
 	updateReq.ID = ba.ID
-	updateReq.Body = &billingModels.Billing20201105UpdateBillingAccountRequest{
-		OrganizationID: r.client.Config.OrganizationID,
-		ID:             ba.ID,
-		ProjectIds:     ba.ProjectIds,
-		Name:           ba.Name,
-		Country:        ba.Country,
+	updateReq.Body = &billingModels.BillingAccountServiceUpdateBody{
+		ProjectIds: ba.ProjectIds,
+		Name:       ba.Name,
+		Country:    ba.Country,
 	}
 
 	updateReq.Body.ProjectIds = append(updateReq.Body.ProjectIds, projectID)
 
-	_, err = r.client.Billing.BillingAccountServiceUpdate(updateReq, nil)
+	_, err = clients.RetryBillingServiceUpdate(r.client, updateReq)
 	if err != nil {
 		return fmt.Errorf("updating billing account failed: %v", err.Error())
 	}

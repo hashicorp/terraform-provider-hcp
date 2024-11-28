@@ -2,35 +2,27 @@
 page_title: "hcp_packer_channel_assignment Resource - terraform-provider-hcp"
 subcategory: "HCP Packer"
 description: |-
-  The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.
+  The Packer Channel Assignment resource allows you to manage the version assigned to a channel in an active HCP Packer Registry.
 ---
 
 # hcp_packer_channel_assignment (Resource)
 
-The Packer Channel Assignment resource allows you to manage the iteration assigned to a bucket channel in an active HCP Packer Registry.
+The Packer Channel Assignment resource allows you to manage the version assigned to a channel in an active HCP Packer Registry.
 
 ## Example Usage
 
 ```terraform
 resource "hcp_packer_channel_assignment" "staging" {
-  bucket_name  = "alpine"
-  channel_name = "staging"
-
-  # Exactly one of version, id, or fingerprint must be set:
-  iteration_version = 12
-  # iteration_id = "01H1SF9NWAK8AP25PAWDBGZ1YD"
-  # iteration_fingerprint = "01H1ZMW0Q2W6FT4FK27FQJCFG7"
+  bucket_name         = "alpine"
+  channel_name        = "staging"
+  version_fingerprint = "01H1ZMW0Q2W6FT4FK27FQJCFG7"
 }
 
-# To set the channel to have no assignment, use one of the iteration attributes with their zero value.
-# The two string-typed iteration attributes, id and fingerprint, use "none" as their zero value.
+# To set the channel to have no assignment, use "none" as the version_fingerprint value.
 resource "hcp_packer_channel_assignment" "staging" {
-  bucket_name  = "alpine"
-  channel_name = "staging"
-
-  iteration_version = 0
-  # iteration_id = "none"
-  # iteration_fingerprint = "none"
+  bucket_name         = "alpine"
+  channel_name        = "staging"
+  version_fingerprint = "none"
 }
 ```
 
@@ -39,18 +31,16 @@ resource "hcp_packer_channel_assignment" "staging" {
 
 ### Required
 
-- `bucket_name` (String) The slug of the HCP Packer Registry bucket where the channel is located.
+- `bucket_name` (String) The slug of the HCP Packer bucket where the channel is located.
 - `channel_name` (String) The name of the HCP Packer channel being managed.
 
 ### Optional
 
-- `iteration_fingerprint` (String) The fingerprint of the iteration assigned to the channel.
-- `iteration_id` (String, Deprecated) The ID of the iteration assigned to the channel.
-- `iteration_version` (Number, Deprecated) The incremental version of the iteration assigned to the channel.
 - `project_id` (String) The ID of the HCP project where the channel is located. 
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `version_fingerprint` (String) The fingerprint of the version assigned to the channel.
 
 ### Read-Only
 

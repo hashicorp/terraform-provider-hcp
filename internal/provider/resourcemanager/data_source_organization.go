@@ -47,7 +47,7 @@ func (d *DataSourceOrganization) Schema(ctx context.Context, req datasource.Sche
 				Computed:    true,
 			},
 			"resource_id": schema.StringAttribute{
-				Description: "The organization's unique identitier",
+				Description: "The organization's unique identifier",
 				Computed:    true,
 			},
 		},

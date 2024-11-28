@@ -1,0 +1,19 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "HCP Vault Radar"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+-> **Note:** This feature is currently in private beta.
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+{{ tffile "examples/resources/hcp_vault_radar_source_github_enterprise/resource.tf" }}
+
+
+{{ .SchemaMarkdown | trimspace }}

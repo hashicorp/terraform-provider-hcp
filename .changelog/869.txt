@@ -1,0 +1,3 @@
+```release-note:breaking-change
+waypoint: Remove version number from templates and add-on definition resources and data sources.
+```

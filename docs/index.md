@@ -38,7 +38,7 @@ terraform {
   required_providers {
     hcp = {
       source  = "hashicorp/hcp"
-      version = "~> 0.80.0"
+      version = "~> 0.99.0"
     }
   }
 }
@@ -134,7 +134,16 @@ resource "hcp_vault_cluster" "example" {
 Required:
 
 - `resource_name` (String) The resource_name of the Workload Identity Provider to exchange the token with.
-- `token_file` (String) The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.
+
+Optional:
+
+- `token` (String) The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.
+- `token_file` (String) The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.
 -> **Note:** See the [authentication guide](guides/auth.md) about a use case when specifying `project_id` is needed.
 
-For more information about HCP, please review our [documentation page](https://cloud.hashicorp.com/docs/hcp).
+## API
+The terraform provider accesses [HCP API](https://developer.hashicorp.com/hcp/docs/hcp/api) to facilitate workflows.
+
+In addition to the documentation provided, the provider also accesses [HashiCorp Services Status page](https://status.hashicorp.com/).
+
+For more information about HCP, please review our [documentation page](https://developer.hashicorp.com/hcp/docs/).

@@ -1,0 +1,3 @@
+```release-note:bug
+Fix intermittent conflicts during IAM policy updates
+```

@@ -1,0 +1,7 @@
+```release-note:bug
+Fixes the case where Vault secret resources ignore provider project changes.
+```
+
+```release-note:improvement
+Vault secret resources can now be created with an optional project ID. If project ID is present, the resource will be created within that project.
+```

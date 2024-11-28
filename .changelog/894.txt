@@ -1,0 +1,3 @@
+```release-note:improvement
+waypoint: The `readme_markdown_template` attribute for both template and add-on definition resources now accepts unencoded strings as well as base64 encoded strings.
+```

@@ -1,3 +1,295 @@
+## v0.99.0 (November 12, 2024)
+
+DEPRECATIONS:
+
+* Added a Deprecation message for the following resources: `hcp_consul_agent_helm_config`,`hcp_consul_agent_kubernetes_secret`,`hcp_consul_cluster`,`hcp_consul_versions` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
+* Added a Deprecation message for the following resources: `hcp_consul_cluster`,`hcp_consul_cluster_root_token`,`hcp_consul_snapshot` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
+## v0.98.1 (November 07, 2024)
+
+BUG FIXES:
+
+* HCP Vault Radar resource documents did not have the subcategory set correctly. [[GH-1129](https://github.com/hashicorp/terraform-provider-hcp/pull/1129)]
+## v0.98.0 (November 06, 2024)
+
+FEATURES:
+
+* Add preview of the following Vault Radar connections and subscriptions:
+hcp_vault_radar_integration_jira_connection
+hcp_vault_radar_integration_jira_subscription
+hcp_vault_radar_integration_slack_connection
+hcp_vault_radar_integration_slack_subscription [[GH-1116](https://github.com/hashicorp/terraform-provider-hcp/pull/1116)]
+* Add preview of vault_radar_source_github_cloud resource. [[GH-1119](https://github.com/hashicorp/terraform-provider-hcp/pull/1119)]
+* add vault_secrets_integration_confluent resource and add support for confluent secrets to vault_secrets_rotating_secret resource [[GH-1120](https://github.com/hashicorp/terraform-provider-hcp/pull/1120)]
+
+IMPROVEMENTS:
+
+* Fixed issues where the HVS App resource would behave improperly such as returning an error if using an empty description. [[GH-1118](https://github.com/hashicorp/terraform-provider-hcp/pull/1118)]
+* Upgrade the HCP SDK and fix breaking change w/ Vault Secrets [[GH-1113](https://github.com/hashicorp/terraform-provider-hcp/pull/1113)]
+* Upgrade the HCP SDK for Vault Secrets [[GH-1122](https://github.com/hashicorp/terraform-provider-hcp/pull/1122)]
+
+BUG FIXES:
+
+* creating a mongodb rotating secret should create a mongodb rotating secret not a twilio one [[GH-1126](https://github.com/hashicorp/terraform-provider-hcp/pull/1126)]
+## v0.97.0 (October 08, 2024)
+
+FEATURES:
+
+* Add pagination support for vault OpenAppSecrets preview api. [[GH-1109](https://github.com/hashicorp/terraform-provider-hcp/pull/1109)]
+* Add preview of vault_radar_source_github_enterprise resource. [[GH-1092](https://github.com/hashicorp/terraform-provider-hcp/pull/1092)]
+* Waypoint: New template resource attribute `use_module_readme` allows users to use the associated Terraform module readme in place of providing a seperate readme for the template. [[GH-1099](https://github.com/hashicorp/terraform-provider-hcp/pull/1099)]
+* add vault_secrets_dynamic_secret resource [[GH-1097](https://github.com/hashicorp/terraform-provider-hcp/pull/1097)]
+* add vault_secrets_rotating_secret resource [[GH-1101](https://github.com/hashicorp/terraform-provider-hcp/pull/1101)]
+* waypoint: Add execution mode and agent pool ID configurations to the
+`hcp_waypoint_template` and `hcp_waypoint_add_on_definition` resources, and
+the `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources. [[GH-1098](https://github.com/hashicorp/terraform-provider-hcp/pull/1098)]
+
+IMPROVEMENTS:
+
+* Update Vault Radar codeowners patterns. [[GH-1103](https://github.com/hashicorp/terraform-provider-hcp/pull/1103)]
+* Update codeowners to include Vault Radar. [[GH-1102](https://github.com/hashicorp/terraform-provider-hcp/pull/1102)]
+* Upgrade the HCP SDK and fix a breaking change in the Boundary API. [[GH-1110](https://github.com/hashicorp/terraform-provider-hcp/pull/1110)]
+
+BUG FIXES:
+
+* Waypoint: fix where using the deprecated terraform_cloud_workspace_details.name field could cause an error. [[GH-1093](https://github.com/hashicorp/terraform-provider-hcp/pull/1093)]
+* waypoint: Fix `hcp_waypoint_template` and `hcp_waypoint_add_on_definition` data sources. [[GH-1094](https://github.com/hashicorp/terraform-provider-hcp/pull/1094)]
+## v0.96.0 (September 13, 2024)
+
+FEATURES:
+
+* add vault_secrets_integration_aws resource [[GH-1078](https://github.com/hashicorp/terraform-provider-hcp/pull/1078)]
+* add vault_secrets_integration_gcp resource [[GH-1085](https://github.com/hashicorp/terraform-provider-hcp/pull/1085)]
+* add vault_secrets_integration_mongodbatlas resource [[GH-1084](https://github.com/hashicorp/terraform-provider-hcp/pull/1084)]
+* add vault_secrets_integration_twilio resource [[GH-1081](https://github.com/hashicorp/terraform-provider-hcp/pull/1081)]
+
+IMPROVEMENTS:
+
+* Added the `version` attribute(s) to `hcp_boundary_cluster` resource and data sources. [[GH-1089](https://github.com/hashicorp/terraform-provider-hcp/pull/1089)]
+## v0.95.1 (August 29, 2024)
+
+IMPROVEMENTS:
+
+* Waypoint resources for templates and add-on definitions no longer require setting
+a `terraform_cloud_workspace_details` resource, and instead can be set by the
+`terraform_project_id` param. [[GH-1052](https://github.com/hashicorp/terraform-provider-hcp/pull/1052)]
+* update hcp-sdk-go [[GH-1080](https://github.com/hashicorp/terraform-provider-hcp/pull/1080)]
+## v0.95.0 (August 21, 2024)
+BREAKING CHANGES:
+
+* waypoint: Remove version number from templates and add-on definition resources and data sources. [[GH-869](https://github.com/hashicorp/terraform-provider-hcp/pull/869)]
+
+FEATURES:
+
+* Allow authenticating the provider using Workload Identity Federation via a
+direct token in the provider configuration. [[GH-1053](https://github.com/hashicorp/terraform-provider-hcp/pull/1053)]
+* HCP Waypoint Application resource and data source can now read any output values associated with that application [[GH-871](https://github.com/hashicorp/terraform-provider-hcp/pull/871)]
+
+IMPROVEMENTS:
+
+* Updated documentation to communicate the APIs the provider leverages during usage. [[GH-1066](https://github.com/hashicorp/terraform-provider-hcp/pull/1066)]
+* waypoint: The `readme_markdown_template` attribute for both template and add-on definition resources now accepts unencoded strings as well as base64 encoded strings. [[GH-894](https://github.com/hashicorp/terraform-provider-hcp/pull/894)]
+## v0.94.1 (July 08, 2024)
+
+BUG FIXES:
+
+* Fix the documentation location for hcp_packer_bucket, hcp_packer_bucket_iam_policy, and hcp_packer_bucket_iam_binding. [[GH-904](https://github.com/hashicorp/terraform-provider-hcp/pull/904)]
+## v0.94.0 (July 03, 2024)
+
+FEATURES:
+
+* New resource: Add `hcp_packer_bucket` resource for managing HCP Packer buckets
+ New Resource: Add `hcp_packer_bucket_iam_policy` resource for assigning a list of policy bindings to multiple principals for a HCP Packer Bucket
+ New resource: Add `hcp_packer_bucket_iam_binding` resource for assigning a single role to a principal for a HCP Packer Bucket [[GH-852](https://github.com/hashicorp/terraform-provider-hcp/pull/852)]
+* add vault_secrets_dynamic_secret data source [[GH-868](https://github.com/hashicorp/terraform-provider-hcp/pull/868)]
+
+IMPROVEMENTS:
+
+* waypoint: Add support for input variables to the `hcp_wapyoint_add_on` resource
+and data source. [[GH-864](https://github.com/hashicorp/terraform-provider-hcp/pull/864)]
+
+BUG FIXES:
+
+* Fix intermittent conflicts during IAM policy updates [[GH-870](https://github.com/hashicorp/terraform-provider-hcp/pull/870)]
+## v0.93.0 (June 25, 2024)
+BREAKING CHANGES:
+
+* waypoint: Rename `hcp_waypoint_application_template` resource and data source to
+`hcp_waypoint_template`. [[GH-861](https://github.com/hashicorp/terraform-provider-hcp/pull/861)]
+
+FEATURES:
+
+* New resource: Add `hcp_waypoint_action_config` resource for managing Waypoint Action Configs.
+ New data-source: Add `data.hcp_waypoint_action_config` data-source for Waypoint Action Configs. [[GH-815](https://github.com/hashicorp/terraform-provider-hcp/pull/815)]
+## v0.92.0 (June 18, 2024)
+
+FEATURES:
+
+* Add `hcp_group_iam_binding` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
+* Add `hcp_group_iam_policy` resource. [[GH-865](https://github.com/hashicorp/terraform-provider-hcp/pull/865)]
+## v0.91.1 (June 13, 2024)
+
+BUG FIXES:
+
+* Fix the documentation for hcp_vault_secrets_rotating_secret [[GH-867](https://github.com/hashicorp/terraform-provider-hcp/pull/867)]
+## v0.91.0 (June 06, 2024)
+
+FEATURES:
+
+* Allows users to fetch rotating secrets using the hcp_vault_secrets_app and hcp_vault_secrets_secret data sources [[GH-850](https://github.com/hashicorp/terraform-provider-hcp/pull/850)]
+* add vault_secrets_rotating_secret data source [[GH-854](https://github.com/hashicorp/terraform-provider-hcp/pull/854)]
+
+IMPROVEMENTS:
+
+* Add support for input variables to `hcp_waypoint_application` resource and
+data source. [[GH-833](https://github.com/hashicorp/terraform-provider-hcp/pull/833)]
+* Update `hcp-sdk-go` [[GH-851](https://github.com/hashicorp/terraform-provider-hcp/pull/851)]
+* Update `hcp-sdk-go` to v0.98.0 [[GH-855](https://github.com/hashicorp/terraform-provider-hcp/pull/855)]
+## v0.90.0 (May 22, 2024)
+
+FEATURES:
+
+* Added HCP Boundary to statuspage components used to warn about potential issues with HCP. [[GH-835](https://github.com/hashicorp/terraform-provider-hcp/pull/835)]
+
+IMPROVEMENTS:
+
+* Support retrieving output values in `hcp_waypoint_add_on` [[GH-822](https://github.com/hashicorp/terraform-provider-hcp/pull/822)]
+
+BUG FIXES:
+
+* Waypoint: fix issue with importing existing Waypoint resources [[GH-839](https://github.com/hashicorp/terraform-provider-hcp/pull/839)]
+## v0.89.0 (May 10, 2024)
+
+IMPROVEMENTS:
+
+* Support setting variable options in `Support setting variable options in `hcp_waypoint_add_on_definition`. [[GH-819](https://github.com/hashicorp/terraform-provider-hcp/pull/819)]
+
+BUG FIXES:
+
+* Fix first apply scenario for hcp_vault_secrets_app_iam_binding and hcp_vault_secrets_app_iam_policy, update docs [[GH-838](https://github.com/hashicorp/terraform-provider-hcp/pull/838)]
+## v0.88.0 (May 02, 2024)
+
+IMPROVEMENTS:
+
+* Documentation: call OpenAppSecrets instead of List + Open in hcp_vault_secrets_app data source. This improves an issue with additional unnecessary client API usage. [[GH-826](https://github.com/hashicorp/terraform-provider-hcp/pull/826)]
+* Support setting variable options in `hcp_waypoint_application_template`. [[GH-816](https://github.com/hashicorp/terraform-provider-hcp/pull/816)]
+* resource/hcp_log_streaming_destination: Label resource as public beta [[GH-830](https://github.com/hashicorp/terraform-provider-hcp/pull/830)]
+## v0.87.1 (April 25, 2024)
+
+BUG FIXES:
+
+* Fix documentation of hcp_vault_secrets_app_iam_binding and hcp_vault_secrets_app_iam_policy [[GH-825](https://github.com/hashicorp/terraform-provider-hcp/pull/825)]
+## v0.87.0 (April 25, 2024)
+
+FEATURES:
+
+* Add `hcp_vault_secrets_app_iam_binding` resource. [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* Add `hcp_vault_secrets_app_iam_policy` resource. [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* New resource: Add `hcp_waypoint_add_on` resource for managing Waypoint Add-ons.
+ New data-source: Add `data.hcp_waypoint_add_on` data-source for Waypoint Add-ons. [[GH-807](https://github.com/hashicorp/terraform-provider-hcp/pull/807)]
+
+IMPROVEMENTS:
+
+* Add GitHub Action to run identity-specific tests [[GH-810](https://github.com/hashicorp/terraform-provider-hcp/pull/810)]
+* CODEOWNERS: Fix the vault-secrets resource ownership to @hashicorp/cloud-vault-secrets team. [[GH-820](https://github.com/hashicorp/terraform-provider-hcp/pull/820)]
+* CODEOWNERS: Fix vault-secrets resource ownership to @hashicorp/cloud-vault-secrets team. [[GH-814](https://github.com/hashicorp/terraform-provider-hcp/pull/814)]
+* Documentation: Gracefully handle rate limiting error on `hcp_vault_secrets_secret` resource. [[GH-812](https://github.com/hashicorp/terraform-provider-hcp/pull/812)]
+* Return resource name when a Vault Secrets App is created [[GH-813](https://github.com/hashicorp/terraform-provider-hcp/pull/813)]
+* Vault secret resources can now be created with an optional project ID. If project ID is present, the resource will be created within that project. [[GH-808](https://github.com/hashicorp/terraform-provider-hcp/pull/808)]
+
+BUG FIXES:
+
+* Fixes the case where Vault secret resources ignore provider project changes. [[GH-808](https://github.com/hashicorp/terraform-provider-hcp/pull/808)]
+## v0.86.0 (April 04, 2024)
+
+FEATURES:
+
+* Add DataDog config option for hcp_log_streaming_destination resource. [[GH-803](https://github.com/hashicorp/terraform-provider-hcp/pull/803)]
+* Add in-place update functionality to `hcp_log_streaming_destination` resource. [[GH-802](https://github.com/hashicorp/terraform-provider-hcp/pull/802)]
+
+BUG FIXES:
+
+* Fixed an issue that caused a HTTP audit-log streaming config to fail with allowed values for http_codec are only "JSON" or "NDJSON" [[GH-781](https://github.com/hashicorp/terraform-provider-hcp/pull/781)]
+* Handle the case when multiple organizations are associated with the configured credentials. Now, it instead prompts an error, requiring users to specify a particular organization in the HCP provider config block. [[GH-793](https://github.com/hashicorp/terraform-provider-hcp/pull/793)]
+## v0.85.0 (April 03, 2024)
+
+FEATURES:
+
+* New resource: Add `hcp_waypoint_application` resource for managing Waypoint Application.
+ New data-source: Add `data.hcp_waypoint_application` data-source for Waypoint Application. [[GH-794](https://github.com/hashicorp/terraform-provider-hcp/pull/794)]
+
+IMPROVEMENTS:
+
+* Documentation: Update hcp_iam_policy docs with HCP Vault Secrets Roles App Manager and App Secret Reader [[GH-801](https://github.com/hashicorp/terraform-provider-hcp/pull/801)]
+## v0.84.1 (March 22, 2024)
+
+IMPROVEMENTS:
+
+* Documentation: Adjust the subcategory for hcp_user_principal, hcp_group_members, hcp_iam_workload_identity_provider to Cloud Platform [[GH-797](https://github.com/hashicorp/terraform-provider-hcp/pull/797)]
+
+BUG FIXES:
+
+* Fixes an issue where organization ID was not sent on data.hcp_user_principal lookup [[GH-797](https://github.com/hashicorp/terraform-provider-hcp/pull/797)]
+## v0.84.0 (March 22, 2024)
+BREAKING CHANGES:
+
+* Removed `hcp_packer_image` data source, previously deprecated and replaced by `hcp_packer_artifact` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+* Removed `hcp_packer_iteration` data source, previously deprecated and replaced by `hcp_packer_version` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+* Removed `iteration_fingerprint` attribute from `hcp_packer_channel_assignment` resource, previously deprecated and replaced by `version_fingerprint` in [v0.82.0](https://github.com/hashicorp/terraform-provider-hcp/releases/tag/v0.82.0). [[GH-791](https://github.com/hashicorp/terraform-provider-hcp/pull/791)]
+
+FEATURES:
+
+* New data source: Add `hcp_group` data source for retrieving HCP groups. [[GH-787](https://github.com/hashicorp/terraform-provider-hcp/pull/787)]
+* New resource: Add `hcp_group_members` resource for managing HCP user principals in a group. [[GH-787](https://github.com/hashicorp/terraform-provider-hcp/pull/787)]
+* New resource: Add `hcp_waypoint_add_on_definition` resource for managing Waypoint Add-on Definitions.
+ New data-source: Add `data.hcp_waypoint_add_on_definition` data-source for Waypoint Add-on Definitions. [[GH-785](https://github.com/hashicorp/terraform-provider-hcp/pull/785)]
+* New resource: Add `hcp_waypoint_application_template` resource for managing Waypoint Application Templates.
+ New data-source: Add `data.hcp_waypoint_application_template` data-source for Waypoint Application Templates. [[GH-778](https://github.com/hashicorp/terraform-provider-hcp/pull/778)]
+* New resource: Add `hcp_waypoint_tfc_config` resource for managing the TFC
+ Configuration used by Waypoint. [[GH-766](https://github.com/hashicorp/terraform-provider-hcp/pull/766)]
+
+BUG FIXES:
+
+* Update Boundary API clients method name to match the latest version [[GH-770](https://github.com/hashicorp/terraform-provider-hcp/pull/770)]
+## v0.83.0 (February 23, 2024)
+
+FEATURES:
+
+* Add CloudWatch config option for hcp_log_streaming_destination resource. [[GH-757](https://github.com/hashicorp/terraform-provider-hcp/pull/757)]
+
+IMPROVEMENTS:
+
+* Update example for `hcp_packer_channel_assignment` resource [[GH-749](https://github.com/hashicorp/terraform-provider-hcp/pull/749)]
+
+BUG FIXES:
+
+* Do not panic if provider is configured with credentials with no project access. [[GH-748](https://github.com/hashicorp/terraform-provider-hcp/pull/748)]
+* Fixing a panic on errors when opening secrets from HCP Vault Secrets. [[GH-751](https://github.com/hashicorp/terraform-provider-hcp/pull/751)]
+* Fixing the validation rules for HCP Vault Secrets app and secret names to match
+what we have on the server side. [[GH-750](https://github.com/hashicorp/terraform-provider-hcp/pull/750)]
+## v0.82.0 (January 30, 2024)
+BREAKING CHANGES:
+
+* `data.hcp_packer_iteration`: Removed the `incremental_version` attribute. Use the `fingerprint`, `id` or `uuid` attributes instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: Removed the `iteration_id` attribute. Use the `version_fingerprint` attribute instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: Removed the `iteration_version` attribute. Use the `version_fingerprint` attribute instead. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+
+FEATURES:
+
+* Add `hcp_notifications_webhook` resource. [[GH-723](https://github.com/hashicorp/terraform-provider-hcp/pull/723)]
+* `data.hcp_packer_artifact`: Added the `hcp_packer_artifact` data source, which replaces `data.hcp_packer_image` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `data.hcp_packer_version`: Added the `hcp_packer_version` data source, which replaces `data.hcp_packer_iteration` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+
+DEPRECATIONS:
+
+* `data.hcp_packer_image`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_artifact` [[GH-735](https://github.com/hashicorp/terraform-provider-hcp/pull/735)]
+* `data.hcp_packer_iteration`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_version` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+* `hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute is now deprecated and will be removed in a future release. 
+Refer to the `version_fingerprint` attribute release notes for more information. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
+## v0.81.0 (January 24, 2024)
+
+FEATURES:
+
+* Add `ip_allowlist` field for HCP Vault clusters to create or update allowed IP address ranges (CIDRs) for inbound traffic. [[GH-625](https://github.com/hashicorp/terraform-provider-hcp/pull/625)]
 ## v0.80.0 (January 11, 2023)
 
 FEATURES:

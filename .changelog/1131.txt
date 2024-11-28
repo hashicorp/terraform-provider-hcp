@@ -1,0 +1,3 @@
+```release-note:bug
+Retry billing service update call when creating a project
+```

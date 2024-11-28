@@ -8,12 +8,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
@@ -34,8 +36,6 @@ func New() func() *schema.Provider {
 				"hcp_hvn_peering_connection":         dataSourceHvnPeeringConnection(),
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
 				"hcp_packer_bucket_names":            dataSourcePackerBucketNames(),
-				"hcp_packer_image":                   dataSourcePackerImage(),
-				"hcp_packer_iteration":               dataSourcePackerIteration(),
 				"hcp_packer_run_task":                dataSourcePackerRunTask(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 				"hcp_vault_plugin":                   dataSourceVaultPlugin(),
@@ -92,8 +92,13 @@ func New() func() *schema.Provider {
 						Schema: map[string]*schema.Schema{
 							"token_file": {
 								Type:        schema.TypeString,
-								Required:    true,
-								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider.",
+								Optional:    true,
+								Description: "The path to a file containing a JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
+							},
+							"token": {
+								Type:        schema.TypeString,
+								Optional:    true,
+								Description: "The JWT token retrieved from an OpenID Connect (OIDC) or OAuth2 provider. At least one of `token_file` or `token` must be set, if both are set then `token` takes precedence.",
 							},
 							"resource_name": {
 								Type:        schema.TypeString,
@@ -140,13 +145,12 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		}
 
 		// Read the workload_identity configuration
-		if v, ok := d.GetOk("workload_identity"); ok && len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
-			wi := v.([]interface{})[0].(map[string]interface{})
-			if tf, ok := wi["token_file"].(string); ok && tf != "" {
-				clientConfig.WorloadIdentityTokenFile = tf
-			}
-			if rn, ok := wi["resource_name"].(string); ok && rn != "" {
-				clientConfig.WorkloadIdentityResourceName = rn
+		if d, ok := d.GetOk("workload_identity"); ok {
+			var moreDiags diag.Diagnostics
+			clientConfig, moreDiags = readWorkloadIdentity(d, clientConfig)
+			diags = append(diags, moreDiags...)
+			if moreDiags.HasError() {
+				return nil, diags
 			}
 		}
 
@@ -198,6 +202,32 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 	}
 }
 
+func readWorkloadIdentity(v interface{}, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if len(v.([]interface{})) == 1 && v.([]interface{})[0] != nil {
+		wi := v.([]interface{})[0].(map[string]interface{})
+		if tf, ok := wi["token_file"].(string); ok && tf != "" {
+			clientConfig.WorkloadIdentityTokenFile = tf
+		}
+		if t, ok := wi["token"].(string); ok && t != "" {
+			clientConfig.WorkloadIdentityToken = t
+		}
+		if rn, ok := wi["resource_name"].(string); ok && rn != "" {
+			clientConfig.WorkloadIdentityResourceName = rn
+		}
+
+		if clientConfig.WorkloadIdentityTokenFile == "" && clientConfig.WorkloadIdentityToken == "" {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "invalid workload_identity",
+				Detail:        "at least one of `token_file` or `token` must be set",
+				AttributePath: cty.GetAttrPath("workload_identity"),
+			})
+		}
+	}
+	return clientConfig, diags
+}
+
 // getProjectFromCredentials uses the configured client credentials to
 // fetch the associated organization and returns that organization's
 // single project.
@@ -210,10 +240,23 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 		return nil, diags
 	}
 	orgLen := len(listOrgResp.Payload.Organizations)
-	if orgLen != 1 {
-		diags = append(diags, diag.Errorf("unexpected number of organizations: expected 1, actual: %v", orgLen)...)
+	if orgLen == 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "The configured credentials do not have access to any organization.",
+			Detail:   "Please assign at least one organization to the configured credentials to use this provider.",
+		})
 		return nil, diags
 	}
+	if orgLen > 1 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "There is more than one organization associated with the configured credentials.",
+			Detail:   "Please configure a specific project in the HCP provider config block",
+		})
+		return nil, diags
+	}
+
 	orgID := listOrgResp.Payload.Organizations[0].ID
 
 	// Get the project using the organization ID.
@@ -238,7 +281,7 @@ func getProjectFromCredentials(ctx context.Context, client *clients.Client) (pro
 	return project, diags
 }
 
-// getOldestProject retrieves the oldest project from a list based on its created_at time.
+// GetOldestProject retrieves the oldest project from a list based on its created_at time.
 func GetOldestProject(projects []*models.HashicorpCloudResourcemanagerProject) (oldestProj *models.HashicorpCloudResourcemanagerProject) {
 	oldestTime := time.Now()
 

@@ -101,6 +101,28 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					return strings.EqualFold(old, new)
 				},
 			},
+			"ip_allowlist": {
+				Description: "Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Description:      "IP address range in CIDR notation.",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validateCIDRRange,
+						},
+						"description": {
+							Description:      "Description to help identify source (maximum 255 chars).",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validateCIDRRangeDescription,
+						},
+					},
+				},
+				MaxItems: 50,
+			},
 			"min_vault_version": {
 				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
 				Type:             schema.TypeString,
@@ -618,6 +640,12 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		httpProxyOption = vaultmodels.HashicorpCloudVault20201125HTTPProxyOption(strings.ToUpper(proxyEndpoint.(string))).Pointer()
 	}
 
+	cidrs := d.Get("ip_allowlist").([]interface{})
+	ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
+	if err != nil {
+		return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+	}
+
 	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
@@ -657,6 +685,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
@@ -698,6 +727,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
 					HTTPProxyOption:  httpProxyOption,
+					IPAllowlist:      ipAllowlist,
 				},
 			},
 			ID:       clusterID,
@@ -844,7 +874,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
+	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "ip_allowlist", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
 		return nil
 	}
 
@@ -854,7 +884,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("ip_allowlist") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
@@ -962,6 +992,10 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
 	httpProxyOption := getHTTPProxyOption(d)
+	ipAllowlist, diagErr := getIPAllowlist(d, clusterID)
+	if diagErr != nil {
+		return diagErr
+	}
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: cluster.Location.OrganizationID,
@@ -993,7 +1027,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
 					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -1019,7 +1053,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		auditConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -1056,6 +1090,19 @@ func getHTTPProxyOption(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault
 		return &httpProxyOption
 	}
 	return nil
+}
+
+func getIPAllowlist(d *schema.ResourceData, clusterID string) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, diag.Diagnostics) {
+	// If we don't change the ip_allowlist_endpoint, return nil so we don't pass ip_allowlist to the update.
+	if d.HasChange("ip_allowlist") {
+		cidrs := d.Get("ip_allowlist").([]interface{})
+		ipAllowlist, err := buildIPAllowlistVaultCluster(cidrs)
+		if err != nil {
+			return nil, diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
+		}
+		return ipAllowlist, nil
+	}
+	return nil, nil
 }
 
 // setVaultClusterResourceData sets the KV pairs of the Vault cluster resource schema.
@@ -1147,6 +1194,20 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 
 	if err := d.Set("created_at", cluster.CreatedAt.String()); err != nil {
 		return err
+	}
+
+	if cluster.Config.NetworkConfig != nil {
+		ipAllowlist := make([]map[string]interface{}, len(cluster.Config.NetworkConfig.IPAllowlist))
+		for i, cidrRange := range cluster.Config.NetworkConfig.IPAllowlist {
+			cidr := map[string]interface{}{
+				"description": cidrRange.Description,
+				"address":     cidrRange.Address,
+			}
+			ipAllowlist[i] = cidr
+		}
+		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
+			return err
+		}
 	}
 
 	clusterSharedLoc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -1526,7 +1587,7 @@ func getValidObservabilityConfig(config map[string]interface{}) (*vaultmodels.Ha
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_method are only \"POST\", \"PUT\", or \"PATCH\"")
 		}
 
-		if strings.ToUpper(httpMethod) != "JSON" && strings.ToUpper(httpMethod) != "NDJSON" {
+		if strings.ToUpper(httpCodec) != "JSON" && strings.ToUpper(httpCodec) != "NDJSON" {
 			invalidProviderConfigError = diag.Errorf("http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"")
 		}
 
@@ -1777,4 +1838,24 @@ func getPathStrings(pathFilter interface{}) []string {
 
 func printPlusScalingWarningMsg() {
 	log.Printf("[WARN] When scaling Plus-tier Vault clusters, be sure to keep the size of all clusters in a replication group in sync")
+}
+
+// buildIPAllowlistVaultCluster returns a vault model for the IP allowlist.
+func buildIPAllowlistVaultCluster(cidrs []interface{}) ([]*vaultmodels.HashicorpCloudVault20201125CidrRange, error) {
+	ipAllowList := make([]*vaultmodels.HashicorpCloudVault20201125CidrRange, len(cidrs))
+
+	for i, cidr := range cidrs {
+		cidrMap := cidr.(map[string]interface{})
+		address := cidrMap["address"].(string)
+		description := cidrMap["description"].(string)
+
+		cidrRange := &vaultmodels.HashicorpCloudVault20201125CidrRange{
+			Address:     address,
+			Description: description,
+		}
+
+		ipAllowList[i] = cidrRange
+	}
+
+	return ipAllowList, nil
 }

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"text/template"
 
+	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,6 +53,7 @@ resource "hcp_vault_cluster" "test" {
 	major_version_upgrade_config {
 		upgrade_type = "MANUAL"
 	}
+	{{ .IPAllowlist }}
 }
 `
 
@@ -69,6 +71,7 @@ resource "hcp_vault_cluster" "test" {
 		maintenance_window_day = "WEDNESDAY"
 		maintenance_window_time = "WINDOW_12AM_4AM"
 	}
+	{{ .IPAllowlist }}
 }
 `
 
@@ -104,6 +107,7 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier           string
 		PublicEndpoint string
 		ProxyEndpoint  string
+		IPAllowlist    string
 	}{
 		ClusterID:      in.VaultClusterName,
 		HvnID:          in.HvnName,
@@ -112,7 +116,19 @@ resource "hcp_vault_cluster_admin_token" "test" {
 		Tier:           tier,
 		PublicEndpoint: in.PublicEndpoint,
 		ProxyEndpoint:  in.ProxyEndpoint,
+		IPAllowlist:    convertIPAllowlistToTFBlocks(in.IPAllowlist),
 	})
 	require.NoError(t, err)
 	return tfResources.String()
+}
+
+func convertIPAllowlistToTFBlocks(ipAlowlist []*vaultmodels.HashicorpCloudVault20201125CidrRange) string {
+	out := ""
+	for _, entry := range ipAlowlist {
+		out += fmt.Sprintf(`ip_allowlist {
+			address = "%s"
+			description = "%s"
+		  }`, entry.Address, entry.Description)
+	}
+	return out
 }
