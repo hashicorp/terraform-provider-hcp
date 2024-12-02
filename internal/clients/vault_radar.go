@@ -123,6 +123,19 @@ func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveEr
 	}
 }
 
+func UpdateRadarDataSourceToken(ctx context.Context, client *Client, projectID string, tokenBody dsrs.UpdateDataSourceTokenBody) error {
+	params := dsrs.NewUpdateDataSourceTokenParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = tokenBody
+
+	if _, err := client.RadarSourceRegistrationService.UpdateDataSourceToken(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.CreateIntegrationConnectionBody) (*ics.CreateIntegrationConnectionOK, error) {
 	params := ics.NewCreateIntegrationConnectionParams()
 	params.Context = ctx
@@ -180,6 +193,19 @@ func DeleteIntegrationConnection(ctx context.Context, client *Client, projectID,
 	return nil
 }
 
+func UpdateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.UpdateIntegrationConnectionBody) error {
+	params := ics.NewUpdateIntegrationConnectionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = connection
+
+	if _, err := client.RadarConnectionService.UpdateIntegrationConnection(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateIntegrationSubscription(ctx context.Context, client *Client, projectID string, connection iss.CreateIntegrationSubscriptionBody) (*iss.CreateIntegrationSubscriptionOK, error) {
 	params := iss.NewCreateIntegrationSubscriptionParams()
 	params.Context = ctx
@@ -231,6 +257,19 @@ func DeleteIntegrationSubscription(ctx context.Context, client *Client, projectI
 	params.LocationProjectID = projectID
 
 	if _, err := client.RadarSubscriptionService.DeleteIntegrationSubscription(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateIntegrationSubscription(ctx context.Context, client *Client, projectID string, subscription iss.UpdateIntegrationSubscriptionBody) error {
+	params := iss.NewUpdateIntegrationSubscriptionParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = subscription
+
+	if _, err := client.RadarSubscriptionService.UpdateIntegrationSubscription(params, nil); err != nil {
 		return err
 	}
 

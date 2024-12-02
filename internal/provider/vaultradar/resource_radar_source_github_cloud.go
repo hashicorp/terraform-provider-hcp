@@ -42,12 +42,16 @@ var githubCloudSourceSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"github_organization": schema.StringAttribute{
 			Description: `GitHub organization Vault Radar will monitor. Example: type "octocat" for the org https://github.com/octocat`,
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9-_.]+$`),
@@ -59,9 +63,6 @@ var githubCloudSourceSchema = schema.Schema{
 			Description: "GitHub personal access token.",
 			Required:    true,
 			Sensitive:   true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
 		},
 
 		// Optional inputs

@@ -1,0 +1,3 @@
+```release-note:improvement
+Update hcp_group API calls to retry when encountering a 502, 503, or 504 error.
+```
