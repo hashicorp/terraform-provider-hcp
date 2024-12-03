@@ -18,7 +18,7 @@ func TestAccServicePrincipalKeyResource(t *testing.T) {
 	spName := acctest.RandString(16)
 	var spk, spk2, spk3 models.HashicorpCloudIamServicePrincipalKey
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{

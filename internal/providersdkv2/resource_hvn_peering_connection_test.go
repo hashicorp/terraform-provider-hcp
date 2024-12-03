@@ -1,13 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,8 +16,8 @@ import (
 )
 
 var (
-	hvn1UniqueID = fmt.Sprintf("hcp-provider-test-%s-1", time.Now().Format("200601021504"))
-	hvn2UniqueID = fmt.Sprintf("hcp-provider-test-%s-2", time.Now().Format("200601021504"))
+	hvn1UniqueID = uniqueName()
+	hvn2UniqueID = uniqueName()
 )
 
 var testAccHvnPeeringConnectionConfig = fmt.Sprintf(`
@@ -51,7 +52,7 @@ func TestAccHvnPeeringConnection(t *testing.T) {
 	resourceName := "hcp_hvn_peering_connection.test"
 	dataSourceName := "data.hcp_hvn_peering_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckHvnPeeringConnectionDestroy,

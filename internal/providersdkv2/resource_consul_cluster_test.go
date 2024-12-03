@@ -1,6 +1,8 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
@@ -101,7 +103,7 @@ func TestAccConsulCluster(t *testing.T) {
 	dataSourceVersionName := "data.hcp_consul_versions.test"
 	rootTokenResourceName := "hcp_consul_cluster_root_token.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckConsulClusterDestroy,

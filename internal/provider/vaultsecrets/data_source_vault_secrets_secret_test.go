@@ -18,7 +18,7 @@ func TestAcc_dataSourceVaultSecretsSecret(t *testing.T) {
 	testSecretName := "secret_one"
 	testSecretValue := "some value"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

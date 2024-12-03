@@ -1,6 +1,8 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
@@ -108,7 +110,7 @@ var (
 func TestAccTGWAttachment(t *testing.T) {
 	resourceName := "hcp_aws_transit_gateway_attachment.example"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

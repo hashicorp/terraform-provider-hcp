@@ -20,7 +20,7 @@ func TestAccServicePrincipalResource_Project(t *testing.T) {
 	var sp models.HashicorpCloudIamServicePrincipal
 	var sp2 models.HashicorpCloudIamServicePrincipal
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccServicePrincipalResource_ExplicitProject(t *testing.T) {
 	spName := acctest.RandString(16)
 	var sp models.HashicorpCloudIamServicePrincipal
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccServicePrincipalResource_Organization(t *testing.T) {
 	spName := acctest.RandString(16)
 	var sp models.HashicorpCloudIamServicePrincipal
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{

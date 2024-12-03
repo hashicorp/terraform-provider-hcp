@@ -1,6 +1,8 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
@@ -8,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	uniqueAzurePeeringTestID = uniqueName()
 	subscriptionID           = os.Getenv("ARM_SUBSCRIPTION_ID")
 	tenantID                 = os.Getenv("ARM_TENANT_ID")
 )
@@ -188,7 +189,7 @@ func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig("", adConfig)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -279,7 +280,7 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeNVAConfig, adConfig)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -367,7 +368,7 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig(adConfig))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -455,7 +456,7 @@ func testAccAzurePeeringConnectionNVAandGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig(adConfig))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

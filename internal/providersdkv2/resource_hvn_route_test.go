@@ -1,14 +1,16 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,7 +19,7 @@ import (
 
 var (
 	// using unique names for resources to make debugging easier
-	hvnRouteUniqueName       = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	hvnRouteUniqueName       = uniqueName()
 	testAccHvnRouteConfigAws = fmt.Sprintf(`
 	  provider "aws" {
 		region = "us-west-2"
@@ -81,6 +83,9 @@ var (
 
 // Azure config
 func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
+	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+	tenantID := os.Getenv("ARM_TENANT_ID")
+
 	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
@@ -359,7 +364,7 @@ var azConfigNVA = `
 func TestAccHvnRouteAws(t *testing.T) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -429,7 +434,7 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 func testHvnRouteGateway(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -498,7 +503,7 @@ func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
 }
 
 func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -530,7 +535,7 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 func testHvnRouteNVA(t *testing.T, adConfig string) {
 	resourceName := "hcp_hvn_route.route"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

@@ -22,7 +22,7 @@ func TestAccHCPLogStreamingDestinationSplunk(t *testing.T) {
 	spName := "splunk-resource-name-1"
 	spNameUpdated := "splunk-resource-name-2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {

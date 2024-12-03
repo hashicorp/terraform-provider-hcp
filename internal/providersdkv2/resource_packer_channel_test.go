@@ -18,7 +18,7 @@ func TestAccPackerChannel(t *testing.T) {
 	unrestrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "false")
 	restrictedChannelConfig := testAccPackerChannelBuilderFromChannel(channelConfig, "true")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t, map[string]bool{"aws": false, "azure": false})
 			upsertRegistry(t)

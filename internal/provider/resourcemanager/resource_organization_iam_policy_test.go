@@ -15,7 +15,7 @@ func TestAccOrganizationIamBindingResource(t *testing.T) {
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{

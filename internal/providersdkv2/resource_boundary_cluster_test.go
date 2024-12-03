@@ -1,20 +1,21 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var boundaryUniqueID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+var boundaryUniqueID = uniqueName()
 
 var boundaryClusterResourceTemplate = fmt.Sprintf(`
 resource hcp_boundary_cluster "test" {
@@ -52,7 +53,7 @@ func TestAccBoundaryCluster(t *testing.T) {
 	boundaryClusterResourceName := "hcp_boundary_cluster.test"
 	boundaryClusterDataSourceName := "data.hcp_boundary_cluster.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckBoundaryClusterDestroy,

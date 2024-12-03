@@ -1,13 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
+//go:build slow_tests
+
 package providersdkv2
 
 import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,7 +17,7 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	hvnPeeringUniqueAWSName = uniqueName()
 	testAccAwsPeeringConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"
@@ -82,7 +83,7 @@ var (
 func TestAccAwsPeering(t *testing.T) {
 	resourceName := "hcp_aws_network_peering.peering"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{

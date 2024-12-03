@@ -23,7 +23,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 	description1 := "my description 1"
 	description2 := "my description 2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create initial app
