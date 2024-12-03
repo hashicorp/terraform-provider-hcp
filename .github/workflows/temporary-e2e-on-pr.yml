@@ -1,0 +1,17 @@
+name: Temporary e2e
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    name: Run Tests
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    permissions:
+      contents: read
