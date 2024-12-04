@@ -191,6 +191,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -209,6 +210,7 @@ resource "hcp_waypoint_add_on_definition" "test" {
   summary = "some summary for fun"
   description = "some description for fun"
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -230,6 +232,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -249,6 +252,7 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   description = "some description for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+  terraform_no_code_module_id     = "nocode-JSMkg9ztLBYgg1eW"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -311,6 +315,7 @@ resource "hcp_waypoint_template" "test" {
   summary = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -330,6 +335,7 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
   description = "some description"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+  terraform_no_code_module_id     = "nocode-JSMkg9ztLBYgg1eW"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
