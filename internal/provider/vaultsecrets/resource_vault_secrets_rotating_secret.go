@@ -214,7 +214,7 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 			},
 		},
 		"azure_application_password": schema.SingleNestedAttribute{
-			Description: "Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `confluent`.",
+			Description: "Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `Azure`.",
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"app_client_id": schema.StringAttribute{
