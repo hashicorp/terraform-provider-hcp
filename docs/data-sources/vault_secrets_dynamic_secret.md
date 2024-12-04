@@ -7,8 +7,6 @@ description: |-
 
 # hcp_vault_secrets_dynamic_secret (Data Source)
 
--> **Note:** This data source is currently in beta.
-
 This data source generates a new dynamic secret instance.
 
 ## Example Usage
