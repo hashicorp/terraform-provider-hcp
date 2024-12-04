@@ -59,7 +59,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_azure" {
   name                 = "my_azure_1_secret"
   integration_name     = "my-azure-1"
   rotation_policy_name = "built-in:60-days-2-active"
-  azure_application_password_params = {
+  azure_application_password = {
     app_object_id = "<app_object_id>"
     app_client_id = "<app_client_id>"
   }

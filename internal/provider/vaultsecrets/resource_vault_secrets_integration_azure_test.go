@@ -23,7 +23,8 @@ func TestAccVaultSecretsResourceIntegrationAzure(t *testing.T) {
 	audience := checkRequiredEnvVarOrFail(t, "AZURE_INTEGRATION_AUDIENCE")
 
 	integrationName1 := generateRandomSlug()
-	integrationName2 := generateRandomSlug()
+	// Set the integration name that is configured in the subject claim while creating a federated credential.
+	integrationName2 := checkRequiredEnvVarOrFail(t, "AZURE_INTEGRATION_NAME_WIF")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },

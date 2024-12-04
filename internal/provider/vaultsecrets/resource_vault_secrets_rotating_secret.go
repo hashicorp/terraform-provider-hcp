@@ -31,7 +31,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("mongodb_atlas_user"),
 		path.MatchRoot("twilio_api_key"),
 		path.MatchRoot("confluent_service_account"),
-		path.MatchRoot("azure_application_password_params"),
+		path.MatchRoot("azure_application_password"),
 	}...,
 )
 
@@ -64,12 +64,12 @@ type RotatingSecret struct {
 	RotationPolicyName types.String `tfsdk:"rotation_policy_name"`
 
 	// Provider specific mutually exclusive fields
-	AWSAccessKeys                  *awsAccessKeys                  `tfsdk:"aws_access_keys"`
-	GCPServiceAccountKey           *gcpServiceAccountKey           `tfsdk:"gcp_service_account_key"`
-	MongoDBAtlasUser               *mongoDBAtlasUser               `tfsdk:"mongodb_atlas_user"`
-	TwilioAPIKey                   *twilioAPIKey                   `tfsdk:"twilio_api_key"`
-	ConfluentServiceAccount        *confluentServiceAccount        `tfsdk:"confluent_service_account"`
-	AzureApplicationPasswordParams *AzureApplicationPasswordParams `tfsdk:"azure_application_password_params"`
+	AWSAccessKeys            *awsAccessKeys            `tfsdk:"aws_access_keys"`
+	GCPServiceAccountKey     *gcpServiceAccountKey     `tfsdk:"gcp_service_account_key"`
+	MongoDBAtlasUser         *mongoDBAtlasUser         `tfsdk:"mongodb_atlas_user"`
+	TwilioAPIKey             *twilioAPIKey             `tfsdk:"twilio_api_key"`
+	ConfluentServiceAccount  *confluentServiceAccount  `tfsdk:"confluent_service_account"`
+	AzureApplicationPassword *AzureApplicationPassword `tfsdk:"azure_application_password"`
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
 
@@ -95,7 +95,7 @@ type confluentServiceAccount struct {
 	ServiceAccountID types.String `tfsdk:"service_account_id"`
 }
 
-type AzureApplicationPasswordParams struct {
+type AzureApplicationPassword struct {
 	AppClientID types.String `tfsdk:"app_client_id"`
 	AppObjectID types.String `tfsdk:"app_object_id"`
 }
@@ -213,8 +213,8 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 				exactlyOneRotatingSecretTypeFieldsValidator,
 			},
 		},
-		"azure_application_password_params": schema.SingleNestedAttribute{
-			Description: "Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `azure`.",
+		"azure_application_password": schema.SingleNestedAttribute{
+			Description: "Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `confluent`.",
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"app_client_id": schema.StringAttribute{

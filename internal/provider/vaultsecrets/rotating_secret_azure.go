@@ -33,8 +33,8 @@ func (s *azureRotatingSecret) read(ctx context.Context, client secret_service.Cl
 }
 
 func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.AzureApplicationPasswordParams == nil {
-		return nil, fmt.Errorf("missing required field 'azure_application_password_params'")
+	if secret.AzureApplicationPassword == nil {
+		return nil, fmt.Errorf("missing required field 'azure_application_password'")
 	}
 
 	response, err := client.CreateAzureApplicationPasswordRotatingSecret(
@@ -46,8 +46,8 @@ func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.
 				IntegrationName:    secret.IntegrationName.ValueString(),
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				AzureApplicationPasswordParams: &secretmodels.Secrets20231128AzureApplicationPasswordParams{
-					AppClientID: secret.AzureApplicationPasswordParams.AppClientID.ValueString(),
-					AppObjectID: secret.AzureApplicationPasswordParams.AppObjectID.ValueString(),
+					AppClientID: secret.AzureApplicationPassword.AppClientID.ValueString(),
+					AppObjectID: secret.AzureApplicationPassword.AppObjectID.ValueString(),
 				},
 				Name: secret.Name.ValueString(),
 			}),
@@ -62,8 +62,8 @@ func (s *azureRotatingSecret) create(ctx context.Context, client secret_service.
 }
 
 func (s *azureRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.AzureApplicationPasswordParams == nil {
-		return nil, fmt.Errorf("missing required field 'azure_application_password_params'")
+	if secret.AzureApplicationPassword == nil {
+		return nil, fmt.Errorf("missing required field 'azure_application_password'")
 	}
 	response, err := client.UpdateAzureApplicationPasswordRotatingSecret(
 		secret_service.NewUpdateAzureApplicationPasswordRotatingSecretParamsWithContext(ctx).
@@ -74,8 +74,8 @@ func (s *azureRotatingSecret) update(ctx context.Context, client secret_service.
 			WithBody(&secretmodels.SecretServiceUpdateAzureApplicationPasswordRotatingSecretBody{
 				RotationPolicyName: secret.RotationPolicyName.ValueString(),
 				AzureApplicationPasswordParams: &secretmodels.Secrets20231128AzureApplicationPasswordParams{
-					AppClientID: secret.AzureApplicationPasswordParams.AppClientID.ValueString(),
-					AppObjectID: secret.AzureApplicationPasswordParams.AppObjectID.ValueString(),
+					AppClientID: secret.AzureApplicationPassword.AppClientID.ValueString(),
+					AppObjectID: secret.AzureApplicationPassword.AppObjectID.ValueString(),
 				},
 			}),
 		nil)

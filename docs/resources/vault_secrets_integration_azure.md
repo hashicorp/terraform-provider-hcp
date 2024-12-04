@@ -17,9 +17,9 @@ resource "hcp_vault_secrets_integration_azure" "example" {
   name         = "my-azure-1"
   capabilities = ["ROTATION"]
   client_secret = {
-    "tenant_id" : "7eb3...",
-    "client_id" : "9de0...",
-    "client_secret" : "WZk8..."
+    "tenant_id"     = "7eb3...",
+    "client_id"     = "9de0...",
+    "client_secret" = "WZk8..."
   }
 }
 ```
@@ -71,5 +71,5 @@ Import is supported using the following syntax:
 # Vault Secrets Azure Integration can be imported by specifying the name of the integration
 # Note that since the client secret is never returned on the Vault Secrets API,
 # the next plan or apply will show a diff for that field.
-terraform import hcp_vault_secrets_integration_confluent.example my-azure-1
+terraform import hcp_vault_secrets_integration_azure.example my-azure-1
 ```
