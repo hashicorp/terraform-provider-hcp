@@ -218,6 +218,8 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	state.Description = types.StringValue(definition.Description)
 	state.TerraformNoCodeModuleSource = types.StringValue(definition.ModuleSource)
 	state.TerraformNoCodeModuleID = types.StringValue(definition.ModuleID)
+	state.TerraformExecutionMode = types.StringValue(definition.TfExecutionMode)
+	state.TerraformAgentPoolID = types.StringValue(definition.TfAgentPoolID)
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
