@@ -67,6 +67,17 @@ resource "hcp_vault_secrets_rotating_secret" "example_confluent" {
   }
 }
 
+resource "hcp_vault_secrets_rotating_secret" "example_postgres" {
+  app_name             = "my-app-1"
+  secret_provider      = "postgres"
+  name                 = "postgres"
+  integration_name     = "my-postgres-1"
+  rotation_policy_name = "built-in:60-days-2-active"
+  postgres_usernames = {
+    usernames = ["user1", "user2"]
+  }
+}
+
 resource "hcp_vault_secrets_rotating_secret" "example_azure" {
   app_name             = "my-app-1"
   secret_provider      = "azure"
@@ -76,17 +87,6 @@ resource "hcp_vault_secrets_rotating_secret" "example_azure" {
   azure_application_password = {
     app_object_id = "<app_object_id>"
     app_client_id = "<app_client_id>"
-  }
-}
-
-resource "hcp_vault_secrets_rotating_secret" "example_postgres" {
-  app_name             = "my-app-1"
-  secret_provider      = "postgres"
-  name                 = "postgres"
-  integration_name     = "my-postgres-1"
-  rotation_policy_name = "built-in:60-days-2-active"
-  postgres_usernames = {
-    usernames = ["user1", "user2"]
   }
 }
 ```
@@ -123,6 +123,15 @@ resource "hcp_vault_secrets_rotating_secret" "example_postgres" {
 Required:
 
 - `iam_username` (String) AWS IAM username to rotate the access keys for.
+
+
+<a id="nestedatt--azure_application_password"></a>
+### Nested Schema for `azure_application_password`
+
+Required:
+
+- `app_client_id` (String) Application client ID to rotate the application password for.
+- `app_object_id` (String) Application object ID to rotate the application password for.
 
 
 <a id="nestedatt--confluent_service_account"></a>
