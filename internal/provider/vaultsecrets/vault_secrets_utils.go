@@ -28,6 +28,7 @@ const (
 	ProviderTwilio       Provider = "twilio"
 	ProviderConfluent    Provider = "confluent"
 	ProviderPostgres     Provider = "postgres"
+	ProviderAzure        Provider = "azure"
 )
 
 func (p Provider) String() string {

@@ -32,6 +32,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("twilio_api_key"),
 		path.MatchRoot("confluent_service_account"),
 		path.MatchRoot("postgres_usernames"),
+		path.MatchRoot("azure_application_password"),
 	}...,
 )
 
@@ -51,6 +52,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderMongoDBAtlas: &mongoDBAtlasRotatingSecret{},
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
+	ProviderAzure:        &azureRotatingSecret{},
 	ProviderPostgres:     &postgresRotatingSecret{},
 }
 
@@ -64,12 +66,13 @@ type RotatingSecret struct {
 	RotationPolicyName types.String `tfsdk:"rotation_policy_name"`
 
 	// Provider specific mutually exclusive fields
-	AWSAccessKeys           *awsAccessKeys           `tfsdk:"aws_access_keys"`
-	GCPServiceAccountKey    *gcpServiceAccountKey    `tfsdk:"gcp_service_account_key"`
-	MongoDBAtlasUser        *mongoDBAtlasUser        `tfsdk:"mongodb_atlas_user"`
-	TwilioAPIKey            *twilioAPIKey            `tfsdk:"twilio_api_key"`
-	ConfluentServiceAccount *confluentServiceAccount `tfsdk:"confluent_service_account"`
-	PostgresUsernames       *postgresUsernames       `tfsdk:"postgres_usernames"`
+	AWSAccessKeys            *awsAccessKeys            `tfsdk:"aws_access_keys"`
+	GCPServiceAccountKey     *gcpServiceAccountKey     `tfsdk:"gcp_service_account_key"`
+	MongoDBAtlasUser         *mongoDBAtlasUser         `tfsdk:"mongodb_atlas_user"`
+	TwilioAPIKey             *twilioAPIKey             `tfsdk:"twilio_api_key"`
+	ConfluentServiceAccount  *confluentServiceAccount  `tfsdk:"confluent_service_account"`
+	AzureApplicationPassword *AzureApplicationPassword `tfsdk:"azure_application_password"`
+	PostgresUsernames        *postgresUsernames       `tfsdk:"postgres_usernames"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -94,6 +97,11 @@ type mongoDBAtlasUser struct {
 
 type confluentServiceAccount struct {
 	ServiceAccountID types.String `tfsdk:"service_account_id"`
+}
+
+type AzureApplicationPassword struct {
+	AppClientID types.String `tfsdk:"app_client_id"`
+	AppObjectID types.String `tfsdk:"app_object_id"`
 }
 
 type twilioAPIKey struct{}
@@ -203,6 +211,29 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 			Attributes: map[string]schema.Attribute{
 				"service_account_id": schema.StringAttribute{
 					Description: "Confluent service account to rotate the cloud api key for.",
+					Required:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
+		"azure_application_password": schema.SingleNestedAttribute{
+			Description: "Azure configuration to manage the application password rotation for the given application. Required if `secret_provider` is `Azure`.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"app_client_id": schema.StringAttribute{
+					Description: "Application client ID to rotate the application password for.",
+					Required:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"app_object_id": schema.StringAttribute{
+					Description: "Application object ID to rotate the application password for.",
 					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),

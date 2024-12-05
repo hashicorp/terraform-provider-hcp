@@ -1,3 +1,16 @@
+## v0.100.0 (December 02, 2024)
+
+IMPROVEMENTS:
+
+* Enable updates to Vault Radar integration connections. [[GH-1133](https://github.com/hashicorp/terraform-provider-hcp/pull/1133)]
+* Enable updates to Vault Radar integration subscriptions. [[GH-1139](https://github.com/hashicorp/terraform-provider-hcp/pull/1139)]
+* Enable updates to Vault Radar source token. [[GH-1134](https://github.com/hashicorp/terraform-provider-hcp/pull/1134)]
+* Update hcp_group API calls to retry when encountering a 502, 503, or 504 error. [[GH-1140](https://github.com/hashicorp/terraform-provider-hcp/pull/1140)]
+* Upgrade the HCP SDK and update Vault Secrets to use API V2 (stable/2023-11-28) [[GH-1142](https://github.com/hashicorp/terraform-provider-hcp/pull/1142)]
+
+BUG FIXES:
+
+* Retry billing service update call when creating a project [[GH-1131](https://github.com/hashicorp/terraform-provider-hcp/pull/1131)]
 ## v0.99.0 (November 12, 2024)
 
 DEPRECATIONS:
