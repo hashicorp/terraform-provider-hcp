@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultsecrets_test
 
 import (
@@ -5,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -61,7 +64,7 @@ func testAccVaultSecretsResourceDynamicSecretAWS(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
+					_, err := client.VaultSecrets.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 						AppName:        appName,
@@ -123,7 +126,7 @@ func awsDynamicSecretExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetAwsDynamicSecret(
+	response, err := client.VaultSecrets.GetAwsDynamicSecret(
 		secret_service.NewGetAwsDynamicSecretParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).
@@ -174,7 +177,7 @@ func testAccVaultSecretsResourceDynamicSecretGCP(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
+					_, err := client.VaultSecrets.DeleteAppSecret(&secret_service.DeleteAppSecretParams{
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
 						AppName:        appName,
@@ -236,7 +239,7 @@ func gcpDynamicSecretExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetGcpDynamicSecret(
+	response, err := client.VaultSecrets.GetGcpDynamicSecret(
 		secret_service.NewGetGcpDynamicSecretParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).

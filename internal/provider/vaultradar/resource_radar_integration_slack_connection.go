@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultradar
 
 import (
@@ -39,12 +42,15 @@ var integrationSlackConnectionSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			Description: "Name of connection. Name must be unique.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -55,7 +61,7 @@ var integrationSlackConnectionSchema = schema.Schema{
 			Required:    true,
 			Sensitive:   true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 

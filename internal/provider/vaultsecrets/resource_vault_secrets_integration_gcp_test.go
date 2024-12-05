@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultsecrets_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -53,7 +56,7 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.DeleteGcpIntegration(&secret_service.DeleteGcpIntegrationParams{
+					_, err := client.VaultSecrets.DeleteGcpIntegration(&secret_service.DeleteGcpIntegrationParams{
 						Name:           integrationName2,
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
@@ -74,7 +77,7 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecretsPreview.CreateGcpIntegration(&secret_service.CreateGcpIntegrationParams{
+					_, err := client.VaultSecrets.CreateGcpIntegration(&secret_service.CreateGcpIntegrationParams{
 						Body: &secretmodels.SecretServiceCreateGcpIntegrationBody{
 							Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
 							FederatedWorkloadIdentity: &secretmodels.Secrets20231128GcpFederatedWorkloadIdentityRequest{
@@ -168,7 +171,7 @@ func gcpIntegrationExists(t *testing.T, name string) bool {
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecretsPreview.GetGcpIntegration(
+	response, err := client.VaultSecrets.GetGcpIntegration(
 		secret_service.NewGetGcpIntegrationParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).

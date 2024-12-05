@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultradar
 
 import (
@@ -187,7 +190,61 @@ func (r *integrationSubscriptionResource) Delete(ctx context.Context, req resour
 }
 
 func (r *integrationSubscriptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// In-place update is not supported.
-	// Plans to support updating subscription details will be in a future iteration.
-	resp.Diagnostics.AddError("Unexpected provider error", "This is an internal error, please report this issue to the provider developers")
+	plan, planDiags := r.GetSubscriptionFromPlan(ctx, req.Plan)
+	resp.Diagnostics.Append(planDiags...)
+
+	state, stateDiags := r.GetSubscriptionFromState(ctx, req.State)
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	projectID := r.client.Config.ProjectID
+	if !plan.GetProjectID().IsUnknown() {
+		projectID = plan.GetProjectID().ValueString()
+	}
+
+	// Initialize the update body with the subscription ID.
+	update := service.UpdateIntegrationSubscriptionBody{
+		ID: plan.GetID().ValueString(),
+	}
+
+	// Check if the name was updated
+	if !plan.GetName().Equal(state.GetName()) {
+		tflog.Trace(ctx, "Radar integration subscription name changed.")
+		update.Name = plan.GetName().ValueString()
+	}
+
+	// Check if the connection id was updated
+	if !plan.GetConnectionID().Equal(state.GetConnectionID()) {
+		tflog.Trace(ctx, "Radar integration subscription connection id changed.")
+		update.ConnectionID = plan.GetConnectionID().ValueString()
+	}
+
+	planDetails, planDiags := plan.GetDetails()
+	resp.Diagnostics.Append(planDiags...)
+
+	stateDetails, stateDiags := state.GetDetails()
+	resp.Diagnostics.Append(stateDiags...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Check if the details were updated
+	if planDetails != stateDetails {
+		tflog.Trace(ctx, "Radar integration subscription details changed.")
+		update.Details = planDetails
+	}
+
+	if err := clients.UpdateIntegrationSubscription(ctx, r.client, projectID, update); err != nil {
+		resp.Diagnostics.AddError("Error Updating Radar subscription", err.Error())
+		return
+	}
+
+	tflog.Info(ctx, "Radar integration subscription updated.")
+
+	// Store the updated plan values
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

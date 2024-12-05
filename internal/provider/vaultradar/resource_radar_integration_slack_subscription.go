@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vaultradar
 
 import (
@@ -38,12 +41,15 @@ var integrationSlackSubscriptionSchema = schema.Schema{
 		"id": schema.StringAttribute{
 			Computed:    true,
 			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			Description: "Name of subscription. Name must be unique.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),
@@ -53,14 +59,14 @@ var integrationSlackSubscriptionSchema = schema.Schema{
 			Description: "id of the integration slack connection to use for the subscription.",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"channel": schema.StringAttribute{
 			Description: "Name of the Slack channel that messages should be sent to. Note that HashiCorp Vault Radar will send a test message to verify the channel. Example: dev-ops-team",
 			Required:    true,
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 			Validators: []validator.String{
 				stringvalidator.LengthAtLeast(1),

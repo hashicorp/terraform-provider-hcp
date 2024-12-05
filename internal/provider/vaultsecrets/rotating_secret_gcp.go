@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -61,7 +61,7 @@ func (s *gcpRotatingSecret) create(ctx context.Context, client secret_service.Cl
 }
 
 func (s *gcpRotatingSecret) update(ctx context.Context, client secret_service.ClientService, secret *RotatingSecret) (any, error) {
-	if secret.AWSAccessKeys == nil {
+	if secret.GCPServiceAccountKey == nil {
 		return nil, fmt.Errorf("missing required field 'gcp_service_account_key'")
 	}
 

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
@@ -66,7 +66,7 @@ func TestAcc_dataSourceVaultSecretsRotatingSecret(t *testing.T) {
 					}
 
 					reqBody := secretmodels.SecretServiceCreateMongoDBAtlasRotatingSecretBody{
-						SecretName:         testSecretName,
+						Name:               testSecretName,
 						IntegrationName:    testIntegrationName,
 						RotationPolicyName: "built-in:30-days-2-active",
 						SecretDetails: &secretmodels.Secrets20231128MongoDBAtlasSecretDetails{

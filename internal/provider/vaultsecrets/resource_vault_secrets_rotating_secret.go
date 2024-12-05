@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/client/secret_service"
-	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/preview/2023-11-28/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
+	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -30,6 +30,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("gcp_service_account_key"),
 		path.MatchRoot("mongodb_atlas_user"),
 		path.MatchRoot("twilio_api_key"),
+		path.MatchRoot("confluent_service_account"),
 	}...,
 )
 
@@ -48,6 +49,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderGCP:          &gcpRotatingSecret{},
 	ProviderMongoDBAtlas: &mongoDBAtlasRotatingSecret{},
 	ProviderTwilio:       &twilioRotatingSecret{},
+	ProviderConfluent:    &confluentRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -60,10 +62,11 @@ type RotatingSecret struct {
 	RotationPolicyName types.String `tfsdk:"rotation_policy_name"`
 
 	// Provider specific mutually exclusive fields
-	AWSAccessKeys        *awsAccessKeys        `tfsdk:"aws_access_keys"`
-	GCPServiceAccountKey *gcpServiceAccountKey `tfsdk:"gcp_service_account_key"`
-	MongoDBAtlasUser     *mongoDBAtlasUser     `tfsdk:"mongodb_atlas_user"`
-	TwilioAPIKey         *twilioAPIKey         `tfsdk:"twilio_api_key"`
+	AWSAccessKeys           *awsAccessKeys           `tfsdk:"aws_access_keys"`
+	GCPServiceAccountKey    *gcpServiceAccountKey    `tfsdk:"gcp_service_account_key"`
+	MongoDBAtlasUser        *mongoDBAtlasUser        `tfsdk:"mongodb_atlas_user"`
+	TwilioAPIKey            *twilioAPIKey            `tfsdk:"twilio_api_key"`
+	ConfluentServiceAccount *confluentServiceAccount `tfsdk:"confluent_service_account"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -84,6 +87,10 @@ type mongoDBAtlasUser struct {
 	ProjectID    types.String   `tfsdk:"project_id"`
 	DatabaseName types.String   `tfsdk:"database_name"`
 	Roles        []types.String `tfsdk:"roles"`
+}
+
+type confluentServiceAccount struct {
+	ServiceAccountID types.String `tfsdk:"service_account_id"`
 }
 
 type twilioAPIKey struct{}
@@ -183,6 +190,22 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 				exactlyOneRotatingSecretTypeFieldsValidator,
 			},
 		},
+		"confluent_service_account": schema.SingleNestedAttribute{
+			Description: "Confluent configuration to manage the cloud api key rotation for the given service account. Required if `secret_provider` is `confluent`.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"service_account_id": schema.StringAttribute{
+					Description: "Confluent service account to rotate the cloud api key for.",
+					Required:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
@@ -224,7 +247,7 @@ func (r *resourceVaultSecretsRotatingSecret) Read(ctx context.Context, req resou
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.read(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.read(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -239,7 +262,7 @@ func (r *resourceVaultSecretsRotatingSecret) Create(ctx context.Context, req res
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.create(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.create(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -254,7 +277,7 @@ func (r *resourceVaultSecretsRotatingSecret) Update(ctx context.Context, req res
 		if !ok {
 			return nil, fmt.Errorf(unsupportedProviderErrorFmt, maps.Keys(rotatingSecretsImpl), secret.SecretProvider.ValueString())
 		}
-		return rotatingSecretImpl.update(ctx, r.client.VaultSecretsPreview, secret)
+		return rotatingSecretImpl.update(ctx, r.client.VaultSecrets, secret)
 	})...)
 }
 
@@ -265,7 +288,7 @@ func (r *resourceVaultSecretsRotatingSecret) Delete(ctx context.Context, req res
 			return nil, fmt.Errorf(invalidSecretTypeErrorFmt, s)
 		}
 
-		_, err := r.client.VaultSecretsPreview.DeleteAppSecret(
+		_, err := r.client.VaultSecrets.DeleteAppSecret(
 			secret_service.NewDeleteAppSecretParamsWithContext(ctx).
 				WithOrganizationID(secret.OrganizationID.ValueString()).
 				WithProjectID(secret.ProjectID.ValueString()).

@@ -7,8 +7,6 @@ description: |-
 
 # hcp_vault_secrets_rotating_secret (Data Source)
 
--> **Note:** This data source is currently in public beta.
-
 This data source retrieves a single rotating secret with its latest version.
 
 ## Example Usage

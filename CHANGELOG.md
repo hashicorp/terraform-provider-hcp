@@ -1,3 +1,48 @@
+## v0.100.0 (December 02, 2024)
+
+IMPROVEMENTS:
+
+* Enable updates to Vault Radar integration connections. [[GH-1133](https://github.com/hashicorp/terraform-provider-hcp/pull/1133)]
+* Enable updates to Vault Radar integration subscriptions. [[GH-1139](https://github.com/hashicorp/terraform-provider-hcp/pull/1139)]
+* Enable updates to Vault Radar source token. [[GH-1134](https://github.com/hashicorp/terraform-provider-hcp/pull/1134)]
+* Update hcp_group API calls to retry when encountering a 502, 503, or 504 error. [[GH-1140](https://github.com/hashicorp/terraform-provider-hcp/pull/1140)]
+* Upgrade the HCP SDK and update Vault Secrets to use API V2 (stable/2023-11-28) [[GH-1142](https://github.com/hashicorp/terraform-provider-hcp/pull/1142)]
+
+BUG FIXES:
+
+* Retry billing service update call when creating a project [[GH-1131](https://github.com/hashicorp/terraform-provider-hcp/pull/1131)]
+## v0.99.0 (November 12, 2024)
+
+DEPRECATIONS:
+
+* Added a Deprecation message for the following resources: `hcp_consul_agent_helm_config`,`hcp_consul_agent_kubernetes_secret`,`hcp_consul_cluster`,`hcp_consul_versions` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
+* Added a Deprecation message for the following resources: `hcp_consul_cluster`,`hcp_consul_cluster_root_token`,`hcp_consul_snapshot` [[GH-1124](https://github.com/hashicorp/terraform-provider-hcp/pull/1124)]
+## v0.98.1 (November 07, 2024)
+
+BUG FIXES:
+
+* HCP Vault Radar resource documents did not have the subcategory set correctly. [[GH-1129](https://github.com/hashicorp/terraform-provider-hcp/pull/1129)]
+## v0.98.0 (November 06, 2024)
+
+FEATURES:
+
+* Add preview of the following Vault Radar connections and subscriptions:
+hcp_vault_radar_integration_jira_connection
+hcp_vault_radar_integration_jira_subscription
+hcp_vault_radar_integration_slack_connection
+hcp_vault_radar_integration_slack_subscription [[GH-1116](https://github.com/hashicorp/terraform-provider-hcp/pull/1116)]
+* Add preview of vault_radar_source_github_cloud resource. [[GH-1119](https://github.com/hashicorp/terraform-provider-hcp/pull/1119)]
+* add vault_secrets_integration_confluent resource and add support for confluent secrets to vault_secrets_rotating_secret resource [[GH-1120](https://github.com/hashicorp/terraform-provider-hcp/pull/1120)]
+
+IMPROVEMENTS:
+
+* Fixed issues where the HVS App resource would behave improperly such as returning an error if using an empty description. [[GH-1118](https://github.com/hashicorp/terraform-provider-hcp/pull/1118)]
+* Upgrade the HCP SDK and fix breaking change w/ Vault Secrets [[GH-1113](https://github.com/hashicorp/terraform-provider-hcp/pull/1113)]
+* Upgrade the HCP SDK for Vault Secrets [[GH-1122](https://github.com/hashicorp/terraform-provider-hcp/pull/1122)]
+
+BUG FIXES:
+
+* creating a mongodb rotating secret should create a mongodb rotating secret not a twilio one [[GH-1126](https://github.com/hashicorp/terraform-provider-hcp/pull/1126)]
 ## v0.97.0 (October 08, 2024)
 
 FEATURES:
