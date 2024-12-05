@@ -37,6 +37,7 @@ func TestAccWaypoint_Template_basic(t *testing.T) {
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "terraform_no_code_module_id", "nocode-7ZQjQoaPXvzs6Hvp"),
 					resource.TestCheckResourceAttr(resourceName, "terraform_execution_mode", "remote"),
 				),
 			},
@@ -193,7 +194,7 @@ resource "hcp_waypoint_template" "var_opts_test" {
         "courier",
         "lone-wanderer",
         "sole-survivor",
-	  ]
+      ]
     },
     {
       name          = "faction"

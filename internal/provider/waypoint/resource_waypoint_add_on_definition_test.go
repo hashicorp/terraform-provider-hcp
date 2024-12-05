@@ -35,6 +35,7 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
 					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "terraform_no_code_module_id", "nocode-7ZQjQoaPXvzs6Hvp"),
 					resource.TestCheckResourceAttr(resourceName, "terraform_execution_mode", "remote"),
 				),
 			},
