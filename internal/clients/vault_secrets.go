@@ -92,6 +92,7 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	createParams := secret_service.NewCreateAppKVSecretParams()
 	createParams.Context = ctx
 	createParams.AppName = appName
+	createParams.Body = &secretmodels.SecretServiceCreateAppKVSecretBody{}
 	createParams.Body.Name = secretName
 	createParams.Body.Value = secretValue
 	createParams.OrganizationID = loc.OrganizationID
