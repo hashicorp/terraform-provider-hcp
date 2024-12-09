@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
@@ -69,7 +70,7 @@ func (r *resourceVaultSecretsIntegrationPostgres) Schema(_ context.Context, _ re
 					Description: "Connection string (DSN) for the Postgres database.",
 					Required:    true,
 					Sensitive:   true,
-					Validators:  nil, // TODO: add validation for the URL format?
+					Validators:  nil,
 				},
 			},
 		},
