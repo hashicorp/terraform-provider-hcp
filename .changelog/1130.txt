@@ -1,0 +1,7 @@
+```release-note:feature
+ Add `hcp_vault_secrets_integration_postgres` resource.
+```
+
+```release-note:feature
+ add postgres provider to hcp_vault_secrets_rotating_secret resource
+```

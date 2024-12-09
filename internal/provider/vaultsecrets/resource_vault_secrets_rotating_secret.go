@@ -31,6 +31,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("mongodb_atlas_user"),
 		path.MatchRoot("twilio_api_key"),
 		path.MatchRoot("confluent_service_account"),
+		path.MatchRoot("postgres_usernames"),
 		path.MatchRoot("azure_application_password"),
 	}...,
 )
@@ -52,6 +53,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
 	ProviderAzure:        &azureRotatingSecret{},
+	ProviderPostgres:     &postgresRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -70,6 +72,8 @@ type RotatingSecret struct {
 	TwilioAPIKey             *twilioAPIKey             `tfsdk:"twilio_api_key"`
 	ConfluentServiceAccount  *confluentServiceAccount  `tfsdk:"confluent_service_account"`
 	AzureApplicationPassword *AzureApplicationPassword `tfsdk:"azure_application_password"`
+	PostgresUsernames        *postgresUsernames        `tfsdk:"postgres_usernames"`
+
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
 
@@ -101,6 +105,10 @@ type AzureApplicationPassword struct {
 }
 
 type twilioAPIKey struct{}
+
+type postgresUsernames struct {
+	Usernames []types.String `tfsdk:"usernames"`
+}
 
 var _ resource.Resource = &resourceVaultSecretsRotatingSecret{}
 var _ resource.ResourceWithConfigure = &resourceVaultSecretsRotatingSecret{}
@@ -229,6 +237,23 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
+		"postgres_usernames": schema.SingleNestedAttribute{
+			Description: "",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"usernames": schema.ListAttribute{
+					Description: "Postgres usernames to rotate passwords for.",
+					Required:    true,
+					ElementType: types.StringType,
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
 					},
 				},
 			},

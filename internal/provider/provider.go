@@ -160,6 +160,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsIntegrationTwilioResource,
 		vaultsecrets.NewVaultSecretsIntegrationsConfluentResource,
 		vaultsecrets.NewVaultSecretsIntegrationAzureResource,
+		vaultsecrets.NewVaultSecretsIntegrationPostgresResource,
 		vaultsecrets.NewVaultSecretsDynamicSecretResource,
 		vaultsecrets.NewVaultSecretsRotatingSecretResource,
 		// IAM
