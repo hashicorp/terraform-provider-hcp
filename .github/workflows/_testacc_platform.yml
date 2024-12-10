@@ -83,7 +83,7 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
 
-          go test internal/providersdkv2 \
+          go test ./internal/providersdkv2 \
             -v \
             -short \
             -test.v \
