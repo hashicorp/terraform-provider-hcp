@@ -54,6 +54,9 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout $(TIMEOUT) -parallel=10
 
+testacc-platform: fmtcheck
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout $(TIMEOUT) -parallel=10
+
 testacc-ci: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \

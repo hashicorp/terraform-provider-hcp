@@ -105,7 +105,7 @@ var (
 	`, tgwAttUniqueAWSName, tgwAttUniqueHvnName)
 )
 
-func TestAccTGWAttachment(t *testing.T) {
+func TestAcc_Platform_TGWAttachment(t *testing.T) {
 	resourceName := "hcp_aws_transit_gateway_attachment.example"
 
 	resource.Test(t, resource.TestCase{

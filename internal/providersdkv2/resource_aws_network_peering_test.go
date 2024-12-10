@@ -79,7 +79,7 @@ var (
 	`, hvnPeeringUniqueAWSName)
 )
 
-func TestAccAwsPeering(t *testing.T) {
+func TestAcc_Platform_Peering_Aws(t *testing.T) {
 	resourceName := "hcp_aws_network_peering.peering"
 
 	resource.Test(t, resource.TestCase{
