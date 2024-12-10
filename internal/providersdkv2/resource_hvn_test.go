@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	hvnUniqueID = testAccPlatformUniqueName()
+	hvnUniqueIDAws   = testAccPlatformUniqueName()
+	hvnUniqueIDAzure = testAccPlatformUniqueName()
 )
 
 var testAccAwsHvnConfig = fmt.Sprintf(`
@@ -30,7 +31,7 @@ resource "hcp_hvn" "test" {
 data "hcp_hvn" "test" {
 	hvn_id = hcp_hvn.test.hvn_id
 }
-`, hvnUniqueID)
+`, hvnUniqueIDAws)
 
 // Currently in public beta
 var testAccAzureHvnConfig = fmt.Sprintf(`
@@ -43,7 +44,7 @@ resource "hcp_hvn" "test" {
 data "hcp_hvn" "test" {
 	hvn_id = hcp_hvn.test.hvn_id
 }
-`, hvnUniqueID)
+`, hvnUniqueIDAzure)
 
 func testAccPlatformUniqueName() string {
 	shortUuid := uuid.New().String()[0:8]
@@ -68,7 +69,7 @@ func TestAcc_Platform_Hvn_Aws(t *testing.T) {
 				Config: testConfig(testAccAwsHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueIDAws),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -77,7 +78,7 @@ func TestAcc_Platform_Hvn_Aws(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueIDAws, HvnResourceType, resourceName),
 				),
 			},
 			// Tests import
@@ -99,7 +100,7 @@ func TestAcc_Platform_Hvn_Aws(t *testing.T) {
 				Config: testConfig(testAccAwsHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueIDAws),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "aws"),
 					resource.TestCheckResourceAttr(resourceName, "region", "us-west-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -108,7 +109,7 @@ func TestAcc_Platform_Hvn_Aws(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueIDAws, HvnResourceType, resourceName),
 				),
 			},
 			// Tests datasource
@@ -146,7 +147,7 @@ func TestAcc_Platform_Hvn_Azure(t *testing.T) {
 				Config: testConfig(testAccAzureHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueIDAzure),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
 					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -154,7 +155,7 @@ func TestAcc_Platform_Hvn_Azure(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueIDAzure, HvnResourceType, resourceName),
 				),
 			},
 			// Tests import
@@ -176,7 +177,7 @@ func TestAcc_Platform_Hvn_Azure(t *testing.T) {
 				Config: testConfig(testAccAzureHvnConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueID),
+					resource.TestCheckResourceAttr(resourceName, "hvn_id", hvnUniqueIDAzure),
 					resource.TestCheckResourceAttr(resourceName, "cloud_provider", "azure"),
 					resource.TestCheckResourceAttr(resourceName, "region", "eastus"),
 					resource.TestCheckResourceAttrSet(resourceName, "cidr_block"),
@@ -184,7 +185,7 @@ func TestAcc_Platform_Hvn_Azure(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					testLink(resourceName, "self_link", hvnUniqueID, HvnResourceType, resourceName),
+					testLink(resourceName, "self_link", hvnUniqueIDAzure, HvnResourceType, resourceName),
 				),
 			},
 			// Tests datasource
