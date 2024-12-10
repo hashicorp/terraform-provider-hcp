@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Set up Go
         uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
         with:
@@ -30,16 +31,29 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
         id: go
+
+      - name: Install Dependencies
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+          go mod tidy
+          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
+          sudo chmod +x /usr/local/bin/jp
+
       - name: Run 'go mod tidy'
         run: |
           make depscheck
+
       - name: Get dependencies
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
           go mod download
+
       - name: Go Build
         run: |
           go build -v .
+
       - name: Run TestAcc
         env:
           TF_ACC: 1
@@ -66,6 +80,11 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
 
-          go test -v TESTARGS='-run=TestAcc_Platform_*' -parallel=10
+          go test -short -coverprofile=testacc-platform.out -v -run=TestAcc_Platform_* -test.v -timeout=360m -parallel=10
+          go tool cover -html=testacc-platform.out -o testacc-platform.html
 
-          # TODO upload test coverage
+      - name: Upload TestAcc Coverage Artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: Test Coverage
+          path: testacc-platform.html
