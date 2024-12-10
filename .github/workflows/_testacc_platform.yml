@@ -83,8 +83,18 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
 
-          go test -short -coverprofile=testacc-platform.out -v -run=TestAcc_Platform_* -test.v -timeout=360m -parallel=10
-          go tool cover -html=testacc-platform.out -o testacc-platform.html
+          go test internal/providersdkv2 \
+            -v \
+            -short \
+            -test.v \
+            -parallel=10 \
+            -timeout=360m \
+            -run=TestAcc_Platform.* \
+            -coverprofile=testacc-platform.out
+
+          go tool cover \
+            -html=testacc-platform.out \
+            -o testacc-platform.html
 
       - name: Upload TestAcc Coverage Artifact
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
