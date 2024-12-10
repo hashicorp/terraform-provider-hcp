@@ -80,6 +80,7 @@ var (
 )
 
 func TestAcc_Platform_Peering_Aws(t *testing.T) {
+	t.Parallel()
 	resourceName := "hcp_aws_network_peering.peering"
 
 	resource.Test(t, resource.TestCase{

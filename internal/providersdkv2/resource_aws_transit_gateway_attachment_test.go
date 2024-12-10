@@ -106,6 +106,7 @@ var (
 )
 
 func TestAcc_Platform_TGWAttachment(t *testing.T) {
+	t.Parallel()
 	resourceName := "hcp_aws_transit_gateway_attachment.example"
 
 	resource.Test(t, resource.TestCase{

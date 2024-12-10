@@ -47,6 +47,7 @@ data "hcp_hvn" "test" {
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time.
 func TestAcc_Platform_Hvn_Aws(t *testing.T) {
+	t.Parallel()
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
@@ -124,6 +125,7 @@ func TestAcc_Platform_Hvn_Aws(t *testing.T) {
 }
 
 func TestAcc_Platform_Hvn_Azure(t *testing.T) {
+	t.Parallel()
 	resourceName := "hcp_hvn.test"
 	dataSourceName := "data.hcp_hvn.test"
 
