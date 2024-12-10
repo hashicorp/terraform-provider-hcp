@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,8 +15,8 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	tgwAttUniqueAWSName        = fmt.Sprintf("hcp-att-unique-test-%s", time.Now().Format("200601021504"))
-	tgwAttUniqueHvnName        = fmt.Sprintf("att-hvn-name-%s", time.Now().Format("200601021504"))
+	tgwAttUniqueAWSName        = testAccPlatformUniqueName()
+	tgwAttUniqueHvnName        = testAccPlatformUniqueName()
 	testAccTGWAttachmentConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"
