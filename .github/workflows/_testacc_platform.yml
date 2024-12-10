@@ -2,10 +2,6 @@ name: TestAcc Platform
 
 on:
   workflow_dispatch:
-    inputs:
-      parallel:
-        type: string
-        default: '10'
   pull_request:
     # Networking resources still use SDKv2 so we have to target files manually until migrated
     paths:
@@ -21,7 +17,7 @@ on:
 
 jobs:
   acceptance_tests:
-    name: Acceptance Tests Platform
+    name: Acceptance Tests
     runs-on: ubuntu-latest
     # environment: testacc-platform
     steps:
@@ -70,6 +66,6 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
 
-          go test -v TESTARGS='-run=TestAcc_Platform_*' -parallel=${{ inputs.parallel }}
+          go test -v TESTARGS='-run=TestAcc_Platform_*' -parallel=10
 
           # TODO upload test coverage
