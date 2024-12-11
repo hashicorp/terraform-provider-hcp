@@ -47,9 +47,9 @@ data "hcp_hvn" "test" {
 `, hvnUniqueIDAzure)
 
 func testAccPlatformUniqueName() string {
-	shortUuid := uuid.New().String()[0:8]
+	shortUUID := uuid.New().String()[0:8]
 
-	return fmt.Sprintf("testacc-platform-%s", shortUuid)
+	return fmt.Sprintf("testacc-platform-%s", shortUUID)
 }
 
 // This includes tests against both the resource and the corresponding datasource
