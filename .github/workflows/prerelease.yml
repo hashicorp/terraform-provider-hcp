@@ -2,8 +2,8 @@ name: Prerelease
 
 on:
   # Run Every Wednesday at 01:00 AM UTC
-  schedule:
-    - cron: '0 2 * * 3'
+  # schedule:
+  #   - cron: '0 2 * * 3'
   workflow_dispatch:
     inputs:
       release-as-patch:
