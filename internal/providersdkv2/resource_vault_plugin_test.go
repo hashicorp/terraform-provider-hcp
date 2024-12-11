@@ -48,7 +48,7 @@ resource "hcp_vault_plugin" "venafi_plugin" {
 )
 
 func TestAcc_Vault_Plugin(t *testing.T) {
-	t.Parralel()
+	t.Parallel()
 
 	resourceName := "hcp_vault_plugin.venafi_plugin"
 	dataSourceName := "data.hcp_vault_plugin.test"

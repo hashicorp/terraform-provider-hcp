@@ -45,7 +45,7 @@ func (in *inputT) GetHvnCidr() string {
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
 func TestAcc_Vault_ClusterAzure(t *testing.T) {
-	t.Parralel()
+	t.Parallel()
 
 	azureTestInput := inputT{
 		VaultClusterName:           addTimestampSuffix("test-vault-azure-"),
@@ -75,7 +75,7 @@ func TestAcc_Vault_ClusterAzure(t *testing.T) {
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
 func TestAcc_Vault_ClusterAWS(t *testing.T) {
-	t.Parralel()
+	t.Parallel()
 
 	awsTestInput := inputT{
 		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),

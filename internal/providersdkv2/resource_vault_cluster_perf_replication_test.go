@@ -50,7 +50,7 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 }
 
 func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
-	t.Parralel()
+	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
 		HvnName:                  addTimestampSuffix("test-perf-hvn-1-"),
