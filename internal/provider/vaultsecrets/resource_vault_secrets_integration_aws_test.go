@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -32,72 +33,78 @@ func TestAccVaultSecretsResourceIntegrationAWS(t *testing.T) {
 			// Create initial integration with access keys
 			{
 				Config: fmt.Sprintf(`
-					resource "hcp_vault_secrets_integration_aws" "acc_test" {
+					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
 						capabilities = ["DYNAMIC", "ROTATION"]
-						access_keys = {
+						provider_type = "aws"
+						aws_access_keys = {
 			               access_key_id = %q
 			               secret_access_key = %q
 			           }
 				  }`, integrationName1, accessKeyID, secretAccessKey),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_name"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "name", integrationName1),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.#", "2"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.0", "DYNAMIC"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.1", "ROTATION"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "access_keys.access_key_id", accessKeyID),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "access_keys.secret_access_key", secretAccessKey),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName1),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "2"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.1", "ROTATION"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "aws"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_access_keys.access_key_id", accessKeyID),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_access_keys.secret_access_key", secretAccessKey),
 				),
 			},
 			// Changing the name forces a recreation
 			{
 				Config: fmt.Sprintf(`
-					resource "hcp_vault_secrets_integration_aws" "acc_test" {
+					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
 						capabilities = ["DYNAMIC", "ROTATION"]
-						access_keys = {
+                        provider_type = "aws"
+						aws_access_keys = {
 			               access_key_id = %q
 			               secret_access_key = %q
 			           }
 				  }`, integrationName2, accessKeyID, secretAccessKey),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_name"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "name", integrationName2),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.#", "2"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.0", "DYNAMIC"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.1", "ROTATION"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "access_keys.access_key_id", accessKeyID),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "access_keys.secret_access_key", secretAccessKey),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName2),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "2"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.1", "ROTATION"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "aws"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_access_keys.access_key_id", accessKeyID),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_access_keys.secret_access_key", secretAccessKey),
 				),
 			},
 			// Modifying mutable fields causes an update
 			{
 				Config: fmt.Sprintf(`
-					resource "hcp_vault_secrets_integration_aws" "acc_test" {
+					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
 						capabilities = ["DYNAMIC"]
-						federated_workload_identity = {
+                        provider_type = "aws"
+						aws_federated_workload_identity = {
 			               role_arn = %q
 			               audience = %q
 			           }
 				  }`, integrationName2, roleArn, audience),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_name"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "name", integrationName2),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.#", "1"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.0", "DYNAMIC"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.role_arn", roleArn),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.audience", audience),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName2),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "aws"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.role_arn", roleArn),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.audience", audience),
 				),
 			},
 			// Deleting the integration out of band causes a recreation
@@ -106,24 +113,26 @@ func TestAccVaultSecretsResourceIntegrationAWS(t *testing.T) {
 					deleteTestAwsIntegration(t, integrationName2)
 				},
 				Config: fmt.Sprintf(`
-					resource "hcp_vault_secrets_integration_aws" "acc_test" {
+					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
 						capabilities = ["DYNAMIC"]
-						federated_workload_identity = {
+                        provider_type = "aws"
+						aws_federated_workload_identity = {
                             role_arn = %q
                             audience = %q
                         }
 				  }`, integrationName2, roleArn, audience),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_name"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "name", integrationName2),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.#", "1"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.0", "DYNAMIC"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.role_arn", roleArn),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.audience", audience),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName2),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "aws"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.role_arn", roleArn),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.audience", audience),
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -134,26 +143,28 @@ func TestAccVaultSecretsResourceIntegrationAWS(t *testing.T) {
 					createTestAwsIntegration(t, integrationName2, roleArn, audience, []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityDYNAMIC.Pointer()})
 				},
 				Config: fmt.Sprintf(`
-					resource "hcp_vault_secrets_integration_aws" "acc_test" {
+					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
 						capabilities = ["DYNAMIC"]
-						federated_workload_identity = {
+                        provider_type = "aws"
+						aws_federated_workload_identity = {
                             role_arn = %q
                             audience = %q
                         }
 				  }`, integrationName2, roleArn, audience),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_aws.acc_test", "resource_name"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "name", integrationName2),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.#", "1"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "capabilities.0", "DYNAMIC"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.role_arn", roleArn),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration_aws.acc_test", "federated_workload_identity.audience", audience),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName2),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "aws"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.role_arn", roleArn),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "aws_federated_workload_identity.audience", audience),
 				),
-				ResourceName:  "hcp_vault_secrets_integration_aws.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 			},

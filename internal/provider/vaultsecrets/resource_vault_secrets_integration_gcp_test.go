@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -97,7 +98,7 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					gcpCheckFederatedIdentityFuncs(integrationName2, audience, serviceAccountEmail)...,
 				),
-				ResourceName:  "hcp_vault_secrets_integration_gcp.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 			},
@@ -116,10 +117,11 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 
 func gcpServiceAccountConfig(integrationName, serviceAccountKey string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_gcp" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-		service_account_key = {
+        provider_type = "gcp"
+		gcp_service_account_key = {
 			credentials = %q
 	   }
     }`, integrationName, serviceAccountKey)
@@ -127,10 +129,11 @@ func gcpServiceAccountConfig(integrationName, serviceAccountKey string) string {
 
 func gcpFederatedIdentityConfig(integrationName, serviceAccountEmail, audience string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_gcp" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["DYNAMIC"]
-		federated_workload_identity = {
+        provider_type = "azure"
+		gcp_federated_workload_identity = {
 			service_account_email = %q
 			audience = %q
 	   }
@@ -139,30 +142,32 @@ func gcpFederatedIdentityConfig(integrationName, serviceAccountEmail, audience s
 
 func gcpCheckServiceAccountKeyFuncs(integrationName, clientEmail, credentials, projectID string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "service_account_key.client_email", clientEmail),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "service_account_key.credentials", credentials),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "service_account_key.project_id", projectID),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "gcp"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.client_email", clientEmail),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.credentials", credentials),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.project_id", projectID),
 	}
 }
 
 func gcpCheckFederatedIdentityFuncs(integrationName, audience, serviceAccountEmail string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_gcp.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "capabilities.0", "DYNAMIC"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "federated_workload_identity.audience", audience),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_gcp.acc_test", "federated_workload_identity.service_account_email", serviceAccountEmail),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "gcp"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_federated_workload_identity.audience", audience),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_federated_workload_identity.service_account_email", serviceAccountEmail),
 	}
 }
 

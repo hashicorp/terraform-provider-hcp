@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -94,7 +95,7 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					mongoDBAtlasCheckFuncs(integrationName2, publicKey, privateKey)...,
 				),
-				ResourceName:  "hcp_vault_secrets_integration_mongodbatlas.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 			},
@@ -113,10 +114,11 @@ func TestAccVaultSecretsResourceIntegrationMongoDBAtlas(t *testing.T) {
 
 func mongoDBAtlasConfig(integrationName, apiPublicKey, apiPrivateKey string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_mongodbatlas" "acc_test"{
+	resource "hcp_vault_secrets_integration" "acc_test"{
         name = %q
         capabilities = ["ROTATION"]
-        static_credential_details = {
+        provider_type = "mongodb-atlas"
+        mongodb_atlas_static_credentials = {
           api_public_key = %q
           api_private_key = %q
         }
@@ -125,15 +127,16 @@ func mongoDBAtlasConfig(integrationName, apiPublicKey, apiPrivateKey string) str
 
 func mongoDBAtlasCheckFuncs(integrationName, apiPublicKey, apiPrivateKey string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_mongodbatlas.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_mongodbatlas.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_mongodbatlas.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "static_credential_details.api_public_key", apiPublicKey),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_mongodbatlas.acc_test", "static_credential_details.api_private_key", apiPrivateKey),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "mongodb-atlas"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "mongodb_atlas_static_credentials.api_public_key", apiPublicKey),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "mongodb_atlas_static_credentials.api_private_key", apiPrivateKey),
 	}
 }
 
