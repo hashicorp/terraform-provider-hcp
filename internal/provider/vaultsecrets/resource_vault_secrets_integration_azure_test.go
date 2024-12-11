@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -98,7 +99,7 @@ func TestAccVaultSecretsResourceIntegrationAzure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					azureCheckFederatedIdentityFuncs(integrationName2, clientID, tenantID, audience)...,
 				),
-				ResourceName:  "hcp_vault_secrets_integration_azure.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 				PlanOnly:      true,
@@ -118,10 +119,11 @@ func TestAccVaultSecretsResourceIntegrationAzure(t *testing.T) {
 
 func azureClientSecretConfig(integrationName, clientID, tenantID, clientSecret string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_azure" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-		client_secret = {
+        provider_type = "azure"
+		azure_client_secret = {
 			tenant_id = %q
 			client_id = %q
 			client_secret = %q
@@ -131,10 +133,11 @@ func azureClientSecretConfig(integrationName, clientID, tenantID, clientSecret s
 
 func azureFederatedIdentityConfig(integrationName, clientID, tenantID, audience string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_azure" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-		federated_workload_identity = {
+         provider_type = "azure"
+		azure_federated_workload_identity = {
 			tenant_id = %q
 			client_id = %q
 			audience = %q
@@ -144,31 +147,33 @@ func azureFederatedIdentityConfig(integrationName, clientID, tenantID, audience 
 
 func azureCheckClientSecretKeyFuncs(integrationName, clientID, tenantID, clientSecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "client_secret.client_id", clientID),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "client_secret.tenant_id", tenantID),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "client_secret.client_secret", clientSecret),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "azure"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.client_id", clientID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.tenant_id", tenantID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.client_secret", clientSecret),
 	}
 }
 
 func azureCheckFederatedIdentityFuncs(integrationName, clientID, tenantID, audience string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_azure.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "federated_workload_identity.audience", audience),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "federated_workload_identity.tenant_id", tenantID),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_azure.acc_test", "federated_workload_identity.client_id", clientID),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "azure"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.audience", audience),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.tenant_id", tenantID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.client_id", clientID),
 	}
 }
 

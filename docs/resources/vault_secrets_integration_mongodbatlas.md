@@ -9,6 +9,8 @@ description: |-
 
 The Vault Secrets MongoDB Atlas integration resource manages an MongoDB Atlas integration.
 
+~> **Note:** This resource is deprecated, please use `hcp_vault_secrets_integration` instead.
+
 ## Example Usage
 
 ```terraform
