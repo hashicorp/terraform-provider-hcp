@@ -33,29 +33,6 @@ resource "hcp_vault_secrets_integration" "example_aws_access_keys" {
   }
 }
 
-// Azure
-resource "hcp_vault_secrets_integration" "example_azure_federated_identity" {
-  name          = "my-azure-1"
-  capabilities  = ["ROTATION"]
-  provider_type = "azure"
-  azure_federated_workload_identity = {
-    tenant_id = "<tenant-id>"
-    client_id = "<client-id>"
-    audience  = "<audience>"
-  }
-}
-
-resource "hcp_vault_secrets_integration" "example_access_keys" {
-  name          = "my-azure-2"
-  capabilities  = ["ROTATION"]
-  provider_type = "azure"
-  azure_client_secret = {
-    tenant_id     = "<tenant-id>"
-    client_id     = "<client-id>"
-    client_secret = "<client-secret>"
-  }
-}
-
 // Confluent
 resource "hcp_vault_secrets_integration" "example_confluent" {
   name          = "my-confluent-1"
