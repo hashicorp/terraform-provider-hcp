@@ -47,7 +47,9 @@ resource "hcp_vault_plugin" "venafi_plugin" {
 `, testAccVaultPluginConfig)
 )
 
-func TestAccVaultPlugin(t *testing.T) {
+func TestAcc_Vault_Plugin(t *testing.T) {
+	t.Parralel()
+
 	resourceName := "hcp_vault_plugin.venafi_plugin"
 	dataSourceName := "data.hcp_vault_plugin.test"
 
