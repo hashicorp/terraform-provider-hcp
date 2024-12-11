@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/uuid"
-
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,8 +15,8 @@ import (
 )
 
 var (
-	hvnUniqueIDAws   = testAccPlatformUniqueName()
-	hvnUniqueIDAzure = testAccPlatformUniqueName()
+	hvnUniqueIDAws   = testAccUniqueNameWithPrefix("platform-hvn")
+	hvnUniqueIDAzure = testAccUniqueNameWithPrefix("platform-hvn")
 )
 
 var testAccAwsHvnConfig = fmt.Sprintf(`
@@ -45,12 +43,6 @@ data "hcp_hvn" "test" {
 	hvn_id = hcp_hvn.test.hvn_id
 }
 `, hvnUniqueIDAzure)
-
-func testAccPlatformUniqueName() string {
-	shortUUID := uuid.New().String()[0:8]
-
-	return fmt.Sprintf("testacc-platform-%s", shortUUID)
-}
 
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time.

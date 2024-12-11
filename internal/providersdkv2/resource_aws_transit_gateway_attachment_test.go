@@ -15,8 +15,8 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	tgwAttUniqueAWSName        = testAccPlatformUniqueName()
-	tgwAttUniqueHvnName        = testAccPlatformUniqueName()
+	tgwAttUniqueAWSName        = testAccUniqueNameWithPrefix("platform-tgw")
+	tgwAttUniqueHvnName        = testAccUniqueNameWithPrefix("platform-hvn")
 	testAccTGWAttachmentConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"

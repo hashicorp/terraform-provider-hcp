@@ -15,7 +15,7 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	hvnPeeringUniqueAWSName = testAccPlatformUniqueName()
+	hvnPeeringUniqueAWSName = testAccUniqueNameWithPrefix("platform-hvn-peer")
 	testAccAwsPeeringConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"

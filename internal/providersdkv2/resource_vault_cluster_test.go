@@ -75,7 +75,7 @@ func TestAcc_Vault_ClusterAzure(t *testing.T) {
 func TestAcc_Vault_ClusterAWS(t *testing.T) {
 	awsTestInput := inputT{
 		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
-		HvnName:                    addTimestampSuffix("test-hvn-aws-"),
+		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-aws-"),
 		VaultClusterResourceName:   vaultClusterResourceName,
 		VaultClusterDataSourceName: vaultClusterDataSourceName,
 		AdminTokenResourceName:     adminTokenResourceName,
