@@ -1,6 +1,7 @@
 name: TestAcc Platform
 
 on:
+  workflow_call:
   workflow_dispatch:
   pull_request:
     # Networking resources still use SDKv2 so we have to target files manually until migrated

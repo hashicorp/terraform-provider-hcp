@@ -1,33 +1,16 @@
-name: Run Tests
+name: Test
 
 on:
   workflow_call:
-    inputs:
-      acc-test-pattern:
-        type: string
-        default: 'Test.*'
-      skip-e2e-tests:
-        description: "Skip the E2E test suite"
-        type: boolean
-        default: false
   workflow_dispatch:
-    inputs:
-      acc-test-pattern:
-        type: string
-        default: 'Test.*'
-      skip-e2e-tests:
-        description: "Skip the E2E test suite"
-        type: boolean
-        default: false
-
-concurrency: acceptance-testing-environment
+  pull_request:
 
 permissions:
   contents: read
-    
+
 jobs:
-  run-tests:
-    name: Run Tests
+  unit-tests:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -49,8 +32,6 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
           go mod tidy
-          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
-          sudo chmod +x /usr/local/bin/jp
 
       - name: Run Unit Tests and Linter
         run: make test-ci
@@ -60,44 +41,3 @@ jobs:
         with:
           name: Test Coverage
           path: coverage.html
-
-      - name: Warn If Non-default Pattern
-        if: inputs.acc-test-pattern != 'Test.*'
-        run: |
-          echo "## WARNING: Some tests may have been skipped!" >> $GITHUB_STEP_SUMMARY
-          echo "The default acceptance test pattern is \`Test.*\`, but it was overridden with \`${{ inputs.acc-test-pattern }}\`." >> $GITHUB_STEP_SUMMARY
-
-      - name: Run E2E Tests
-        if: ${{ !inputs.skip-e2e-tests }}
-        env:
-          HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
-          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
-          HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-          HCP_ORGANIZATION_ID: ${{ secrets.HCP_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.HCP_PROJECT_ID }}
-
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-          AWS_REGION: us-west-1
-
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          AZURE_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: |
-          AWS_OUTPUT=$(aws sts assume-role --role-arn $AWS_ROLE_ARN --role-session-name e2e-test --duration-seconds 43200)
-          export AWS_ACCESS_KEY_ID=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.AccessKeyId)
-          export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
-          export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
-          make testacc-ci TESTARGS='-run=${{ inputs.acc-test-pattern }} -test.v'
-
-      - name: Upload E2E Coverage Artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: Test Coverage
-          path: coverage-e2e.html
