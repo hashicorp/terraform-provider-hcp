@@ -8,6 +8,12 @@ on:
       - 'internal/clients/vault_cluster.go'
       - 'internal/providersdkv2/resource_vault_*'
 
+# This prevents more than one run of this workflow from executing at a time.
+# Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
+concurrency:
+  group: testacc-vault
+  cancel-in-progress: false
+
 jobs:
   acceptance_tests:
     name: Acceptance Tests

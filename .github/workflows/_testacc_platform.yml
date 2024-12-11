@@ -15,6 +15,12 @@ on:
       - 'internal/providersdkv2/resource_aws_transit_gateway_attachment*'
       - 'internal/providersdkv2/resource_hvn*'
 
+# This prevents more than one run of this workflow from executing at a time.
+# Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
+concurrency:
+  group: testacc-platform
+  cancel-in-progress: false
+
 jobs:
   acceptance_tests:
     name: Acceptance Tests
