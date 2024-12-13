@@ -3,6 +3,9 @@ name: TestAcc
 on:
   workflow_call:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - 'jasonpilz/testacc'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
