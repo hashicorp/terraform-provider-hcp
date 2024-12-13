@@ -19,9 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"golang.org/x/exp/maps"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
-	"golang.org/x/exp/maps"
 )
 
 var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
@@ -49,6 +50,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderAWS:          &awsRotatingSecret{},
 	ProviderGCP:          &gcpRotatingSecret{},
 	ProviderMongoDBAtlas: &mongoDBAtlasRotatingSecret{},
+	"mongodb_atlas":      &mongoDBAtlasRotatingSecret{}, // The provider name changed to mongodb-atlas to fit with the HVS API, this is for backwards compatibility
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
 	ProviderAzure:        &azureRotatingSecret{},
