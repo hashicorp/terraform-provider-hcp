@@ -1,0 +1,3 @@
+```release-note:bug
+creating a hvs app or kv secret should not panic
+```
