@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -96,7 +97,7 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					twilioCheckFuncs(integrationName2, accountSID, apiKeySID, apiKeySecret)...,
 				),
-				ResourceName:  "hcp_vault_secrets_integration_twilio.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 			},
@@ -115,10 +116,11 @@ func TestAccVaultSecretsResourceIntegrationTwilio(t *testing.T) {
 
 func twilioConfig(integrationName, accountSID, apiKeySID, apiKeySecret string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_twilio" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-		static_credential_details = {
+        provider_type = "twilio"
+		twilio_static_credentials = {
 			account_sid = %q
 			api_key_sid = %q
 			api_key_secret = %q
@@ -128,16 +130,17 @@ func twilioConfig(integrationName, accountSID, apiKeySID, apiKeySecret string) s
 
 func twilioCheckFuncs(integrationName, accountSID, apiKeySID, apiKeySecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_twilio.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_twilio.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_twilio.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "static_credential_details.account_sid", accountSID),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "static_credential_details.api_key_secret", apiKeySecret),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_twilio.acc_test", "static_credential_details.api_key_sid", apiKeySID),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "twilio"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "twilio_static_credentials.account_sid", accountSID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "twilio_static_credentials.api_key_secret", apiKeySecret),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "twilio_static_credentials.api_key_sid", apiKeySID),
 	}
 }
 
