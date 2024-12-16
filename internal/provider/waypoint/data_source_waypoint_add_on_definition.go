@@ -46,6 +46,7 @@ type DataSourceAddOnDefinitionModel struct {
 
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformNoCodeModuleID     types.String         `tfsdk:"terraform_no_code_module_id"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
 	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
@@ -150,6 +151,10 @@ func (d *DataSourceAddOnDefinition) Schema(ctx context.Context, req datasource.S
 				Computed:    true,
 				Description: "The ID of the Terraform agent pool.",
 			},
+			"terraform_no_code_module_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of the Terraform no-code module to use for running Terraform operations",
+			},
 		},
 	}
 }
@@ -212,6 +217,9 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 	state.Summary = types.StringValue(definition.Summary)
 	state.Description = types.StringValue(definition.Description)
 	state.TerraformNoCodeModuleSource = types.StringValue(definition.ModuleSource)
+	state.TerraformNoCodeModuleID = types.StringValue(definition.ModuleID)
+	state.TerraformExecutionMode = types.StringValue(definition.TfExecutionMode)
+	state.TerraformAgentPoolID = types.StringValue(definition.TfAgentPoolID)
 
 	if definition.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{

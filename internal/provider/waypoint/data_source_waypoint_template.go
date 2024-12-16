@@ -46,6 +46,7 @@ type DataSourceTemplateModel struct {
 
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformNoCodeModuleID     types.String         `tfsdk:"terraform_no_code_module_id"`
 	VariableOptions             []*tfcVariableOption `tfsdk:"variable_options"`
 	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
 	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
@@ -150,6 +151,10 @@ func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRe
 				Computed:    true,
 				Description: "Terraform agent pool ID",
 			},
+			"terraform_no_code_module_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of the Terraform no-code module to use for running Terraform operations",
+			},
 		},
 	}
 }
@@ -211,6 +216,7 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.Summary = types.StringValue(appTemplate.Summary)
 	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
+	data.TerraformNoCodeModuleID = types.StringValue(appTemplate.ModuleID)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		tfcWorkspace := &tfcWorkspace{
