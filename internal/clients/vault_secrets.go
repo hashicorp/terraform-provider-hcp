@@ -23,8 +23,10 @@ func CreateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 
 	createParams := secret_service.NewCreateAppParams()
 	createParams.Context = ctx
-	createParams.Body.Name = appName
-	createParams.Body.Description = description
+	createParams.Body = &secretmodels.SecretServiceCreateAppBody{
+		Name:        appName,
+		Description: description,
+	}
 	createParams.OrganizationID = loc.OrganizationID
 	createParams.ProjectID = loc.ProjectID
 
@@ -57,7 +59,9 @@ func UpdateVaultSecretsApp(ctx context.Context, client *Client, loc *sharedmodel
 	updateParams := secret_service.NewUpdateAppParams()
 	updateParams.Context = ctx
 	updateParams.Name = appName
-	updateParams.Body.Description = description
+	updateParams.Body = &secretmodels.SecretServiceUpdateAppBody{
+		Description: description,
+	}
 	updateParams.OrganizationID = loc.OrganizationID
 	updateParams.ProjectID = loc.ProjectID
 
@@ -92,8 +96,10 @@ func CreateVaultSecretsAppSecret(ctx context.Context, client *Client, loc *share
 	createParams := secret_service.NewCreateAppKVSecretParams()
 	createParams.Context = ctx
 	createParams.AppName = appName
-	createParams.Body.Name = secretName
-	createParams.Body.Value = secretValue
+	createParams.Body = &secretmodels.SecretServiceCreateAppKVSecretBody{
+		Name:  secretName,
+		Value: secretValue,
+	}
 	createParams.OrganizationID = loc.OrganizationID
 	createParams.ProjectID = loc.ProjectID
 
