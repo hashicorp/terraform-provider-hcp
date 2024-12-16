@@ -18,8 +18,8 @@ concurrency:
 
 jobs:
   testacc_platform:
-    name: TestAcc Platform
+    name: Platform
     uses: ./.github/workflows/_testacc_platform.yml
   testacc_vault:
-    name: TestAcc Vault
+    name: Vault
     uses: ./.github/workflows/_testacc_vault.yml
