@@ -36,7 +36,7 @@ resource "hcp_vault_plugin" "venafi_plugin" {
 	plugin_name        = "venafi-pki-backend"
 	plugin_type        = "SECRET"
 }
-`, addTimestampSuffix("test-hvn-aws-"), addTimestampSuffix("test-cluster-"))
+`, testAccUniqueNameWithPrefix("vault-hvn-aws-"), addTimestampSuffix("test-cluster-"))
 
 	testAccVaultPluginDataSourceConfig = fmt.Sprintf(`%s
 	data "hcp_vault_plugin" "test" {
@@ -47,7 +47,9 @@ resource "hcp_vault_plugin" "venafi_plugin" {
 `, testAccVaultPluginConfig)
 )
 
-func TestAccVaultPlugin(t *testing.T) {
+func TestAcc_Vault_Plugin(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_vault_plugin.venafi_plugin"
 	dataSourceName := "data.hcp_vault_plugin.test"
 
