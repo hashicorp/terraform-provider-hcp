@@ -1,0 +1,3 @@
+```release-note:improvement
+Updating docs with examples for hcp_waypoint_template resource/data-source
+```
