@@ -125,6 +125,7 @@ func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.Creat
 				Name:        app.AppName.ValueString(),
 				Description: app.Description.ValueString(),
 			},
+			// TODO: add sync integrations
 			OrganizationID: app.OrganizationID.ValueString(),
 			ProjectID:      app.ProjectID.ValueString(),
 		}, nil)
