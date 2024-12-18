@@ -76,6 +76,9 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 						"must contain only ASCII letters, numbers, and underscores; must not start with a number",
 					),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"secret_value": schema.StringAttribute{
 				Description: "The value of the secret",
