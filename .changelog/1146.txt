@@ -1,0 +1,4 @@
+```release-note:breaking-change
+waypoint: Add new required field for no-code module ID to Waypoint template and
+add-on definition resources.
+```
