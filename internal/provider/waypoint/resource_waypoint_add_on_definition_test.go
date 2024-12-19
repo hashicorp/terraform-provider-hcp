@@ -35,6 +35,7 @@ func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
 					testAccCheckWaypointAddOnDefinitionExists(t, resourceName, &addOnDefinitionModel),
 					testAccCheckWaypointAddOnDefinitionName(t, &addOnDefinitionModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "terraform_no_code_module_id", "nocode-7ZQjQoaPXvzs6Hvp"),
 					resource.TestCheckResourceAttr(resourceName, "terraform_execution_mode", "remote"),
 				),
 			},
@@ -134,6 +135,7 @@ resource "hcp_waypoint_add_on_definition" "test" {
   summary = "some summary for fun"
   description = "some description for fun"
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"

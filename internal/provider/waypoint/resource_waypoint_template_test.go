@@ -37,6 +37,7 @@ func TestAccWaypoint_Template_basic(t *testing.T) {
 					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
 					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "terraform_no_code_module_id", "nocode-7ZQjQoaPXvzs6Hvp"),
 					resource.TestCheckResourceAttr(resourceName, "terraform_execution_mode", "remote"),
 				),
 			},
@@ -159,6 +160,7 @@ resource "hcp_waypoint_template" "test" {
   summary                  = "some summary for fun"
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -176,6 +178,7 @@ resource "hcp_waypoint_template" "var_opts_test" {
   summary                  = "A template with a variable with options."
   readme_markdown_template = base64encode("# Some Readme")
   terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-vault-dweller/null"
+  terraform_no_code_module_id = "nocode-JSMkg9ztLBYgg1eW"
   terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
   terraform_cloud_workspace_details = {
     name                 = "Default Project"
@@ -186,7 +189,12 @@ resource "hcp_waypoint_template" "var_opts_test" {
 	  name          = "vault_dweller_name"
 	  variable_type = "string"
       user_editable = true
-      options       = []
+      options       = [
+        "lucy",
+        "courier",
+        "lone-wanderer",
+        "sole-survivor",
+      ]
     },
     {
       name          = "faction"

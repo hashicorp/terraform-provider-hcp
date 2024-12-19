@@ -54,6 +54,7 @@ type TemplateResourceModel struct {
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformNoCodeModuleID     types.String         `tfsdk:"terraform_no_code_module_id"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
 	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
@@ -213,6 +214,14 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 					" this template. Required if terraform_execution_mode is " +
 					"set to 'agent'.",
 			},
+			"terraform_no_code_module_id": schema.StringAttribute{
+				Required: true,
+				Description: "The ID of the Terraform no-code module to use for" +
+					" running Terraform operations. This is in the format of 'nocode-<ID>'.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 	}
 }
@@ -303,6 +312,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			Labels:                         strLabels,
 			Description:                    plan.Description.ValueString(),
 			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+			ModuleID:                       plan.TerraformNoCodeModuleID.ValueString(),
 			TerraformCloudWorkspaceDetails: tfWsDetails,
 			VariableOptions:                varOpts,
 			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),
@@ -313,9 +323,9 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	// If there is an error, we assume that it is because the string is not encoded. This is ok and
-	// we will just use the string as is in the ReadmeTemplate field of the model.
-	// Eventually the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
+	// If there is an error, we assume that it is because the string is not encoded.
+	// This is ok, and we will just use the string as is in the ReadmeTemplate field of the model.
+	// Eventually, the ReadmeMarkdownTemplate field will be deprecated, so the default behavior will be to
 	// expect the readme to not be encoded
 	if err != nil {
 		modelBody.ApplicationTemplate.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
@@ -473,6 +483,7 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 	data.Summary = types.StringValue(appTemplate.Summary)
 	data.TerraformNoCodeModuleSource = types.StringValue(appTemplate.ModuleSource)
+	data.TerraformNoCodeModuleID = types.StringValue(appTemplate.ModuleID)
 
 	if appTemplate.TerraformCloudWorkspaceDetails != nil {
 		data.TerraformProjectID = types.StringValue(appTemplate.TerraformCloudWorkspaceDetails.ProjectID)
@@ -585,6 +596,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			Labels:                         strLabels,
 			Description:                    plan.Description.ValueString(),
 			ModuleSource:                   plan.TerraformNoCodeModuleSource.ValueString(),
+			ModuleID:                       plan.TerraformNoCodeModuleID.ValueString(),
 			TerraformCloudWorkspaceDetails: tfWsDetails,
 			VariableOptions:                varOpts,
 			TfExecutionMode:                plan.TerraformExecutionMode.ValueString(),

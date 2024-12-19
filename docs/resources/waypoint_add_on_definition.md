@@ -19,6 +19,7 @@ Waypoint Add-on Definition resource
 - `description` (String) A longer description of the Add-on Definition.
 - `name` (String) The name of the Add-on Definition.
 - `summary` (String) A short summary of the Add-on Definition.
+- `terraform_no_code_module_id` (String) The ID of the Terraform no-code module to use for running Terraform operations. This is in the format of 'nocode-<ID>'.
 - `terraform_no_code_module_source` (String) Terraform Cloud no-code Module Source, expected to be in one of the following formats: "app.terraform.io/hcp_waypoint_example/ecs-advanced-microservice/aws" or "private/hcp_waypoint_example/ecs-advanced-microservice/aws".
 - `terraform_project_id` (String) The ID of the Terraform Cloud Project to create workspaces in. The ID is found on the Terraform Cloud Project settings page.
 

@@ -40,6 +40,7 @@ func TestAccWaypointData_Add_On_Definition_basic(t *testing.T) {
 				Config: testDataAddOnDefinitionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", name),
+					resource.TestCheckResourceAttr(dataSourceName, "terraform_no_code_module_id", "nocode-7ZQjQoaPXvzs6Hvp"),
 					resource.TestCheckResourceAttr(dataSourceName, "terraform_execution_mode", "remote"),
 				),
 			},
