@@ -50,6 +50,7 @@ type AddOnDefinitionResourceModel struct {
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     types.Object         `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
+	TerraformNoCodeModuleID     types.String         `tfsdk:"terraform_no_code_module_id"`
 	TerraformVariableOptions    []*tfcVariableOption `tfsdk:"variable_options"`
 	TerraformExecutionMode      types.String         `tfsdk:"terraform_execution_mode"`
 	TerraformAgentPoolID        types.String         `tfsdk:"terraform_agent_pool_id"`
@@ -184,6 +185,10 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 					"running Terraform operations. This is only applicable when" +
 					" the execution mode is set to 'agent'.",
 			},
+			"terraform_no_code_module_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Terraform no-code module to use for running Terraform operations. This is in the format of 'nocode-<ID>'.",
+			},
 		},
 	}
 }
@@ -268,14 +273,17 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
-		Name:            plan.Name.ValueString(),
-		Summary:         plan.Summary.ValueString(),
-		Description:     plan.Description.ValueString(),
-		Labels:          stringLabels,
-		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
-		VariableOptions: varOpts,
-		TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
-		TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
+		AddOnDefinition: &waypointModels.HashicorpCloudWaypointAddOnDefinition{
+			Name:            plan.Name.ValueString(),
+			Summary:         plan.Summary.ValueString(),
+			Description:     plan.Description.ValueString(),
+			Labels:          stringLabels,
+			ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
+			VariableOptions: varOpts,
+			TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
+			TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
+			ModuleID:        plan.TerraformNoCodeModuleID.ValueString(),
+		},
 	}
 
 	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
@@ -294,7 +302,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			// Set a default if none provided
 			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
 		}
-		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      workspaceDetails.Name.ValueString(),
 			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
 		}
@@ -302,14 +310,14 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	// If there is an error, we assume that it is because the string is not encoded. This is ok and
-	// we will just use the string as is in the ReadmeTemplate field of the model.
-	// Eventually the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
+	// If there is an error, we assume that it is because the string is not encoded.
+	// This is ok, and we will just use the string as is in the ReadmeTemplate field of the model.
+	// Eventually, the ReadmeMarkdownTemplate field will be deprecated, so the default behavior will be to
 	// expect the readme to not be encoded
 	if err != nil {
-		modelBody.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
+		modelBody.AddOnDefinition.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
 	} else {
-		modelBody.ReadmeMarkdownTemplate = readmeBytes
+		modelBody.AddOnDefinition.ReadmeMarkdownTemplate = readmeBytes
 	}
 
 	params := &waypoint_service.WaypointServiceCreateAddOnDefinitionParams{
@@ -337,6 +345,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	plan.OrgID = types.StringValue(orgID)
 	plan.Summary = types.StringValue(addOnDefinition.Summary)
 	plan.TerraformNoCodeModuleSource = types.StringValue(addOnDefinition.ModuleSource)
+	plan.TerraformNoCodeModuleID = types.StringValue(addOnDefinition.ModuleID)
 
 	plan.Description = types.StringValue(addOnDefinition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -431,6 +440,7 @@ func (r *AddOnDefinitionResource) Read(ctx context.Context, req resource.ReadReq
 	state.ProjectID = types.StringValue(client.Config.ProjectID)
 	state.Summary = types.StringValue(definition.Summary)
 	state.TerraformNoCodeModuleSource = types.StringValue(definition.ModuleSource)
+	state.TerraformNoCodeModuleID = types.StringValue(definition.ModuleID)
 
 	state.Description = types.StringValue(definition.Description)
 	// set plan.description if it's not null or addOnDefinition.description is not empty
@@ -540,14 +550,17 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 
 	// TODO: add support for Tags
 	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
-		Name:            plan.Name.ValueString(),
-		Summary:         plan.Summary.ValueString(),
-		Description:     plan.Description.ValueString(),
-		Labels:          stringLabels,
-		ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
-		VariableOptions: varOpts,
-		TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
-		TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
+		AddOnDefinition: &waypointModels.HashicorpCloudWaypointAddOnDefinition{
+			Name:            plan.Name.ValueString(),
+			Summary:         plan.Summary.ValueString(),
+			Description:     plan.Description.ValueString(),
+			Labels:          stringLabels,
+			ModuleSource:    plan.TerraformNoCodeModuleSource.ValueString(),
+			ModuleID:        plan.TerraformNoCodeModuleSource.ValueString(),
+			VariableOptions: varOpts,
+			TfExecutionMode: plan.TerraformExecutionMode.ValueString(),
+			TfAgentPoolID:   plan.TerraformAgentPoolID.ValueString(),
+		},
 	}
 
 	if !plan.TerraformCloudWorkspace.IsNull() && !plan.TerraformCloudWorkspace.IsUnknown() {
@@ -566,7 +579,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			// Grab the top level project ID if this was not provided
 			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
 		}
-		modelBody.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      workspaceDetails.Name.ValueString(),
 			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
 		}
@@ -574,14 +587,14 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 
 	// Decode the base64 encoded readme markdown template to see if it is encoded
 	readmeBytes, err := base64.StdEncoding.DecodeString(plan.ReadmeMarkdownTemplate.ValueString())
-	// If there is an error, we assume that it is because the string is not encoded. This is ok and
+	// If there is an error, we assume that it is because the string is not encoded. This is ok, and
 	// we will just use the string as is in the ReadmeTemplate field of the model.
-	// Eventually the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
+	// Eventually, the ReadMeMarkdownTemplate field will be deprecated, so the default behavior will be to
 	// expect the readme to not be encoded
 	if err != nil {
-		modelBody.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
+		modelBody.AddOnDefinition.ReadmeTemplate = plan.ReadmeMarkdownTemplate.ValueString()
 	} else {
-		modelBody.ReadmeMarkdownTemplate = readmeBytes
+		modelBody.AddOnDefinition.ReadmeMarkdownTemplate = readmeBytes
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{

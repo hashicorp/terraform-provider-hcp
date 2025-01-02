@@ -1,0 +1,13 @@
+```release-note:deprecation
+the following resources are deprecated:
+  - `hcp_vault_secrets_integration_aws`
+  - `hcp_vault_secrets_integration_azure`
+  - `hcp_vault_secrets_integration_confluent`
+  - `hcp_vault_secrets_integration_gcp`
+  - `hcp_vault_secrets_integration_mongodbatlas`
+  - 'hcp_vault_secrets_integration_twilio'
+```
+
+```release-note:feature
+add 'hcp_vault_secrets_integration' resource as a replacement for the provider-specific resources
+```
