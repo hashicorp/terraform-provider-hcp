@@ -9,6 +9,8 @@ description: |-
 
 The Vault Secrets GCP integration resource manages an GCP integration.
 
+~> **Note:** This resource is deprecated, please use `hcp_vault_secrets_integration` instead.
+
 ## Example Usage
 
 ```terraform

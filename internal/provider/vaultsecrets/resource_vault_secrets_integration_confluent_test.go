@@ -12,6 +12,7 @@ import (
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
@@ -87,7 +88,7 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					confluentCheckFuncs(integrationName2, cloudAPIKeyID, cloudAPISecret)...,
 				),
-				ResourceName:  "hcp_vault_secrets_integration_confluent.acc_test",
+				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
 			},
@@ -106,10 +107,11 @@ func TestAccVaultSecretsResourceIntegrationConfluent(t *testing.T) {
 
 func confluentConfig(integrationName, cloudAPIKeyID, cloudAPISecret string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_integration_confluent" "acc_test" {
+	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-		static_credential_details = {
+        provider_type = "confluent"
+		confluent_static_credentials = {
 			cloud_api_key_id = %q
 			cloud_api_secret = %q
 	   }
@@ -118,15 +120,16 @@ func confluentConfig(integrationName, cloudAPIKeyID, cloudAPISecret string) stri
 
 func confluentCheckFuncs(integrationName, cloudAPIKeyID, cloudAPISecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_confluent.acc_test", "organization_id"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_confluent.acc_test", "resource_id"),
-		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration_confluent.acc_test", "resource_name"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "name", integrationName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_secret", cloudAPISecret),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration_confluent.acc_test", "static_credential_details.cloud_api_key_id", cloudAPIKeyID),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_id"),
+		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "confluent"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "confluent_static_credentials.cloud_api_secret", cloudAPISecret),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "confluent_static_credentials.cloud_api_key_id", cloudAPIKeyID),
 	}
 }
 

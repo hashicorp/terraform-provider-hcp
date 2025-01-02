@@ -1,3 +1,23 @@
+## v0.101.0 (December 16, 2024)
+
+FEATURES:
+
+* add 'hcp_vault_secrets_integration' resource as a replacement for the provider-specific resources [[GH-1151](https://github.com/hashicorp/terraform-provider-hcp/pull/1151)]
+* add vault_secrets_integration_azure resource and add support for azure secrets to vault_secrets_rotating_secret resource [[GH-1143](https://github.com/hashicorp/terraform-provider-hcp/pull/1143)]
+
+DEPRECATIONS:
+
+* the following resources are deprecated:
+  - `hcp_vault_secrets_integration_aws`
+  - `hcp_vault_secrets_integration_azure`
+  - `hcp_vault_secrets_integration_confluent`
+  - `hcp_vault_secrets_integration_gcp`
+  - `hcp_vault_secrets_integration_mongodbatlas`
+  - 'hcp_vault_secrets_integration_twilio' [[GH-1151](https://github.com/hashicorp/terraform-provider-hcp/pull/1151)]
+
+BUG FIXES:
+
+* Fix a panic when creating HVS app or secret [[GH-1154](https://github.com/hashicorp/terraform-provider-hcp/pull/1154)]
 ## v0.100.0 (December 02, 2024)
 
 IMPROVEMENTS:

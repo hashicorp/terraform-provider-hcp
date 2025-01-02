@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -23,14 +24,26 @@ type Provider string
 
 const (
 	ProviderAWS          Provider = "aws"
-	ProviderGCP          Provider = "gcp"
-	ProviderMongoDBAtlas Provider = "mongodb_atlas"
-	ProviderTwilio       Provider = "twilio"
+	ProviderAzure        Provider = "azure"
 	ProviderConfluent    Provider = "confluent"
+	ProviderGCP          Provider = "gcp"
+	ProviderMongoDBAtlas Provider = "mongodb-atlas"
+	ProviderTwilio       Provider = "twilio"
 )
 
 func (p Provider) String() string {
 	return string(p)
+}
+
+func ProviderStrings() []string {
+	return []string{
+		string(ProviderAWS),
+		string(ProviderAzure),
+		string(ProviderConfluent),
+		string(ProviderGCP),
+		string(ProviderMongoDBAtlas),
+		string(ProviderTwilio),
+	}
 }
 
 var (

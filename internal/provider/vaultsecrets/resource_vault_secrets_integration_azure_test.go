@@ -17,15 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 )
 
-func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
-	projectID := checkRequiredEnvVarOrFail(t, "GCP_PROJECT_ID")
-	clientEmail := checkRequiredEnvVarOrFail(t, "GCP_CLIENT_EMAIL")
-	serviceAccountKey := checkRequiredEnvVarOrFail(t, "GCP_SERVICE_ACCOUNT_KEY")
-	serviceAccountEmail := checkRequiredEnvVarOrFail(t, "GCP_INTEGRATION_SERVICE_ACCOUNT_EMAIL")
-	audience := checkRequiredEnvVarOrFail(t, "GCP_INTEGRATION_AUDIENCE")
+func TestAccVaultSecretsResourceIntegrationAzure(t *testing.T) {
+	tenantID := checkRequiredEnvVarOrFail(t, "AZURE_TENANT_ID")
+	clientID := checkRequiredEnvVarOrFail(t, "AZURE_CLIENT_ID")
+	clientSecret := checkRequiredEnvVarOrFail(t, "AZURE_CLIENT_SECRET")
+	audience := checkRequiredEnvVarOrFail(t, "AZURE_INTEGRATION_AUDIENCE")
 
 	integrationName1 := generateRandomSlug()
-	integrationName2 := generateRandomSlug()
+	// Set the integration name that is configured in the subject claim while creating a federated credential.
+	integrationName2 := checkRequiredEnvVarOrFail(t, "AZURE_INTEGRATION_NAME_WIF")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -33,23 +33,23 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create initial integration with access keys
 			{
-				Config: gcpServiceAccountConfig(integrationName1, serviceAccountKey),
+				Config: azureClientSecretConfig(integrationName1, clientID, tenantID, clientSecret),
 				Check: resource.ComposeTestCheckFunc(
-					gcpCheckServiceAccountKeyFuncs(integrationName1, clientEmail, serviceAccountKey, projectID)...,
+					azureCheckClientSecretKeyFuncs(integrationName1, clientID, tenantID, clientSecret)...,
 				),
 			},
 			// Changing the name forces a recreation
 			{
-				Config: gcpServiceAccountConfig(integrationName2, serviceAccountKey),
+				Config: azureClientSecretConfig(integrationName2, clientID, tenantID, clientSecret),
 				Check: resource.ComposeTestCheckFunc(
-					gcpCheckServiceAccountKeyFuncs(integrationName2, clientEmail, serviceAccountKey, projectID)...,
+					azureCheckClientSecretKeyFuncs(integrationName2, clientID, tenantID, clientSecret)...,
 				),
 			},
 			// Modifying mutable fields causes an update
 			{
-				Config: gcpFederatedIdentityConfig(integrationName2, serviceAccountEmail, audience),
+				Config: azureFederatedIdentityConfig(integrationName2, clientID, tenantID, audience),
 				Check: resource.ComposeTestCheckFunc(
-					gcpCheckFederatedIdentityFuncs(integrationName2, audience, serviceAccountEmail)...,
+					azureCheckFederatedIdentityFuncs(integrationName2, clientID, tenantID, audience)...,
 				),
 			},
 			// Deleting the integration out of band causes a recreation
@@ -57,7 +57,7 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecrets.DeleteGcpIntegration(&secret_service.DeleteGcpIntegrationParams{
+					_, err := client.VaultSecrets.DeleteAzureIntegration(&secret_service.DeleteAzureIntegrationParams{
 						Name:           integrationName2,
 						OrganizationID: client.Config.OrganizationID,
 						ProjectID:      client.Config.ProjectID,
@@ -66,9 +66,9 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: gcpFederatedIdentityConfig(integrationName2, serviceAccountEmail, audience),
+				Config: azureFederatedIdentityConfig(integrationName2, clientID, tenantID, audience),
 				Check: resource.ComposeTestCheckFunc(
-					gcpCheckFederatedIdentityFuncs(integrationName2, audience, serviceAccountEmail)...,
+					azureCheckFederatedIdentityFuncs(integrationName2, clientID, tenantID, audience)...,
 				),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -78,12 +78,13 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 				PreConfig: func() {
 					t.Helper()
 					client := acctest.HCPClients(t)
-					_, err := client.VaultSecrets.CreateGcpIntegration(&secret_service.CreateGcpIntegrationParams{
-						Body: &secretmodels.SecretServiceCreateGcpIntegrationBody{
+					_, err := client.VaultSecrets.CreateAzureIntegration(&secret_service.CreateAzureIntegrationParams{
+						Body: &secretmodels.SecretServiceCreateAzureIntegrationBody{
 							Capabilities: []*secretmodels.Secrets20231128Capability{secretmodels.Secrets20231128CapabilityROTATION.Pointer()},
-							FederatedWorkloadIdentity: &secretmodels.Secrets20231128GcpFederatedWorkloadIdentityRequest{
-								Audience:            audience,
-								ServiceAccountEmail: serviceAccountEmail,
+							FederatedWorkloadIdentity: &secretmodels.Secrets20231128AzureFederatedWorkloadIdentityRequest{
+								Audience: audience,
+								ClientID: clientID,
+								TenantID: tenantID,
 							},
 							Name: integrationName2,
 						},
@@ -94,53 +95,57 @@ func TestAccVaultSecretsResourceIntegrationGCP(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: gcpFederatedIdentityConfig(integrationName2, serviceAccountEmail, audience),
+				Config: azureFederatedIdentityConfig(integrationName2, clientID, tenantID, audience),
 				Check: resource.ComposeTestCheckFunc(
-					gcpCheckFederatedIdentityFuncs(integrationName2, audience, serviceAccountEmail)...,
+					azureCheckFederatedIdentityFuncs(integrationName2, clientID, tenantID, audience)...,
 				),
 				ResourceName:  "hcp_vault_secrets_integration.acc_test",
 				ImportStateId: integrationName2,
 				ImportState:   true,
+				PlanOnly:      true,
 			},
 		},
 		CheckDestroy: func(_ *terraform.State) error {
-			if gcpIntegrationExists(t, integrationName1) {
-				return fmt.Errorf("test gcp integration %s was not destroyed", integrationName1)
+			if azureIntegrationExists(t, integrationName1) {
+				return fmt.Errorf("test azure integration %s was not destroyed", integrationName1)
 			}
-			if gcpIntegrationExists(t, integrationName2) {
-				return fmt.Errorf("test gcp integration %s was not destroyed", integrationName2)
+			if azureIntegrationExists(t, integrationName2) {
+				return fmt.Errorf("test azure integration %s was not destroyed", integrationName2)
 			}
 			return nil
 		},
 	})
 }
 
-func gcpServiceAccountConfig(integrationName, serviceAccountKey string) string {
+func azureClientSecretConfig(integrationName, clientID, tenantID, clientSecret string) string {
 	return fmt.Sprintf(`
 	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
 		capabilities = ["ROTATION"]
-        provider_type = "gcp"
-		gcp_service_account_key = {
-			credentials = %q
+        provider_type = "azure"
+		azure_client_secret = {
+			tenant_id = %q
+			client_id = %q
+			client_secret = %q
 	   }
-    }`, integrationName, serviceAccountKey)
+    }`, integrationName, tenantID, clientID, clientSecret)
 }
 
-func gcpFederatedIdentityConfig(integrationName, serviceAccountEmail, audience string) string {
+func azureFederatedIdentityConfig(integrationName, clientID, tenantID, audience string) string {
 	return fmt.Sprintf(`
 	resource "hcp_vault_secrets_integration" "acc_test" {
 		name = %q
-		capabilities = ["DYNAMIC"]
-        provider_type = "azure"
-		gcp_federated_workload_identity = {
-			service_account_email = %q
+		capabilities = ["ROTATION"]
+         provider_type = "azure"
+		azure_federated_workload_identity = {
+			tenant_id = %q
+			client_id = %q
 			audience = %q
 	   }
-    }`, integrationName, serviceAccountEmail, audience)
+    }`, integrationName, tenantID, clientID, audience)
 }
 
-func gcpCheckServiceAccountKeyFuncs(integrationName, clientEmail, credentials, projectID string) []resource.TestCheckFunc {
+func azureCheckClientSecretKeyFuncs(integrationName, clientID, tenantID, clientSecret string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
@@ -149,14 +154,14 @@ func gcpCheckServiceAccountKeyFuncs(integrationName, clientEmail, credentials, p
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "gcp"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.client_email", clientEmail),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.credentials", credentials),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_service_account_key.project_id", projectID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "azure"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.client_id", clientID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.tenant_id", tenantID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_client_secret.client_secret", clientSecret),
 	}
 }
 
-func gcpCheckFederatedIdentityFuncs(integrationName, audience, serviceAccountEmail string) []resource.TestCheckFunc {
+func azureCheckFederatedIdentityFuncs(integrationName, clientID, tenantID, audience string) []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
@@ -164,20 +169,21 @@ func gcpCheckFederatedIdentityFuncs(integrationName, audience, serviceAccountEma
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "resource_name"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "name", integrationName),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.#", "1"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "DYNAMIC"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "gcp"),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_federated_workload_identity.audience", audience),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "gcp_federated_workload_identity.service_account_email", serviceAccountEmail),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "capabilities.0", "ROTATION"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "provider_type", "azure"),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.audience", audience),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.tenant_id", tenantID),
+		resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "azure_federated_workload_identity.client_id", clientID),
 	}
 }
 
-func gcpIntegrationExists(t *testing.T, name string) bool {
+func azureIntegrationExists(t *testing.T, name string) bool {
 	t.Helper()
 
 	client := acctest.HCPClients(t)
 
-	response, err := client.VaultSecrets.GetGcpIntegration(
-		secret_service.NewGetGcpIntegrationParamsWithContext(ctx).
+	response, err := client.VaultSecrets.GetAzureIntegration(
+		secret_service.NewGetAzureIntegrationParamsWithContext(ctx).
 			WithOrganizationID(client.Config.OrganizationID).
 			WithProjectID(client.Config.ProjectID).
 			WithName(name), nil)
