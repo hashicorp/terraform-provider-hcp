@@ -121,7 +121,7 @@ func GetBoundaryClusterControllerConfigByID(
 	client *Client,
 	loc *sharedmodels.HashicorpCloudLocationLocation,
 	boundaryClusterID string,
-) (*boundarymodels.HashicorpCloudBoundary20211221GetControllerConfigurationResponse, error) {
+) (*boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration, error) {
 
 	params := boundary_service.NewBoundaryServiceGetControllerConfigurationParams()
 	params.Context = ctx
@@ -134,7 +134,7 @@ func GetBoundaryClusterControllerConfigByID(
 		return nil, err
 	}
 
-	return resp.Payload, nil
+	return resp.Payload.Config, nil
 }
 
 // UpdateBoundaryClusterControllerConfig updates the controllers auth config for TTL and TTS on a Boundary cluster.
@@ -155,6 +155,29 @@ func UpdateBoundaryClusterControllerConfig(
 	params.ClusterID = boundaryClusterID
 
 	_, err := client.Boundary.BoundaryServiceUpdateControllerConfiguration(params, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ResetBoundaryClusterControllerConfig resets the controllers auth config for TTL and TTS on a Boundary cluster.
+func ResetBoundaryClusterControllerConfig(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	boundaryClusterID string,
+) error {
+
+	params := boundary_service.NewBoundaryServiceResetControllerConfigurationParams()
+	params.Context = ctx
+
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.ClusterID = boundaryClusterID
+
+	_, err := client.Boundary.BoundaryServiceResetControllerConfiguration(params, nil)
 	if err != nil {
 		return err
 	}

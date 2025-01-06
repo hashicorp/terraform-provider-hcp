@@ -22,6 +22,10 @@ resource "hcp_boundary_cluster" "example" {
     end          = 12
     upgrade_type = "SCHEDULED"
   }
+  controller_config {
+    auth_token_time_to_live  = "36h0m0s"
+    auth_token_time_to_stale = "12h0m0s"
+  }
 }
 ```
 
@@ -37,6 +41,7 @@ resource "hcp_boundary_cluster" "example" {
 
 ### Optional
 
+- `controller_config` (Block List, Max: 1) The controller configuration for the Boundary cluster. (see [below for nested schema](#nestedblock--controller_config))
 - `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config))
 - `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
@@ -50,6 +55,15 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `id` (String) The ID of this resource.
 - `state` (String) The state of the Boundary cluster.
 - `version` (String) The version of the Boundary cluster.
+
+<a id="nestedblock--controller_config"></a>
+### Nested Schema for `controller_config`
+
+Optional:
+
+- `auth_token_time_to_live` (String) The time to live for the auth token in the format of golang's time.Duration string.
+- `auth_token_time_to_stale` (String) The time to stale for the auth token in the format of golang's time.Duration string.
+
 
 <a id="nestedblock--maintenance_window_config"></a>
 ### Nested Schema for `maintenance_window_config`
