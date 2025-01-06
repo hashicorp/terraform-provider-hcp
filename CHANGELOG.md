@@ -8,6 +8,13 @@ FEATURES:
 DEPRECATIONS:
 
 * the following resources are deprecated:
+  - `Starter_Small` is no longer supported for Vault Cluster
+  
+## v0.101.0 (January 15, 2025)
+
+DEPRECATIONS:
+
+* the following resources are deprecated:
   - `hcp_vault_secrets_integration_aws`
   - `hcp_vault_secrets_integration_azure`
   - `hcp_vault_secrets_integration_confluent`
