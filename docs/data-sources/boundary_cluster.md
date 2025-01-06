@@ -34,6 +34,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 ### Read-Only
 
 - `cluster_url` (String) A unique URL identifying the Boundary cluster.
+- `controller_config` (List of Object) (see [below for nested schema](#nestedatt--controller_config))
 - `created_at` (String) The time that the Boundary cluster was created.
 - `id` (String) The ID of this resource.
 - `maintenance_window_config` (List of Object) (see [below for nested schema](#nestedatt--maintenance_window_config))
@@ -47,6 +48,15 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedatt--controller_config"></a>
+### Nested Schema for `controller_config`
+
+Read-Only:
+
+- `auth_token_time_to_live` (String)
+- `auth_token_time_to_stale` (String)
 
 
 <a id="nestedatt--maintenance_window_config"></a>

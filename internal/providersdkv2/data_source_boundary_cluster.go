@@ -94,6 +94,24 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"controller_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_token_time_to_live": {
+							Description: "The time to live for the auth token in time.Duration format.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"auth_token_time_to_stale": {
+							Description: "The time to stale for the auth token in time.Duration format.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -135,8 +153,13 @@ func dataSourceBoundaryClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("unable to fetch maintenenace window Boundary cluster (%s): %v", clusterID, err)
 	}
 
+	controllerConfig, err := clients.GetBoundaryClusterControllerConfigByID(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to fetch controller config for Boundary cluster (%s): %v", clusterID, err)
+	}
+
 	// cluster found, update resource data
-	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW); err != nil {
+	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW, controllerConfig); err != nil {
 		return diag.FromErr(err)
 	}
 
