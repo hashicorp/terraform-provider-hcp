@@ -114,3 +114,50 @@ func GetBoundaryClusterMaintenanceWindow(
 
 	return resp.Payload.UpgradeType, resp.Payload.MaintenanceWindow, nil
 }
+
+// GetBoundaryClusterControllerConfigByID gets the controllers auth config for TTL and TTS on a Boundary cluster.
+func GetBoundaryClusterControllerConfigByID(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	boundaryClusterID string,
+) (*boundarymodels.HashicorpCloudBoundary20211221GetControllerConfigurationResponse, error) {
+
+	params := boundary_service.NewBoundaryServiceGetControllerConfigurationParams()
+	params.Context = ctx
+	params.ClusterID = boundaryClusterID
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+
+	resp, err := client.Boundary.BoundaryServiceGetControllerConfiguration(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
+}
+
+// UpdateBoundaryClusterControllerConfig updates the controllers auth config for TTL and TTS on a Boundary cluster.
+func UpdateBoundaryClusterControllerConfig(
+	ctx context.Context,
+	client *Client,
+	loc *sharedmodels.HashicorpCloudLocationLocation,
+	boundaryClusterID string,
+	updateRequest *boundarymodels.HashicorpCloudBoundary20211221UpdateControllerConfigurationRequest,
+) error {
+
+	params := boundary_service.NewBoundaryServiceUpdateControllerConfigurationParams()
+	params.Context = ctx
+	params.Body = updateRequest
+
+	params.LocationOrganizationID = loc.OrganizationID
+	params.LocationProjectID = loc.ProjectID
+	params.ClusterID = boundaryClusterID
+
+	_, err := client.Boundary.BoundaryServiceUpdateControllerConfiguration(params, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
