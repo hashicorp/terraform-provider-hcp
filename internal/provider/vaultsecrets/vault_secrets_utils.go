@@ -28,10 +28,6 @@ const (
 	ProviderGCP          Provider = "gcp"
 	ProviderMongoDBAtlas Provider = "mongodb-atlas"
 	ProviderTwilio       Provider = "twilio"
-	ProviderGCP          Provider = "gcp"
-	ProviderMongoDBAtlas Provider = "mongodb_atlas"
-	ProviderTwilio       Provider = "twilio"
-	ProviderConfluent    Provider = "confluent"
 )
 
 func (p Provider) String() string {
