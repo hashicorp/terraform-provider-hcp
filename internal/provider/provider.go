@@ -159,11 +159,13 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsRotatingSecretResource,
 		// Vault Secrets Deprecated
 		vaultsecrets.NewVaultSecretsIntegrationAWSResource,
-		vaultsecrets.NewVaultSecretsIntegrationAzureResource,
 		vaultsecrets.NewVaultSecretsIntegrationsConfluentResource,
 		vaultsecrets.NewVaultSecretsIntegrationGCPResource,
 		vaultsecrets.NewVaultSecretsIntegrationMongoDBAtlasResource,
 		vaultsecrets.NewVaultSecretsIntegrationTwilioResource,
+		vaultsecrets.NewVaultSecretsIntegrationsConfluentResource,
+		vaultsecrets.NewVaultSecretsDynamicSecretResource,
+		vaultsecrets.NewVaultSecretsRotatingSecretResource,
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
