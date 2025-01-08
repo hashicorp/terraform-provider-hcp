@@ -94,23 +94,15 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"controller_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_token_time_to_live": {
-							Description: "The time to live for the auth token in time.Duration format.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-						"auth_token_time_to_stale": {
-							Description: "The time to stale for the auth token in time.Duration format.",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-					},
-				},
+			"auth_token_time_to_live": {
+				Description: "The time to live for the auth token in golang's time.Duration string format.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"auth_token_time_to_stale": {
+				Description: "The time to stale for the auth token in golang's time.Duration string format.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
