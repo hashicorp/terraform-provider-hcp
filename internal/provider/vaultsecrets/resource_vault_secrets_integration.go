@@ -63,7 +63,7 @@ type Integration struct {
 	GcpFederatedWorkloadIdentity     types.Object `tfsdk:"gcp_federated_workload_identity"`
 	MongoDBAtlasStaticCredentials    types.Object `tfsdk:"mongodb_atlas_static_credentials"`
 	TwilioStaticCredentials          types.Object `tfsdk:"twilio_static_credentials"`
-	MysqlStaticCredentials      	 types.Object `tfsdk:"mysql_static_credentials"`
+	MysqlStaticCredentials           types.Object `tfsdk:"mysql_static_credentials"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -372,7 +372,7 @@ func (r *resourceVaultSecretsIntegration) Create(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
-				MysqlStaticCredentials: 	    integration.mysqlStaticCredentials,
+				MysqlStaticCredentials:         integration.mysqlStaticCredentials,
 			},
 			OrganizationID: integration.OrganizationID.ValueString(),
 			ProjectID:      integration.ProjectID.ValueString(),
@@ -407,7 +407,7 @@ func (r *resourceVaultSecretsIntegration) Update(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
-				MysqlStaticCredentials: 	    integration.mysqlStaticCredentials,
+				MysqlStaticCredentials:         integration.mysqlStaticCredentials,
 			},
 			Name:           integration.Name.ValueString(),
 			OrganizationID: integration.OrganizationID.ValueString(),
