@@ -247,8 +247,7 @@ func validateCIDRRangeDescription(v interface{}, path cty.Path) diag.Diagnostics
 
 func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
-	v = strings.ToUpper(v.(string))
-	err := vaultmodels.HashicorpCloudVault20201125Tier(v.(string)).Validate(strfmt.Default)
+	err := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
 		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
 		expectedEnumList := strings.ToLower(enumList)
@@ -261,7 +260,7 @@ func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 		})
 	}
 	// Check if the tier is disabled and add a deprecation message if the tier is disabled
-	if vaulthelper.IsDisabledTier(v.(string)) {
+	if vaulthelper.IsDisabledTier(strings.ToUpper(v.(string))) {
 		msg := fmt.Sprintf("Tier '%v' is deprecated", v)
 		diagnostics = append(diagnostics, diag.Diagnostic{
 			Severity:      diag.Error,
