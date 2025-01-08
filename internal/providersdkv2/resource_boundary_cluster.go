@@ -166,51 +166,42 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"controller_config": {
-				Description: "The controller configuration for the Boundary cluster.",
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_token_time_to_live": {
-							Description: "The time to live for the auth token in the format of golang's time.Duration string.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
-								_, err := time.ParseDuration(i.(string))
-								if err != nil {
-									errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
-								}
-								return warnings, errors
-							},
-							RequiredWith: []string{"controller_config.0.auth_token_time_to_stale"},
-							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-								oldTime, _ := time.ParseDuration(old)
-								newTime, _ := time.ParseDuration(new)
-								return newTime == oldTime
-							},
-						},
-						"auth_token_time_to_stale": {
-							Description: "The time to stale for the auth token in the format of golang's time.Duration string.",
-							Type:        schema.TypeString,
-							Optional:    true,
-							ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
-								_, err := time.ParseDuration(i.(string))
-								if err != nil {
-									errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
-								}
-								return warnings, errors
-							},
-							RequiredWith: []string{"controller_config.0.auth_token_time_to_live"},
-							DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-								oldTime, _ := time.ParseDuration(old)
-								newTime, _ := time.ParseDuration(new)
-								return newTime == oldTime
-							},
-						},
-					},
+			"auth_token_time_to_live": {
+				Description:  "The time to live for the auth token in golang's time.Duration string format.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "1680h0m0s",
+				RequiredWith: []string{"auth_token_time_to_stale"},
+				ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
+					_, err := time.ParseDuration(i.(string))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
+					}
+					return warnings, errors
+				},
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					oldTime, _ := time.ParseDuration(old)
+					newTime, _ := time.ParseDuration(new)
+					return newTime == oldTime
+				},
+			},
+			"auth_token_time_to_stale": {
+				Description:  "The time to stale for the auth token in golang's time.Duration string format.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "24h0m0s",
+				RequiredWith: []string{"auth_token_time_to_live"},
+				ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
+					_, err := time.ParseDuration(i.(string))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
+					}
+					return warnings, errors
+				},
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					oldTime, _ := time.ParseDuration(old)
+					newTime, _ := time.ParseDuration(new)
+					return newTime == oldTime
 				},
 			},
 		},
@@ -325,14 +316,8 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 		currentUpgradeType = upgradeType
 	}
 
-	// Retrieve the controller configuration in the case it was not provided
-	currentControllerConfig, err := clients.GetBoundaryClusterControllerConfigByID(ctx, client, loc, clusterID)
-	if err != nil {
-		return diag.Errorf("unable to fetch controller configuration for Boundary cluster (%s): %v", clusterID, err)
-	}
-
 	// set Boundary cluster resource data
-	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow, currentControllerConfig)
+	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow, controllerConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -586,21 +571,21 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 		return err
 	}
 
-	ctrlConfig := map[string]any{}
-	if clusterCtrlConfig != nil {
-		authTTL, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToLive)
-		if err != nil {
-			return fmt.Errorf("unable to parse auth_token_time_to_live to time: %v", err)
-		}
-		authTTS, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToStale)
-		if err != nil {
-			return fmt.Errorf("unable to parse auth_token_time_to_stale to time: %v", err)
-		}
-		ctrlConfig["auth_token_time_to_live"] = authTTL.String()
-		ctrlConfig["auth_token_time_to_stale"] = authTTS.String()
+	authTTL, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToLive)
+	if err != nil {
+		return fmt.Errorf("unable to parse auth_token_time_to_live to time: %v", err)
 	}
 
-	if err := d.Set("controller_config", []any{ctrlConfig}); err != nil {
+	authTTS, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToStale)
+	if err != nil {
+		return fmt.Errorf("unable to parse auth_token_time_to_stale to time: %v", err)
+	}
+
+	if err := d.Set("auth_token_time_to_live", authTTL.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("auth_token_time_to_stale", authTTS.String()); err != nil {
 		return err
 	}
 
@@ -671,32 +656,20 @@ func getBoundaryClusterMaintainanceWindowConfig(d *schema.ResourceData) (*bounda
 }
 
 func getBoundaryClusterControllerConfig(d *schema.ResourceData) (*boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration, diag.Diagnostics) {
-	if !d.HasChange("controller_config") {
-		return nil, nil
-	}
-
-	// get the controller_config resources
-	controllerConfigParam, ok := d.GetOk("controller_config")
-	if !ok {
-		return nil, nil
-	}
-
-	// convert to []any is required even though we set a MaxItems=1
-	controllerConfigs, ok := controllerConfigParam.([]any)
-	if !ok || len(controllerConfigs) == 0 {
-		return nil, nil
-	}
-
-	// get the elements in the config
-	controllerConfigElems, ok := controllerConfigs[0].(map[string]any)
-	if !ok || len(controllerConfigElems) == 0 {
+	if !d.HasChange("auth_token_time_to_live") && !d.HasChange("auth_token_time_to_stale") {
 		return nil, nil
 	}
 
 	controllerConfig := &boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration{}
 
-	authTTL, _ := time.ParseDuration(controllerConfigElems["auth_token_time_to_live"].(string))
-	authTTS, _ := time.ParseDuration(controllerConfigElems["auth_token_time_to_stale"].(string))
+	authTTL, err := time.ParseDuration(d.Get("auth_token_time_to_live").(string))
+	if err != nil {
+		return nil, diag.Errorf("unable to parse auth_token_time_to_live to time: %v", err)
+	}
+	authTTS, err := time.ParseDuration(d.Get("auth_token_time_to_stale").(string))
+	if err != nil {
+		return nil, diag.Errorf("unable to parse auth_token_time_to_stale to time: %v", err)
+	}
 
 	controllerConfig.AuthTokenTimeToLive = authTTL.String()
 	controllerConfig.AuthTokenTimeToStale = authTTS.String()
