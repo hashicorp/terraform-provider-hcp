@@ -17,6 +17,7 @@ import (
 	vaultmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-service/stable/2020-11-25/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	vaulthelper "github.com/hashicorp/terraform-provider-hcp/internal/helpers"
 	"github.com/hashicorp/terraform-provider-hcp/internal/input"
 )
 
@@ -191,7 +192,6 @@ func validateConsulClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 
 func validateConsulClusterSize(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
-
 	// TODO: Update the validation once SDK provides a way to get all valid values for the enum.
 	err := consulmodels.HashicorpCloudConsul20210204CapacityConfigSize(strings.ToUpper(v.(string))).Validate(strfmt.Default)
 	if err != nil {
@@ -247,8 +247,8 @@ func validateCIDRRangeDescription(v interface{}, path cty.Path) diag.Diagnostics
 
 func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
-
-	err := vaultmodels.HashicorpCloudVault20201125Tier(strings.ToUpper(v.(string))).Validate(strfmt.Default)
+	v = strings.ToUpper(v.(string))
+	err := vaultmodels.HashicorpCloudVault20201125Tier(v.(string)).Validate(strfmt.Default)
 	if err != nil {
 		enumList := regexp.MustCompile(`\[.*\]`).FindString(err.Error())
 		expectedEnumList := strings.ToLower(enumList)
@@ -260,7 +260,16 @@ func validateVaultClusterTier(v interface{}, path cty.Path) diag.Diagnostics {
 			AttributePath: path,
 		})
 	}
-
+	// Check if the tier is disabled and add a deprecation message if the tier is disabled
+	if vaulthelper.IsDisabledTier(v.(string)) {
+		msg := fmt.Sprintf("Tier '%v' is deprecated", v)
+		diagnostics = append(diagnostics, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       msg,
+			Detail:        msg,
+			AttributePath: path,
+		})
+	}
 	return diagnostics
 }
 
