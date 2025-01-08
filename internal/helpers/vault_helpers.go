@@ -1,9 +1,9 @@
 package helpers
 
-var DISABLED_TIERS = []string{"STARTER_SMALL"}
+var DisabledTiers = []string{"STARTER_SMALL"}
 
 func IsDisabledTier(v string) bool {
-	for _, tier := range DISABLED_TIERS {
+	for _, tier := range DisabledTiers {
 		if tier == v {
 			return true
 		}
