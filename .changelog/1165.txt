@@ -1,0 +1,3 @@
+```release-note:fix
+Fix the category for Azure Resource using a tmpl file
+```
