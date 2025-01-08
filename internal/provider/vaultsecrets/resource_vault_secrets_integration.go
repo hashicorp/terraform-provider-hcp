@@ -288,7 +288,7 @@ func (r *resourceVaultSecretsIntegration) Schema(_ context.Context, _ resource.S
 		},
 		"mysql_static_credentials": schema.SingleNestedAttribute{
 			Description: "MySQL API key parts used to authenticate against the target MySQL account.",
-			Optional:    false,
+			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"connection_string": schema.StringAttribute{
 					Description: "Connection string for the target MySQL account.",
