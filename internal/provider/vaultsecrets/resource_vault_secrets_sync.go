@@ -3,6 +3,7 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
+
 	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
@@ -146,9 +147,10 @@ func (r *resourceVaultSecretsSync) Create(ctx context.Context, req resource.Crea
 
 		response, err := r.client.VaultSecrets.CreateSync(&secret_service.CreateSyncParams{
 			Body: &secretmodels.SecretServiceCreateSyncBody{
-				Name:            sync.Name.ValueString(),
-				IntegrationName: sync.IntegrationName.ValueString(),
-				Type:            providerType,
+				Name:             sync.Name.ValueString(),
+				IntegrationName:  sync.IntegrationName.ValueString(),
+				Type:             providerType,
+				SyncConfigGitlab: &secretmodels.Secrets20231128SyncConfigGitlab{},
 			},
 			OrganizationID: sync.OrganizationID.ValueString(),
 			ProjectID:      sync.ProjectID.ValueString(),
@@ -162,7 +164,6 @@ func (r *resourceVaultSecretsSync) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceVaultSecretsSync) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 }
 
 func (r *resourceVaultSecretsSync) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
