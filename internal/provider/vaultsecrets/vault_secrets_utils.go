@@ -24,7 +24,6 @@ type Provider string
 
 const (
 	ProviderAWS          Provider = "aws"
-	ProviderAzure        Provider = "azure"
 	ProviderConfluent    Provider = "confluent"
 	ProviderGCP          Provider = "gcp"
 	ProviderMongoDBAtlas Provider = "mongodb-atlas"
@@ -38,7 +37,6 @@ func (p Provider) String() string {
 func ProviderStrings() []string {
 	return []string{
 		string(ProviderAWS),
-		string(ProviderAzure),
 		string(ProviderConfluent),
 		string(ProviderGCP),
 		string(ProviderMongoDBAtlas),

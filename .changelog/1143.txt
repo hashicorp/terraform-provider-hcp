@@ -1,3 +1,0 @@
-```release-note:feature
-add vault_secrets_integration_azure resource and add support for azure secrets to vault_secrets_rotating_secret resource
-```
