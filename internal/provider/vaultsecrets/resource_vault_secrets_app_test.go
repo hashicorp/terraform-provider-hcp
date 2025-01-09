@@ -18,17 +18,14 @@ import (
 )
 
 func TestAccVaultSecretsResourceApp(t *testing.T) {
-	integrationName1 := generateRandomSlug()
-	accessKeyID := checkRequiredEnvVarOrFail(t, "AWS_ACCESS_KEY_ID")
-	secretAccessKey := checkRequiredEnvVarOrFail(t, "AWS_SECRET_ACCESS_KEY")
-
-	appName1 := generateRandomSlug()
-	appName2 := generateRandomSlug()
-
-	description1 := "my description 1"
-	description2 := "my description 2"
-
-	syncName := generateRandomSlug()
+	var (
+		integrationName1 = generateRandomSlug()
+		appName1         = generateRandomSlug()
+		appName2         = generateRandomSlug()
+		description1     = "my description 1"
+		description2     = "my description 2"
+		syncName         = generateRandomSlug()
+	)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
@@ -59,17 +56,18 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 				Config: fmt.Sprintf(`
 					resource "hcp_vault_secrets_integration" "acc_test" {
 						name = %q
-						capabilities = ["DYNAMIC", "ROTATION"]
-						provider_type = "aws"
-						aws_access_keys = {
-							access_key_id = %q
-							secret_access_key = %q
-						}
+						capabilities = ["DYNAMIC", "SYNC"]
+						provider_type = "gitlab"
+						# TODO: add GitLab-specific fields
 					}
 
 					resource "hcp_vault_secrets_sync" "example" {
 						name = %q
     					integration_name = hcp_vault_secrets_integration.acc_test.name
+    					gitlab_config {
+    					    scope = "PROJECT"
+    					    project_id = "1234"
+    					}
 					}
 
 					resource "hcp_vault_secrets_app" "acc_test_app" {
@@ -77,7 +75,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 						description = %q
 						sync_names = [hcp_vault_secrets_sync.example.name]
 					}
-				`, integrationName1, accessKeyID, secretAccessKey, syncName, appName2, description2),
+				`, integrationName1, syncName, appName2, description2),
 				Check: resource.ComposeTestCheckFunc(
 					appCheckFunc(appName2, description2, []string{syncName})...,
 				),

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -26,11 +27,39 @@ type Sync struct {
 	IntegrationName types.String `tfsdk:"integration_name"`
 	ProjectID       types.String `tfsdk:"project_id"`
 	OrganizationID  types.String `tfsdk:"organization_id"`
+
+	// Destination-specific mutually exclusive fields
+	GitlabConfig types.Object `tfsdk:"gitlab_config"`
+
+	// Inner API-compatible models derived from the Terraform fields
+	gitlabConfig *secretmodels.Secrets20231128SyncConfigGitlab `tfsdk:"-"`
 }
 
-func (s *Sync) initModel(_ context.Context, orgID, projID string) diag.Diagnostics {
+type gitlabConfigParams struct {
+	Scope     types.String `tfsdk:"scope"`
+	GroupId   types.String `tfsdk:"group_id"`
+	ProjectId types.String `tfsdk:"project_id"`
+}
+
+func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	s.OrganizationID = types.StringValue(orgID)
 	s.ProjectID = types.StringValue(projID)
+
+	if !s.GitlabConfig.IsNull() {
+		config := gitlabConfigParams{}
+		diags := s.GitlabConfig.As(ctx, &config, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			return diags
+		}
+
+		scope := secretmodels.SyncConfigGitlabScope(config.Scope.ValueString())
+
+		s.gitlabConfig = &secretmodels.Secrets20231128SyncConfigGitlab{
+			Scope:     &scope,
+			GroupID:   config.GroupId.ValueString(),
+			ProjectID: config.ProjectId.ValueString(),
+		}
+	}
 
 	return diag.Diagnostics{}
 }
@@ -96,6 +125,24 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 				slugValidator,
 			},
 		},
+		"gitlab_config": schema.SingleNestedAttribute{
+			Description: "Configuration parameters used to determine the sync destination.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"scope": schema.StringAttribute{
+					Description: "", // TODO: write this description
+					Required:    true,
+				},
+				"project_id": schema.StringAttribute{
+					Description: "", // TODO: write this description
+					Required:    true,
+					Sensitive:   true,
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneIntegrationTypeFieldsValidator,
+			},
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
@@ -150,7 +197,7 @@ func (r *resourceVaultSecretsSync) Create(ctx context.Context, req resource.Crea
 				Name:             sync.Name.ValueString(),
 				IntegrationName:  sync.IntegrationName.ValueString(),
 				Type:             providerType,
-				SyncConfigGitlab: &secretmodels.Secrets20231128SyncConfigGitlab{},
+				SyncConfigGitlab: sync.gitlabConfig,
 			},
 			OrganizationID: sync.OrganizationID.ValueString(),
 			ProjectID:      sync.ProjectID.ValueString(),
