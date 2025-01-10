@@ -1,28 +1,26 @@
 name: Prerelease
 
 on:
-  # Run Every Wednesday at 01:00 AM UTC
-  # schedule:
-  #   - cron: '0 2 * * 3'
   workflow_dispatch:
     inputs:
       release-as-patch:
         description: "Patch Release (default: Minor)"
         type: boolean
         default: false
-      skip-tests:
-        description: "Skip the E2E test suite for break-glass scenarios"
-        type: boolean
-        default: false
+
 permissions: write-all
 
 jobs:
-  run-tests:
+  test:
     name: Run Tests
     uses: ./.github/workflows/test.yml
-    with:
-      # need to use contains because inputs are null for schedule runs
-      skip-e2e-tests: ${{ contains(inputs.skip-tests, 'true') }}
+    secrets: inherit
+    permissions:
+      contents: read
+
+  testacc:
+    name: Run Acceptance Tests
+    uses: ./.github/workflows/testacc.yml
     secrets: inherit
     permissions:
       contents: read
