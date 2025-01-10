@@ -8,4 +8,6 @@ resource "hcp_boundary_cluster" "example" {
     end          = 12
     upgrade_type = "SCHEDULED"
   }
+  auth_token_time_to_live  = "36h0m0s"
+  auth_token_time_to_stale = "12h0m0s"
 }
