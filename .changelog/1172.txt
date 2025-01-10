@@ -1,0 +1,3 @@
+```release-note:improvement
+Added MsSQL resource for integration and secrets for HVS
+```
