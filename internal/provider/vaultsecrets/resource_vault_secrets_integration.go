@@ -38,8 +38,13 @@ var exactlyOneIntegrationTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("gcp_federated_workload_identity"),
 		path.MatchRoot("mongodb_atlas_static_credentials"),
 		path.MatchRoot("twilio_static_credentials"),
+		path.MatchRoot("mssql_static_credentials"),
 	}...,
 )
+
+type mssqlStaticCredentials struct {
+	ConnectionString types.String `tfsdk:"connection_string"`
+}
 
 type Integration struct {
 	// Input fields
@@ -58,6 +63,7 @@ type Integration struct {
 	GcpFederatedWorkloadIdentity     types.Object `tfsdk:"gcp_federated_workload_identity"`
 	MongoDBAtlasStaticCredentials    types.Object `tfsdk:"mongodb_atlas_static_credentials"`
 	TwilioStaticCredentials          types.Object `tfsdk:"twilio_static_credentials"`
+	MssqlStaticCredentials           types.Object `tfsdk:"mssql_static_credentials"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -75,6 +81,7 @@ type Integration struct {
 	gcpFederatedWorkloadIdentity   *secretmodels.Secrets20231128GcpFederatedWorkloadIdentityRequest   `tfsdk:"-"`
 	mongoDBAtlasStaticCredentials  *secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest  `tfsdk:"-"`
 	twilioStaticCredentials        *secretmodels.Secrets20231128TwilioStaticCredentialsRequest        `tfsdk:"-"`
+	mssqlStaticCredentials         *secretmodels.Secrets20231128MssqlStaticCredentialsRequest         `tfsdk:"-"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsIntegration{}
@@ -279,6 +286,19 @@ func (r *resourceVaultSecretsIntegration) Schema(_ context.Context, _ resource.S
 				exactlyOneIntegrationTypeFieldsValidator,
 			},
 		},
+		"mssql_static_credentials": schema.SingleNestedAttribute{
+			Description: "MsSQL API key parts used to authenticate against the target MsSQL account.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"connection_string": schema.StringAttribute{
+					Description: "Connection string for the target MsSQL account.",
+					Required:    true,
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneIntegrationTypeFieldsValidator,
+			},
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
@@ -352,6 +372,7 @@ func (r *resourceVaultSecretsIntegration) Create(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
+				MssqlStaticCredentials:         integration.mssqlStaticCredentials,
 			},
 			OrganizationID: integration.OrganizationID.ValueString(),
 			ProjectID:      integration.ProjectID.ValueString(),
@@ -386,6 +407,7 @@ func (r *resourceVaultSecretsIntegration) Update(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
+				MssqlStaticCredentials:         integration.mssqlStaticCredentials,
 			},
 			Name:           integration.Name.ValueString(),
 			OrganizationID: integration.OrganizationID.ValueString(),
@@ -568,6 +590,18 @@ func (i *Integration) initModel(ctx context.Context, orgID, projID string) diag.
 		}
 	}
 
+	if !i.MssqlStaticCredentials.IsNull() {
+		scd := mssqlStaticCredentials{}
+		diags = i.MssqlStaticCredentials.As(ctx, &scd, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			return diags
+		}
+
+		i.mssqlStaticCredentials = &secretmodels.Secrets20231128MssqlStaticCredentialsRequest{
+			ConnectionString: scd.ConnectionString.ValueString(),
+		}
+	}
+
 	return diag.Diagnostics{}
 }
 
@@ -713,6 +747,15 @@ func (i *Integration) fromModel(ctx context.Context, orgID, projID string, model
 			"account_sid":    types.StringValue(integrationModel.TwilioStaticCredentials.AccountSid),
 			"api_key_sid":    types.StringValue(integrationModel.TwilioStaticCredentials.APIKeySid),
 			"api_key_secret": types.StringValue(apiKeySecret),
+		})
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	if integrationModel.MssqlStaticCredentials != nil {
+		i.MssqlStaticCredentials, diags = types.ObjectValue(i.MssqlStaticCredentials.AttributeTypes(ctx), map[string]attr.Value{
+			"connection_string": types.StringValue(integrationModel.MssqlStaticCredentials.ConnectionString),
 		})
 		if diags.HasError() {
 			return diags
