@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
+
+func testAccUniqueNameWithPrefix(prefix string) string {
+	shortUUID := uuid.New().String()[0:8]
+
+	return fmt.Sprintf("testacc-%s-%s", prefix, shortUUID)
+}
 
 func testAccCheckFullURL(name, key, port string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
