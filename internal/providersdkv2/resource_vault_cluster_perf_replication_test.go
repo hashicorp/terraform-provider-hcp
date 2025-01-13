@@ -49,7 +49,10 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 	return tfResources.String()
 }
 
-func TestAccPerformanceReplication_ValidationsAws(t *testing.T) {
+func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
+	t.Skip("Error:http is not enabled as an observability provider")
+	t.Parallel()
+
 	awsPerfReplicationTestInput := &inputT{
 		HvnName:                  addTimestampSuffix("test-perf-hvn-1-"),
 		HvnCidr:                  "172.25.16.0/20",
@@ -153,9 +156,9 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				tier            = "{{ .Tier }}"
 				public_endpoint = true
 				audit_log_config {
-					http_endpoint = "https://http-input-splunkcloud.com"
-					http_codec		= "INVALID"
-					http_method		= "POST"
+					http_uri    = "https://http-input-splunkcloud.com"
+					http_codec	= "INVALID"
+					http_method	= "POST"
 				}
 			}
 			`, in)),
@@ -176,7 +179,7 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
 				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
-				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_endpoint"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"),
 				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
 			),
 			ExpectError: regexp.MustCompile(`http configuration is invalid: allowed values for http_codec are only \"JSON\" or \"NDJSON\"`),
@@ -190,9 +193,9 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				tier            = "{{ .Tier }}"
 				public_endpoint = true
 				audit_log_config {
-					http_endpoint = "https://http-input-splunkcloud.com"
-					http_codec		= "JSON"
-					http_method		= "POST"
+					http_uri    = "https://http-input-splunkcloud.com"
+					http_codec	= "JSON"
+					http_method	= "POST"
 				}
 			}
 			`, in)),
@@ -213,7 +216,7 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
 				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
-				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_endpoint"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"),
 				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
 				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
 			),
