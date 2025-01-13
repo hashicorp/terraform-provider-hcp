@@ -2,7 +2,7 @@
 subcategory: ""
 page_title: "Resize or scale a Vault cluster"
 description: |-
-    Change a current HCP Vault cluster in terms of tiers (Dev, Starter, Standard, Plus) or sizes (S, M, L).
+    Change a current HCP Vault cluster in terms of tiers (Dev, Standard, Plus) or sizes (S, M, L).
 ---
 
 # Scale a cluster
