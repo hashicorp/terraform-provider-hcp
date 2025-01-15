@@ -116,6 +116,7 @@ resource "hcp_vault_secrets_integration" "example_twilio" {
 - `gcp_federated_workload_identity` (Attributes) (Recommended) Federated identity configuration to authenticate against the target GCP project. Cannot be used with `service_account_key`. (see [below for nested schema](#nestedatt--gcp_federated_workload_identity))
 - `gcp_service_account_key` (Attributes) GCP service account key used to authenticate against the target GCP project. Cannot be used with `federated_workload_identity`. (see [below for nested schema](#nestedatt--gcp_service_account_key))
 - `mongodb_atlas_static_credentials` (Attributes) MongoDB Atlas API key used to authenticate against the target project. (see [below for nested schema](#nestedatt--mongodb_atlas_static_credentials))
+- `mysql_static_credentials` (Attributes) MySQL API key parts used to authenticate against the target MySQL account. (see [below for nested schema](#nestedatt--mysql_static_credentials))
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
 - `twilio_static_credentials` (Attributes) Twilio API key parts used to authenticate against the target Twilio account. (see [below for nested schema](#nestedatt--twilio_static_credentials))
 
@@ -201,6 +202,14 @@ Required:
 
 - `api_private_key` (String, Sensitive) Private key used alongside the public key to authenticate against the target project.
 - `api_public_key` (String) Public key used alongside the private key to authenticate against the target project.
+
+
+<a id="nestedatt--mysql_static_credentials"></a>
+### Nested Schema for `mysql_static_credentials`
+
+Required:
+
+- `connection_string` (String) Connection string for the target MySQL account.
 
 
 <a id="nestedatt--twilio_static_credentials"></a>
