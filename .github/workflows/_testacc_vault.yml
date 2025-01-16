@@ -15,6 +15,9 @@ concurrency:
   group: testacc-vault
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   acceptance_tests:
     name: Acceptance Tests
