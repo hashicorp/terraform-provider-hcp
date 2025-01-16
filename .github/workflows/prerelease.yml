@@ -19,8 +19,6 @@ jobs:
     name: Run Tests
     uses: ./.github/workflows/test.yml
     secrets: inherit
-    permissions:
-      contents: read
 
   testacc:
     name: Run Acceptance Tests
