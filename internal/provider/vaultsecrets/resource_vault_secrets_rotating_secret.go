@@ -33,6 +33,7 @@ var exactlyOneRotatingSecretTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("twilio_api_key"),
 		path.MatchRoot("confluent_service_account"),
 		path.MatchRoot("azure_application_password"),
+		path.MatchRoot("mssql_users"),
 	}...,
 )
 
@@ -54,6 +55,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
 	ProviderAzure:        &azureRotatingSecret{},
+	ProviderMssql:        &mssqlRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -72,6 +74,7 @@ type RotatingSecret struct {
 	TwilioAPIKey             *twilioAPIKey             `tfsdk:"twilio_api_key"`
 	ConfluentServiceAccount  *confluentServiceAccount  `tfsdk:"confluent_service_account"`
 	AzureApplicationPassword *AzureApplicationPassword `tfsdk:"azure_application_password"`
+	MssqlUsers               *mssqlUsers               `tfsdk:"mssql_users"`
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
 
@@ -100,6 +103,10 @@ type confluentServiceAccount struct {
 type AzureApplicationPassword struct {
 	AppClientID types.String `tfsdk:"app_client_id"`
 	AppObjectID types.String `tfsdk:"app_object_id"`
+}
+
+type mssqlUsers struct {
+	Usernames []string `tfsdk:"usernames"`
 }
 
 type twilioAPIKey struct{}
@@ -228,6 +235,22 @@ func (r *resourceVaultSecretsRotatingSecret) Schema(_ context.Context, _ resourc
 				},
 				"app_object_id": schema.StringAttribute{
 					Description: "Application object ID to rotate the application password for.",
+					Required:    true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Validators: []validator.Object{
+				exactlyOneRotatingSecretTypeFieldsValidator,
+			},
+		},
+		"mssql_users": schema.SingleNestedAttribute{
+			Description: "MSSQL configuration to manage the database user credential rotation for the given host. Required if `secret_provider` is `mssql`.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"usernames": schema.StringAttribute{
+					Description: "MsSQL usernames to rotate the passwords for.",
 					Required:    true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),

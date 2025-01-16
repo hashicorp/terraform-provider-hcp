@@ -98,6 +98,7 @@ resource "hcp_vault_secrets_rotating_secret" "example_azure" {
 - `confluent_service_account` (Attributes) Confluent configuration to manage the cloud api key rotation for the given service account. Required if `secret_provider` is `confluent`. (see [below for nested schema](#nestedatt--confluent_service_account))
 - `gcp_service_account_key` (Attributes) GCP configuration to manage the service account key rotation for the given service account. Required if `secret_provider` is `gcp`. (see [below for nested schema](#nestedatt--gcp_service_account_key))
 - `mongodb_atlas_user` (Attributes) MongoDB Atlas configuration to manage the user password rotation on the given database. Required if `secret_provider` is `mongodb_atlas`. (see [below for nested schema](#nestedatt--mongodb_atlas_user))
+- `mssql_users` (Attributes) MSSQL configuration to manage the database user credential rotation for the given host. Required if `secret_provider` is `mssql`. (see [below for nested schema](#nestedatt--mssql_users))
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
 - `twilio_api_key` (Attributes) Twilio configuration to manage the api key rotation on the given account. Required if `secret_provider` is `twilio`. (see [below for nested schema](#nestedatt--twilio_api_key))
 
@@ -146,6 +147,14 @@ Required:
 - `database_name` (String) MongoDB Atlas database or cluster name to rotate the username and password for.
 - `project_id` (String) MongoDB Atlas project ID to rotate the username and password for.
 - `roles` (List of String) MongoDB Atlas roles to assign to the rotating user.
+
+
+<a id="nestedatt--mssql_users"></a>
+### Nested Schema for `mssql_users`
+
+Required:
+
+- `usernames` (String) MsSQL usernames to rotate the passwords for.
 
 
 <a id="nestedatt--twilio_api_key"></a>
