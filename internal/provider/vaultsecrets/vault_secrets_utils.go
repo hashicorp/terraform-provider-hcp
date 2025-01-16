@@ -29,6 +29,7 @@ const (
 	ProviderGCP          Provider = "gcp"
 	ProviderMongoDBAtlas Provider = "mongodb-atlas"
 	ProviderTwilio       Provider = "twilio"
+	ProviderMySQL        Provider = "mysql"
 )
 
 func (p Provider) String() string {
@@ -43,6 +44,7 @@ func ProviderStrings() []string {
 		string(ProviderGCP),
 		string(ProviderMongoDBAtlas),
 		string(ProviderTwilio),
+		string(ProviderMySQL),
 	}
 }
 

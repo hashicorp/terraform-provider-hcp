@@ -54,6 +54,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
 	ProviderAzure:        &azureRotatingSecret{},
+	ProviderMySQL:        &mysqlRotatingSecret{},
 }
 
 type RotatingSecret struct {
