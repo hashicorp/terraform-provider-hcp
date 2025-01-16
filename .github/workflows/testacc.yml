@@ -13,6 +13,9 @@ concurrency:
   group: testacc
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 # Runs all Acceptance test groups in parallel to encompass the entire provider.
 # These will be enabled as they are onboarded.
 jobs:
@@ -34,6 +37,7 @@ jobs:
   testacc_vault:
     name: Vault
     uses: ./.github/workflows/_testacc_vault.yml
+    secrets: inherit
   # testacc_vaultsecrets:
   #   name: Vault Secrets
   #   uses: ./.github/workflows/_testacc_vaultsecrets.yml

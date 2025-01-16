@@ -8,6 +8,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: prerelease
+  cancel-in-progress: false
+
 permissions: write-all
 
 jobs:
@@ -22,8 +26,6 @@ jobs:
     name: Run Acceptance Tests
     uses: ./.github/workflows/testacc.yml
     secrets: inherit
-    permissions:
-      contents: read
 
   prerelease:
     name: Prerelease
