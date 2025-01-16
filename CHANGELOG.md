@@ -1,3 +1,17 @@
+## v0.102.0 (January 16, 2025)
+BREAKING CHANGES:
+
+* waypoint: Add new required field for no-code module ID to Waypoint template and
+add-on definition resources. [[GH-1146](https://github.com/hashicorp/terraform-provider-hcp/pull/1146)]
+
+FEATURES:
+
+* remove 'starter_small' as a valid tier for hcp vault cluster [[GH-1162](https://github.com/hashicorp/terraform-provider-hcp/pull/1162)]
+
+IMPROVEMENTS:
+
+* Update Go version to 1.22. [[GH-1161](https://github.com/hashicorp/terraform-provider-hcp/pull/1161)]
+* Updating docs with examples for hcp_waypoint_template resource/data-source [[GH-1156](https://github.com/hashicorp/terraform-provider-hcp/pull/1156)]
 ## v0.101.0 (December 16, 2024)
 
 FEATURES:
