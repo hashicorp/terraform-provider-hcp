@@ -27,7 +27,9 @@ jobs:
 
   prerelease:
     name: Prerelease
-    needs: [test]
+    needs:
+      - test
+      - testacc
     runs-on: ubuntu-latest
     steps:
       - uses: hashicorp/setup-terraform@v3
