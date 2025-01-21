@@ -11,6 +11,9 @@ description: |-
 
 The Streaming Destination resource allows users to configure an external log system to stream HCP logs to.
 
+To manage destinations, you must authenticate with an organization-level service principal with
+the `contributor` or `admin` role.
+
 ## Example Usage: CloudWatch
 
 ```terraform

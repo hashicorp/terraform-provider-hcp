@@ -11,6 +11,9 @@ description: |-
 
 {{ .Description | trimspace }}
 
+To manage destinations, you must authenticate with an organization-level service principal with
+the `contributor` or `admin` role.
+
 ## Example Usage: CloudWatch
 
 {{ tffile "examples/resources/hcp_log_streaming_destination/resource_cloudwatch.tf" }}

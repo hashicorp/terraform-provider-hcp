@@ -35,7 +35,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-operation/stable/2020-05-05/client/operation_service"
 
 	cloud_packer "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client"
-	packer_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2021-04-30/client/packer_service"
 
 	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client"
 	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
@@ -55,6 +55,7 @@ import (
 
 	cloud_log_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/streaming_service"
 
 	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client/webhook_service"
@@ -89,6 +90,7 @@ type Client struct {
 	Waypoint                       waypoint_service.ClientService
 	Webhook                        webhook_service.ClientService
 	LogService                     log_service.ClientService
+	LogStreamingService            streaming_service.ClientService
 	ResourceService                resource_service.ClientService
 	RadarSourceRegistrationService radar_src_registration_service.ClientService
 	RadarConnectionService         radar_connection_service.ClientService
@@ -179,6 +181,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		VaultSecrets:                   cloud_vault_secrets.New(httpClient, nil).SecretService,
 		Waypoint:                       cloud_waypoint.New(httpClient, nil).WaypointService,
 		LogService:                     cloud_log_service.New(httpClient, nil).LogService,
+		LogStreamingService:            cloud_log_service.New(httpClient, nil).StreamingService,
 		Webhook:                        cloud_webhook.New(httpClient, nil).WebhookService,
 		ResourceService:                cloud_resource_manager.New(httpClient, nil).ResourceService,
 		RadarSourceRegistrationService: cloud_vault_radar.New(httpClient, nil).DataSourceRegistrationService,

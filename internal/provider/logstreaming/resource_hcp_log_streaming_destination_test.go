@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -264,12 +263,8 @@ func testAccHCPLogStreamingDestinationExists(t *testing.T, name string) resource
 		}
 
 		client := acctest.HCPClients(t)
-		loc := &sharedmodels.HashicorpCloudLocationLocation{
-			OrganizationID: client.Config.OrganizationID,
-			ProjectID:      client.Config.ProjectID,
-		}
 
-		res, err := clients.GetLogStreamingDestination(context.Background(), client, loc, streamingDestinationID)
+		res, err := clients.GetLogStreamingDestination(context.Background(), client, client.Config.OrganizationID, streamingDestinationID)
 		if err != nil {
 			return fmt.Errorf("unable to read streaming destination %q: %v", streamingDestinationID, err)
 		}
@@ -290,12 +285,7 @@ func testAccHCPLogStreamingDestinationDestroy(t *testing.T, s *terraform.State) 
 
 			streamingDestinationID := rs.Primary.Attributes["streaming_destination_id"]
 
-			loc := &sharedmodels.HashicorpCloudLocationLocation{
-				OrganizationID: client.Config.OrganizationID,
-				ProjectID:      client.Config.ProjectID,
-			}
-
-			_, err := clients.GetLogStreamingDestination(context.Background(), client, loc, streamingDestinationID)
+			_, err := clients.GetLogStreamingDestination(context.Background(), client, client.Config.OrganizationID, streamingDestinationID)
 			if err == nil || !clients.IsResponseCodeNotFound(err) {
 				return fmt.Errorf("didn't get a 404 when reading destroyed streaming destination %q: %v", streamingDestinationID, err)
 			}
