@@ -95,7 +95,7 @@ func setTestAccConsulClusterConfig(consulCluster string) string {
 // This includes tests against both the resource, the corresponding datasource,
 // and creation of the Consul cluster root token resource in order to shorten
 // testing time.
-func TestAccConsulCluster(t *testing.T) {
+func TestAcc_Consul_Cluster(t *testing.T) {
 	t.Parallel()
 
 	resourceName := "hcp_consul_cluster.test"
