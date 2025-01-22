@@ -1,4 +1,4 @@
-## v0.102.0 (January 16, 2025)
+## v0.102.0 (January 17, 2025)
 BREAKING CHANGES:
 
 * waypoint: Add new required field for no-code module ID to Waypoint template and

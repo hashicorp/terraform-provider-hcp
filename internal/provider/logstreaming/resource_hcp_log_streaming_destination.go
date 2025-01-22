@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/streaming_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/models"
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -247,23 +247,30 @@ func (h *HCPLogStreamingDestination) extract(ctx context.Context) diag.Diagnosti
 
 // fromModel encodes the values from a Log Streaming Destination model into the
 // Terraform values, such that they can be saved to state.
-func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *models.LogService20210330Destination, dataDogAPIKeyValue string) diag.Diagnostics {
+func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *models.LogService20210330StreamingDestination) diag.Diagnostics {
 	var diags diag.Diagnostics
 	h.Name = types.StringValue(logSD.Name)
-	h.StreamingDestinationID = types.StringValue(logSD.Resource.ID)
-	if logSD.CloudwatchlogsProvider != nil {
+	h.StreamingDestinationID = types.StringValue(logSD.ID)
+	if logSD.CloudwatchLogsProvider != nil {
 		h.CloudWatch = types.ObjectValueMust(h.CloudWatch.AttributeTypes(ctx), map[string]attr.Value{
-			"external_id":    types.StringValue(logSD.CloudwatchlogsProvider.ExternalID),
-			"region":         types.StringValue(logSD.CloudwatchlogsProvider.Region),
-			"role_arn":       types.StringValue(logSD.CloudwatchlogsProvider.RoleArn),
-			"log_group_name": types.StringValue(logSD.CloudwatchlogsProvider.LogGroupName),
+			"external_id":    types.StringValue(logSD.CloudwatchLogsProvider.ExternalID),
+			"region":         types.StringValue(logSD.CloudwatchLogsProvider.Region),
+			"role_arn":       types.StringValue(logSD.CloudwatchLogsProvider.RoleArn),
+			"log_group_name": types.StringValue(logSD.CloudwatchLogsProvider.LogGroupName),
 		})
 	}
 
 	if logSD.SplunkCloudProvider != nil {
+		// The GetDestination response redacts sensitive values, like the Splunk Token.
+		// So reuse the value in Terraform state.
+		var splunkState SplunkCloudProvider
+		if !h.SplunkCloud.IsNull() {
+			h.SplunkCloud.As(ctx, &splunkState, basetypes.ObjectAsOptions{})
+		}
+
 		h.SplunkCloud = types.ObjectValueMust(h.SplunkCloud.AttributeTypes(ctx), map[string]attr.Value{
 			"endpoint": types.StringValue(logSD.SplunkCloudProvider.HecEndpoint),
-			"token":    types.StringValue(logSD.SplunkCloudProvider.Token),
+			"token":    splunkState.Token,
 		})
 	}
 
@@ -277,9 +284,16 @@ func (h *HCPLogStreamingDestination) fromModel(ctx context.Context, logSD *model
 			}
 		}
 
+		// The GetDestination response redacts sensitive values, like the DataDog API Key.
+		// So reuse the value in Terraform state.
+		var dataDogState DataDogProvider
+		if !h.Datadog.IsNull() {
+			h.Datadog.As(ctx, &dataDogState, basetypes.ObjectAsOptions{})
+		}
+
 		h.Datadog = types.ObjectValueMust(h.Datadog.AttributeTypes(ctx), map[string]attr.Value{
 			"endpoint":        types.StringValue(logSD.DatadogProvider.Endpoint),
-			"api_key":         types.StringValue(dataDogAPIKeyValue),
+			"api_key":         dataDogState.APIKey,
 			"application_key": applicationKeyValue,
 		})
 	}
@@ -295,30 +309,26 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 		return
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
-	}
+	orgID := r.client.Config.OrganizationID
 
-	createParams := log_service.NewLogServiceCreateStreamingDestinationParams()
+	createParams := streaming_service.NewStreamingServiceCreateDestinationParams()
 	createParams.Context = ctx
-	createParams.LocationOrganizationID = loc.OrganizationID
-	createParams.LocationProjectID = loc.ProjectID
+	createParams.OrganizationID = orgID
 
-	createRequestBody := &models.LogService20210330CreateStreamingDestinationRequest{
+	createRequestBody := &models.LogService20210330CreateDestinationRequest{
 		DestinationName: plan.Name.ValueString(),
 		SourceChannel:   TFProviderSourceChannel,
 	}
 
 	if plan.splunkCloud != nil {
-		createRequestBody.SplunkCloudProvider = &models.LogService20210330SplunkCloudProvider{
+		createRequestBody.SplunkCloudProvider = &models.LogService20210330StreamingSplunkCloudProvider{
 			HecEndpoint: plan.splunkCloud.HecEndpoint.ValueString(),
 			Token:       plan.splunkCloud.Token.ValueString(),
 		}
 	}
 
 	if plan.cloudwatch != nil {
-		createRequestBody.CloudwatchlogsProvider = &models.LogService20210330CloudwatchLogsProvider{
+		createRequestBody.CloudwatchLogsProvider = &models.LogService20210330StreamingCloudwatchLogsProvider{
 			ExternalID:   plan.cloudwatch.ExternalID.ValueString(),
 			Region:       plan.cloudwatch.Region.ValueString(),
 			RoleArn:      plan.cloudwatch.RoleArn.ValueString(),
@@ -330,7 +340,7 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 	if plan.datadog != nil {
 		fromModelDatadogAPIKey = plan.datadog.APIKey.ValueString()
 
-		ddProviderAuthorization := &models.LogService20210330Authorization{
+		ddProviderAuthorization := &models.LogService20210330StreamingAuthorization{
 			Header: "DD-API-KEY",
 			Value:  fromModelDatadogAPIKey,
 		}
@@ -341,7 +351,7 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 			}
 		}
 
-		createRequestBody.DatadogProvider = &models.LogService20210330DatadogProvider{
+		createRequestBody.DatadogProvider = &models.LogService20210330StreamingDatadogProvider{
 			Endpoint:      plan.datadog.Endpoint.ValueString(),
 			Authorization: ddProviderAuthorization,
 		}
@@ -349,24 +359,34 @@ func (r *resourceHCPLogStreamingDestination) Create(ctx context.Context, req res
 
 	createParams.Body = createRequestBody
 
-	res, err := r.client.LogService.LogServiceCreateStreamingDestination(createParams, nil)
+	res, err := r.client.LogStreamingService.StreamingServiceCreateDestination(createParams, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating Log Streaming Destination", err.Error())
 		return
 	}
 
-	err = clients.CreateLogStreamingDestinationOrgFilter(ctx, r.client, loc.OrganizationID, res.GetPayload().Destination.Resource.ID)
-	if err != nil {
+	createFilterParams := streaming_service.NewStreamingServiceCreateDestinationFilterParams()
+	createFilterParams.Context = ctx
+	createFilterParams.OrganizationID = orgID
+	createFilterParams.DestinationID = res.GetPayload().Destination.ID
+	fil := models.LogService20210330DestinationFilterTypeDESTINATIONFILTERTYPEORGFILTER
+	createFilterParams.Body = &models.LogService20210330CreateDestinationFilterRequest{
+		DestinationID:  res.GetPayload().Destination.ID,
+		FilterType:     &fil,
+		OrganizationID: orgID,
+	}
+
+	if _, err := r.client.LogStreamingService.StreamingServiceCreateDestinationFilter(createFilterParams, nil); err != nil {
 		resp.Diagnostics.AddError("Error creating Log Streaming Destination Filter", err.Error())
 		return
 	}
 
-	logStreamingDest, err := clients.GetLogStreamingDestination(ctx, r.client, loc, res.GetPayload().Destination.Resource.ID)
+	logStreamingDest, err := clients.GetLogStreamingDestination(ctx, r.client, orgID, res.GetPayload().Destination.ID)
 	if err != nil {
 		resp.Diagnostics.AddError("Error retrieving newly created Log Streaming Destination", err.Error())
 	}
 
-	resp.Diagnostics.Append(plan.fromModel(ctx, logStreamingDest, fromModelDatadogAPIKey)...)
+	resp.Diagnostics.Append(plan.fromModel(ctx, logStreamingDest)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -377,13 +397,11 @@ func (r *resourceHCPLogStreamingDestination) Read(ctx context.Context, req resou
 		return
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
-	}
-	res, err := clients.GetLogStreamingDestination(ctx, r.client, loc, state.StreamingDestinationID.ValueString())
+	orgID := r.client.Config.OrganizationID
+
+	res, err := clients.GetLogStreamingDestination(ctx, r.client, orgID, state.StreamingDestinationID.ValueString())
 	if err != nil {
-		var getErr *log_service.LogServiceGetStreamingDestinationDefault
+		var getErr *streaming_service.StreamingServiceGetDestinationDefault
 		if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
@@ -392,14 +410,7 @@ func (r *resourceHCPLogStreamingDestination) Read(ctx context.Context, req resou
 		return
 	}
 
-	ddAPIKey := ""
-	if !state.Datadog.IsNull() {
-		var dataDogState DataDogProvider
-		_ = state.Datadog.As(ctx, &dataDogState, basetypes.ObjectAsOptions{})
-		ddAPIKey = dataDogState.APIKey.ValueString()
-	}
-
-	resp.Diagnostics.Append(state.fromModel(ctx, res, ddAPIKey)...)
+	resp.Diagnostics.Append(state.fromModel(ctx, res)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -411,17 +422,15 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 	resp.Diagnostics.Append(plan.extract(ctx)...)
 	resp.Diagnostics.Append(state.extract(ctx)...)
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
-	}
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var fieldMaskPaths []string
-	destination := &models.LogService20210330Destination{}
+	destination := &models.LogService20210330StreamingDestination{
+		OrganizationID: r.client.Config.OrganizationID,
+		ID:             state.StreamingDestinationID.ValueString(),
+	}
 
 	if !plan.Name.Equal(state.Name) {
 		fieldMaskPaths = append(fieldMaskPaths, "name")
@@ -435,8 +444,8 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 			// do nothing ... state has not changed
 		} else {
 			// if there is a diff between plan and state we need to call log service to update destination
-			fieldMaskPaths = append(fieldMaskPaths, "provider")
-			destination.CloudwatchlogsProvider = &models.LogService20210330CloudwatchLogsProvider{
+			fieldMaskPaths = append(fieldMaskPaths, "cloudwatch_logs_provider")
+			destination.CloudwatchLogsProvider = &models.LogService20210330StreamingCloudwatchLogsProvider{
 				ExternalID:   plan.cloudwatch.ExternalID.ValueString(),
 				Region:       plan.cloudwatch.Region.ValueString(),
 				RoleArn:      plan.cloudwatch.RoleArn.ValueString(),
@@ -451,8 +460,8 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 			// do nothing ... state has not changed
 		} else {
 			// if there is a diff between plan and state we need to call log service to update destination
-			fieldMaskPaths = append(fieldMaskPaths, "provider")
-			destination.SplunkCloudProvider = &models.LogService20210330SplunkCloudProvider{
+			fieldMaskPaths = append(fieldMaskPaths, "splunk_cloud_provider")
+			destination.SplunkCloudProvider = &models.LogService20210330StreamingSplunkCloudProvider{
 				HecEndpoint: plan.splunkCloud.HecEndpoint.ValueString(),
 				Token:       plan.splunkCloud.Token.ValueString(),
 			}
@@ -465,8 +474,8 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 			// do nothing ... state has not changed
 		} else {
 			// if there is a diff between plan and state we need to call log service to update destination
-			fieldMaskPaths = append(fieldMaskPaths, "provider")
-			ddProviderAuthorization := &models.LogService20210330Authorization{
+			fieldMaskPaths = append(fieldMaskPaths, "datadog_provider")
+			ddProviderAuthorization := &models.LogService20210330StreamingAuthorization{
 				Header: "DD-API-KEY",
 				Value:  plan.datadog.APIKey.ValueString(),
 			}
@@ -477,7 +486,7 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 				}
 			}
 
-			destination.DatadogProvider = &models.LogService20210330DatadogProvider{
+			destination.DatadogProvider = &models.LogService20210330StreamingDatadogProvider{
 				Endpoint:      plan.datadog.Endpoint.ValueString(),
 				Authorization: ddProviderAuthorization,
 			}
@@ -488,14 +497,7 @@ func (r *resourceHCPLogStreamingDestination) Update(ctx context.Context, req res
 	// We could have opted to change the subfields of a specific provider object but that would lead to more complexity as we add
 	// providers to the supported list.
 	if len(fieldMaskPaths) > 0 {
-		destination.Resource = &models.LocationLink{
-			ID: state.StreamingDestinationID.ValueString(),
-			Location: &models.CloudlocationLocation{
-				OrganizationID: loc.OrganizationID,
-				ProjectID:      loc.ProjectID,
-			},
-		}
-		err := clients.UpdateLogStreamingDestination(ctx, r.client, loc, fieldMaskPaths, destination)
+		err := clients.UpdateLogStreamingDestination(ctx, r.client, fieldMaskPaths, destination)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating log streaming destination", err.Error())
 			return
@@ -512,12 +514,7 @@ func (r *resourceHCPLogStreamingDestination) Delete(ctx context.Context, req res
 		return
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: r.client.Config.OrganizationID,
-		ProjectID:      r.client.Config.ProjectID,
-	}
-
-	err := clients.DeleteLogStreamingDestination(ctx, r.client, loc, state.StreamingDestinationID.ValueString())
+	err := clients.DeleteLogStreamingDestination(ctx, r.client, r.client.Config.OrganizationID, state.StreamingDestinationID.ValueString())
 	if err != nil {
 		var getErr *log_service.LogServiceGetStreamingDestinationDefault
 		if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
