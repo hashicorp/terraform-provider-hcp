@@ -1,0 +1,3 @@
+```release-note:improvement
+Added MySQL resource for integration and secrets for HVS
+```
