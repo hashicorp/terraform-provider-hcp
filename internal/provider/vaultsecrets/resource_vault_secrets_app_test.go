@@ -25,6 +25,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 		description1     = "my description 1"
 		description2     = "my description 2"
 		syncName         = generateRandomSlug()
+		gitLabToken      = checkRequiredEnvVarOrFail(t, "GITLAB_ACCESS_TOKEN")
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -58,7 +59,9 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 						name = %q
 						capabilities = ["DYNAMIC", "SYNC"]
 						provider_type = "gitlab"
-						# TODO: add GitLab-specific fields
+						gitlab_credentials = {
+							access_token = %q
+						}
 					}
 
 					resource "hcp_vault_secrets_sync" "example" {
@@ -75,7 +78,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 						description = %q
 						sync_names = [hcp_vault_secrets_sync.example.name]
 					}
-				`, integrationName1, syncName, appName2, description2),
+				`, integrationName1, gitLabToken, syncName, appName2, description2),
 				Check: resource.ComposeTestCheckFunc(
 					appCheckFunc(appName2, description2, []string{syncName})...,
 				),
