@@ -36,6 +36,8 @@ resource "hcp_consul_snapshot" "test" {
 }`, consulClusterSnapshotHVNUniqueID, consulClusterSnapshotUniqueID)
 
 func TestAccConsulSnapshot(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_consul_snapshot.test"
 
 	resource.Test(t, resource.TestCase{
