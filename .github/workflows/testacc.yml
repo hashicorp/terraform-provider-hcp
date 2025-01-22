@@ -1,0 +1,49 @@
+name: TestAcc
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  # Run Every Wednesday at 01:00 AM UTC
+  # schedule:
+  #   - cron: '0 2 * * 3'
+
+# This prevents more than one run of this workflow from executing at a time.
+# Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
+concurrency:
+  group: testacc
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+# Runs all Acceptance test groups in parallel to encompass the entire provider.
+# These will be enabled as they are onboarded.
+jobs:
+  # testacc_platform:
+  #   name: Platform
+  #   uses: ./.github/workflows/_testacc_platform.yml
+  # testacc_iam:
+  #   name: Iam
+  #   uses: ./.github/workflows/_testacc_iam.yml
+  # testacc_boundary:
+  #   name: Boundary
+  #   uses: ./.github/workflows/_testacc_boundary.yml
+  # testacc_consul:
+  #   name: Consul
+  #   uses: ./.github/workflows/_testacc_consul.yml
+  # testacc_packer:
+  #   name: Packer
+  #   uses: ./.github/workflows/_testacc_packer.yml
+  testacc_vault:
+    name: Vault
+    uses: ./.github/workflows/_testacc_vault.yml
+    secrets: inherit
+  # testacc_vaultsecrets:
+  #   name: Vault Secrets
+  #   uses: ./.github/workflows/_testacc_vaultsecrets.yml
+  # testacc_vaultradar:
+  #   name: Vault Radar
+  #   uses: ./.github/workflows/_testacc_vaultradar.yml
+  # testacc_waypoint:
+  #   name: Waypoint
+  #   uses: ./.github/workflows/_testacc_waypoint.yml
