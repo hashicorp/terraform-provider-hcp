@@ -54,7 +54,9 @@ data "hcp_boundary_cluster" "test" {
 `, boundaryCluster)
 }
 
-func TestAccBoundaryCluster(t *testing.T) {
+func TestAcc_Boundary_Cluster(t *testing.T) {
+	t.Parallel()
+
 	boundaryClusterResourceName := "hcp_boundary_cluster.test"
 	boundaryClusterDataSourceName := "data.hcp_boundary_cluster.test"
 
