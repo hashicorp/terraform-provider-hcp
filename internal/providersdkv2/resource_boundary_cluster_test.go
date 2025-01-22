@@ -35,8 +35,14 @@ var maintenanceWindowConfig = `
 	}
 `
 
+var controllerConfig = `
+	auth_token_time_to_live = "12h0m0s"
+	auth_token_time_to_stale = "1h0m0s"
+`
+
 var boundaryCluster = fmt.Sprintf(boundaryClusterResourceTemplate, "")
 var boundaryClusterWithMaintenanceWindow = fmt.Sprintf(boundaryClusterResourceTemplate, maintenanceWindowConfig)
+var boundaryClusterWithControllerConfig = fmt.Sprintf(boundaryClusterResourceTemplate, controllerConfig)
 
 func setTestAccBoundaryClusterConfig(boundaryCluster string) string {
 	return fmt.Sprintf(`
@@ -69,6 +75,8 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_live"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_stale"),
 				),
 			},
 			{
@@ -98,6 +106,8 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_live"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_stale"),
 				),
 			},
 			{
@@ -111,6 +121,8 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "state", boundaryClusterDataSourceName, "state"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
 					resource.TestCheckResourceAttrPair(boundaryClusterResourceName, "version", boundaryClusterDataSourceName, "version"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_live"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_stale"),
 				),
 			},
 			{
@@ -129,6 +141,24 @@ func TestAccBoundaryCluster(t *testing.T) {
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.start", "2"),
 					resource.TestCheckResourceAttr(boundaryClusterResourceName, "maintenance_window_config.0.end", "12"),
 					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_live"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "auth_token_time_to_stale"),
+				),
+			},
+			{
+				// this test step tests creating a boundary cluster with non-default controller config settings.
+				Config: testConfig(setTestAccBoundaryClusterConfig(boundaryClusterWithControllerConfig)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBoundaryClusterExists(boundaryClusterResourceName),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "cluster_id", boundaryUniqueID),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "cluster_url"),
+					testAccCheckFullURL(boundaryClusterResourceName, "cluster_url", ""),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "state"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "tier", "PLUS"),
+					resource.TestCheckResourceAttrSet(boundaryClusterResourceName, "version"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "auth_token_time_to_live", "12h0m0s"),
+					resource.TestCheckResourceAttr(boundaryClusterResourceName, "auth_token_time_to_stale", "1h0m0s"),
 				),
 			},
 		},

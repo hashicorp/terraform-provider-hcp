@@ -1,0 +1,3 @@
+```release-note:improvement
+Updating the provider for HCP Boundary to allow for controller configuration settings upon hcp_boundary_cluster resource/data-source
+```
