@@ -8,6 +8,7 @@ on:
     paths:
       - 'internal/clients/vault_cluster.go'
       - 'internal/providersdkv2/resource_vault_*'
+      - 'internal/providersdkv2/data_source_vault_*'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
@@ -43,8 +44,6 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
           go mod tidy
-          sudo wget https://github.com/jmespath/jp/releases/latest/download/jp-linux-amd64 -O /usr/local/bin/jp
-          sudo chmod +x /usr/local/bin/jp
 
       - name: Run 'go mod tidy'
         run: |
