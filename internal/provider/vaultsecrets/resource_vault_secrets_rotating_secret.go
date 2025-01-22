@@ -54,6 +54,7 @@ var rotatingSecretsImpl = map[Provider]rotatingSecret{
 	ProviderTwilio:       &twilioRotatingSecret{},
 	ProviderConfluent:    &confluentRotatingSecret{},
 	ProviderAzure:        &azureRotatingSecret{},
+	ProviderMySQL:        &mysqlRotatingSecret{},
 }
 
 type RotatingSecret struct {
@@ -72,6 +73,7 @@ type RotatingSecret struct {
 	TwilioAPIKey             *twilioAPIKey             `tfsdk:"twilio_api_key"`
 	ConfluentServiceAccount  *confluentServiceAccount  `tfsdk:"confluent_service_account"`
 	AzureApplicationPassword *AzureApplicationPassword `tfsdk:"azure_application_password"`
+	MysqlUsers               *mysqlUsers               `tfsdk:"mysql_users"`
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
 
@@ -103,6 +105,10 @@ type AzureApplicationPassword struct {
 }
 
 type twilioAPIKey struct{}
+
+type mysqlUsers struct {
+	Usernames []string `json:"usernames"`
+}
 
 var _ resource.Resource = &resourceVaultSecretsRotatingSecret{}
 var _ resource.ResourceWithConfigure = &resourceVaultSecretsRotatingSecret{}
