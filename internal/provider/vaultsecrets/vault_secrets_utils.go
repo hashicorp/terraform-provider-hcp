@@ -44,7 +44,6 @@ func ProviderStrings() []string {
 		string(ProviderGCP),
 		string(ProviderMongoDBAtlas),
 		string(ProviderTwilio),
-		string(ProviderMySQL),
 	}
 }
 
