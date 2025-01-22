@@ -166,6 +166,44 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"auth_token_time_to_live": {
+				Description:  "The time to live for the auth token in golang's time.Duration string format.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "1680h0m0s",
+				RequiredWith: []string{"auth_token_time_to_stale"},
+				ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
+					_, err := time.ParseDuration(i.(string))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
+					}
+					return warnings, errors
+				},
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					oldTime, _ := time.ParseDuration(old)
+					newTime, _ := time.ParseDuration(new)
+					return newTime == oldTime
+				},
+			},
+			"auth_token_time_to_stale": {
+				Description:  "The time to stale for the auth token in golang's time.Duration string format.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "24h0m0s",
+				RequiredWith: []string{"auth_token_time_to_live"},
+				ValidateFunc: func(i any, k string) (warnings []string, errors []error) {
+					_, err := time.ParseDuration(i.(string))
+					if err != nil {
+						errors = append(errors, fmt.Errorf("expected %s to be a valid duration, got %s", k, i))
+					}
+					return warnings, errors
+				},
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					oldTime, _ := time.ParseDuration(old)
+					newTime, _ := time.ParseDuration(new)
+					return newTime == oldTime
+				},
+			},
 		},
 	}
 }
@@ -205,6 +243,12 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 		return diagErr
 	}
 
+	controllerConfig, diagErr := getBoundaryClusterControllerConfig(d)
+
+	if diagErr != nil {
+		return diagErr
+	}
+
 	// check for an existing boundary cluster
 	_, err = clients.GetBoundaryClusterByID(ctx, client, loc, clusterID)
 	if err != nil {
@@ -219,11 +263,12 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 
 	// assemble the BoundaryClusterCreateRequest
 	req := &boundarymodels.HashicorpCloudBoundary20211221CreateRequest{
-		ClusterID:    clusterID,
-		Username:     username,
-		Password:     password,
-		Location:     loc,
-		MarketingSku: &tierPb,
+		ClusterID:        clusterID,
+		Username:         username,
+		Password:         password,
+		Location:         loc,
+		MarketingSku:     &tierPb,
+		ControllerConfig: controllerConfig,
 	}
 
 	// execute the Boundary cluster creation
@@ -272,7 +317,7 @@ func resourceBoundaryClusterCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// set Boundary cluster resource data
-	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow)
+	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow, controllerConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -294,6 +339,11 @@ func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 	upgradeType, maintenanceWindow, diagErr := getBoundaryClusterMaintainanceWindowConfig(d)
 	if diagErr != nil {
 		return diagErr
+	}
+
+	controllerConfig, dialErr := getBoundaryClusterControllerConfig(d)
+	if dialErr != nil {
+		return dialErr
 	}
 
 	log.Printf("[INFO] Reading Boundary cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
@@ -331,8 +381,28 @@ func resourceBoundaryClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 		currentUpgradeType = upgradeType
 	}
 
+	log.Printf("[INFO] Updated controller configuration for Boundary cluster (%s) [project_id=%s, organization_id=%s]", clusterID, loc.ProjectID, loc.OrganizationID)
+
+	currentControllerConfig, err := clients.GetBoundaryClusterControllerConfigByID(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to fetch controller configuration for Boundary cluster (%s): %v", clusterID, err)
+	}
+
+	// update the controller configuration if it was created
+	if controllerConfig != nil {
+		ctrlConfigReq := boundarymodels.HashicorpCloudBoundary20211221UpdateControllerConfigurationRequest{}
+		ctrlConfigReq.ClusterID = cluster.ClusterID
+		ctrlConfigReq.Location = cluster.Location
+		ctrlConfigReq.Config = controllerConfig
+
+		if err = clients.UpdateBoundaryClusterControllerConfig(ctx, client, loc, clusterID, &ctrlConfigReq); err != nil {
+			return diag.Errorf("error updating controller configuration for Boundary cluster (%s): %v", clusterID, err)
+		}
+		currentControllerConfig = controllerConfig
+	}
+
 	// set Boundary cluster resource data
-	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow)
+	err = setBoundaryClusterResourceData(d, cluster, currentUpgradeType, currentMaintenanceWindow, currentControllerConfig)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -376,8 +446,13 @@ func resourceBoundaryClusterRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to fetch maintenenace window Boundary cluster (%s): %v", clusterID, err)
 	}
 
+	controllerConfig, err := clients.GetBoundaryClusterControllerConfigByID(ctx, client, loc, clusterID)
+	if err != nil {
+		return diag.Errorf("unable to fetch controller configuration for Boundary cluster (%s): %v", clusterID, err)
+	}
+
 	// Cluster found, update resource data.
-	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW); err != nil {
+	if err := setBoundaryClusterResourceData(d, cluster, clusterUpgradeType, clusterMW, controllerConfig); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -455,7 +530,7 @@ func resourceBoundaryClusterImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymodels.HashicorpCloudBoundary20211221Cluster, upgradeType *boundarymodels.HashicorpCloudBoundary20211221UpgradeType, clusterMW *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow) error {
+func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymodels.HashicorpCloudBoundary20211221Cluster, upgradeType *boundarymodels.HashicorpCloudBoundary20211221UpgradeType, clusterMW *boundarymodels.HashicorpCloudBoundary20211221MaintenanceWindow, clusterCtrlConfig *boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration) error {
 	if err := d.Set("cluster_id", cluster.ClusterID); err != nil {
 		return err
 	}
@@ -493,6 +568,24 @@ func setBoundaryClusterResourceData(d *schema.ResourceData, cluster *boundarymod
 	}
 
 	if err := d.Set("maintenance_window_config", []interface{}{mwConfig}); err != nil {
+		return err
+	}
+
+	authTTL, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToLive)
+	if err != nil {
+		return fmt.Errorf("unable to parse auth_token_time_to_live to time: %v", err)
+	}
+
+	authTTS, err := time.ParseDuration(clusterCtrlConfig.AuthTokenTimeToStale)
+	if err != nil {
+		return fmt.Errorf("unable to parse auth_token_time_to_stale to time: %v", err)
+	}
+
+	if err := d.Set("auth_token_time_to_live", authTTL.String()); err != nil {
+		return err
+	}
+
+	if err := d.Set("auth_token_time_to_stale", authTTS.String()); err != nil {
 		return err
 	}
 
@@ -560,4 +653,30 @@ func getBoundaryClusterMaintainanceWindowConfig(d *schema.ResourceData) (*bounda
 	}
 
 	return &upgradeType, maintenanceWindow, nil
+}
+
+func getBoundaryClusterControllerConfig(d *schema.ResourceData) (*boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration, diag.Diagnostics) {
+	if !d.HasChange("auth_token_time_to_live") && !d.HasChange("auth_token_time_to_stale") {
+		return nil, nil
+	}
+
+	controllerConfig := &boundarymodels.HashicorpCloudBoundary20211221ControllerConfiguration{}
+
+	authTTL, err := time.ParseDuration(d.Get("auth_token_time_to_live").(string))
+	if err != nil {
+		return nil, diag.Errorf("unable to parse auth_token_time_to_live to time: %v", err)
+	}
+	authTTS, err := time.ParseDuration(d.Get("auth_token_time_to_stale").(string))
+	if err != nil {
+		return nil, diag.Errorf("unable to parse auth_token_time_to_stale to time: %v", err)
+	}
+
+	controllerConfig.AuthTokenTimeToLive = authTTL.String()
+	controllerConfig.AuthTokenTimeToStale = authTTS.String()
+
+	if authTTL < authTTS {
+		return nil, diag.Errorf("controller configuration is invalid: `auth_token_time_to_live` should be greater than or equal to `auth_token_time_to_stale`")
+	}
+
+	return controllerConfig, nil
 }

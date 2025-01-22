@@ -33,6 +33,8 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 ### Read-Only
 
+- `auth_token_time_to_live` (String) The time to live for the auth token in golang's time.Duration string format.
+- `auth_token_time_to_stale` (String) The time to stale for the auth token in golang's time.Duration string format.
 - `cluster_url` (String) A unique URL identifying the Boundary cluster.
 - `created_at` (String) The time that the Boundary cluster was created.
 - `id` (String) The ID of this resource.
