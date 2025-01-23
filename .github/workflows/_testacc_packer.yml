@@ -73,7 +73,7 @@ jobs:
           HCP_CLIENT_ID: ${{ secrets.PACKER_HCP_CLIENT_ID }}
           HCP_CLIENT_SECRET: ${{ secrets.PACKER_HCP_CLIENT_SECRET }}
         run: |
-          go test ./internal/providersdkv2 \
+          go test ./internal/providersdkv2 ./internal/provider/packer/... \
             -v \
             -short \
             -test.v \
