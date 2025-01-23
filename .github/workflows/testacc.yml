@@ -44,6 +44,7 @@ jobs:
   # testacc_vaultradar:
   #   name: Vault Radar
   #   uses: ./.github/workflows/_testacc_vaultradar.yml
-  # testacc_waypoint:
-  #   name: Waypoint
-  #   uses: ./.github/workflows/_testacc_waypoint.yml
+  testacc_waypoint:
+    name: Waypoint
+    uses: ./.github/workflows/_testacc_waypoint.yml
+    secrets: inherit
