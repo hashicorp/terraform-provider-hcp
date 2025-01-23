@@ -61,6 +61,7 @@ jobs:
       - name: Run TestAcc
         env:
           TF_ACC: 1
+          HCP_WAYP_ACTION_TEST: true
 
           HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
