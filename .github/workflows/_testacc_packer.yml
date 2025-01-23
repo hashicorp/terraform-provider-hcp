@@ -61,7 +61,7 @@ jobs:
         run: |
           go build -v .
 
-      - name: Run TestAcc
+      - name: Run TestAcc SDKv2
         env:
           TF_ACC: 1
 
@@ -73,7 +73,7 @@ jobs:
           HCP_CLIENT_ID: ${{ secrets.PACKER_HCP_CLIENT_ID }}
           HCP_CLIENT_SECRET: ${{ secrets.PACKER_HCP_CLIENT_SECRET }}
         run: |
-          go test ./internal/providersdkv2 ./internal/provider/packer/... \
+          go test ./internal/providersdkv2 \
             -v \
             -short \
             -test.v \
@@ -91,3 +91,35 @@ jobs:
         with:
           name: Test Coverage
           path: testacc-packer.html
+
+      # This runs synchronously because parallelism between packages causes failure
+      - name: Run TestAcc Plugin Framework
+        env:
+          TF_ACC: 1
+
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
+
+          HCP_ORGANIZATION_ID: ${{ secrets.PACKER_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.PACKER_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.PACKER_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.PACKER_HCP_CLIENT_SECRET }}
+        run: |
+          go test ./internal/provider/packer/... \
+            -v \
+            -short \
+            -test.v \
+            -parallel=10 \
+            -timeout=360m \
+            -run=TestAcc_Packer.* \
+            -coverprofile=testacc-packer-pf.out
+
+          go tool cover \
+            -html=testacc-packer-pf.out \
+            -o testacc-packer-pf.html
+
+      - name: Upload TestAcc Coverage Artifact - PF
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: Test Coverage
+          path: testacc-packer-pf.html
