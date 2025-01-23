@@ -70,7 +70,7 @@ jobs:
           HCP_CLIENT_ID: ${{ secrets.WAYPOINT_HCP_CLIENT_ID }}
           HCP_CLIENT_SECRET: ${{ secrets.WAYPOINT_HCP_CLIENT_SECRET }}
         run: |
-          go test ./internal/waypoint \
+          go test ./internal/provider/waypoint \
             -v \
             -short \
             -test.v \
