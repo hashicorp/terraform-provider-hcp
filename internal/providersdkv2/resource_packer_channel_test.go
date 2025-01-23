@@ -12,8 +12,6 @@ import (
 )
 
 func TestAcc_Packer_Channel(t *testing.T) {
-	t.Parallel()
-
 	bucketName := testAccCreateSlug("ChannelSimple")
 	channelName := bucketName // No need for a different name
 	channelConfig := testAccPackerChannelBuilderBase("SimpleChannel", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
@@ -67,8 +65,6 @@ func TestAcc_Packer_Channel(t *testing.T) {
 }
 
 func TestAcc_Packer_Channel_HCPManaged(t *testing.T) {
-	t.Parallel()
-
 	bucketName := testAccCreateSlug("ChannelHCPManaged")
 	channelName := "latest"
 	latestConfig := testAccPackerChannelBuilderBase("latest", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
@@ -122,8 +118,6 @@ func TestAcc_Packer_Channel_HCPManaged(t *testing.T) {
 }
 
 func TestAcc_Packer_Channel_RestrictionDrift(t *testing.T) {
-	t.Parallel()
-
 	bucketName := testAccCreateSlug("RestrictionDrift")
 	channelName := bucketName // No need for a different name
 
@@ -170,8 +164,6 @@ func TestAcc_Packer_Channel_RestrictionDrift(t *testing.T) {
 }
 
 func TestAcc_Packer_Channel_RestrictionDriftHCPManaged(t *testing.T) {
-	t.Parallel()
-
 	bucketName := testAccCreateSlug("RestrictionDriftHCPManaged")
 	latestName := "latest"
 

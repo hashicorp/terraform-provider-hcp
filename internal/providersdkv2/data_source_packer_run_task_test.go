@@ -14,8 +14,6 @@ import (
 )
 
 func TestAcc_Packer_dataSourcePackerRunTask(t *testing.T) {
-	t.Parallel()
-
 	runTask := testAccPackerDataRunTaskBuilder("runTask")
 	config := testConfig(testAccConfigBuildersToString(runTask))
 

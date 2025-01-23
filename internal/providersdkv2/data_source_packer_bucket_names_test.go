@@ -10,8 +10,6 @@ import (
 )
 
 func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
-	t.Parallel()
-
 	bucket0 := testAccCreateSlug("1-BucketNames")
 	bucket1 := testAccCreateSlug("2-BucketNames")
 	bucket2 := testAccCreateSlug("3-BucketNames")

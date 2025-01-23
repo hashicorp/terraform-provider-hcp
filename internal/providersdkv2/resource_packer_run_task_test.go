@@ -16,8 +16,6 @@ import (
 )
 
 func TestAcc_Packer_RunTask(t *testing.T) {
-	t.Parallel()
-
 	runTask := testAccPackerRunTaskBuilder("runTask", `false`)
 	config := testConfig(testAccConfigBuildersToString(runTask))
 	runTaskRegen := testAccPackerRunTaskBuilderFromRunTask(runTask, `true`)
