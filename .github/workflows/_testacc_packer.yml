@@ -86,12 +86,6 @@ jobs:
             -html=testacc-packer.out \
             -o testacc-packer.html
 
-      - name: Upload TestAcc Coverage Artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
-        with:
-          name: Test Coverage
-          path: testacc-packer.html
-
       # This runs synchronously because parallelism between packages causes failure
       - name: Run TestAcc Plugin Framework
         env:
@@ -111,15 +105,10 @@ jobs:
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run=TestAcc_Packer.* \
-            -coverprofile=testacc-packer-pf.out
+            -run=TestAcc_Packer.*
 
-          go tool cover \
-            -html=testacc-packer-pf.out \
-            -o testacc-packer-pf.html
-
-      - name: Upload TestAcc Coverage Artifact - PF
+      - name: Upload TestAcc Coverage Artifact
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: Test Coverage
-          path: testacc-packer-pf.html
+          path: testacc-packer.html
