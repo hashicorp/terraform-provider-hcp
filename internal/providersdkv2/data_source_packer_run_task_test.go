@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients/packerv2"
 )
 
-func TestAcc_dataSourcePackerRunTask(t *testing.T) {
+func TestAcc_Packer_dataSourcePackerRunTask(t *testing.T) {
+	t.Parallel()
+
 	runTask := testAccPackerDataRunTaskBuilder("runTask")
 	config := testConfig(testAccConfigBuildersToString(runTask))
 
