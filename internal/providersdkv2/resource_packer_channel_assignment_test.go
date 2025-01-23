@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"
 )
 
-func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_SimpleSetUnset(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentSimpleSetUnset")
 	channelSlug := bucketSlug // No need for a different slug
 	versionFingerprint := "1"
@@ -80,7 +82,9 @@ func TestAccPackerChannelAssignment_SimpleSetUnset(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_AssignLatest(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentAssignLatest")
 	channelSlug := bucketSlug // No need for a different slug
 	uniqueName := "AssignLatest"
@@ -156,7 +160,9 @@ func TestAccPackerChannelAssignment_AssignLatest(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_InvalidInputs(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentInvalidInputs")
 	channelSlug := bucketSlug // No need for a different slug
 
@@ -200,7 +206,9 @@ func TestAccPackerChannelAssignment_InvalidInputs(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentCreateFailPreassign")
 	channelSlug := bucketSlug // No need for a different slug
 	versionFingerprint := "1"
@@ -248,7 +256,9 @@ func TestAccPackerChannelAssignment_CreateFailsWhenPreassigned(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentHCPManaged")
 	channelSlug := "latest"
 
@@ -290,7 +300,9 @@ func TestAccPackerChannelAssignment_HCPManagedChannelErrors(t *testing.T) {
 
 // Test that all attributes generate and successfully apply plans to fix
 // the assignment when it is changed OOB from null to a non-null version
-func TestAccPackerChannelAssignment_EnforceNull(t *testing.T) {
+func TestAcc_Packer_ChannelAssignment_EnforceNull(t *testing.T) {
+	t.Parallel()
+
 	bucketSlug := testAccCreateSlug("AssignmentEnforceNull")
 	channelSlug := bucketSlug // No need for a different slug
 
