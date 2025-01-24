@@ -28,12 +28,13 @@ jobs:
   # testacc_boundary:
   #   name: Boundary
   #   uses: ./.github/workflows/_testacc_boundary.yml
-  # testacc_consul:
-  #   name: Consul
-  #   uses: ./.github/workflows/_testacc_consul.yml
   testacc_packer:
     name: Packer
     uses: ./.github/workflows/_testacc_packer.yml
+    secrets: inherit
+  testacc_consul:
+    name: Consul
+    uses: ./.github/workflows/_testacc_consul.yml
     secrets: inherit
   testacc_vault:
     name: Vault
