@@ -22,9 +22,10 @@ jobs:
   # testacc_platform:
   #   name: Platform
   #   uses: ./.github/workflows/_testacc_platform.yml
-  # testacc_iam:
-  #   name: Iam
-  #   uses: ./.github/workflows/_testacc_iam.yml
+  testacc_iam:
+    name: Iam
+    uses: ./.github/workflows/_testacc_iam.yml
+    secrets: inherit
   # testacc_boundary:
   #   name: Boundary
   #   uses: ./.github/workflows/_testacc_boundary.yml
