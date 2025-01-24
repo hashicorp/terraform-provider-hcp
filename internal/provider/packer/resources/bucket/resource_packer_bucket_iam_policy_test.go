@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/testutils/testclient"
 )
 
-func TestAccPackerBucketIamPolicyResource(t *testing.T) {
+func TestAcc_Packer_BucketIamPolicyResource(t *testing.T) {
+	t.Parallel()
+
 	bucketName := "iam-policy-bucket"
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)
@@ -56,7 +58,9 @@ func TestAccPackerBucketIamPolicyResource(t *testing.T) {
 	})
 }
 
-func TestAccPackerBucketIamBindingResource(t *testing.T) {
+func TestAcc_Packer_BucketIamBindingResource(t *testing.T) {
+	t.Parallel()
+
 	bucketName := "iam-binding-bucket"
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)

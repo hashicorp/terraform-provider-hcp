@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/testutils/testclient"
 )
 
-func TestAccPackerBucketResource(t *testing.T) {
+func TestAcc_Packer_BucketResource(t *testing.T) {
+	t.Parallel()
+
 	bucketName := "test-bucket"
 	updatedBucketName := "new-test-bucket"
 	var createdAt string
@@ -139,7 +141,7 @@ func (b PackerBucketResourceConfigBuilder) Build() string {
 resource "hcp_packer_bucket" "%s" {
 	name = %q
 	%s
-	
+
 }`,
 		b.terraformResourceName,
 		b.name,
