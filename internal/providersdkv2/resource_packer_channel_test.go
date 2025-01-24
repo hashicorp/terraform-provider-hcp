@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccPackerChannel(t *testing.T) {
+func TestAcc_Packer_Channel(t *testing.T) {
 	bucketName := testAccCreateSlug("ChannelSimple")
 	channelName := bucketName // No need for a different name
 	channelConfig := testAccPackerChannelBuilderBase("SimpleChannel", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
@@ -64,7 +64,7 @@ func TestAccPackerChannel(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannel_HCPManaged(t *testing.T) {
+func TestAcc_Packer_Channel_HCPManaged(t *testing.T) {
 	bucketName := testAccCreateSlug("ChannelHCPManaged")
 	channelName := "latest"
 	latestConfig := testAccPackerChannelBuilderBase("latest", fmt.Sprintf("%q", channelName), fmt.Sprintf("%q", bucketName))
@@ -117,7 +117,7 @@ func TestAccPackerChannel_HCPManaged(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
+func TestAcc_Packer_Channel_RestrictionDrift(t *testing.T) {
 	bucketName := testAccCreateSlug("RestrictionDrift")
 	channelName := bucketName // No need for a different name
 
@@ -163,7 +163,7 @@ func TestAccPackerChannel_RestrictionDrift(t *testing.T) {
 	})
 }
 
-func TestAccPackerChannel_RestrictionDriftHCPManaged(t *testing.T) {
+func TestAcc_Packer_Channel_RestrictionDriftHCPManaged(t *testing.T) {
 	bucketName := testAccCreateSlug("RestrictionDriftHCPManaged")
 	latestName := "latest"
 
