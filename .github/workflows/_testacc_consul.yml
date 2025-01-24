@@ -1,19 +1,20 @@
-name: TestAcc Vault
+name: TestAcc Consul
 
 on:
   workflow_call:
   workflow_dispatch:
   pull_request:
-    # Vault resources still use SDKv2 so we have to target files manually until migrated
+    # Consul resources still use SDKv2 so we have to target files manually until migrated
     paths:
-      - 'internal/clients/vault_cluster.go'
-      - 'internal/providersdkv2/resource_vault_*'
-      - 'internal/providersdkv2/data_source_vault_*'
+      - 'internal/consul'
+      - 'internal/clients/consul_*.go'
+      - 'internal/providersdkv2/resource_consul_*'
+      - 'internal/providersdkv2/data_source_consul_*'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
 concurrency:
-  group: testacc-vault
+  group: testacc-consul
   cancel-in-progress: false
 
 permissions:
@@ -65,10 +66,10 @@ jobs:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
 
-          HCP_ORGANIZATION_ID: ${{ secrets.VAULT_HCP_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.VAULT_HCP_PROJECT_ID }}
-          HCP_CLIENT_ID: ${{ secrets.VAULT_HCP_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.VAULT_HCP_CLIENT_SECRET }}
+          HCP_ORGANIZATION_ID: ${{ secrets.CONSUL_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.CONSUL_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.CONSUL_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.CONSUL_HCP_CLIENT_SECRET }}
         run: |
           go test ./internal/providersdkv2 \
             -v \
@@ -76,15 +77,15 @@ jobs:
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run=TestAcc_Vault.* \
-            -coverprofile=testacc-vault.out
+            -run=TestAcc_Consul.* \
+            -coverprofile=testacc-consul.out
 
           go tool cover \
-            -html=testacc-vault.out \
-            -o testacc-vault.html
+            -html=testacc-consul.out \
+            -o testacc-consul.html
 
       - name: Upload TestAcc Coverage Artifact
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: Test Coverage
-          path: testacc-vault.html
+          path: testacc-consul.html
