@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	hvn1UniqueID = testAccUniqueNameWithPrefix("platform-hvn-hvn-peer-1")
-	hvn2UniqueID = testAccUniqueNameWithPrefix("platform-hvn-hvn-peer-2")
+	hvn1UniqueID = testAccUniqueNameWithPrefix("p-hvn-hvn-peer-1")
+	hvn2UniqueID = testAccUniqueNameWithPrefix("p-hvn-hvn-peer-2")
 )
 
 var testAccHvnPeeringConnectionConfig = fmt.Sprintf(`
