@@ -91,7 +91,7 @@ jobs:
             -v \
             -short \
             -test.v \
-            -parallel=10 \
+            -parallel=5 \
             -timeout=360m \
             -run=TestAcc_Platform.* \
             -coverprofile=testacc-platform.out
