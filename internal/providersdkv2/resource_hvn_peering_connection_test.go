@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,8 +14,8 @@ import (
 )
 
 var (
-	hvn1UniqueID = fmt.Sprintf("hcp-provider-test-%s-1", time.Now().Format("200601021504"))
-	hvn2UniqueID = fmt.Sprintf("hcp-provider-test-%s-2", time.Now().Format("200601021504"))
+	hvn1UniqueID = testAccUniqueNameWithPrefix("platform-hvn-hvn-peer-1")
+	hvn2UniqueID = testAccUniqueNameWithPrefix("platform-hvn-hvn-peer-2")
 )
 
 var testAccHvnPeeringConnectionConfig = fmt.Sprintf(`
@@ -47,7 +46,9 @@ data "hcp_hvn_peering_connection" "test" {
 
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time
-func TestAccHvnPeeringConnection(t *testing.T) {
+func TestAcc_Platform_HvnPeeringConnection(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_hvn_peering_connection.test"
 	dataSourceName := "data.hcp_hvn_peering_connection.test"
 
