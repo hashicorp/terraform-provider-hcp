@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,7 +15,7 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	uniqueAzurePeeringTestID = testAccUniqueNameWithPrefix("p-hvn-az-peer")
 	subscriptionID           = os.Getenv("ARM_SUBSCRIPTION_ID")
 	tenantID                 = os.Getenv("ARM_TENANT_ID")
 )
@@ -173,8 +172,10 @@ func gatewayConfig(optConfig string) string {
 	`, uniqueAzurePeeringTestID, optConfig)
 }
 
-// TestAccAzurePeeringConnection tests Azure peering with no hub / spoke config
-func TestAccAzurePeeringConnection(t *testing.T) {
+// TestAcc_Platform_AzurePeeringConnection tests Azure peering with no hub / spoke config
+func TestAcc_Platform_AzurePeeringConnection(t *testing.T) {
+	t.Parallel()
+
 	testAccAzurePeeringConnection(t, azureAdConfig)
 }
 
@@ -264,8 +265,10 @@ func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
 	})
 }
 
-// TestAccAzurePeeringConnectionNVA tests Azure peering with NVA hub / spoke networking
-func TestAccAzurePeeringConnectionNVA(t *testing.T) {
+// TestAcc_Platform_AzurePeeringConnectionNVA tests Azure peering with NVA hub / spoke networking
+func TestAcc_Platform_AzurePeeringConnectionNVA(t *testing.T) {
+	t.Parallel()
+
 	testAccAzurePeeringConnectionNVA(t, azureAdConfig)
 }
 
@@ -352,8 +355,10 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 	})
 }
 
-// TestAccAzurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
-func TestAccAzurePeeringConnectionGateway(t *testing.T) {
+// TestAcc_Platform_AzurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
+func TestAcc_Platform_AzurePeeringConnectionGateway(t *testing.T) {
+	t.Parallel()
+
 	testAccAzurePeeringConnectionGateway(t, azureAdConfig)
 }
 
@@ -440,8 +445,10 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 	})
 }
 
-// TestAccAzurePeeringConnectionNVAandGateway tests Azure peering with hub / spoke NVA and Gateway
-func TestAccAzurePeeringConnectionNVAandGateway(t *testing.T) {
+// TestAcc_Platform_AzurePeeringConnectionNVAandGateway tests Azure peering with hub / spoke NVA and Gateway
+func TestAcc_Platform_AzurePeeringConnectionNVAandGateway(t *testing.T) {
+	t.Parallel()
+
 	testAccAzurePeeringConnectionNVAandGateway(t, azureAdConfig)
 }
 
