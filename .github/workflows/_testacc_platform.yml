@@ -64,10 +64,10 @@ jobs:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL }}
 
-          HCP_CLIENT_ID: ${{ secrets.PLATFORM_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.PLATFORM_CLIENT_SECRET }}
-          HCP_ORGANIZATION_ID: ${{ secrets.PLATFORM_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.PLATFORM_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.PLATFORM_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.PLATFORM_HCP_CLIENT_SECRET }}
+          HCP_ORGANIZATION_ID: ${{ secrets.PLATFORM_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.PLATFORM_HCP_PROJECT_ID }}
 
           AWS_REGION: us-west-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
