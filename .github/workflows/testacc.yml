@@ -19,9 +19,10 @@ permissions:
 # Runs all Acceptance test groups in parallel to encompass the entire provider.
 # These will be enabled as they are onboarded.
 jobs:
-  # testacc_platform:
-  #   name: Platform
-  #   uses: ./.github/workflows/_testacc_platform.yml
+  testacc_platform:
+    name: Platform
+    uses: ./.github/workflows/_testacc_platform.yml
+    secrets: inherit
   # testacc_iam:
   #   name: Iam
   #   uses: ./.github/workflows/_testacc_iam.yml
