@@ -41,13 +41,14 @@ var peeringHubSpokeNVAandGatewayConfig = `
 `
 
 // azureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
-var azureAdConfig = `
+func azureAdConfig(resID string) string {
+	return fmt.Sprintf(`
 	resource "azuread_service_principal" "principal" {
 	  application_id = hcp_azure_peering_connection.peering.application_id
 	}
 
 	resource "azurerm_role_definition" "definition" {
-	  name  = "hcp-provider-test-role-def"
+	  name  = "%[1]s"
 	  scope = azurerm_virtual_network.vnet.id
 
 	  assignable_scopes = [
@@ -68,7 +69,8 @@ var azureAdConfig = `
 	  scope              = azurerm_virtual_network.vnet.id
 	  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 	}
-`
+  `, resID)
+}
 
 // baseConfig is the config excluding the authorization components (SP, Role, Role assignment).
 // This is used to support HashiCorp internal engineers.
@@ -175,7 +177,7 @@ func gatewayConfig(resID, optConfig string) string {
 func TestAcc_Platform_AzurePeeringConnection(t *testing.T) {
 	t.Parallel()
 
-	testAccAzurePeeringConnection(t, azureAdConfig)
+	testAccAzurePeeringConnection(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-base")))
 }
 
 func TestAccAzurePeeringConnectionInternal(t *testing.T) {
@@ -269,7 +271,7 @@ func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
 func TestAcc_Platform_AzurePeeringConnectionNVA(t *testing.T) {
 	t.Parallel()
 
-	testAccAzurePeeringConnectionNVA(t, azureAdConfig)
+	testAccAzurePeeringConnectionNVA(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-nva")))
 }
 
 func TestAccAzurePeeringConnectionNVAInternal(t *testing.T) {
@@ -360,7 +362,7 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 func TestAcc_Platform_AzurePeeringConnectionGateway(t *testing.T) {
 	t.Parallel()
 
-	testAccAzurePeeringConnectionGateway(t, azureAdConfig)
+	testAccAzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
 }
 
 func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
@@ -451,7 +453,7 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 func TestAcc_Platform_AzurePeeringConnectionNVAandGateway(t *testing.T) {
 	t.Parallel()
 
-	testAccAzurePeeringConnectionNVAandGateway(t, azureAdConfig)
+	testAccAzurePeeringConnectionNVAandGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-nva-gate")))
 }
 
 func TestAccAzurePeeringConnectionNVAandGatewayInternal(t *testing.T) {
