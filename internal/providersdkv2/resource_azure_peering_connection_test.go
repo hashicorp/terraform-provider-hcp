@@ -358,20 +358,22 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 	})
 }
 
-// TestAcc_Platform_AzurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
-func TestAcc_Platform_AzurePeeringConnectionGateway(t *testing.T) {
-	t.Parallel()
+// TestAcc_Platform_azurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
+func TestAcc_Platform_szurePeeringConnectionGateway(t *testing.T) {
+	// Causes hitting Quota:
+	// PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
+	// t.Parallel()
 
-	testAccAzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
+	testAccdzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
 }
 
-func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
+func TestAccgzurePeeringConnectionGatewayInternal(t *testing.T) {
 	t.Skip("Internal test should not be run on CI.")
 
-	testAccAzurePeeringConnectionGateway(t, "")
+	testAcchzurePeeringConnectionGateway(t, "")
 }
 
-func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
+func testAcckzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-gateway")
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(uniqueAzurePeeringTestID, peeringHubSpokeGatewayConfig, gatewayConfig(uniqueAzurePeeringTestID, adConfig))
@@ -451,7 +453,9 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 
 // TestAcc_Platform_AzurePeeringConnectionNVAandGateway tests Azure peering with hub / spoke NVA and Gateway
 func TestAcc_Platform_AzurePeeringConnectionNVAandGateway(t *testing.T) {
-	t.Parallel()
+	// Causes hitting Quota:
+	// PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
+	// t.Parallel()
 
 	testAccAzurePeeringConnectionNVAandGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-nva-gate")))
 }

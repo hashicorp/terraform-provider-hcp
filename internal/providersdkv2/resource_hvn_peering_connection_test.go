@@ -47,6 +47,8 @@ data "hcp_hvn_peering_connection" "test" {
 // This includes tests against both the resource and the corresponding datasource
 // to shorten testing time
 func TestAcc_Platform_HvnPeeringConnection(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_hvn_peering_connection.test"
 	dataSourceName := "data.hcp_hvn_peering_connection.test"
 
