@@ -15,9 +15,8 @@ import (
 )
 
 var (
-	uniqueAzurePeeringTestID = testAccUniqueNameWithPrefix("p-hvn-az-peer")
-	subscriptionID           = os.Getenv("ARM_SUBSCRIPTION_ID")
-	tenantID                 = os.Getenv("ARM_TENANT_ID")
+	subscriptionID = os.Getenv("ARM_SUBSCRIPTION_ID")
+	tenantID       = os.Getenv("ARM_TENANT_ID")
 )
 
 // peeringHubSpokeNVAConfig is the hcp_azure_peering_connection config params
@@ -73,7 +72,7 @@ var azureAdConfig = `
 
 // baseConfig is the config excluding the authorization components (SP, Role, Role assignment).
 // This is used to support HashiCorp internal engineers.
-func baseConfig(hubSpokeConfig, optConfig string) string {
+func baseConfig(resID, hubSpokeConfig, optConfig string) string {
 	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
@@ -131,12 +130,12 @@ func baseConfig(hubSpokeConfig, optConfig string) string {
 	}
 
 	%[5]s
-	`, uniqueAzurePeeringTestID, subscriptionID, tenantID, hubSpokeConfig, optConfig)
+	`, resID, subscriptionID, tenantID, hubSpokeConfig, optConfig)
 }
 
 // gatewayConfig is the additional components required for Hub and Spoke architecture
 // using a Gateway.
-func gatewayConfig(optConfig string) string {
+func gatewayConfig(resID, optConfig string) string {
 	return fmt.Sprintf(`
 	resource "azurerm_subnet" "subnet" {
 	  name                 = "GatewaySubnet"
@@ -169,7 +168,7 @@ func gatewayConfig(optConfig string) string {
 	}
 
 	%[2]s
-	`, uniqueAzurePeeringTestID, optConfig)
+	`, resID, optConfig)
 }
 
 // TestAcc_Platform_AzurePeeringConnection tests Azure peering with no hub / spoke config
@@ -186,8 +185,9 @@ func TestAccAzurePeeringConnectionInternal(t *testing.T) {
 }
 
 func testAccAzurePeeringConnection(t *testing.T, adConfig string) {
+	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-base")
 	resourceName := "hcp_azure_peering_connection.peering"
-	tfConfig := baseConfig("", adConfig)
+	tfConfig := baseConfig(uniqueAzurePeeringTestID, "", adConfig)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
@@ -279,8 +279,9 @@ func TestAccAzurePeeringConnectionNVAInternal(t *testing.T) {
 }
 
 func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
+	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-nva")
 	resourceName := "hcp_azure_peering_connection.peering"
-	tfConfig := baseConfig(peeringHubSpokeNVAConfig, adConfig)
+	tfConfig := baseConfig(uniqueAzurePeeringTestID, peeringHubSpokeNVAConfig, adConfig)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
@@ -369,8 +370,9 @@ func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
 }
 
 func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
+	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-gateway")
 	resourceName := "hcp_azure_peering_connection.peering"
-	tfConfig := baseConfig(peeringHubSpokeGatewayConfig, gatewayConfig(adConfig))
+	tfConfig := baseConfig(uniqueAzurePeeringTestID, peeringHubSpokeGatewayConfig, gatewayConfig(uniqueAzurePeeringTestID, adConfig))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
@@ -459,8 +461,9 @@ func TestAccAzurePeeringConnectionNVAandGatewayInternal(t *testing.T) {
 }
 
 func testAccAzurePeeringConnectionNVAandGateway(t *testing.T, adConfig string) {
+	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-nva-gate")
 	resourceName := "hcp_azure_peering_connection.peering"
-	tfConfig := baseConfig(peeringHubSpokeNVAandGatewayConfig, gatewayConfig(adConfig))
+	tfConfig := baseConfig(uniqueAzurePeeringTestID, peeringHubSpokeNVAandGatewayConfig, gatewayConfig(uniqueAzurePeeringTestID, adConfig))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
