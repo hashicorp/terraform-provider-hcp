@@ -360,9 +360,8 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 
 // TestAcc_Platform_azurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
 func TestAcc_Platform_azurePeeringConnectionGateway(t *testing.T) {
-	// Causes hitting Quota:
-	// PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
-	// t.Parallel()
+	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
+	t.Skip()
 
 	testAccAzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
 }
@@ -453,9 +452,8 @@ func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 
 // TestAcc_Platform_AzurePeeringConnectionNVAandGateway tests Azure peering with hub / spoke NVA and Gateway
 func TestAcc_Platform_AzurePeeringConnectionNVAandGateway(t *testing.T) {
-	// Causes hitting Quota:
-	// PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
-	// t.Parallel()
+	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
+	t.Skip()
 
 	testAccAzurePeeringConnectionNVAandGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-nva-gate")))
 }

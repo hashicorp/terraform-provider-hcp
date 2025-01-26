@@ -496,7 +496,7 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 func TestAcc_Platform_HvnRouteAzureInvalidConfig(t *testing.T) {
 	t.Parallel()
 
-	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig(""))
+	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig("fail"))
 }
 
 func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
