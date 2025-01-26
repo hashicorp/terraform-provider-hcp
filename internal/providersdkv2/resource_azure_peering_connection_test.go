@@ -359,21 +359,21 @@ func testAccAzurePeeringConnectionNVA(t *testing.T, adConfig string) {
 }
 
 // TestAcc_Platform_azurePeeringConnectionGateway tests Azure peering with hub / spoke Gateway
-func TestAcc_Platform_szurePeeringConnectionGateway(t *testing.T) {
+func TestAcc_Platform_azurePeeringConnectionGateway(t *testing.T) {
 	// Causes hitting Quota:
 	// PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
 	// t.Parallel()
 
-	testAccdzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
+	testAccAzurePeeringConnectionGateway(t, azureAdConfig(testAccUniqueNameWithPrefix("p-az-peer-gateway")))
 }
 
-func TestAccgzurePeeringConnectionGatewayInternal(t *testing.T) {
+func TestAccAzurePeeringConnectionGatewayInternal(t *testing.T) {
 	t.Skip("Internal test should not be run on CI.")
 
-	testAcchzurePeeringConnectionGateway(t, "")
+	testAccAzurePeeringConnectionGateway(t, "")
 }
 
-func testAcckzurePeeringConnectionGateway(t *testing.T, adConfig string) {
+func testAccAzurePeeringConnectionGateway(t *testing.T, adConfig string) {
 	uniqueAzurePeeringTestID := testAccUniqueNameWithPrefix("p-az-peer-gateway")
 	resourceName := "hcp_azure_peering_connection.peering"
 	tfConfig := baseConfig(uniqueAzurePeeringTestID, peeringHubSpokeGatewayConfig, gatewayConfig(uniqueAzurePeeringTestID, adConfig))
