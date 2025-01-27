@@ -420,8 +420,7 @@ func TestAcc_Platform_HvnRouteAws(t *testing.T) {
 
 // Test Azure Route with Gateway architecture
 func TestAcc_Platform_HvnRouteAzureGateway(t *testing.T) {
-	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
-	t.Skip()
+	t.Parallel()
 
 	testHvnRouteGateway(t, hvnRouteAzureAdConfig(testAccUniqueNameWithPrefix("p-az-r-gateway")))
 }
@@ -495,8 +494,7 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 
 // Test Azure Route with invalid config
 func TestAcc_Platform_HvnRouteAzureInvalidConfig(t *testing.T) {
-	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
-	t.Skip()
+	t.Parallel()
 
 	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig("fail"))
 }
@@ -528,8 +526,7 @@ func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
 
 // Test Azure Route with NVA architecture
 func TestAcc_Platform_HvnRouteAzureNVA(t *testing.T) {
-	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
-	t.Skip("Internal test should not be run on CI.")
+	t.Parallel()
 
 	testHvnRouteNVA(t, hvnRouteAzureAdConfig(testAccUniqueNameWithPrefix("p-az-r-nva")))
 }
