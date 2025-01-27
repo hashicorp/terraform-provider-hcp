@@ -495,7 +495,8 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 
 // Test Azure Route with invalid config
 func TestAcc_Platform_HvnRouteAzureInvalidConfig(t *testing.T) {
-	t.Parallel()
+	// TODO: PublicIPCountLimitReached: Cannot create more than 10 public IP addresses for this subscription in this region.
+	t.Skip()
 
 	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig("fail"))
 }
