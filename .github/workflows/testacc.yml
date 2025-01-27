@@ -26,9 +26,10 @@ jobs:
   # testacc_iam:
   #   name: Iam
   #   uses: ./.github/workflows/_testacc_iam.yml
-  # testacc_boundary:
-  #   name: Boundary
-  #   uses: ./.github/workflows/_testacc_boundary.yml
+  testacc_boundary:
+    name: Boundary
+    uses: ./.github/workflows/_testacc_boundary.yml
+    secrets: inherit
   testacc_packer:
     name: Packer
     uses: ./.github/workflows/_testacc_packer.yml
