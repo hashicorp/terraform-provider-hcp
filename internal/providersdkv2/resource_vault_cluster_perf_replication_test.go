@@ -50,7 +50,7 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 }
 
 func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
-	t.Skip("Error:http is not enabled as an observability provider")
+	//t.Skip("Error:http is not enabled as an observability provider")
 	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
