@@ -1,3 +1,8 @@
+## v0.103.0 (January 28, 2025)
+IMPROVEMENTS:
+
+* Inclusion of HCP Vault Dedicated pending tests during pipeline.
+
 ## v0.102.0 (January 17, 2025)
 BREAKING CHANGES:
 

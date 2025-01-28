@@ -1,0 +1,3 @@
+```release-note:improvement
+Inclusion of pending HCP Vault Dedicates GHA pipeline tests.
+```
