@@ -223,10 +223,11 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				}
 
 				# Allow a token to look up its own entity by id or name
-				path "identity/entity/id/{{identity.entity.id}}" {
+				path "identity/entity/id" {
 				capabilities = ["read"]
 				}
-				path "identity/entity/name/{{identity.entity.name}}" {
+
+				path "identity/entity/name" {
 				capabilities = ["read"]
 				}
 
