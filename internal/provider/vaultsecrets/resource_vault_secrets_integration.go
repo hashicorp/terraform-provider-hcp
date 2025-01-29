@@ -38,8 +38,13 @@ var exactlyOneIntegrationTypeFieldsValidator = objectvalidator.ExactlyOneOf(
 		path.MatchRoot("gcp_federated_workload_identity"),
 		path.MatchRoot("mongodb_atlas_static_credentials"),
 		path.MatchRoot("twilio_static_credentials"),
+		path.MatchRoot("gitlab_access"),
 	}...,
 )
+
+type gitlabAccessDetails struct {
+	AccessToken types.String `tfsdk:"token"`
+}
 
 type Integration struct {
 	// Input fields
@@ -58,6 +63,7 @@ type Integration struct {
 	GcpFederatedWorkloadIdentity     types.Object `tfsdk:"gcp_federated_workload_identity"`
 	MongoDBAtlasStaticCredentials    types.Object `tfsdk:"mongodb_atlas_static_credentials"`
 	TwilioStaticCredentials          types.Object `tfsdk:"twilio_static_credentials"`
+	GitLabAccess                     types.Object `tfsdk:"gitlab_access"`
 
 	// Computed fields
 	OrganizationID types.String `tfsdk:"organization_id"`
@@ -75,6 +81,7 @@ type Integration struct {
 	gcpFederatedWorkloadIdentity   *secretmodels.Secrets20231128GcpFederatedWorkloadIdentityRequest   `tfsdk:"-"`
 	mongoDBAtlasStaticCredentials  *secretmodels.Secrets20231128MongoDBAtlasStaticCredentialsRequest  `tfsdk:"-"`
 	twilioStaticCredentials        *secretmodels.Secrets20231128TwilioStaticCredentialsRequest        `tfsdk:"-"`
+	gitlabAccess                   *secretmodels.Secrets20231128GitlabAccessTokenRequest              `tfsdk:"-"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsIntegration{}
@@ -279,6 +286,17 @@ func (r *resourceVaultSecretsIntegration) Schema(_ context.Context, _ resource.S
 				exactlyOneIntegrationTypeFieldsValidator,
 			},
 		},
+		"gitlab_access": schema.SingleNestedAttribute{
+			Description: "GitLab access token used to authenticate against the target GitLab account.",
+			Optional:    true,
+			Attributes: map[string]schema.Attribute{
+				"token": schema.StringAttribute{
+					Description: "Access token used to authenticate against the target GitLab account.",
+					Required:    true,
+					Sensitive:   true,
+				},
+			},
+		},
 	}
 
 	maps.Copy(attributes, locationAttributes)
@@ -352,6 +370,7 @@ func (r *resourceVaultSecretsIntegration) Create(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
+				GitlabAccessToken:              integration.gitlabAccess,
 			},
 			OrganizationID: integration.OrganizationID.ValueString(),
 			ProjectID:      integration.ProjectID.ValueString(),
@@ -386,6 +405,7 @@ func (r *resourceVaultSecretsIntegration) Update(ctx context.Context, req resour
 				GcpFederatedWorkloadIdentity:   integration.gcpFederatedWorkloadIdentity,
 				MongoDbAtlasStaticCredentials:  integration.mongoDBAtlasStaticCredentials,
 				TwilioStaticCredentials:        integration.twilioStaticCredentials,
+				GitlabAccessToken:              integration.gitlabAccess,
 			},
 			Name:           integration.Name.ValueString(),
 			OrganizationID: integration.OrganizationID.ValueString(),
@@ -568,6 +588,18 @@ func (i *Integration) initModel(ctx context.Context, orgID, projID string) diag.
 		}
 	}
 
+	if !i.GitLabAccess.IsNull() {
+		gad := gitlabAccessDetails{}
+		diags = i.GitLabAccess.As(ctx, &gad, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			return diags
+		}
+
+		i.gitlabAccess = &secretmodels.Secrets20231128GitlabAccessTokenRequest{
+			Token: gad.AccessToken.ValueString(),
+		}
+	}
+
 	return diag.Diagnostics{}
 }
 
@@ -713,6 +745,20 @@ func (i *Integration) fromModel(ctx context.Context, orgID, projID string, model
 			"account_sid":    types.StringValue(integrationModel.TwilioStaticCredentials.AccountSid),
 			"api_key_sid":    types.StringValue(integrationModel.TwilioStaticCredentials.APIKeySid),
 			"api_key_secret": types.StringValue(apiKeySecret),
+		})
+		if diags.HasError() {
+			return diags
+		}
+	}
+
+	if integrationModel.GitlabAccessToken != nil {
+		accessToken := ""
+		if i.gitlabAccess != nil {
+			accessToken = i.gitlabAccess.Token
+		}
+
+		i.GitLabAccess, diags = types.ObjectValue(i.GitLabAccess.AttributeTypes(ctx), map[string]attr.Value{
+			"token": types.StringValue(accessToken),
 		})
 		if diags.HasError() {
 			return diags
