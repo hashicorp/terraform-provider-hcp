@@ -187,6 +187,13 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 		{
 			// add an http audit log provider
 			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+			required_providers {
+				vault = {
+					source  = "hashicorp/vault"
+					version = "~> 3.0"
+				}
+			}
+
 			resource "hcp_vault_cluster" "c1" {
 				cluster_id      = "{{ .VaultClusterName }}"
 				hvn_id          = hcp_hvn.hvn1.hvn_id
