@@ -115,6 +115,7 @@ resource "hcp_vault_secrets_integration" "example_twilio" {
 - `confluent_static_credentials` (Attributes) Confluent API key used to authenticate for cloud apis. (see [below for nested schema](#nestedatt--confluent_static_credentials))
 - `gcp_federated_workload_identity` (Attributes) (Recommended) Federated identity configuration to authenticate against the target GCP project. Cannot be used with `service_account_key`. (see [below for nested schema](#nestedatt--gcp_federated_workload_identity))
 - `gcp_service_account_key` (Attributes) GCP service account key used to authenticate against the target GCP project. Cannot be used with `federated_workload_identity`. (see [below for nested schema](#nestedatt--gcp_service_account_key))
+- `gitlab_access` (Attributes) GitLab access token used to authenticate against the target GitLab account. (see [below for nested schema](#nestedatt--gitlab_access))
 - `mongodb_atlas_static_credentials` (Attributes) MongoDB Atlas API key used to authenticate against the target project. (see [below for nested schema](#nestedatt--mongodb_atlas_static_credentials))
 - `project_id` (String) HCP project ID that owns the HCP Vault Secrets integration. Inferred from the provider configuration if omitted.
 - `twilio_static_credentials` (Attributes) Twilio API key parts used to authenticate against the target Twilio account. (see [below for nested schema](#nestedatt--twilio_static_credentials))
@@ -192,6 +193,14 @@ Read-Only:
 
 - `client_email` (String) Service account email corresponding to the service account key.
 - `project_id` (String) GCP project ID corresponding to the service account key.
+
+
+<a id="nestedatt--gitlab_access"></a>
+### Nested Schema for `gitlab_access`
+
+Required:
+
+- `token` (String, Sensitive) Access token used to authenticate against the target GitLab account.
 
 
 <a id="nestedatt--mongodb_atlas_static_credentials"></a>
