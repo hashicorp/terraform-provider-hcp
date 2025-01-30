@@ -29,6 +29,7 @@ resource "hcp_vault_secrets_app" "example" {
 
 - `description` (String) The Vault Secrets app description
 - `project_id` (String) The ID of the HCP project where the HCP Vault Secrets app is located.
+- `sync_names` (List of String) List of sync names to associate with this app.
 
 ### Read-Only
 

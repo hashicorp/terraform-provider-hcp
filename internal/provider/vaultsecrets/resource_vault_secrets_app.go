@@ -10,11 +10,13 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -30,6 +32,7 @@ type App struct {
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
 	ResourceName   types.String `tfsdk:"resource_name"`
+	SyncNames      types.Set    `tfsdk:"sync_names"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsApp{}
@@ -90,7 +93,17 @@ func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Computed:    true,
 				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
 			},
-		},
+			"sync_names": schema.ListAttribute{
+				Description: "List of sync names to associate with this app.",
+				Optional:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.List{
+					listvalidator.UniqueValues(),
+				},
+			}},
 	}
 }
 
@@ -120,10 +133,13 @@ func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.Creat
 			return nil, fmt.Errorf("invalid resource type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
+		syncNames := make([]string, len(app.SyncNames.Elements()))
+
 		response, err := r.client.VaultSecrets.CreateApp(&secret_service.CreateAppParams{
 			Body: &secretmodels.SecretServiceCreateAppBody{
 				Name:        app.AppName.ValueString(),
 				Description: app.Description.ValueString(),
+				SyncNames:   syncNames,
 			},
 			OrganizationID: app.OrganizationID.ValueString(),
 			ProjectID:      app.ProjectID.ValueString(),

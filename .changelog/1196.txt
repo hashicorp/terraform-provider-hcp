@@ -1,0 +1,3 @@
+```release-note:improvement
+Add support for sync resource in HCP Vault Secrets
+```
