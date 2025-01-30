@@ -15,6 +15,8 @@ import (
 )
 
 func TestAccProjectResource(t *testing.T) {
+	t.Parallel()
+
 	var p models.HashicorpCloudResourcemanagerProject
 	projectName := acctest.RandString(16)
 	description := acctest.RandString(200)

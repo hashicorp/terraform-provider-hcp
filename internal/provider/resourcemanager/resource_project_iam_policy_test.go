@@ -12,6 +12,8 @@ import (
 )
 
 func TestAccProjectIamPolicyResource(t *testing.T) {
+	t.Parallel()
+
 	projectName := acctest.RandString(16)
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
@@ -50,6 +52,8 @@ func TestAccProjectIamPolicyResource(t *testing.T) {
 }
 
 func TestAccProjectIamBindingResource(t *testing.T) {
+	t.Parallel()
+
 	projectName := acctest.RandString(16)
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"

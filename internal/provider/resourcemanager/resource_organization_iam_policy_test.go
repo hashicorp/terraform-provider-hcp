@@ -12,6 +12,8 @@ import (
 )
 
 func TestAccOrganizationIamBindingResource(t *testing.T) {
+	t.Parallel()
+
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
 
