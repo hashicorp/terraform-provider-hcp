@@ -42,8 +42,12 @@ resource "hcp_vault_secrets_sync" "example_aws_sync" {
 
 Required:
 
-- `project_id` (String, Sensitive)
-- `scope` (String)
+- `scope` (String) The scope to which values apply. The valid options are GROUP and PROJECT
+
+Optional:
+
+- `group_id` (String, Sensitive) ID of the group, if the scope is GROUP
+- `project_id` (String, Sensitive) ID of the project, if the scope is PROJECT
 
 ## Import
 

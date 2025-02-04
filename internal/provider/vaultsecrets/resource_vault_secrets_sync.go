@@ -134,13 +134,18 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"scope": schema.StringAttribute{
-					Description: "", // TODO: write this description
+					Description: "The scope to which values apply. The valid options are GROUP and PROJECT",
 					Required:    true,
 				},
-				"project_id": schema.StringAttribute{
-					Description: "", // TODO: write this description
-					Required:    true,
+				"group_id": schema.StringAttribute{
+					Description: "ID of the group, if the scope is GROUP",
 					Sensitive:   true,
+					Optional:    true,
+				},
+				"project_id": schema.StringAttribute{
+					Description: "ID of the project, if the scope is PROJECT",
+					Sensitive:   true,
+					Optional:    true,
 				},
 			},
 			Validators: []validator.Object{

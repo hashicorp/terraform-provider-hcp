@@ -19,12 +19,10 @@ func TestAccVaultSecretsResourceSync(t *testing.T) {
 			{
 				Config: syncConfig(syncName, integrationName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_integration.acc_test", "organization_id"),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_integration.acc_test", "project_id", os.Getenv("HCP_PROJECT_ID")),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_sync.acc_test_aws", "name", syncName),
-					resource.TestCheckResourceAttr("hcp_vault_secrets_sync.acc_test_aws", "integration_name", integrationName),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_sync.acc_test_aws", "organization_id"),
-					resource.TestCheckResourceAttrSet("hcp_vault_secrets_sync.acc_test_aws", "project_id")),
+					resource.TestCheckResourceAttrSet("hcp_vault_secrets_sync.acc_test_gitlab", "organization_id"),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_sync.acc_test_gitlab", "project_id", os.Getenv("HCP_PROJECT_ID")),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_sync.acc_test_gitlab", "name", syncName),
+					resource.TestCheckResourceAttr("hcp_vault_secrets_sync.acc_test_gitlab", "integration_name", integrationName)),
 			},
 		},
 	})
@@ -32,7 +30,7 @@ func TestAccVaultSecretsResourceSync(t *testing.T) {
 
 func syncConfig(syncName, integrationName string) string {
 	return fmt.Sprintf(`
-	resource "hcp_vault_secrets_sync" "acc_test_aws" {
+	resource "hcp_vault_secrets_sync" "acc_test_gitlab" {
 	  name = %q
 	  integration_name = %q
 	}`, syncName, integrationName)
