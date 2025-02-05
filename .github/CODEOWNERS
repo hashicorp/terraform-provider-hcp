@@ -45,3 +45,5 @@
 **/vaultradar/* @hashicorp/vault-scanning
 **/vaultradar* @hashicorp/vault-scanning
 **/hcp_vault_radar* @hashicorp/vault-scanning
+
+.github/workflows/ @hashicorp/cloud-core-platform-systems @hashicorp/cloud-core-platform-surfaces
