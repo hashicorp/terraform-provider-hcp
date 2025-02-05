@@ -6,6 +6,7 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"regexp"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
@@ -234,7 +235,7 @@ func (a *App) projectID() types.String {
 	return a.ProjectID
 }
 
-func (a *App) initModel(_ context.Context, orgID, projID string) diag.Diagnostics {
+func (a *App) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	a.OrganizationID = types.StringValue(orgID)
 	a.ProjectID = types.StringValue(projID)
 
@@ -254,6 +255,15 @@ func (a *App) fromModel(_ context.Context, orgID, projID string, model any) diag
 	a.ProjectID = types.StringValue(projID)
 	a.ID = types.StringValue(appModel.ResourceID)
 	a.ResourceName = types.StringValue(appModel.ResourceName)
+
+	var syncs []attr.Value
+	for _, c := range appModel.SyncNames {
+		syncs = append(syncs, types.StringValue(c))
+	}
+	a.SyncNames, diags = types.SetValue(types.StringType, syncs)
+	if diags.HasError() {
+		return diags
+	}
 
 	return diags
 }
