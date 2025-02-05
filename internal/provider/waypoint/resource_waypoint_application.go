@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -283,7 +283,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Prepare the input variables that the user provided to the application
 	// creation request
-	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
+	ivs := make([]*waypoint_models_v2.HashicorpCloudWaypointInputVariable, 0)
 
 	var inputVarsSlice []InputVar
 	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
@@ -293,7 +293,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	for _, v := range inputVarsSlice {
 		// add the input variable to the list of input variables for the app
 		// creation API call
-		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
+		ivs = append(ivs, &waypoint_models_v2.HashicorpCloudWaypointInputVariable{
 			Name:         v.Name.ValueString(),
 			Value:        v.Value.ValueString(),
 			VariableType: v.VariableType.ValueString(),
@@ -305,30 +305,31 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	var (
 		actionIDs  []string
-		actionRefs []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+		actionRefs []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
 	)
 	diags = plan.Actions.ElementsAs(ctx, &actionIDs, false)
 	if diags.HasError() {
 		return
 	}
 	for _, n := range actionIDs {
-		actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+		actionRefs = append(actionRefs, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationFromTemplateBody{
 		Name:          plan.Name.ValueString(),
 		ActionCfgRefs: actionRefs,
-		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
+		ApplicationTemplate: &waypoint_models_v2.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.TemplateID.ValueString(),
 		},
 		Variables: ivs,
 	}
 
-	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+	params := &waypoint_service_v2.WaypointServiceCreateApplicationFromTemplateParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	app, err := r.client.Waypoint.WaypointServiceCreateApplicationFromTemplate(params, nil)
 	if err != nil {
@@ -336,7 +337,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	var application *waypoint_models.HashicorpCloudWaypointApplication
+	var application *waypoint_models_v2.HashicorpCloudWaypointApplication
 	if app.Payload != nil {
 		application = app.Payload.Application
 	}
@@ -552,7 +553,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 // template input variables are those that are set by the template or by HCP
 // Waypoint.
 func splitInputs(
-	inputVars []*waypoint_models.HashicorpCloudWaypointInputVariable,
+	inputVars []*waypoint_models_v2.HashicorpCloudWaypointInputVariable,
 	varTypes map[string]string,
 ) ([]*InputVar, []*InputVar) {
 	applicationInputVars := make([]*InputVar, 0)
@@ -632,24 +633,25 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	if diags.HasError() {
 		return
 	}
-	var actionRefs []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	var actionRefs []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
 	for _, n := range strActions {
-		actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+		actionRefs = append(actionRefs, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationBody{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationBody{
 		// this is the updated name
 		Name:           plan.Name.ValueString(),
 		ReadmeMarkdown: readmeBytes,
 		ActionCfgRefs:  actionRefs,
 	}
 
-	params := &waypoint_service.WaypointServiceUpdateApplicationParams{
-		ApplicationID: plan.ID.ValueString(),
-		NamespaceID:   ns.ID,
-		Body:          modelBody,
+	params := &waypoint_service_v2.WaypointServiceUpdateApplicationParams{
+		ApplicationID:                   plan.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	app, err := r.client.Waypoint.WaypointServiceUpdateApplication(params, nil)
 	if err != nil {
@@ -657,7 +659,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	var application *waypoint_models.HashicorpCloudWaypointApplication
+	var application *waypoint_models_v2.HashicorpCloudWaypointApplication
 	if app.Payload != nil {
 		application = app.Payload.Application
 	}
@@ -735,22 +737,13 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error deleting application",
-			err.Error(),
-		)
-		return
+	params := &waypoint_service_v2.WaypointServiceDestroyApplicationParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ApplicationID:                   data.ID.ValueString(),
 	}
 
-	params := &waypoint_service.WaypointServiceDestroyApplicationParams{
-		NamespaceID:   ns.ID,
-		ApplicationID: data.ID.ValueString(),
-	}
-
-	_, err = r.client.Waypoint.WaypointServiceDestroyApplication(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDestroyApplication(params, nil)
 
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {

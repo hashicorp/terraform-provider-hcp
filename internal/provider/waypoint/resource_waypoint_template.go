@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -277,23 +277,13 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
 		return
 	}
 
-	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
+	var varOpts []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags = v.Options.ElementsAs(ctx, &strOpts, false)
@@ -301,7 +291,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -311,27 +301,27 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.Name.ValueString()
-	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
 	}
 
 	var (
 		actionIDs []string
-		actions   []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+		actions   []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
 	)
 	diags = plan.Actions.ElementsAs(ctx, &actionIDs, false)
 	if diags.HasError() {
 		return
 	}
 	for _, n := range actionIDs {
-		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+		actions = append(actions, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
-		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationTemplateBody{
+		ApplicationTemplate: &waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
@@ -359,9 +349,10 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+	params := &waypoint_service_v2.WaypointServiceCreateApplicationTemplateParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	createTplResp, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
 	if err != nil {
@@ -369,7 +360,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate
 	if createTplResp.Payload != nil {
 		appTemplate = createTplResp.Payload.ApplicationTemplate
 	}
@@ -456,7 +447,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 func readVarOpts(
 	ctx context.Context,
-	v []*waypoint_models.HashicorpCloudWaypointTFModuleVariable,
+	v []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable,
 	d *diag.Diagnostics,
 ) ([]*tfcVariableOption, error) {
 	var varOpts []*tfcVariableOption
@@ -607,16 +598,6 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
@@ -628,14 +609,14 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	if diags.HasError() {
 		return
 	}
-	var actions []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	var actions []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
 	for _, n := range strActions {
-		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+		actions = append(actions, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
+	varOpts := []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags = v.Options.ElementsAs(ctx, &strOpts, false)
@@ -643,7 +624,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -653,13 +634,13 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 
 	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.Name.ValueString()
-	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
-		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationTemplateBody{
+		ApplicationTemplate: &waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
@@ -687,10 +668,11 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{
-		NamespaceID:                   ns.ID,
-		Body:                          modelBody,
-		ExistingApplicationTemplateID: plan.ID.ValueString(),
+	params := &waypoint_service_v2.WaypointServiceUpdateApplicationTemplateParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
+		ExistingApplicationTemplateID:   plan.ID.ValueString(),
 	}
 	app, err := r.client.Waypoint.WaypointServiceUpdateApplicationTemplate(params, nil)
 	if err != nil {
@@ -698,7 +680,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate
 	if app.Payload != nil {
 		appTemplate = app.Payload.ApplicationTemplate
 	}
@@ -795,22 +777,13 @@ func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
+	params := &waypoint_service_v2.WaypointServiceDeleteApplicationTemplateParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ApplicationTemplateID:           data.ID.ValueString(),
 	}
 
-	params := &waypoint_service.WaypointServiceDeleteApplicationTemplateParams{
-		NamespaceID:           ns.ID,
-		ApplicationTemplateID: data.ID.ValueString(),
-	}
-
-	_, err = r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Template not found for organization during delete call, ignoring")

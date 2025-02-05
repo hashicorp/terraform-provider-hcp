@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypointModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -198,7 +198,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 		ProjectID:      projectID,
 	}
 
-	var definition *waypointModels.HashicorpCloudWaypointAddOnDefinition
+	var definition *waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition
 	var err error
 
 	if state.ID.IsNull() {

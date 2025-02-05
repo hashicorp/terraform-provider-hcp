@@ -10,8 +10,7 @@ import (
 	"testing"
 	"time"
 
-	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -66,26 +65,10 @@ func testAccCheckWaypointTfcConfigExists(t *testing.T, resourceName string, tfcC
 		orgID := client.Config.OrganizationID
 		tfcConfig.ProjectID = types.StringValue(projectID)
 
-		loc := &sharedmodels.HashicorpCloudLocationLocation{
-			OrganizationID: orgID,
-			ProjectID:      projectID,
-		}
-
 		// Fetch the project
-
-		namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
-			LocationOrganizationID: loc.OrganizationID,
-			LocationProjectID:      loc.ProjectID,
-		}
-		// get namespace
-		ns, err := client.Waypoint.WaypointServiceGetNamespace(namespaceParams, nil)
-		if err != nil {
-			return err
-		}
-
-		namespace := ns.GetPayload().Namespace
-		params := &waypoint_service.WaypointServiceGetTFCConfigParams{
-			NamespaceID: namespace.ID,
+		params := &waypoint_service_v2.WaypointServiceGetTFCConfigParams{
+			NamespaceLocationOrganizationID: projectID,
+			NamespaceLocationProjectID:      orgID,
 		}
 		config, err := client.Waypoint.WaypointServiceGetTFCConfig(params, nil)
 		if err != nil {
@@ -104,19 +87,9 @@ func testAccCheckWaypointTfcConfigDestroy(t *testing.T, tfcConfig *waypoint.TfcC
 		projectID := tfcConfig.ProjectID.ValueString()
 		orgID := client.Config.OrganizationID
 
-		namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
-			LocationOrganizationID: orgID,
-			LocationProjectID:      projectID,
-		}
-		// get namespace
-		ns, err := client.Waypoint.WaypointServiceGetNamespace(namespaceParams, nil)
-		if err != nil {
-			return err
-		}
-
-		namespace := ns.GetPayload().Namespace
-		params := &waypoint_service.WaypointServiceGetTFCConfigParams{
-			NamespaceID: namespace.ID,
+		params := &waypoint_service_v2.WaypointServiceGetTFCConfigParams{
+			NamespaceLocationOrganizationID: orgID,
+			NamespaceLocationProjectID:      projectID,
 		}
 
 		// Fetch the config

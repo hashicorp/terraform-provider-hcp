@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -158,24 +158,10 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
-			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateActionConfigBody{
+		ActionConfig: &waypoint_models_v2.HashicorpCloudWaypointActionConfig{
+			Request: &waypoint_models_v2.HashicorpCloudWaypointActionConfigRequest{},
 		},
 	}
 
@@ -189,9 +175,9 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
-		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+		modelBody.ActionConfig.Request.Custom = &waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
+		method := waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -202,7 +188,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 				return
 			}
 			for key, value := range elements {
-				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
 					Key:   key,
 					Value: value.ValueString(),
 				})
@@ -217,9 +203,10 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	params := &waypoint_service.WaypointServiceCreateActionConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+	params := &waypoint_service_v2.WaypointServiceCreateActionConfigParams{
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
 	}
 
 	aCfg, err := r.client.Waypoint.WaypointServiceCreateActionConfig(params, nil)
@@ -228,7 +215,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	var aCfgModel *waypoint_models.HashicorpCloudWaypointActionConfig
+	var aCfgModel *waypoint_models_v2.HashicorpCloudWaypointActionConfig
 	if aCfg.Payload != nil {
 		aCfgModel = aCfg.Payload.ActionConfig
 	}
@@ -355,24 +342,10 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
-			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateActionConfigBody{
+		ActionConfig: &waypoint_models_v2.HashicorpCloudWaypointActionConfig{
+			Request: &waypoint_models_v2.HashicorpCloudWaypointActionConfigRequest{},
 		},
 	}
 
@@ -384,9 +357,9 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
-		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+		modelBody.ActionConfig.Request.Custom = &waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustom{}
 
-		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
+		method := waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -397,7 +370,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 				return
 			}
 			for key, value := range elements {
-				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models_v2.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
 					Key:   key,
 					Value: value.ValueString(),
 				})
@@ -412,9 +385,10 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
-	params := &waypoint_service.WaypointServiceUpdateActionConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+	params := &waypoint_service_v2.WaypointServiceUpdateActionConfigParams{
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
 	}
 
 	actionCfg, err := r.client.Waypoint.WaypointServiceUpdateActionConfig(params, nil)
@@ -423,7 +397,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	var aCfgModel *waypoint_models.HashicorpCloudWaypointActionConfig
+	var aCfgModel *waypoint_models_v2.HashicorpCloudWaypointActionConfig
 	if actionCfg.Payload != nil {
 		aCfgModel = actionCfg.Payload.ActionConfig
 	}
@@ -485,23 +459,14 @@ func (r *ActionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting Action",
-			err.Error(),
-		)
-		return
+	params := &waypoint_service_v2.WaypointServiceDeleteActionConfigParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ActionID:                        data.ID.ValueStringPointer(),
+		ActionName:                      data.Name.ValueStringPointer(),
 	}
 
-	params := &waypoint_service.WaypointServiceDeleteActionConfigParams{
-		NamespaceID: ns.ID,
-		ActionID:    data.ID.ValueStringPointer(),
-		ActionName:  data.Name.ValueStringPointer(),
-	}
-
-	_, err = r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Action not found for organization during delete call, ignoring")
@@ -521,7 +486,7 @@ func (r *ActionResource) ImportState(ctx context.Context, req resource.ImportSta
 func readCustomAction(
 	ctx context.Context,
 	data *ActionResourceModel,
-	actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig,
+	actionCfg *waypoint_models_v2.HashicorpCloudWaypointActionConfig,
 ) diag.Diagnostics {
 	data.Request.Custom = &customRequest{}
 	headerMap := make(map[string]string)

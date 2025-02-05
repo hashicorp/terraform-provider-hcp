@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypointModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -228,20 +228,6 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
-
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
 
 	var stringLabels []string
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
@@ -255,7 +241,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
-	var varOpts []*waypointModels.HashicorpCloudWaypointTFModuleVariable
+	var varOpts []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags := v.Options.ElementsAs(ctx, &strOpts, false)
@@ -264,7 +250,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			return
 		}
 
-		varOpts = append(varOpts, &waypointModels.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -272,8 +258,8 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		})
 	}
 
-	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceCreateAddOnDefinitionBody{
-		AddOnDefinition: &waypointModels.HashicorpCloudWaypointAddOnDefinition{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateAddOnDefinitionBody{
+		AddOnDefinition: &waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition{
 			Name:            plan.Name.ValueString(),
 			Summary:         plan.Summary.ValueString(),
 			Description:     plan.Description.ValueString(),
@@ -302,7 +288,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 			// Set a default if none provided
 			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
 		}
-		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      workspaceDetails.Name.ValueString(),
 			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
 		}
@@ -320,9 +306,10 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		modelBody.AddOnDefinition.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service.WaypointServiceCreateAddOnDefinitionParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+	params := &waypoint_service_v2.WaypointServiceCreateAddOnDefinitionParams{
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
 	}
 	def, err := r.client.Waypoint.WaypointServiceCreateAddOnDefinition(params, nil)
 	if err != nil {
@@ -330,7 +317,7 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	var addOnDefinition *waypointModels.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
@@ -505,20 +492,6 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
-
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
 
 	stringLabels := []string{}
 	if !plan.Labels.IsNull() && !plan.Labels.IsUnknown() {
@@ -532,7 +505,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		}
 	}
 
-	varOpts := []*waypointModels.HashicorpCloudWaypointTFModuleVariable{}
+	varOpts := []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags := v.Options.ElementsAs(ctx, &strOpts, false)
@@ -540,7 +513,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		varOpts = append(varOpts, &waypointModels.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -549,8 +522,8 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// TODO: add support for Tags
-	modelBody := &waypointModels.HashicorpCloudWaypointWaypointServiceUpdateAddOnDefinitionBody{
-		AddOnDefinition: &waypointModels.HashicorpCloudWaypointAddOnDefinition{
+	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateAddOnDefinitionBody{
+		AddOnDefinition: &waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition{
 			Name:            plan.Name.ValueString(),
 			Summary:         plan.Summary.ValueString(),
 			Description:     plan.Description.ValueString(),
@@ -579,7 +552,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 			// Grab the top level project ID if this was not provided
 			workspaceDetails.TerraformProjectID = plan.TerraformProjectID
 		}
-		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypointModels.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+		modelBody.AddOnDefinition.TerraformCloudWorkspaceDetails = &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 			Name:      workspaceDetails.Name.ValueString(),
 			ProjectID: workspaceDetails.TerraformProjectID.ValueString(),
 		}
@@ -597,10 +570,11 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		modelBody.AddOnDefinition.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service.WaypointServiceUpdateAddOnDefinitionParams{
-		NamespaceID:               ns.ID,
-		Body:                      modelBody,
-		ExistingAddOnDefinitionID: plan.ID.ValueString(),
+	params := &waypoint_service_v2.WaypointServiceUpdateAddOnDefinitionParams{
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
+		ExistingAddOnDefinitionID:       plan.ID.ValueString(),
 	}
 	def, err := r.client.Waypoint.WaypointServiceUpdateAddOnDefinition(params, nil)
 	if err != nil {
@@ -608,7 +582,7 @@ func (r *AddOnDefinitionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	var addOnDefinition *waypointModels.HashicorpCloudWaypointAddOnDefinition
+	var addOnDefinition *waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition
 	if def.Payload != nil {
 		addOnDefinition = def.Payload.AddOnDefinition
 	}
@@ -696,22 +670,13 @@ func (r *AddOnDefinitionResource) Delete(ctx context.Context, req resource.Delet
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
+	params := &waypoint_service_v2.WaypointServiceDeleteAddOnDefinitionParams{
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		AddOnDefinitionID:               state.ID.ValueString(),
 	}
 
-	params := &waypoint_service.WaypointServiceDeleteAddOnDefinitionParams{
-		NamespaceID:       ns.ID,
-		AddOnDefinitionID: state.ID.ValueString(),
-	}
-
-	_, err = r.client.Waypoint.WaypointServiceDeleteAddOnDefinition(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteAddOnDefinition(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Add-on Definition not found for organization during delete call, ignoring")

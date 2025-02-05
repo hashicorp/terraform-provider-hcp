@@ -7,14 +7,14 @@ import (
 	"context"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 )
 
 // getNamespaceByLocation will retrieve a namespace by location information
 // provided by HCP
-func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointNamespace, error) {
-	namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
+func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models_v2.HashicorpCloudWaypointNamespace, error) {
+	namespaceParams := &waypoint_service_v2.WaypointServiceGetNamespaceParams{
 		LocationOrganizationID: loc.OrganizationID,
 		LocationProjectID:      loc.ProjectID,
 	}
@@ -28,16 +28,12 @@ func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels
 
 // GetAction will retrieve an Action using the provided ID by default
 // or by name if the ID is not provided
-func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetActionConfigParams{
-		ActionID:    &actionID,
-		ActionName:  &actionName,
-		NamespaceID: ns.ID,
+func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models_v2.HashicorpCloudWaypointActionConfig, error) {
+	params := &waypoint_service_v2.WaypointServiceGetActionConfigParams{
+		ActionID:                        &actionID,
+		ActionName:                      &actionName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetActionConfig(params, nil)
@@ -48,15 +44,11 @@ func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpC
 }
 
 // GetApplicationTemplateByName will retrieve a template by name
-func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetApplicationTemplate2Params{
-		ApplicationTemplateName: appName,
-		NamespaceID:             ns.ID,
+func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate, error) {
+	params := &waypoint_service_v2.WaypointServiceGetApplicationTemplate2Params{
+		ApplicationTemplateName:         appName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetApplicationTemplate2(params, nil)
@@ -67,15 +59,11 @@ func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *shar
 }
 
 // GetApplicationTemplateByID will retrieve a template by ID
-func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetApplicationTemplateParams{
-		ApplicationTemplateID: appID,
-		NamespaceID:           ns.ID,
+func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate, error) {
+	params := &waypoint_service_v2.WaypointServiceGetApplicationTemplateParams{
+		ApplicationTemplateID:           appID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetApplicationTemplate(params, nil)
@@ -86,15 +74,11 @@ func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *shared
 }
 
 // GetAddOnDefinitionByName will retrieve an add-on definition by name
-func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetAddOnDefinition2Params{
-		AddOnDefinitionName: defName,
-		NamespaceID:         ns.ID,
+func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition, error) {
+	params := &waypoint_service_v2.WaypointServiceGetAddOnDefinition2Params{
+		AddOnDefinitionName:             defName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetAddOnDefinition2(params, nil)
@@ -105,15 +89,11 @@ func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmo
 }
 
 // GetAddOnDefinitionByID will retrieve an add-on definition by ID
-func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetAddOnDefinitionParams{
-		AddOnDefinitionID: defID,
-		NamespaceID:       ns.ID,
+func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models_v2.HashicorpCloudWaypointAddOnDefinition, error) {
+	params := &waypoint_service_v2.WaypointServiceGetAddOnDefinitionParams{
+		AddOnDefinitionID:               defID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetAddOnDefinition(params, nil)
@@ -124,15 +104,11 @@ func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmode
 }
 
 // GetApplicationByName will retrieve an application by name
-func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetApplication2Params{
-		ApplicationName: appName,
-		NamespaceID:     ns.ID,
+func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models_v2.HashicorpCloudWaypointApplication, error) {
+	params := &waypoint_service_v2.WaypointServiceGetApplication2Params{
+		ApplicationName:                 appName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetApplication2(params, nil)
@@ -143,15 +119,11 @@ func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels
 }
 
 // GetApplicationByID will retrieve an application by ID
-func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetApplicationParams{
-		ApplicationID: appID,
-		NamespaceID:   ns.ID,
+func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models_v2.HashicorpCloudWaypointApplication, error) {
+	params := &waypoint_service_v2.WaypointServiceGetApplicationParams{
+		ApplicationID:                   appID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetApplication(params, nil)
@@ -162,15 +134,11 @@ func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.H
 }
 
 // GetAddOnByName will retrieve an add-on by name
-func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointAddOn, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetAddOn2Params{
-		AddOnName:   defName,
-		NamespaceID: ns.ID,
+func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models_v2.HashicorpCloudWaypointAddOn, error) {
+	params := &waypoint_service_v2.WaypointServiceGetAddOn2Params{
+		AddOnName:                       defName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetAddOn2(params, nil)
@@ -181,15 +149,11 @@ func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.Hashi
 }
 
 // GetAddOnByID will retrieve an add-on by ID
-func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointAddOn, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetAddOnParams{
-		AddOnID:     defID,
-		NamespaceID: ns.ID,
+func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models_v2.HashicorpCloudWaypointAddOn, error) {
+	params := &waypoint_service_v2.WaypointServiceGetAddOnParams{
+		AddOnID:                         defID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetAddOn(params, nil)
@@ -199,15 +163,11 @@ func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.Hashico
 	return getResp.GetPayload().AddOn, nil
 }
 
-func GetInputVariables(ctx context.Context, client *Client, workspaceName string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*waypoint_models.HashicorpCloudWaypointInputVariable, error) {
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		return nil, err
-	}
-
-	params := &waypoint_service.WaypointServiceGetTFRunStatusParams{
-		WorkspaceName: workspaceName,
-		NamespaceID:   ns.ID,
+func GetInputVariables(ctx context.Context, client *Client, workspaceName string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*waypoint_models_v2.HashicorpCloudWaypointInputVariable, error) {
+	params := &waypoint_service_v2.WaypointServiceGetTFRunStatusParams{
+		WorkspaceName:                   workspaceName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
 	getResp, err := client.Waypoint.WaypointServiceGetTFRunStatus(params, nil)
