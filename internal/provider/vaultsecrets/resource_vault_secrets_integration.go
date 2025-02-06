@@ -291,7 +291,7 @@ func (r *resourceVaultSecretsIntegration) Schema(_ context.Context, _ resource.S
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"token": schema.StringAttribute{
-					Description: "Access token used to authenticate against the target GitLab account.",
+					Description: "Access token used to authenticate against the target GitLab account. This token must have privilege to create CI/CD variables.",
 					Required:    true,
 					Sensitive:   true,
 				},

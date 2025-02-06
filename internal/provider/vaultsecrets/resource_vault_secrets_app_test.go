@@ -6,7 +6,6 @@ package vaultsecrets_test
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
@@ -65,11 +64,11 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 					}
 					resource "hcp_vault_secrets_sync" "gitlab_sync" {
 						name = %q
-    					integration_name = hcp_vault_secrets_integration.acc_test.name
-    					gitlab_config {
-    					    scope = "PROJECT"
-    					    project_id = "1234"
-    					}
+						integration_name = hcp_vault_secrets_integration.acc_test.name
+						gitlab_config = {
+						    scope = "PROJECT"
+						    project_id = "1234"
+						}
 					}
 					resource "hcp_vault_secrets_app" "acc_test_app" {
 						app_name    = %q
@@ -145,23 +144,26 @@ func appConfig(appName, description string) string {
 	resource "hcp_vault_secrets_app" "acc_test_app" {
       app_name    = %q
       description = %q
+	  sync_names = []
    }`, appName, description)
 }
 
 func appCheckFunc(appName, description string, syncNames []string) []resource.TestCheckFunc {
-	formattedSyncs := ""
-	if len(syncNames) > 0 {
-		formattedSyncs = fmt.Sprintf("[%s]", strings.Join(syncNames, ","))
+	syncsTestFns := make([]resource.TestCheckFunc, 0, len(syncNames))
+	for _, syncName := range syncNames {
+		syncsTestFns = append(syncsTestFns, resource.TestCheckTypeSetElemAttr("hcp_vault_secrets_app.acc_test_app", "sync_names.*", syncName))
 	}
-	return []resource.TestCheckFunc{
+
+	testFns := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_app.acc_test_app", "organization_id"),
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_app.acc_test_app", "id"),
 		resource.TestCheckResourceAttrSet("hcp_vault_secrets_app.acc_test_app", "resource_name"),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_app.acc_test_app", "project_id", os.Getenv("HCP_PROJECT_ID")),
 		resource.TestCheckResourceAttr("hcp_vault_secrets_app.acc_test_app", "app_name", appName),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_app.acc_test_app", "description", description),
-		resource.TestCheckResourceAttr("hcp_vault_secrets_app.acc_test_app", "sync_names", formattedSyncs),
-	}
+		resource.TestCheckResourceAttr("hcp_vault_secrets_app.acc_test_app", "description", description)}
+
+	testFns = append(testFns, syncsTestFns...)
+	return testFns
 }
 
 func appExists(t *testing.T, name string) bool {
