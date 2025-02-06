@@ -125,7 +125,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		},
 	}
 
-	res, err := r.client.Project.ProjectServiceCreate(createParams, nil)
+	res, err := clients.CreateProjectWithRetry(r.client, createParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating project", err.Error())
 		return
@@ -220,7 +220,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			Name: plan.Name.ValueString(),
 		}
 
-		_, err := r.client.Project.ProjectServiceSetName(setNameReq, nil)
+		_, err := clients.SetProjectNameWithRetry(r.client, setNameReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating project name", err.Error())
 			return
@@ -235,7 +235,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			Description: plan.Description.ValueString(),
 		}
 
-		_, err := r.client.Project.ProjectServiceSetDescription(setDescReq, nil)
+		_, err := clients.SetProjectDescriptionWithRetry(r.client, setDescReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating project description", err.Error())
 			return

@@ -4,8 +4,11 @@
 package clients
 
 import (
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
@@ -135,4 +138,45 @@ func RetryBillingServiceUpdate(client *Client, params *billing.BillingAccountSer
 		}
 	}
 	return resp, err
+}
+
+// newBackoff creates a new exponential backoff with default values.
+func newBackoff() backoff.BackOff {
+	// Create a new exponential backoff with explicit default values.
+	return backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(backoff.DefaultInitialInterval),
+		backoff.WithRandomizationFactor(backoff.DefaultRandomizationFactor),
+		backoff.WithMultiplier(backoff.DefaultMultiplier),
+		backoff.WithMaxInterval(backoff.DefaultMaxInterval),
+		backoff.WithMaxElapsedTime(backoff.DefaultMaxElapsedTime),
+	)
+}
+
+func newBackoffOp(op func() error, serviceError ServiceError) func() error {
+	return func() error {
+		err := op()
+
+		if err == nil {
+			return nil
+		}
+
+		code, codeErr := getCode(err, serviceError)
+		if codeErr != nil {
+			return backoff.Permanent(codeErr)
+		}
+
+		if !shouldRetryErrorCode(code, groupErrorCodesToRetry[:]) {
+			return backoff.Permanent(err)
+		}
+
+		return err
+	}
+}
+
+func getCode(err error, serviceErr ServiceError) (int, error) {
+	ok := errors.As(err, &serviceErr)
+	if !ok {
+		return 0, err
+	}
+	return serviceErr.Code(), nil
 }

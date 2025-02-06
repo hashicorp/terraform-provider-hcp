@@ -22,15 +22,8 @@ func CreateGroupRetry(client *Client, params *groups_service.GroupsServiceCreate
 		return err
 	}
 
-	getCode := func(err error) (int, error) {
-		serviceErr, ok := err.(*groups_service.GroupsServiceCreateGroupDefault)
-		if !ok {
-			return 0, err
-		}
-		return serviceErr.Code(), nil
-	}
-
-	err := backoff.Retry(newBackoffOp(op, getCode), newBackoff())
+	serviceErr := &groups_service.GroupsServiceCreateGroupDefault{}
+	err := backoff.Retry(newBackoffOp(op, serviceErr), newBackoff())
 
 	return res, err
 }
@@ -44,15 +37,8 @@ func UpdateGroupRetry(client *Client, params *groups_service.GroupsServiceUpdate
 		return err
 	}
 
-	getCode := func(err error) (int, error) {
-		serviceErr, ok := err.(*groups_service.GroupsServiceUpdateGroup2Default)
-		if !ok {
-			return 0, err
-		}
-		return serviceErr.Code(), nil
-	}
-
-	err := backoff.Retry(newBackoffOp(op, getCode), newBackoff())
+	serviceErr := &groups_service.GroupsServiceUpdateGroup2Default{}
+	err := backoff.Retry(newBackoffOp(op, serviceErr), newBackoff())
 
 	return res, err
 }
@@ -66,15 +52,8 @@ func DeleteGroupRetry(client *Client, params *groups_service.GroupsServiceDelete
 		return err
 	}
 
-	getCode := func(err error) (int, error) {
-		serviceErr, ok := err.(*groups_service.GroupsServiceDeleteGroupDefault)
-		if !ok {
-			return 0, err
-		}
-		return serviceErr.Code(), nil
-	}
-
-	err := backoff.Retry(newBackoffOp(op, getCode), newBackoff())
+	serviceErr := &groups_service.GroupsServiceDeleteGroupDefault{}
+	err := backoff.Retry(newBackoffOp(op, serviceErr), newBackoff())
 
 	return res, err
 }
@@ -90,48 +69,8 @@ func UpdateGroupMembersRetry(client *Client, params *groups_service.GroupsServic
 		return err
 	}
 
-	getCode := func(err error) (int, error) {
-		serviceErr, ok := err.(*groups_service.GroupsServiceUpdateGroupMembersDefault)
-		if !ok {
-			return 0, err
-		}
-		return serviceErr.Code(), nil
-	}
-
-	err := backoff.Retry(newBackoffOp(op, getCode), newBackoff())
+	serviceErr := &groups_service.GroupsServiceUpdateGroupMembersDefault{}
+	err := backoff.Retry(newBackoffOp(op, serviceErr), newBackoff())
 
 	return res, err
-}
-
-// newBackoff creates a new exponential backoff with default values.
-func newBackoff() backoff.BackOff {
-	// Create a new exponential backoff with explicit default values.
-	return backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(backoff.DefaultInitialInterval),
-		backoff.WithRandomizationFactor(backoff.DefaultRandomizationFactor),
-		backoff.WithMultiplier(backoff.DefaultMultiplier),
-		backoff.WithMaxInterval(backoff.DefaultMaxInterval),
-		backoff.WithMaxElapsedTime(backoff.DefaultMaxElapsedTime),
-	)
-}
-
-func newBackoffOp(op func() error, getCode func(error) (int, error)) func() error {
-	return func() error {
-		err := op()
-
-		if err == nil {
-			return nil
-		}
-
-		code, codeErr := getCode(err)
-		if codeErr != nil {
-			return backoff.Permanent(codeErr)
-		}
-
-		if !shouldRetryErrorCode(code, groupErrorCodesToRetry[:]) {
-			return backoff.Permanent(err)
-		}
-
-		return err
-	}
 }
