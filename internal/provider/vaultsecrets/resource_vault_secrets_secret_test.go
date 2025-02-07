@@ -12,8 +12,6 @@ import (
 )
 
 func TestAccVaultSecretsResourceSecret(t *testing.T) {
-	t.Skip("This config requires service principal permission to Create Project")
-
 	testAppName1 := generateRandomSlug()
 	testAppName2 := generateRandomSlug()
 	resource.Test(t, resource.TestCase{
