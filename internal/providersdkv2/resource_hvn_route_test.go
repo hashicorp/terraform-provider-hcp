@@ -8,79 +8,77 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-var (
-	// using unique names for resources to make debugging easier
-	hvnRouteUniqueName       = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
-	testAccHvnRouteConfigAws = fmt.Sprintf(`
-	  provider "aws" {
-		region = "us-west-2"
-	  }
+// AWS config
+func testAccHvnRouteConfigAws(resID string) string {
+	return fmt.Sprintf(`
+	provider "aws" {
+	  region = "us-west-2"
+	}
 
-	  resource "hcp_hvn" "test" {
-		  hvn_id         = "%[1]s"
-		  cloud_provider = "aws"
-		  region         = "us-west-2"
-	  }
+	resource "hcp_hvn" "test" {
+		hvn_id         = "%[1]s"
+		cloud_provider = "aws"
+		region         = "us-west-2"
+	}
 
-	  resource "aws_vpc" "vpc" {
-		cidr_block = "10.220.0.0/16"
-		tags = {
-		   Name = "%[1]s"
-		}
+	resource "aws_vpc" "vpc" {
+	  cidr_block = "10.220.0.0/16"
+	  tags = {
+		 Name = "%[1]s"
 	  }
+	}
 
-	  resource "hcp_aws_network_peering" "peering" {
-		peering_id      = "%[1]s"
-		hvn_id          = hcp_hvn.test.hvn_id
-		peer_account_id = aws_vpc.vpc.owner_id
-		peer_vpc_id     = aws_vpc.vpc.id
-		peer_vpc_region = "us-west-2"
+	resource "hcp_aws_network_peering" "peering" {
+	  peering_id      = "%[1]s"
+	  hvn_id          = hcp_hvn.test.hvn_id
+	  peer_account_id = aws_vpc.vpc.owner_id
+	  peer_vpc_id     = aws_vpc.vpc.id
+	  peer_vpc_region = "us-west-2"
+	}
+
+	// This data source is the same as the resource above, but waits for the connection to be Active before returning.
+	data "hcp_aws_network_peering" "peering" {
+	  hvn_id                = hcp_hvn.test.hvn_id
+	  peering_id            = hcp_aws_network_peering.peering.peering_id
+	  wait_for_active_state = true
+	}
+
+	// The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
+	resource "hcp_hvn_route" "route" {
+	  hvn_route_id     = "%[1]s"
+	  hvn_link         = hcp_hvn.test.self_link
+	  destination_cidr = "172.31.0.0/16"
+	  target_link      = data.hcp_aws_network_peering.peering.self_link
+	}
+
+	resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
+	  vpc_peering_connection_id = hcp_aws_network_peering.peering.provider_peering_id
+	  auto_accept               = true
+	  tags = {
+		 Name = "%[1]s"
+
+		 // we need to have these tags here because peering-accepter will turn into
+		 // an actual peering which HCP will populate with a set of tags (the ones below).
+		 // After succesfull "apply"" test will try to run "plan" operation
+		 // to make sure there are no changes to the state and if we don't specify these
+		 // tags here then it will fail.
+		 hvn_id          = hcp_hvn.test.hvn_id
+		 organization_id = hcp_hvn.test.organization_id
+		 project_id      = hcp_hvn.test.project_id
+		 peering_id      = hcp_aws_network_peering.peering.peering_id
 	  }
-
-	  // This data source is the same as the resource above, but waits for the connection to be Active before returning.
-	  data "hcp_aws_network_peering" "peering" {
-		hvn_id                = hcp_hvn.test.hvn_id
-		peering_id            = hcp_aws_network_peering.peering.peering_id
-		wait_for_active_state = true
-	  }
-
-	  // The route depends on the data source, rather than the resource, to ensure the peering is in an Active state.
-	  resource "hcp_hvn_route" "route" {
-		hvn_route_id     = "%[1]s"
-		hvn_link         = hcp_hvn.test.self_link
-		destination_cidr = "172.31.0.0/16"
-		target_link      = data.hcp_aws_network_peering.peering.self_link
-	  }
-
-	  resource "aws_vpc_peering_connection_accepter" "peering-accepter" {
-		vpc_peering_connection_id = hcp_aws_network_peering.peering.provider_peering_id
-		auto_accept               = true
-		tags = {
-		   Name = "%[1]s"
-
-		   // we need to have these tags here because peering-accepter will turn into
-		   // an actual peering which HCP will populate with a set of tags (the ones below).
-		   // After succesfull "apply"" test will try to run "plan" operation
-		   // to make sure there are no changes to the state and if we don't specify these
-		   // tags here then it will fail.
-		   hvn_id          = hcp_hvn.test.hvn_id
-		   organization_id = hcp_hvn.test.organization_id
-		   project_id      = hcp_hvn.test.project_id
-		   peering_id      = hcp_aws_network_peering.peering.peering_id
-		}
-	  }
-	  `, hvnRouteUniqueName)
-)
+	}
+	`, resID)
+}
 
 // Azure config
-func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
+func testAccHvnRouteConfigAzure(resID, azConfig, optConfig string) string {
 	return fmt.Sprintf(`
 	provider "azurerm" {
 	  features {}
@@ -173,10 +171,10 @@ func testAccHvnRouteConfigAzure(azConfig, optConfig string) string {
 	}
 
 	%[5]s
-	`, hvnRouteUniqueName, subscriptionID, tenantID, azConfig, optConfig)
+	`, resID, subscriptionID, tenantID, azConfig, optConfig)
 }
 
-func testAccHvnRouteConfigNVA(optConfig string) string {
+func testAccHvnRouteConfigNVA(resID, optConfig string) string {
 	return fmt.Sprintf(`
 	resource "azurerm_subnet" "spoke" {
 	  name                 = "as-spoke-%[1]s"
@@ -303,17 +301,18 @@ func testAccHvnRouteConfigNVA(optConfig string) string {
 	}
 
 	%[2]s
-	`, hvnRouteUniqueName, optConfig)
+	`, resID, optConfig)
 }
 
 // hvnRouteAzureAdConfig is the config required to allow HCP to peer from the Remote VNet to HCP HVN
-var hvnRouteAzureAdConfig = `
+func hvnRouteAzureAdConfig(resID string) string {
+	return fmt.Sprintf(`
 	resource "azuread_service_principal" "principal" {
 	  application_id = hcp_azure_peering_connection.peering.application_id
 	}
 
 	resource "azurerm_role_definition" "definition" {
-	  name  = "hcp-provider-test-role-def"
+	  name  = "%[1]s"
 	  scope = azurerm_virtual_network.vnet.id
 
 	  assignable_scopes = [
@@ -334,7 +333,8 @@ var hvnRouteAzureAdConfig = `
 	  scope              = azurerm_virtual_network.vnet.id
 	  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
 	}
-`
+	`, resID)
+}
 
 var azConfigGateway = `
 	  azure_config {
@@ -356,7 +356,10 @@ var azConfigNVA = `
 	  }
 `
 
-func TestAccHvnRouteAws(t *testing.T) {
+func TestAcc_Platform_HvnRouteAws(t *testing.T) {
+	t.Parallel()
+
+	hvnRouteUniqueName := testAccUniqueNameWithPrefix("p-route-aws")
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -370,7 +373,7 @@ func TestAccHvnRouteAws(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAws),
+				Config: testConfig(testAccHvnRouteConfigAws(hvnRouteUniqueName)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
@@ -400,7 +403,7 @@ func TestAccHvnRouteAws(t *testing.T) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAws),
+				Config: testConfig(testAccHvnRouteConfigAws(hvnRouteUniqueName)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hvn_route_id", hvnRouteUniqueName),
@@ -416,8 +419,10 @@ func TestAccHvnRouteAws(t *testing.T) {
 }
 
 // Test Azure Route with Gateway architecture
-func TestAccHvnRouteAzureGateway(t *testing.T) {
-	testHvnRouteGateway(t, hvnRouteAzureAdConfig)
+func TestAcc_Platform_HvnRouteAzureGateway(t *testing.T) {
+	t.Parallel()
+
+	testHvnRouteGateway(t, hvnRouteAzureAdConfig(testAccUniqueNameWithPrefix("p-az-r-gateway")))
 }
 
 func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
@@ -427,6 +432,7 @@ func TestAccHvnRouteAzureGatewayInternal(t *testing.T) {
 }
 
 func testHvnRouteGateway(t *testing.T, adConfig string) {
+	hvnRouteUniqueName := testAccUniqueNameWithPrefix("p-az-r-gateway")
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -441,7 +447,7 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, adConfig)),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteUniqueName, azConfigGateway, adConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
@@ -471,7 +477,7 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigGateway, adConfig)),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteUniqueName, azConfigGateway, adConfig)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "azure_config.0.next_hop_type", "VIRTUAL_NETWORK_GATEWAY"),
@@ -487,8 +493,10 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 }
 
 // Test Azure Route with invalid config
-func TestAccHvnRouteAzureInvalidConfig(t *testing.T) {
-	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig)
+func TestAcc_Platform_HvnRouteAzureInvalidConfig(t *testing.T) {
+	t.Parallel()
+
+	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig("fail"))
 }
 
 func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
@@ -507,9 +515,9 @@ func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
 		},
 		CheckDestroy: testAccCheckHvnRouteDestroy,
 		Steps: []resource.TestStep{
-			// Testing invalide azure_config based on next_hop_type value
+			// Testing invalid azure_config based on next_hop_type value
 			{
-				Config:      testConfig(testAccHvnRouteConfigAzure(azConfigInvalidNextHopType, adConfig)),
+				Config:      testConfig(testAccHvnRouteConfigAzure("fail", azConfigInvalidNextHopType, adConfig)),
 				ExpectError: regexp.MustCompile(`azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE`),
 			},
 		},
@@ -517,8 +525,10 @@ func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
 }
 
 // Test Azure Route with NVA architecture
-func TestAccHvnRouteAzureNVA(t *testing.T) {
-	testHvnRouteNVA(t, hvnRouteAzureAdConfig)
+func TestAcc_Platform_HvnRouteAzureNVA(t *testing.T) {
+	t.Parallel()
+
+	testHvnRouteNVA(t, hvnRouteAzureAdConfig(testAccUniqueNameWithPrefix("p-az-r-nva")))
 }
 
 func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
@@ -528,6 +538,7 @@ func TestAccHvnRouteAzureNVAInternal(t *testing.T) {
 }
 
 func testHvnRouteNVA(t *testing.T, adConfig string) {
+	hvnRouteUniqueName := testAccUniqueNameWithPrefix("p-route-nva")
 	resourceName := "hcp_hvn_route.route"
 
 	resource.Test(t, resource.TestCase{
@@ -542,7 +553,7 @@ func testHvnRouteNVA(t *testing.T, adConfig string) {
 		Steps: []resource.TestStep{
 			// Testing that initial Apply created correct HVN route
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA(adConfig))),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteUniqueName, azConfigNVA, testAccHvnRouteConfigNVA(hvnRouteUniqueName, adConfig))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),
@@ -573,7 +584,7 @@ func testHvnRouteNVA(t *testing.T, adConfig string) {
 			},
 			// Testing running Terraform Apply for already known resource
 			{
-				Config: testConfig(testAccHvnRouteConfigAzure(azConfigNVA, testAccHvnRouteConfigNVA(adConfig))),
+				Config: testConfig(testAccHvnRouteConfigAzure(hvnRouteUniqueName, azConfigNVA, testAccHvnRouteConfigNVA(hvnRouteUniqueName, adConfig))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHvnRouteExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "azure_config.0.next_hop_ip_address"),

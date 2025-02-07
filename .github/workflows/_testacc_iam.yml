@@ -1,19 +1,20 @@
-name: TestAcc Vault
+name: TestAcc Iam
 
 on:
   workflow_call:
   workflow_dispatch:
   pull_request:
-    # Vault resources still use SDKv2 so we have to target files manually until migrated
     paths:
-      - 'internal/clients/vault_cluster.go'
-      - 'internal/providersdkv2/resource_vault_*'
-      - 'internal/providersdkv2/data_source_vault_*'
+      - 'internal/clients/group.go'
+      - 'internal/clients/iam.go'
+      - 'internal/clients/iampolicy/**'
+      - 'internal/provider/iam/**'
+      - 'internal/provider/resourcemanager/**'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
 concurrency:
-  group: testacc-vault
+  group: testacc-iam
   cancel-in-progress: false
 
 permissions:
@@ -59,25 +60,26 @@ jobs:
           HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
 
-          HCP_ORGANIZATION_ID: ${{ secrets.VAULT_HCP_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.VAULT_HCP_PROJECT_ID }}
-          HCP_CLIENT_ID: ${{ secrets.VAULT_HCP_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.VAULT_HCP_CLIENT_SECRET }}
+          HCP_ORGANIZATION_ID: ${{ secrets.IAM_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.IAM_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.IAM_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.IAM_HCP_CLIENT_SECRET }}
         run: |
-          go test ./internal/providersdkv2 \
+          go test \
+            ./internal/provider/iam \
+            ./internal/provider/resourcemanager \
             -v \
             -short \
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run=TestAcc_Vault.* \
-            -coverprofile=testacc-vault.out
+            -coverprofile=testacc-iam.out
 
           go tool cover \
-            -html=testacc-vault.out \
-            -o testacc-vault.html
+            -html=testacc-iam.out \
+            -o testacc-iam.html
       - name: Upload TestAcc Coverage Artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: coverage-vault
-          path: testacc-vault.html
+          name: Test Coverage
+          path: testacc-iam.html

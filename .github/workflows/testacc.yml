@@ -19,21 +19,26 @@ permissions:
 # Runs all Acceptance test groups in parallel to encompass the entire provider.
 # These will be enabled as they are onboarded.
 jobs:
-  # testacc_platform:
-  #   name: Platform
-  #   uses: ./.github/workflows/_testacc_platform.yml
-  # testacc_iam:
-  #   name: Iam
-  #   uses: ./.github/workflows/_testacc_iam.yml
-  # testacc_boundary:
-  #   name: Boundary
-  #   uses: ./.github/workflows/_testacc_boundary.yml
-  # testacc_consul:
-  #   name: Consul
-  #   uses: ./.github/workflows/_testacc_consul.yml
-  # testacc_packer:
-  #   name: Packer
-  #   uses: ./.github/workflows/_testacc_packer.yml
+  testacc_iam:
+    name: IAM
+    uses: ./.github/workflows/_testacc_iam.yml
+    secrets: inherit
+  testacc_platform:
+    name: Platform
+    uses: ./.github/workflows/_testacc_platform.yml
+    secrets: inherit
+  testacc_boundary:
+    name: Boundary
+    uses: ./.github/workflows/_testacc_boundary.yml
+    secrets: inherit
+  testacc_packer:
+    name: Packer
+    uses: ./.github/workflows/_testacc_packer.yml
+    secrets: inherit
+  testacc_consul:
+    name: Consul
+    uses: ./.github/workflows/_testacc_consul.yml
+    secrets: inherit
   testacc_vault:
     name: Vault
     uses: ./.github/workflows/_testacc_vault.yml
@@ -41,9 +46,12 @@ jobs:
   # testacc_vaultsecrets:
   #   name: Vault Secrets
   #   uses: ./.github/workflows/_testacc_vaultsecrets.yml
-  # testacc_vaultradar:
-  #   name: Vault Radar
-  #   uses: ./.github/workflows/_testacc_vaultradar.yml
+  #   secrets: inherit
+  testacc_vaultradar:
+    name: Vault Radar
+    uses: ./.github/workflows/_testacc_vaultradar.yml
+    secrets: inherit
   # testacc_waypoint:
   #   name: Waypoint
   #   uses: ./.github/workflows/_testacc_waypoint.yml
+  #   secrets: inherit
