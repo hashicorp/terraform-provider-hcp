@@ -402,6 +402,8 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
+	plan.CreatedBy = types.StringNull()
+
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
 	if err != nil {
@@ -537,6 +539,8 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 	state.Labels = labels
+
+	state.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
@@ -691,6 +695,8 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			plan.ApplicationID = types.StringValue(addOn.Application.ID)
 		}
 	}
+
+	plan.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)

@@ -11,21 +11,6 @@ import (
 	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 )
 
-// getNamespaceByLocation will retrieve a namespace by location information
-// provided by HCP
-func getNamespaceByLocation(_ context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models_v2.HashicorpCloudWaypointNamespace, error) {
-	namespaceParams := &waypoint_service_v2.WaypointServiceGetNamespaceParams{
-		LocationOrganizationID: loc.OrganizationID,
-		LocationProjectID:      loc.ProjectID,
-	}
-	// get namespace
-	ns, err := client.Waypoint.WaypointServiceGetNamespace(namespaceParams, nil)
-	if err != nil {
-		return nil, err
-	}
-	return ns.GetPayload().Namespace, nil
-}
-
 // GetAction will retrieve an Action using the provided ID by default
 // or by name if the ID is not provided
 func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models_v2.HashicorpCloudWaypointActionConfig, error) {

@@ -257,6 +257,8 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		state.ReadmeMarkdown = types.StringNull()
 	}
 
+	state.CreatedBy = types.StringNull()
+
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
 	if err != nil {

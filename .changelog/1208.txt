@@ -1,0 +1,4 @@
+```release-note:deprecation
+The following attribute is deprecated for Waypoint the add-on resource and data source:
+  - `hcp_waypoint_add_on_created_by`
+```
