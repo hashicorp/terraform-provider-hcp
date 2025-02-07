@@ -1,19 +1,22 @@
-name: TestAcc Vault
+name: TestAcc Packer
 
 on:
   workflow_call:
   workflow_dispatch:
   pull_request:
-    # Vault resources still use SDKv2 so we have to target files manually until migrated
+    # Packer resources still use SDKv2 so we have to target files manually until fully migrated
     paths:
-      - 'internal/clients/vault_cluster.go'
-      - 'internal/providersdkv2/resource_vault_*'
-      - 'internal/providersdkv2/data_source_vault_*'
+      # Plugin Framework
+      - 'internal/provider/packer/**'
+      # SDKv2
+      - 'internal/clients/packerv2/**'
+      - 'internal/providersdkv2/data_source_packer_*'
+      - 'internal/providersdkv2/resource_packer_*'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
 concurrency:
-  group: testacc-vault
+  group: testacc-packer
   cancel-in-progress: false
 
 permissions:
@@ -52,17 +55,17 @@ jobs:
       - name: Go Build
         run: |
           go build -v .
-      - name: Run TestAcc
+      - name: Run TestAcc SDKv2
         env:
           TF_ACC: 1
 
           HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
           HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
 
-          HCP_ORGANIZATION_ID: ${{ secrets.VAULT_HCP_ORGANIZATION_ID }}
-          HCP_PROJECT_ID: ${{ secrets.VAULT_HCP_PROJECT_ID }}
-          HCP_CLIENT_ID: ${{ secrets.VAULT_HCP_CLIENT_ID }}
-          HCP_CLIENT_SECRET: ${{ secrets.VAULT_HCP_CLIENT_SECRET }}
+          HCP_ORGANIZATION_ID: ${{ secrets.PACKER_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.PACKER_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.PACKER_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.PACKER_HCP_CLIENT_SECRET }}
         run: |
           go test ./internal/providersdkv2 \
             -v \
@@ -70,14 +73,34 @@ jobs:
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run=TestAcc_Vault.* \
-            -coverprofile=testacc-vault.out
+            -run=TestAcc_Packer.* \
+            -coverprofile=testacc-packer.out
 
           go tool cover \
-            -html=testacc-vault.out \
-            -o testacc-vault.html
+            -html=testacc-packer.out \
+            -o testacc-packer.html
+      # This runs synchronously because parallelism between packages causes failure
+      - name: Run TestAcc Plugin Framework
+        env:
+          TF_ACC: 1
+
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
+
+          HCP_ORGANIZATION_ID: ${{ secrets.PACKER_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.PACKER_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.PACKER_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.PACKER_HCP_CLIENT_SECRET }}
+        run: |
+          go test ./internal/provider/packer/... \
+            -v \
+            -short \
+            -test.v \
+            -parallel=10 \
+            -timeout=360m \
+            -run=TestAcc_Packer.*
       - name: Upload TestAcc Coverage Artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: coverage-vault
-          path: testacc-vault.html
+          name: coverage-packer
+          path: testacc-packer.html

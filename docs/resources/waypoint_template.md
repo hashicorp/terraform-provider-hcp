@@ -14,26 +14,31 @@ Waypoint Template resource
 ## Example Usage
 
 ```terraform
-resource "hcp_waypoint_template" "example" {
-  name                            = "waypoint-template-name"
-  summary                         = "short summary for waypoint template"
-  terraform_no_code_module_source = "private/tfcorg/modulename/providername"
-  terraform_project_id            = "prj-j5pmTUfmstDi6okP"
+resource "hcp_waypoint_template" "template" {
+  name                            = "go-k8s-microservice"
+  summary                         = "A simple Go microservice running on Kubernetes."
+  description                     = <<EOF
+This template deploys a simple Go microservice to Kubernetes. The microservice
+is a simple HTTP server that listens on port 8080 and returns a JSON response.
+The template includes a Dockerfile, Kubernetes manifests, and boiler plate code
+for a gRPC service written in Go.
+EOF
+  terraform_project_id            = "prj-123456"
+  labels                          = ["go", "kubernetes"]
+  terraform_no_code_module_source = "private/fake-org/go-k8s-microservice/kubernetes"
+  terraform_no_code_module_id     = "nocode-123456"
   variable_options = [
     {
-      "name" : "storage_account_name",
-      "options" : [
-        "azure_storage_account"
-      ],
-      "user_editable" : false,
-      "variable_type" : "string"
+      name          = "resource_size"
+      user_editable = true
+      options       = ["small", "medium", "large"]
     },
     {
-      "name" : "web_app_name",
-      "options" : [],
-      "user_editable" : true,
-      "variable_type" : "string"
-  }]
+      name          = "service_port"
+      user_editable = false
+      options       = ["8080"]
+    },
+  ]
 }
 ```
 

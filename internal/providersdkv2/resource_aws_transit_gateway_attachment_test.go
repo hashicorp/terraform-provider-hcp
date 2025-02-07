@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,8 +15,8 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	tgwAttUniqueAWSName        = fmt.Sprintf("hcp-att-unique-test-%s", time.Now().Format("200601021504"))
-	tgwAttUniqueHvnName        = fmt.Sprintf("att-hvn-name-%s", time.Now().Format("200601021504"))
+	tgwAttUniqueAWSName        = testAccUniqueNameWithPrefix("platform-tgw")
+	tgwAttUniqueHvnName        = testAccUniqueNameWithPrefix("platform-hvn")
 	testAccTGWAttachmentConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"
@@ -105,7 +104,9 @@ var (
 	`, tgwAttUniqueAWSName, tgwAttUniqueHvnName)
 )
 
-func TestAccTGWAttachment(t *testing.T) {
+func TestAcc_Platform_TGWAttachment(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_aws_transit_gateway_attachment.example"
 
 	resource.Test(t, resource.TestCase{

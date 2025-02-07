@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,7 +15,7 @@ import (
 
 var (
 	// using unique names for AWS resource to make debugging easier
-	hvnPeeringUniqueAWSName = fmt.Sprintf("hcp-provider-test-%s", time.Now().Format("200601021504"))
+	hvnPeeringUniqueAWSName = testAccUniqueNameWithPrefix("platform-hvn-peer")
 	testAccAwsPeeringConfig = fmt.Sprintf(`
 	provider "aws" {
 	  region = "us-west-2"
@@ -79,7 +78,9 @@ var (
 	`, hvnPeeringUniqueAWSName)
 )
 
-func TestAccAwsPeering(t *testing.T) {
+func TestAcc_Platform_AwsPeering(t *testing.T) {
+	t.Parallel()
+
 	resourceName := "hcp_aws_network_peering.peering"
 
 	resource.Test(t, resource.TestCase{
