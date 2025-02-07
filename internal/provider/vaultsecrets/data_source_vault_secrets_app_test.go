@@ -18,8 +18,6 @@ import (
 )
 
 func TestAcc_dataSourceVaultSecretsAppMigration(t *testing.T) {
-	t.Parallel()
-
 	testAppName := generateRandomSlug()
 	dataSourceAddress := "data.hcp_vault_secrets_app.example"
 
