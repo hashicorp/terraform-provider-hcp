@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -34,6 +33,8 @@ type App struct {
 	OrganizationID types.String `tfsdk:"organization_id"`
 	ResourceName   types.String `tfsdk:"resource_name"`
 	SyncNames      types.Set    `tfsdk:"sync_names"`
+
+	syncNames []string `tfsdk:"-"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsApp{}
@@ -98,12 +99,9 @@ func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Description: "Set of sync names to associate with this app.",
 				Optional:    true,
 				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
-						stringvalidator.LengthBetween(1, 511),
+						slugValidator,
 					),
 				},
 			}},
@@ -136,13 +134,11 @@ func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.Creat
 			return nil, fmt.Errorf("invalid resource type, expected *App, got: %T, this is a bug on the provider", i)
 		}
 
-		syncNames := make([]string, len(app.SyncNames.Elements()))
-
 		response, err := r.client.VaultSecrets.CreateApp(&secret_service.CreateAppParams{
 			Body: &secretmodels.SecretServiceCreateAppBody{
 				Name:        app.AppName.ValueString(),
 				Description: app.Description.ValueString(),
-				SyncNames:   syncNames,
+				SyncNames:   app.syncNames,
 			},
 			OrganizationID: app.OrganizationID.ValueString(),
 			ProjectID:      app.ProjectID.ValueString(),
@@ -238,6 +234,8 @@ func (a *App) projectID() types.String {
 func (a *App) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	a.OrganizationID = types.StringValue(orgID)
 	a.ProjectID = types.StringValue(projID)
+	a.syncNames = make([]string, 0, len(a.SyncNames.Elements()))
+	a.SyncNames.ElementsAs(ctx, &a.syncNames, false)
 
 	return diag.Diagnostics{}
 }
