@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypointData_Template_basic(t *testing.T) {
+func TestAcc_Waypoint_Data_Template_basic(t *testing.T) {
+	t.Parallel()
+
 	// this is only used to verify the template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var appTemplateModel waypoint.TemplateResourceModel
@@ -56,7 +58,9 @@ func TestAccWaypointData_Template_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypointData_template_with_variable_options(t *testing.T) {
+func TestAcc_Waypoint_Data_template_with_variable_options(t *testing.T) {
+	t.Parallel()
+
 	// this is only used to verify the template gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var appTemplateModel waypoint.TemplateResourceModel

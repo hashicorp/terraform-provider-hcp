@@ -18,7 +18,9 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
-func TestAccWaypoint_Add_On_basic(t *testing.T) {
+func TestAcc_Waypoint_Add_On_basic(t *testing.T) {
+	t.Parallel()
+
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test"
 	addOnName := generateRandomName()
@@ -43,7 +45,9 @@ func TestAccWaypoint_Add_On_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_AddOnInputVariables(t *testing.T) {
+func TestAcc_Waypoint_AddOnInputVariables(t *testing.T) {
+	t.Parallel()
+
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test_var_opts"
 	addOnName := generateRandomName()
@@ -79,7 +83,9 @@ func TestAccWaypoint_AddOnInputVariables(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_AddOnInputVariables_OnDefinition(t *testing.T) {
+func TestAcc_Waypoint_AddOnInputVariables_OnDefinition(t *testing.T) {
+	t.Parallel()
+
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test_var_opts"
 	addOnName := generateRandomName()

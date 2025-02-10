@@ -18,7 +18,9 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
-func TestAccWaypoint_Add_On_Definition_basic(t *testing.T) {
+func TestAcc_Waypoint_Add_On_Definition_basic(t *testing.T) {
+	t.Parallel()
+
 	var addOnDefinitionModel waypoint.AddOnDefinitionResourceModel
 	resourceName := "hcp_waypoint_add_on_definition.test"
 	name := generateRandomName()

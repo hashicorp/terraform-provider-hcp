@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypointData_Add_On_basic(t *testing.T) {
+func TestAcc_Waypoint_Data_Add_On_basic(t *testing.T) {
+	t.Parallel()
+
 	// this is only used to verify the add-on gets cleaned up in the end
 	// of the test, and not used for any other purpose at this time
 	var addOnModel waypoint.AddOnResourceModel
@@ -48,7 +50,9 @@ func TestAccWaypointData_Add_On_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_AddOn_DataSource_WithInputVars(t *testing.T) {
+func TestAcc_Waypoint_AddOn_DataSource_WithInputVars(t *testing.T) {
+	t.Parallel()
+
 	var addOnModel waypoint.AddOnResourceModel
 	resourceName := "hcp_waypoint_add_on.test_var_opts"
 	dataSourceName := "data." + resourceName

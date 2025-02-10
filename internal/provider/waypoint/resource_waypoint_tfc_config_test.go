@@ -20,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypointTfcConfig_basic(t *testing.T) {
+func TestAcc_Waypoint_TfcConfig_basic(t *testing.T) {
+	t.Parallel()
+
 	// This will need to be rewritten to delete the TFC Config before running in order to function
 	t.Skip("Skipping nonfunctional TFC Config test")
 	var tfcConfig waypoint.TfcConfigResourceModel

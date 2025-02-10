@@ -1,0 +1,81 @@
+name: TestAcc Waypoint
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'internal/clients/waypoint.go'
+      - 'internal/provider/waypoint/**'
+
+# This prevents more than one run of this workflow from executing at a time.
+# Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
+concurrency:
+  group: testacc-waypoint
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  acceptance_tests:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      - name: Set up Go
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+        id: go
+      - name: Install Dependencies
+        env:
+          GOPRIVATE: 'github.com/hashicorp/*'
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+          go mod tidy
+      - name: Run 'go mod tidy'
+        run: |
+          make depscheck
+      - name: Get dependencies
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+          go mod download
+      - name: Go Build
+        run: |
+          go build -v .
+      - name: Run TestAcc
+        env:
+          TF_ACC: 1
+          HCP_WAYP_ACTION_TEST: true
+
+          HCP_API_HOST: ${{ secrets.HCP_API_HOST_INT }}
+          HCP_AUTH_URL: ${{ secrets.HCP_AUTH_URL_INT }}
+
+          HCP_ORGANIZATION_ID: ${{ secrets.WAYPOINT_HCP_ORGANIZATION_ID }}
+          HCP_PROJECT_ID: ${{ secrets.WAYPOINT_HCP_PROJECT_ID }}
+          HCP_CLIENT_ID: ${{ secrets.WAYPOINT_HCP_CLIENT_ID }}
+          HCP_CLIENT_SECRET: ${{ secrets.WAYPOINT_HCP_CLIENT_SECRET }}
+        run: |
+          go test ./internal/provider/waypoint \
+            -v \
+            -short \
+            -test.v \
+            -parallel=10 \
+            -timeout=360m \
+            -coverprofile=testacc-waypoint.out
+
+          go tool cover \
+            -html=testacc-waypoint.out \
+            -o testacc-waypoint.html
+      - name: Upload TestAcc Coverage Artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: Test Coverage
+          path: testacc-waypoint.html
