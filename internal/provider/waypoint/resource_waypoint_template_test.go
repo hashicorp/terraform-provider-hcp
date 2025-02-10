@@ -20,7 +20,9 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
-func TestAccWaypoint_Template_basic(t *testing.T) {
+func TestAcc_Waypoint_Template_basic(t *testing.T) {
+	t.Parallel()
+
 	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_template.test"
 	name := generateRandomName()
@@ -53,7 +55,9 @@ func TestAccWaypoint_Template_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_template_with_variable_options(t *testing.T) {
+func TestAcc_Waypoint_template_with_variable_options(t *testing.T) {
+	t.Parallel()
+
 	var appTemplateModel waypoint.TemplateResourceModel
 	resourceName := "hcp_waypoint_template.var_opts_test"
 	name := generateRandomName()

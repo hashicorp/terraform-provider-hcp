@@ -17,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypoint_Application_basic(t *testing.T) {
+func TestAcc_Waypoint_Application_basic(t *testing.T) {
+	t.Parallel()
+
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test"
 	templateName := generateRandomName()
@@ -40,7 +42,9 @@ func TestAccWaypoint_Application_basic(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
+func TestAcc_Waypoint_ApplicationInputVariables(t *testing.T) {
+	t.Parallel()
+
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test_var_opts"
 	templateName := generateRandomName()
@@ -72,7 +76,9 @@ func TestAccWaypoint_ApplicationInputVariables(t *testing.T) {
 	})
 }
 
-func TestAccWaypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
+func TestAcc_Waypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
+	t.Parallel()
+
 	var applicationModel waypoint.ApplicationResourceModel
 	resourceName := "hcp_waypoint_application.test_var_opts"
 	templateName := generateRandomName()
@@ -263,7 +269,7 @@ resource "hcp_waypoint_application" "test_var_opts" {
       name  		= "vault_dweller_name"
       variable_type = "string"
 	  value 		= "courier"
-    }	
+    }
   ]
 }`, tempName, appName)
 }

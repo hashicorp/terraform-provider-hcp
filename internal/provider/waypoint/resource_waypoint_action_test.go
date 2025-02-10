@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
 
-func TestAccWaypoint_Action_basic(t *testing.T) {
+func TestAcc_Waypoint_Action_basic(t *testing.T) {
+	t.Parallel()
+
 	// Skip this test unless the appropriate environment variable is set
 	// This is to prevent running this test by default
 	if os.Getenv("HCP_WAYP_ACTION_TEST") == "" {
