@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -46,12 +46,10 @@ type ApplicationResourceModel struct {
 	TemplateID     types.String `tfsdk:"template_id"`
 	TemplateName   types.String `tfsdk:"template_name"`
 	NamespaceID    types.String `tfsdk:"namespace_id"`
+	Actions        types.List   `tfsdk:"actions"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
-
-	// deferred and probably a list or objects, but may possible be a separate
-	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
 	InputVars types.Set `tfsdk:"application_input_variables"`
 
@@ -148,6 +146,16 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Internal Namespace ID.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"actions": schema.ListAttribute{
+				Optional: true,
+				Description: "List of actions by 'id' to assign to this Template. " +
+					"Applications created from this template will have these actions " +
+					"assigned to them. Only 'ID' is supported.",
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"application_input_variables": schema.SetNestedAttribute{
@@ -295,8 +303,23 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
+	var (
+		actionIDs  []string
+		actionRefs []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	)
+	diags = plan.Actions.ElementsAs(ctx, &actionIDs, false)
+	if diags.HasError() {
+		return
+	}
+	for _, n := range actionIDs {
+		actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			ID: n,
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
-		Name: plan.Name.ValueString(),
+		Name:          plan.Name.ValueString(),
+		ActionCfgRefs: actionRefs,
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.TemplateID.ValueString(),
 		},
@@ -328,6 +351,20 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.OrgID = types.StringValue(orgID)
 	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
+
+	var planActionIDs []string
+	for _, n := range application.ActionCfgRefs {
+		planActionIDs = append(planActionIDs, n.ID)
+	}
+	actionPlan, actionDiags := types.ListValueFrom(ctx, types.StringType, planActionIDs)
+	resp.Diagnostics.Append(actionDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		plan.Actions = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
@@ -440,6 +477,24 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.Name = types.StringValue(application.Name)
 	data.OrgID = types.StringValue(orgID)
 	data.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
+
+	data.Actions = types.ListNull(types.StringType)
+	if application.ActionCfgRefs != nil {
+		var actionIDs []string
+		for _, n := range application.ActionCfgRefs {
+			actionIDs = append(actionIDs, n.ID)
+		}
+
+		actions, diags := types.ListValueFrom(ctx, types.StringType, actionIDs)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			data.Actions = types.ListNull(types.StringType)
+		}
+		data.Actions = actions
+	}
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
@@ -572,10 +627,23 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	strActions := []string{}
+	diags := plan.Actions.ElementsAs(ctx, &strActions, false)
+	if diags.HasError() {
+		return
+	}
+	var actionRefs []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	for _, n := range strActions {
+		actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			ID: n,
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationBody{
 		// this is the updated name
 		Name:           plan.Name.ValueString(),
 		ReadmeMarkdown: readmeBytes,
+		ActionCfgRefs:  actionRefs,
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationParams{
@@ -605,14 +673,26 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
 
+	var planActionIDs []string
+	for _, action := range application.ActionCfgRefs {
+		planActionIDs = append(planActionIDs, action.ID)
+	}
+	actionPlan, diags := types.ListValueFrom(ctx, types.StringType, planActionIDs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		plan.Actions = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
+
 	// set plan.readme if it's not null or application.readme is not
 	// empty
 	plan.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
 	if application.ReadmeMarkdown.String() == "" {
 		plan.ReadmeMarkdown = types.StringNull()
 	}
-
-	var diags diag.Diagnostics
 
 	// Read the output values from the application and set them in the plan
 	ol := readOutputs(application.OutputValues)

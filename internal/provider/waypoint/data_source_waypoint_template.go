@@ -43,6 +43,7 @@ type DataSourceTemplateModel struct {
 	Labels                 types.List   `tfsdk:"labels"`
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
+	Actions                types.List   `tfsdk:"actions"`
 
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
 	TerraformNoCodeModuleSource types.String         `tfsdk:"terraform_no_code_module_source"`
@@ -94,6 +95,13 @@ func (d *DataSourceTemplate) Schema(ctx context.Context, req datasource.SchemaRe
 			"readme_markdown_template": schema.StringAttribute{
 				Computed:    true,
 				Description: "Instructions for using the template (markdown format supported)",
+			},
+			"actions": schema.ListAttribute{
+				Optional: true,
+				Description: "List of actions by 'id' to assign to this Template. " +
+					"Applications created from this template will have these actions " +
+					"assigned to them. Only 'ID' is supported.",
+				ElementType: types.StringType,
 			},
 			"labels": schema.ListAttribute{
 				Computed:    true,
@@ -241,6 +249,24 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 		labels = types.ListNull(types.StringType)
 	}
 	data.Labels = labels
+
+	data.Actions = types.ListNull(types.StringType)
+	if appTemplate.ActionCfgRefs != nil {
+		var actionIDs []string
+		for _, action := range appTemplate.ActionCfgRefs {
+			actionIDs = append(actionIDs, action.ID)
+		}
+
+		actions, diags := types.ListValueFrom(ctx, types.StringType, actionIDs)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			actions = types.ListNull(types.StringType)
+		}
+		data.Actions = actions
+	}
 
 	// set data.description if it's not null or appTemplate.description is not
 	// empty

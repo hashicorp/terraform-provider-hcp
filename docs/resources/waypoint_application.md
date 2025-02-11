@@ -21,6 +21,7 @@ The Waypoint Application resource managed the lifecycle of an Application that's
 
 ### Optional
 
+- `actions` (List of String) List of actions by 'id' to assign to this Template. Applications created from this template will have these actions assigned to them. Only 'ID' is supported.
 - `application_input_variables` (Attributes Set) Input variables set for the application. (see [below for nested schema](#nestedatt--application_input_variables))
 - `project_id` (String) The ID of the HCP project where the Waypoint Application is located.
 - `readme_markdown` (String) Instructions for using the Application (markdown format supported). Note: this is a base64 encoded string, and can only be set in configuration after initial creation. The initial version of the README is generated from the README Template from source Template.
