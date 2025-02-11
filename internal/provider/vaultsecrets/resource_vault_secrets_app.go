@@ -98,12 +98,19 @@ func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 			"sync_names": schema.SetAttribute{
 				Description: "Set of sync names to associate with this app.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
 						slugValidator,
 					),
 				},
+				//Default: setdefault.StaticValue(
+				//	types.SetValueMust(
+				//		types.StringType,
+				//		[]attr.Value{},
+				//	),
+				//),
 			}},
 	}
 }

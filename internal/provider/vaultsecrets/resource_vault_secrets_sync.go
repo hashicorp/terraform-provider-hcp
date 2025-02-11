@@ -96,27 +96,27 @@ func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) d
 
 	if syncModel.SyncConfigGitlab != nil {
 		scope := *syncModel.SyncConfigGitlab.Scope
-		var groupIdValue types.String
-		var projectIdValue types.String
+		var groupIDValue types.String
+		var projectIDValue types.String
 
 		if syncModel.SyncConfigGitlab.GroupID == "" {
-			groupIdValue = types.StringNull()
+			groupIDValue = types.StringNull()
 		} else {
-			groupIdValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
+			groupIDValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
 		}
 
 		if syncModel.SyncConfigGitlab.ProjectID == "" {
-			projectIdValue = types.StringNull()
+			projectIDValue = types.StringNull()
 		} else {
-			projectIdValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
+			projectIDValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
 		}
 
 		s.GitlabConfig, diags = types.ObjectValue(
 			s.GitlabConfig.AttributeTypes(ctx),
 			map[string]attr.Value{
 				"scope":      types.StringValue(string(scope)),
-				"group_id":   groupIdValue,
-				"project_id": projectIdValue,
+				"group_id":   groupIDValue,
+				"project_id": projectIDValue,
 			},
 		)
 	}
