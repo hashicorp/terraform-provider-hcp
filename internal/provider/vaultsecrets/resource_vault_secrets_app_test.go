@@ -23,7 +23,8 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 		appName2         = generateRandomSlug()
 		description1     = "my description 1"
 		description2     = "my description 2"
-		syncName         = generateRandomSlug()
+		projSyncName     = generateRandomSlug()
+		groupSyncName    = generateRandomSlug()
 		gitLabToken      = checkRequiredEnvVarOrFail(t, "GITLAB_ACCESS_TOKEN")
 	)
 
@@ -62,12 +63,20 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 							token = %q
 						}
 					}
-					resource "hcp_vault_secrets_sync" "gitlab_sync" {
+					resource "hcp_vault_secrets_sync" "gitlab_proj_sync" {
 						name = %q
 						integration_name = hcp_vault_secrets_integration.acc_test.name
 						gitlab_config = {
 						    scope = "PROJECT"
-						    project_id = "1234"
+						    project_id = "123456789"
+						}
+					}
+					resource "hcp_vault_secrets_sync" "gitlab_group_sync" {
+						name = %q
+						integration_name = hcp_vault_secrets_integration.acc_test.name
+						gitlab_config = {
+						    scope = "GROUP"
+						    project_id = "987654321"
 						}
 					}
 					resource "hcp_vault_secrets_app" "acc_test_app" {
@@ -75,9 +84,9 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 						description = %q
 						sync_names = [hcp_vault_secrets_sync.gitlab_sync.name]
 					}
-				`, integrationName1, gitLabToken, syncName, appName2, description2),
+				`, integrationName1, gitLabToken, projSyncName, groupSyncName, appName2, description2),
 				Check: resource.ComposeTestCheckFunc(
-					appCheckFunc(appName2, description2, []string{syncName})...,
+					appCheckFunc(appName2, description2, []string{projSyncName, groupSyncName})...,
 				),
 			},
 			// Deleting the app out of band causes a recreation

@@ -185,6 +185,7 @@ func (r *resourceVaultSecretsApp) Update(ctx context.Context, req resource.Updat
 		response, err := r.client.VaultSecrets.UpdateApp(&secret_service.UpdateAppParams{
 			Body: &secretmodels.SecretServiceUpdateAppBody{
 				Description: app.Description.ValueString(),
+				SyncNames:   app.syncNames,
 			},
 			Name:           app.AppName.ValueString(),
 			OrganizationID: app.OrganizationID.ValueString(),

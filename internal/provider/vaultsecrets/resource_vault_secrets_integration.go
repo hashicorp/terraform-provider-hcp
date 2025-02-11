@@ -296,6 +296,9 @@ func (r *resourceVaultSecretsIntegration) Schema(_ context.Context, _ resource.S
 					Sensitive:   true,
 				},
 			},
+			Validators: []validator.Object{
+				exactlyOneIntegrationTypeFieldsValidator,
+			},
 		},
 	}
 

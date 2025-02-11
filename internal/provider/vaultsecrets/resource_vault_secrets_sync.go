@@ -3,11 +3,12 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
-
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,11 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
 
 var _ hvsResource = &Sync{}
 
+var exactlyOneSyncConfigFieldsValidator = objectvalidator.ExactlyOneOf(
+	path.Expressions{
+		path.MatchRoot("gitlab_config"),
+	}...,
+)
+
 type Sync struct {
+	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 	IntegrationName types.String `tfsdk:"integration_name"`
 	ProjectID       types.String `tfsdk:"project_id"`
@@ -35,11 +44,14 @@ type Sync struct {
 	gitlabConfig *secretmodels.Secrets20231128SyncConfigGitlab `tfsdk:"-"`
 }
 
+func (s *Sync) projectID() types.String {
+	return s.ProjectID
+}
+
 type gitlabConfigParams struct {
-	EnvironmentScope types.String `tfsdk:"environment_scope"`
-	Scope            types.String `tfsdk:"scope"`
-	GroupID          types.String `tfsdk:"group_id"`
-	ProjectID        types.String `tfsdk:"project_id"`
+	Scope     types.String `tfsdk:"scope"`
+	GroupID   types.String `tfsdk:"group_id"`
+	ProjectID types.String `tfsdk:"project_id"`
 }
 
 func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
@@ -56,23 +68,18 @@ func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnos
 		scope := secretmodels.SyncConfigGitlabScope(config.Scope.ValueString())
 
 		s.gitlabConfig = &secretmodels.Secrets20231128SyncConfigGitlab{
-			EnvironmentScope: config.EnvironmentScope.ValueString(),
-			GroupID:          config.GroupID.ValueString(),
-			ProjectID:        config.ProjectID.ValueString(),
-			Protected:        false,
-			Raw:              false,
-			Scope:            &scope,
+			GroupID:   config.GroupID.ValueString(),
+			ProjectID: config.ProjectID.ValueString(),
+			Protected: false,
+			Raw:       false,
+			Scope:     &scope,
 		}
 	}
 
 	return diag.Diagnostics{}
 }
 
-func (s *Sync) projectID() types.String {
-	return s.ProjectID
-}
-
-func (s *Sync) fromModel(_ context.Context, orgID, projID string, model any) diag.Diagnostics {
+func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
 	syncModel, ok := model.(*secretmodels.Secrets20231128Sync)
@@ -85,11 +92,42 @@ func (s *Sync) fromModel(_ context.Context, orgID, projID string, model any) dia
 	s.IntegrationName = types.StringValue(syncModel.IntegrationName)
 	s.OrganizationID = types.StringValue(orgID)
 	s.ProjectID = types.StringValue(projID)
+	s.ID = types.StringValue(syncModel.ResourceID)
+
+	if syncModel.SyncConfigGitlab != nil {
+		scope := *syncModel.SyncConfigGitlab.Scope
+		var groupIdValue types.String
+		var projectIdValue types.String
+
+		if syncModel.SyncConfigGitlab.GroupID == "" {
+			groupIdValue = types.StringNull()
+		} else {
+			groupIdValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
+		}
+
+		if syncModel.SyncConfigGitlab.ProjectID == "" {
+			projectIdValue = types.StringNull()
+		} else {
+			projectIdValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
+		}
+
+		s.GitlabConfig, diags = types.ObjectValue(
+			s.GitlabConfig.AttributeTypes(ctx),
+			map[string]attr.Value{
+				"scope":      types.StringValue(string(scope)),
+				"group_id":   groupIdValue,
+				"project_id": projectIdValue,
+			},
+		)
+	}
 
 	return diags
 }
 
 var _ resource.Resource = &resourceVaultSecretsSync{}
+var _ resource.ResourceWithConfigure = &resourceVaultSecretsSync{}
+var _ resource.ResourceWithModifyPlan = &resourceVaultSecretsSync{}
+var _ resource.ResourceWithImportState = &resourceVaultSecretsSync{}
 
 func NewVaultSecretsSyncResource() resource.Resource {
 	return &resourceVaultSecretsSync{}
@@ -139,17 +177,17 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 				},
 				"group_id": schema.StringAttribute{
 					Description: "ID of the group, if the scope is GROUP",
-					Sensitive:   true,
+					Sensitive:   false,
 					Optional:    true,
 				},
 				"project_id": schema.StringAttribute{
 					Description: "ID of the project, if the scope is PROJECT",
-					Sensitive:   true,
+					Sensitive:   false,
 					Optional:    true,
 				},
 			},
 			Validators: []validator.Object{
-				exactlyOneIntegrationTypeFieldsValidator,
+				exactlyOneSyncConfigFieldsValidator,
 			},
 		},
 	}
@@ -160,6 +198,25 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 		MarkdownDescription: "The Vault Secrets sync resource manages an integration.",
 		Attributes:          attributes,
 	}
+}
+
+func (r *resourceVaultSecretsSync) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	client, ok := req.ProviderData.(*clients.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *clients.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.client = client
+}
+
+func (r *resourceVaultSecretsSync) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	modifiers.ModifyPlanForDefaultProjectChange(ctx, r.client.Config.ProjectID, req.State, req.Config, req.Plan, resp)
 }
 
 func (r *resourceVaultSecretsSync) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
