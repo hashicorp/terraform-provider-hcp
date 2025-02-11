@@ -81,6 +81,13 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Computed:    true,
 				Description: "Internal Namespace ID.",
 			},
+			/*
+				"actions": schema.ListAttribute{
+					Optional:    true,
+					Description: "List of actions by 'name' to assign to this Application.",
+					ElementType: types.StringType,
+				},
+			*/
 			"input_variables": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables for the Application.",
@@ -156,6 +163,7 @@ type ApplicationDataSourceModel struct {
 	TemplateID     types.String `tfsdk:"template_id"`
 	TemplateName   types.String `tfsdk:"template_name"`
 	NamespaceID    types.String `tfsdk:"namespace_id"`
+	// Actions        types.List   `tfsdk:"actions"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
@@ -206,6 +214,19 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	data.ID = types.StringValue(application.ID)
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
+
+	/*
+		actions, diags := types.ListValueFrom(ctx, types.StringType, application.ActionCfgRefs)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			data.Actions = types.ListNull(types.StringType)
+		}
+		data.Actions = actions
+	*/
+
 	// set data.readme if it's not null or application.readme is not
 	// empty
 	data.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
@@ -219,6 +240,8 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
 		return
 	}
+
+	var diags diag.Diagnostics
 
 	inputVariables := make([]*InputVar, 0)
 	for _, iv := range inputVars {
@@ -237,8 +260,6 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	} else {
 		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
-
-	var diags diag.Diagnostics
 
 	// Read the output values from the application and set them in the plan
 	ol := readOutputs(application.OutputValues)

@@ -50,6 +50,7 @@ type TemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 	UseModuleReadme        types.Bool   `tfsdk:"use_module_readme"`
+	Actions                types.List   `tfsdk:"actions"`
 
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
@@ -132,6 +133,15 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			"use_module_readme": schema.BoolAttribute{
 				Optional:    true,
 				Description: "If true, will auto-import the readme form the Terraform module used. If this is set to true, users should not also set `readme_markdown_template`.",
+			},
+			"actions": schema.ListAttribute{
+				Optional: true,
+				Description: "List of actions by 'name' to assign to this Template. " +
+					"Applications created from this template will have these actions assigned to them.",
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -305,8 +315,23 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		ProjectID: tfProjID,
 	}
 
+	var (
+		actionNames []string
+		actions     []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	)
+	diags = plan.Actions.ElementsAs(ctx, &actionNames, false)
+	if diags.HasError() {
+		return
+	}
+	for _, n := range plan.Actions.Elements() {
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			Name: n.String(),
+		})
+	}
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
 			Labels:                         strLabels,
@@ -376,8 +401,17 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	if len(labels.Elements()) == 0 {
 		labels = types.ListNull(types.StringType)
 	}
-
 	plan.Labels = labels
+
+	actionPlan, diags := types.ListValueFrom(ctx, types.StringType, actionNames)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		actionPlan = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
 
 	// set plan.description if it's not null or appTemplate.description is not
 	// empty
@@ -505,6 +539,16 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	data.Labels = labels
 
+	actions, diags := types.ListValueFrom(ctx, types.StringType, appTemplate.ActionCfgRefs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actions.Elements()) == 0 {
+		actions = types.ListNull(types.StringType)
+	}
+	data.Actions = actions
+
 	// set data.description if it's not null or appTemplate.description is not
 	// empty
 	data.Description = types.StringValue(appTemplate.Description)
@@ -566,6 +610,18 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	strActions := []string{}
+	diags = plan.Actions.ElementsAs(ctx, &strActions, false)
+	if diags.HasError() {
+		return
+	}
+	var actions []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	for _, n := range plan.Actions.Elements() {
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			Name: n.String(),
+		})
+	}
+
 	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
@@ -591,6 +647,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
 			Labels:                         strLabels,
@@ -659,6 +716,16 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	plan.Labels = labels
+
+	actionPlan, diags := types.ListValueFrom(ctx, types.StringType, strActions)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		plan.Actions = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
 
 	plan.Description = types.StringValue(appTemplate.Description)
 	if appTemplate.Description == "" {

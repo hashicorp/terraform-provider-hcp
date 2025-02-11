@@ -92,6 +92,8 @@ func testAccCheckWaypointActionExists(t *testing.T, resourceName string, actionC
 			actionCfgModel.ID = types.StringValue(actionCfg.ID)
 		}
 
+		t.Logf("actionID: %s, actionName: %s", actionCfg.ID, actionCfg.Name)
+
 		return nil
 	}
 }

@@ -23,6 +23,7 @@ data "hcp_waypoint_template" "example" {
 
 ### Optional
 
+- `actions` (List of String) List of actions by 'name' to assign to this Template.
 - `id` (String) The ID of the Template.
 - `name` (String) The name of the Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Template is located.

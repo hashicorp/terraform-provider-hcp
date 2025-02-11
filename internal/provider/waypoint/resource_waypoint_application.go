@@ -46,12 +46,10 @@ type ApplicationResourceModel struct {
 	TemplateID     types.String `tfsdk:"template_id"`
 	TemplateName   types.String `tfsdk:"template_name"`
 	NamespaceID    types.String `tfsdk:"namespace_id"`
+	// Actions        types.List   `tfsdk:"actions"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
-
-	// deferred and probably a list or objects, but may possible be a separate
-	// ActionCfgs types.List `tfsdk:"action_cfgs"`
 
 	InputVars types.Set `tfsdk:"application_input_variables"`
 
@@ -150,6 +148,16 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			/*
+				"actions": schema.ListAttribute{
+					Optional:    true,
+					Description: "List of actions by 'name' to assign to this Application.",
+					ElementType: types.StringType,
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.UseStateForUnknown(),
+					},
+				},
+			*/
 			"application_input_variables": schema.SetNestedAttribute{
 				Optional:    true,
 				Description: "Input variables set for the application.",
@@ -295,8 +303,25 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		varTypes[v.Name.ValueString()] = v.VariableType.ValueString()
 	}
 
+	/*
+		var (
+			actionNames []string
+			actionRefs  []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+		)
+		diags = plan.Actions.ElementsAs(ctx, &actionNames, false)
+		if diags.HasError() {
+			return
+		}
+		for _, name := range plan.Actions.Elements() {
+			actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+				Name: name.String(),
+			})
+		}
+	*/
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
 		Name: plan.Name.ValueString(),
+		// ActionCfgRefs: actionRefs,
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
 			ID: plan.TemplateID.ValueString(),
 		},
@@ -328,6 +353,18 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.OrgID = types.StringValue(orgID)
 	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
+
+	/*
+		actionPlan, diags := types.ListValueFrom(ctx, types.StringType, actionNames)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actionPlan.Elements()) == 0 {
+			plan.Actions = types.ListNull(types.StringType)
+		}
+		plan.Actions = actionPlan
+	*/
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
@@ -440,6 +477,18 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	data.Name = types.StringValue(application.Name)
 	data.OrgID = types.StringValue(orgID)
 	data.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
+
+	/*
+		actions, diags := types.ListValueFrom(ctx, types.StringType, application.ActionCfgRefs)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			data.Actions = types.ListNull(types.StringType)
+		}
+		data.Actions = actions
+	*/
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
@@ -572,10 +621,25 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	/*
+		strActions := []string{}
+		diags := plan.Actions.ElementsAs(ctx, &strActions, false)
+		if diags.HasError() {
+			return
+		}
+		var actionRefs []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+		for _, n := range plan.Actions.Elements() {
+			actionRefs = append(actionRefs, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+				Name: n.String(),
+			})
+		}
+	*/
+
 	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationBody{
 		// this is the updated name
 		Name:           plan.Name.ValueString(),
 		ReadmeMarkdown: readmeBytes,
+		// ActionCfgRefs:  actionRefs,
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationParams{
@@ -604,6 +668,18 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.OrgID = types.StringValue(orgID)
 	plan.TemplateName = types.StringValue(application.ApplicationTemplate.Name)
 	plan.NamespaceID = types.StringValue(ns.ID)
+
+	/*
+		actionPlan, actionDiags := types.ListValueFrom(ctx, types.StringType, strActions)
+		resp.Diagnostics.Append(actionDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actionPlan.Elements()) == 0 {
+			plan.Actions = types.ListNull(types.StringType)
+		}
+		plan.Actions = actionPlan
+	*/
 
 	// set plan.readme if it's not null or application.readme is not
 	// empty
