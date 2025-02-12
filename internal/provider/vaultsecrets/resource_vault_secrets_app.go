@@ -98,19 +98,12 @@ func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 			"sync_names": schema.SetAttribute{
 				Description: "Set of sync names to associate with this app.",
 				Optional:    true,
-				Computed:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
 						slugValidator,
 					),
 				},
-				//Default: setdefault.StaticValue(
-				//	types.SetValueMust(
-				//		types.StringType,
-				//		[]attr.Value{},
-				//	),
-				//),
 			}},
 	}
 }
@@ -266,9 +259,12 @@ func (a *App) fromModel(_ context.Context, orgID, projID string, model any) diag
 	for _, c := range appModel.SyncNames {
 		syncs = append(syncs, types.StringValue(c))
 	}
-	a.SyncNames, diags = types.SetValue(types.StringType, syncs)
-	if diags.HasError() {
-		return diags
+
+	if len(syncs) > 0 {
+		a.SyncNames, diags = types.SetValue(types.StringType, syncs)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	return diags
