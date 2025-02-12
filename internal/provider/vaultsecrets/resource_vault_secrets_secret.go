@@ -64,6 +64,9 @@ func (r *resourceVaultsecretsSecret) Schema(_ context.Context, _ resource.Schema
 						"must contain only ASCII letters, numbers, and hyphens; must not start or end with a hyphen",
 					),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"secret_name": schema.StringAttribute{
 				Description: "The name of the secret",
