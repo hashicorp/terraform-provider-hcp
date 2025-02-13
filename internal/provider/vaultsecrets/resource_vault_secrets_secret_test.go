@@ -85,6 +85,10 @@ func TestAccVaultSecretsResourceSecret(t *testing.T) {
 				),
 			},
 		},
+		CheckDestroy: func(s *terraform.State) error {
+			deleteTestApp(t, testAppName1)
+			return nil
+		},
 	})
 }
 
