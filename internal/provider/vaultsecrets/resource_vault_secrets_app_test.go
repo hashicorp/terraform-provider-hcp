@@ -76,7 +76,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 						integration_name = hcp_vault_secrets_integration.acc_test.name
 						gitlab_config = {
 						    scope = "GROUP"
-						    project_id = "987654321"
+						    group_id = "987654321"
 						}
 					}
 					resource "hcp_vault_secrets_app" "acc_test_app" {

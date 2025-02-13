@@ -3,5 +3,5 @@ Add support for sync resource in HCP Vault Secrets
 ```
 
 ```release-note:improvement
-Associate a sync with an HCP Vault Secrets App
+Allow users to assign one or more syncs with an HCP Vault Secrets App
 ```

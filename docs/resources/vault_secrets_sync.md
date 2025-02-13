@@ -12,10 +12,22 @@ The Vault Secrets sync resource manages an integration.
 ## Example Usage
 
 ```terraform
-# the provider is derived from the integration name
-resource "hcp_vault_secrets_sync" "example_aws_sync" {
-  name             = "my-aws-1"
-  integration_name = "my-integration-1"
+resource "hcp_vault_secrets_integration" "example_gitlab_integration" {
+  name          = "gitlab-integration"
+  capabilities  = ["SYNC"]
+  provider_type = "gitlab"
+  gitlab_access = {
+    token = "myaccesstoken"
+  }
+}
+
+resource "hcp_vault_secrets_sync" "example_gitlab_project_sync" {
+  name             = "gitlab-proj-sync"
+  integration_name = hcp_vault_secrets_integration.example_gitlab_integration.name
+  gitlab_config = {
+    scope      = "PROJECT"
+    project_id = "123456"
+  }
 }
 ```
 

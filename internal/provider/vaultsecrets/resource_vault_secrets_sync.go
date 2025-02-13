@@ -3,12 +3,13 @@ package vaultsecrets
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+
 	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -177,12 +178,10 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 				},
 				"group_id": schema.StringAttribute{
 					Description: "ID of the group, if the scope is GROUP",
-					Sensitive:   false,
 					Optional:    true,
 				},
 				"project_id": schema.StringAttribute{
 					Description: "ID of the project, if the scope is PROJECT",
-					Sensitive:   false,
 					Optional:    true,
 				},
 			},
