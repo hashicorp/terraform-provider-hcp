@@ -24,14 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/modifiers"
 )
 
-var _ hvsResource = &Sync{}
-
-var exactlyOneSyncConfigFieldsValidator = objectvalidator.ExactlyOneOf(
-	path.Expressions{
-		path.MatchRoot("gitlab_config"),
-	}...,
-)
-
 type Sync struct {
 	ResourceID      types.String `tfsdk:"resource_id"`
 	Name            types.String `tfsdk:"name"`
@@ -44,86 +36,6 @@ type Sync struct {
 
 	// Inner API-compatible models derived from the Terraform fields
 	gitlabConfig *secretmodels.Secrets20231128SyncConfigGitlab `tfsdk:"-"`
-}
-
-func (s *Sync) projectID() types.String {
-	return s.ProjectID
-}
-
-type gitlabConfigParams struct {
-	Scope     types.String `tfsdk:"scope"`
-	GroupID   types.String `tfsdk:"group_id"`
-	ProjectID types.String `tfsdk:"project_id"`
-}
-
-func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
-	s.OrganizationID = types.StringValue(orgID)
-	s.ProjectID = types.StringValue(projID)
-
-	if !s.GitlabConfig.IsNull() {
-		config := gitlabConfigParams{}
-		diags := s.GitlabConfig.As(ctx, &config, basetypes.ObjectAsOptions{})
-		if diags.HasError() {
-			return diags
-		}
-
-		scope := secretmodels.SyncConfigGitlabScope(config.Scope.ValueString())
-
-		s.gitlabConfig = &secretmodels.Secrets20231128SyncConfigGitlab{
-			GroupID:   config.GroupID.ValueString(),
-			ProjectID: config.ProjectID.ValueString(),
-			Protected: false,
-			Raw:       false,
-			Scope:     &scope,
-		}
-	}
-
-	return diag.Diagnostics{}
-}
-
-func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	syncModel, ok := model.(*secretmodels.Secrets20231128Sync)
-	if !ok {
-		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128Sync, got: %T", model))
-		return diags
-	}
-
-	s.ResourceID = types.StringValue(syncModel.ResourceID)
-	s.Name = types.StringValue(syncModel.Name)
-	s.IntegrationName = types.StringValue(syncModel.IntegrationName)
-	s.OrganizationID = types.StringValue(orgID)
-	s.ProjectID = types.StringValue(projID)
-
-	if syncModel.SyncConfigGitlab != nil {
-		scope := *syncModel.SyncConfigGitlab.Scope
-		var groupIDValue types.String
-		var projectIDValue types.String
-
-		if syncModel.SyncConfigGitlab.GroupID == "" {
-			groupIDValue = types.StringNull()
-		} else {
-			groupIDValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
-		}
-
-		if syncModel.SyncConfigGitlab.ProjectID == "" {
-			projectIDValue = types.StringNull()
-		} else {
-			projectIDValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
-		}
-
-		s.GitlabConfig, diags = types.ObjectValue(
-			s.GitlabConfig.AttributeTypes(ctx),
-			map[string]attr.Value{
-				"scope":      types.StringValue(string(scope)),
-				"group_id":   groupIDValue,
-				"project_id": projectIDValue,
-			},
-		)
-	}
-
-	return diags
 }
 
 var _ resource.Resource = &resourceVaultSecretsSync{}
@@ -175,7 +87,7 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 			Attributes: map[string]schema.Attribute{
 				"scope": schema.StringAttribute{
 					Description: "The scope to which values apply. The valid options are GROUP and PROJECT",
-					Required:    true,
+					Optional:    true,
 					Validators: []validator.String{
 						stringvalidator.OneOf("GROUP", "PROJECT"),
 					},
@@ -306,4 +218,94 @@ func (r *resourceVaultSecretsSync) ImportState(ctx context.Context, req resource
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), r.client.Config.OrganizationID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), r.client.Config.ProjectID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), req.ID)...)
+}
+
+var _ hvsResource = &Sync{}
+
+func (s *Sync) projectID() types.String {
+	return s.ProjectID
+}
+
+func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
+	s.OrganizationID = types.StringValue(orgID)
+	s.ProjectID = types.StringValue(projID)
+
+	if !s.GitlabConfig.IsNull() {
+		config := gitlabConfigParams{}
+		diags := s.GitlabConfig.As(ctx, &config, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			return diags
+		}
+
+		scope := secretmodels.SyncConfigGitlabScope(config.Scope.ValueString())
+
+		s.gitlabConfig = &secretmodels.Secrets20231128SyncConfigGitlab{
+			GroupID:   config.GroupID.ValueString(),
+			ProjectID: config.ProjectID.ValueString(),
+			Protected: false,
+			Raw:       false,
+			Scope:     &scope,
+		}
+	}
+
+	return diag.Diagnostics{}
+}
+
+func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	syncModel, ok := model.(*secretmodels.Secrets20231128Sync)
+	if !ok {
+		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128Sync, got: %T", model))
+		return diags
+	}
+
+	s.ResourceID = types.StringValue(syncModel.ResourceID)
+	s.Name = types.StringValue(syncModel.Name)
+	s.IntegrationName = types.StringValue(syncModel.IntegrationName)
+	s.OrganizationID = types.StringValue(orgID)
+	s.ProjectID = types.StringValue(projID)
+
+	if syncModel.SyncConfigGitlab != nil {
+		scope := *syncModel.SyncConfigGitlab.Scope
+		var groupIDValue types.String
+		var projectIDValue types.String
+
+		if syncModel.SyncConfigGitlab.GroupID == "" {
+			groupIDValue = types.StringNull()
+		} else {
+			groupIDValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
+		}
+
+		if syncModel.SyncConfigGitlab.ProjectID == "" {
+			projectIDValue = types.StringNull()
+		} else {
+			projectIDValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
+		}
+
+		s.GitlabConfig, diags = types.ObjectValue(
+			s.GitlabConfig.AttributeTypes(ctx),
+			map[string]attr.Value{
+				"scope":      types.StringValue(string(scope)),
+				"group_id":   groupIDValue,
+				"project_id": projectIDValue,
+			},
+		)
+	}
+
+	return diags
+}
+
+// Validations and types for sync destinations
+
+var exactlyOneSyncConfigFieldsValidator = objectvalidator.ExactlyOneOf(
+	path.Expressions{
+		path.MatchRoot("gitlab_config"),
+	}...,
+)
+
+type gitlabConfigParams struct {
+	Scope     types.String `tfsdk:"scope"`
+	GroupID   types.String `tfsdk:"group_id"`
+	ProjectID types.String `tfsdk:"project_id"`
 }
