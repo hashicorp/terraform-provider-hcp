@@ -1,0 +1,3 @@
+```release-note:bug
+diagnostics: Disable statuspage check during migration
+```
