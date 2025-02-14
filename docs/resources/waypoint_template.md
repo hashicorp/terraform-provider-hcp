@@ -62,7 +62,7 @@ EOF
 - `terraform_agent_pool_id` (String) The ID of the agent pool to use for Terraform operations, for workspaces created for applications using this template. Required if terraform_execution_mode is set to 'agent'.
 - `terraform_cloud_workspace_details` (Attributes, Deprecated) Terraform Cloud Workspace details (see [below for nested schema](#nestedatt--terraform_cloud_workspace_details))
 - `terraform_execution_mode` (String) The execution mode of the HCP Terraform workspaces created for applications using this template.
-- `use_module_readme` (Boolean) If true, will auto-import the readme form the Terraform odule used. If this is set to true, users should not also set `readme_markdown_template`.
+- `use_module_readme` (Boolean) If true, will auto-import the readme form the Terraform module used. If this is set to true, users should not also set `readme_markdown_template`.
 - `variable_options` (Attributes Set) List of variable options for the template. (see [below for nested schema](#nestedatt--variable_options))
 
 ### Read-Only

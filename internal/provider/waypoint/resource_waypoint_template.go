@@ -131,7 +131,7 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"use_module_readme": schema.BoolAttribute{
 				Optional:    true,
-				Description: "If true, will auto-import the readme form the Terraform odule used. If this is set to true, users should not also set `readme_markdown_template`.",
+				Description: "If true, will auto-import the readme form the Terraform module used. If this is set to true, users should not also set `readme_markdown_template`.",
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
