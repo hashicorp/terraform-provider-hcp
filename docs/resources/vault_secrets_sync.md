@@ -46,8 +46,8 @@ resource "hcp_vault_secrets_sync" "example_gitlab_project_sync" {
 
 ### Read-Only
 
-- `id` (String) Required ID field that is set to the sync name.
 - `organization_id` (String) HCP organization ID that owns the HCP Vault Secrets integration.
+- `resource_id` (String) Resource ID used to uniquely identify the sync on the HCP platform.
 
 <a id="nestedatt--gitlab_config"></a>
 ### Nested Schema for `gitlab_config`
@@ -67,5 +67,5 @@ Import is supported using the following syntax:
 
 ```shell
 # Vault Secrets Integration can be imported by specifying the name of the integration
-terraform import hcp_vault_secrets_sync.example gitlab-proj-sync
+terraform import hcp_vault_secrets_sync.example_gitlab_project_sync gitlab-proj-sync
 ```

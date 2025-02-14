@@ -33,11 +33,11 @@ var exactlyOneSyncConfigFieldsValidator = objectvalidator.ExactlyOneOf(
 )
 
 type Sync struct {
-	ID              types.String `tfsdk:"id"`
+	ResourceID      types.String `tfsdk:"resource_id"`
 	Name            types.String `tfsdk:"name"`
 	IntegrationName types.String `tfsdk:"integration_name"`
-	ProjectID       types.String `tfsdk:"project_id"`
 	OrganizationID  types.String `tfsdk:"organization_id"`
+	ProjectID       types.String `tfsdk:"project_id"`
 
 	// Destination-specific mutually exclusive fields
 	GitlabConfig types.Object `tfsdk:"gitlab_config"`
@@ -90,11 +90,11 @@ func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) d
 		return diags
 	}
 
+	s.ResourceID = types.StringValue(syncModel.ResourceID)
 	s.Name = types.StringValue(syncModel.Name)
 	s.IntegrationName = types.StringValue(syncModel.IntegrationName)
 	s.OrganizationID = types.StringValue(orgID)
 	s.ProjectID = types.StringValue(projID)
-	s.ID = types.StringValue(syncModel.ResourceID)
 
 	if syncModel.SyncConfigGitlab != nil {
 		scope := *syncModel.SyncConfigGitlab.Scope
@@ -145,9 +145,9 @@ func (r *resourceVaultSecretsSync) Metadata(_ context.Context, req resource.Meta
 
 func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attributes := map[string]schema.Attribute{
-		"id": schema.StringAttribute{
+		"resource_id": schema.StringAttribute{
+			Description: "Resource ID used to uniquely identify the sync on the HCP platform.",
 			Computed:    true,
-			Description: "Required ID field that is set to the sync name.",
 		},
 		"name": schema.StringAttribute{
 			Description: "The Vault Secrets Sync name.",
