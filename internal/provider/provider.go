@@ -231,7 +231,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
 		// This helper verifies HCP's status and either returns a warning for degraded performance
 		// or errors out if there's an outage.
-		resp.Diagnostics.Append(isHCPOperationalFramework()...)
+		// resp.Diagnostics.Append(isHCPOperationalFramework()...)
 	}
 
 	// Sets up HCP SDK client.
