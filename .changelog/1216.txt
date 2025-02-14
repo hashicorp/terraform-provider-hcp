@@ -1,0 +1,3 @@
+```release-note:bug
+diagnostics: Remove statuspage checks
+```
