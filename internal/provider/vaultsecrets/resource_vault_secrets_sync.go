@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -175,6 +176,9 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 				"scope": schema.StringAttribute{
 					Description: "The scope to which values apply. The valid options are GROUP and PROJECT",
 					Required:    true,
+					Validators: []validator.String{
+						stringvalidator.OneOf("GROUP", "PROJECT"),
+					},
 				},
 				"group_id": schema.StringAttribute{
 					Description: "ID of the group, if the scope is GROUP",
@@ -229,9 +233,11 @@ func (r *resourceVaultSecretsSync) Read(ctx context.Context, req resource.ReadRe
 			WithOrganizationID(sync.OrganizationID.ValueString()).
 			WithProjectID(sync.ProjectID.ValueString()).
 			WithName(sync.Name.ValueString()), nil)
-		if err != nil && !clients.IsResponseForbidden(err) { // The HVS API returns 403 if the sync doesn't exist even if the principal has the correct permissions.
+
+		if err != nil && !clients.IsResponseCodeNotFound(err) {
 			return nil, err
 		}
+
 		if response == nil || response.Payload == nil {
 			return nil, nil
 		}
