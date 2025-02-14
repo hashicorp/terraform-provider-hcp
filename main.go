@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+
 	provider "github.com/hashicorp/terraform-provider-hcp/internal/provider"
 	providersdkv2 "github.com/hashicorp/terraform-provider-hcp/internal/providersdkv2"
 	"github.com/hashicorp/terraform-provider-hcp/version"
