@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -142,7 +142,7 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 		ProjectID:      projectID,
 	}
 
-	var actionModel *waypoint_models_v2.HashicorpCloudWaypointActionConfig
+	var actionModel *waypoint_models.HashicorpCloudWaypointActionConfig
 	var err error
 
 	actionModel, err = clients.GetAction(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())

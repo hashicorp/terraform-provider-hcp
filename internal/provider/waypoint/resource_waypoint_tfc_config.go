@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
-	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -133,14 +133,14 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 		ProjectID:      projectID,
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateTFCConfigBody{
-		TfcConfig: &waypoint_models_v2.HashicorpCloudWaypointTFCConfig{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateTFCConfigBody{
+		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
 		},
 	}
 
-	params := &waypoint_service_v2.WaypointServiceCreateTFCConfigParams{
+	params := &waypoint_service.WaypointServiceCreateTFCConfigParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -188,7 +188,7 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		ProjectID:      projectID,
 	}
 
-	params := &waypoint_service_v2.WaypointServiceGetTFCConfigParams{
+	params := &waypoint_service.WaypointServiceGetTFCConfigParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 	}
@@ -239,14 +239,14 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 		ProjectID:      projectID,
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateTFCConfigBody{
-		TfcConfig: &waypoint_models_v2.HashicorpCloudWaypointTFCConfig{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateTFCConfigBody{
+		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
 		},
 	}
 
-	params := &waypoint_service_v2.WaypointServiceUpdateTFCConfigParams{
+	params := &waypoint_service.WaypointServiceUpdateTFCConfigParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -293,7 +293,7 @@ func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteReque
 		ProjectID:      projectID,
 	}
 
-	params := &waypoint_service_v2.WaypointServiceDeleteTFCConfigParams{
+	params := &waypoint_service.WaypointServiceDeleteTFCConfigParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 	}
@@ -314,9 +314,9 @@ func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteReque
 
 // getNamespaceByLocation will retrieve a namespace by location information
 // provided by HCP
-func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models_v2.HashicorpCloudWaypointNamespace, error) {
+func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointNamespace, error) {
 	// TODO:(clint) consolidate this either in the wrapper or something
-	namespaceParams := &waypoint_service_v2.WaypointServiceGetNamespaceParams{
+	namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
 		LocationOrganizationID: loc.OrganizationID,
 		LocationProjectID:      loc.ProjectID,
 	}

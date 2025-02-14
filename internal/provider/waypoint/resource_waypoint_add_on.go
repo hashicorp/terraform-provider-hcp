@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
-	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -276,7 +276,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	// Prepare the input variables that the user provided to the application
 	// creation request
-	ivs := make([]*waypoint_models_v2.HashicorpCloudWaypointInputVariable, 0)
+	ivs := make([]*waypoint_models.HashicorpCloudWaypointInputVariable, 0)
 
 	var inputVarsSlice []InputVar
 	diags := plan.InputVars.ElementsAs(ctx, &inputVarsSlice, false)
@@ -286,7 +286,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	for _, v := range inputVarsSlice {
 		// add the input variable to the list of input variables for the app
 		// creation API call
-		ivs = append(ivs, &waypoint_models_v2.HashicorpCloudWaypointInputVariable{
+		ivs = append(ivs, &waypoint_models.HashicorpCloudWaypointInputVariable{
 			Name:         v.Name.ValueString(),
 			Value:        v.Value.ValueString(),
 			VariableType: v.VariableType.ValueString(),
@@ -311,7 +311,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// An application ref can only have one of ID or Name set,
 	// we ask for ID, so we will set ID
 	applicationID := plan.ApplicationID.ValueString()
-	applicationRefModel := &waypoint_models_v2.HashicorpCloudWaypointRefApplication{}
+	applicationRefModel := &waypoint_models.HashicorpCloudWaypointRefApplication{}
 	if applicationID != "" {
 		applicationRefModel.ID = applicationID
 	} else {
@@ -325,7 +325,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// Similarly, a definition ref can only have one of ID or Name set,
 	// we ask for ID, so we will set ID
 	definitionID := plan.DefinitionID.ValueString()
-	definitionRefModel := &waypoint_models_v2.HashicorpCloudWaypointRefAddOnDefinition{}
+	definitionRefModel := &waypoint_models.HashicorpCloudWaypointRefAddOnDefinition{}
 	if definitionID != "" {
 		definitionRefModel.ID = definitionID
 	} else {
@@ -336,14 +336,14 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateAddOnBody{
 		Name:        plan.Name.ValueString(),
 		Application: applicationRefModel,
 		Definition:  definitionRefModel,
 		Variables:   ivs,
 	}
 
-	params := &waypoint_service_v2.WaypointServiceCreateAddOnParams{
+	params := &waypoint_service.WaypointServiceCreateAddOnParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -354,7 +354,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	var addOn *waypoint_models_v2.HashicorpCloudWaypointAddOn
+	var addOn *waypoint_models.HashicorpCloudWaypointAddOn
 	if responseAddOn.Payload != nil {
 		addOn = responseAddOn.Payload.AddOn
 	}
@@ -632,11 +632,11 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		ProjectID:      projectID,
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateAddOnBody{
 		Name: plan.Name.ValueString(),
 	}
 
-	params := &waypoint_service_v2.WaypointServiceUpdateAddOnParams{
+	params := &waypoint_service.WaypointServiceUpdateAddOnParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -648,7 +648,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	var addOn *waypoint_models_v2.HashicorpCloudWaypointAddOn
+	var addOn *waypoint_models.HashicorpCloudWaypointAddOn
 	if def.Payload != nil {
 		addOn = def.Payload.AddOn
 	}
@@ -751,7 +751,7 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		ProjectID:      projectID,
 	}
 
-	params := &waypoint_service_v2.WaypointServiceDestroyAddOnParams{
+	params := &waypoint_service.WaypointServiceDestroyAddOnParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		AddOnID:                         state.ID.ValueString(),
@@ -778,7 +778,7 @@ func (r *AddOnResource) ImportState(ctx context.Context, req resource.ImportStat
 
 // readOutputs accepts a list of output values in the type returned by the Waypoint API and returns a list of output
 // values in the custom outputValue type used in this provider
-func readOutputs(ovs []*waypoint_models_v2.HashicorpCloudWaypointTFOutputValue) []*outputValue {
+func readOutputs(ovs []*waypoint_models.HashicorpCloudWaypointTFOutputValue) []*outputValue {
 	ol := make([]*outputValue, len(ovs))
 	for i, ov := range ovs {
 		ol[i] = &outputValue{

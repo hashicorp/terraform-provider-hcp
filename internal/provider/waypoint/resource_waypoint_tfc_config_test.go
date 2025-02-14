@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -66,7 +66,7 @@ func testAccCheckWaypointTfcConfigExists(t *testing.T, resourceName string, tfcC
 		tfcConfig.ProjectID = types.StringValue(projectID)
 
 		// Fetch the project
-		params := &waypoint_service_v2.WaypointServiceGetTFCConfigParams{
+		params := &waypoint_service.WaypointServiceGetTFCConfigParams{
 			NamespaceLocationOrganizationID: projectID,
 			NamespaceLocationProjectID:      orgID,
 		}
@@ -87,7 +87,7 @@ func testAccCheckWaypointTfcConfigDestroy(t *testing.T, tfcConfig *waypoint.TfcC
 		projectID := tfcConfig.ProjectID.ValueString()
 		orgID := client.Config.OrganizationID
 
-		params := &waypoint_service_v2.WaypointServiceGetTFCConfigParams{
+		params := &waypoint_service.WaypointServiceGetTFCConfigParams{
 			NamespaceLocationOrganizationID: orgID,
 			NamespaceLocationProjectID:      projectID,
 		}

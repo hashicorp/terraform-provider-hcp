@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
-	waypoint_models_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -283,7 +283,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	var varOpts []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable
+	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags = v.Options.ElementsAs(ctx, &strOpts, false)
@@ -291,7 +291,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -301,27 +301,27 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.Name.ValueString()
-	tfWsDetails := &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
 	}
 
 	var (
 		actionIDs []string
-		actions   []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
+		actions   []*waypoint_models.HashicorpCloudWaypointActionCfgRef
 	)
 	diags = plan.Actions.ElementsAs(ctx, &actionIDs, false)
 	if diags.HasError() {
 		return
 	}
 	for _, n := range actionIDs {
-		actions = append(actions, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationTemplateBody{
-		ApplicationTemplate: &waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationTemplateBody{
+		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
@@ -349,7 +349,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service_v2.WaypointServiceCreateApplicationTemplateParams{
+	params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -360,7 +360,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	var appTemplate *waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
 	if createTplResp.Payload != nil {
 		appTemplate = createTplResp.Payload.ApplicationTemplate
 	}
@@ -447,7 +447,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 
 func readVarOpts(
 	ctx context.Context,
-	v []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable,
+	v []*waypoint_models.HashicorpCloudWaypointTFModuleVariable,
 	d *diag.Diagnostics,
 ) ([]*tfcVariableOption, error) {
 	var varOpts []*tfcVariableOption
@@ -609,14 +609,14 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	if diags.HasError() {
 		return
 	}
-	var actions []*waypoint_models_v2.HashicorpCloudWaypointActionCfgRef
+	var actions []*waypoint_models.HashicorpCloudWaypointActionCfgRef
 	for _, n := range strActions {
-		actions = append(actions, &waypoint_models_v2.HashicorpCloudWaypointActionCfgRef{
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
 			ID: n,
 		})
 	}
 
-	varOpts := []*waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{}
+	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
 		diags = v.Options.ElementsAs(ctx, &strOpts, false)
@@ -624,7 +624,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		varOpts = append(varOpts, &waypoint_models_v2.HashicorpCloudWaypointTFModuleVariable{
+		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
 			Name:         v.Name.ValueString(),
 			VariableType: v.VariableType.ValueString(),
 			Options:      strOpts,
@@ -634,13 +634,13 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 
 	tfProjID := plan.TerraformProjectID.ValueString()
 	tfWsName := plan.Name.ValueString()
-	tfWsDetails := &waypoint_models_v2.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
+	tfWsDetails := &waypoint_models.HashicorpCloudWaypointTerraformCloudWorkspaceDetails{
 		Name:      tfWsName,
 		ProjectID: tfProjID,
 	}
 
-	modelBody := &waypoint_models_v2.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationTemplateBody{
-		ApplicationTemplate: &waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationTemplateBody{
+		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
@@ -668,7 +668,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		modelBody.ApplicationTemplate.ReadmeMarkdownTemplate = readmeBytes
 	}
 
-	params := &waypoint_service_v2.WaypointServiceUpdateApplicationTemplateParams{
+	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		Body:                            modelBody,
@@ -680,7 +680,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var appTemplate *waypoint_models_v2.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
 	if app.Payload != nil {
 		appTemplate = app.Payload.ApplicationTemplate
 	}
@@ -777,7 +777,7 @@ func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteReques
 		ProjectID:      projectID,
 	}
 
-	params := &waypoint_service_v2.WaypointServiceDeleteApplicationTemplateParams{
+	params := &waypoint_service.WaypointServiceDeleteApplicationTemplateParams{
 		NamespaceLocationOrganizationID: loc.OrganizationID,
 		NamespaceLocationProjectID:      loc.ProjectID,
 		ApplicationTemplateID:           data.ID.ValueString(),
