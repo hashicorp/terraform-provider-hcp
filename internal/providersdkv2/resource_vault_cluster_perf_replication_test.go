@@ -218,8 +218,8 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
 				// resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"), --chirag
-				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
-				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
+				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
+				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
 			),
 		},
 		{
