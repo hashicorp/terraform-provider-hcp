@@ -52,7 +52,7 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
 	// t.Skip("Error:http is not enabled as an observability provider")
 	// enabled LD flag https://app.launchdarkly.com/projects/cloud-services/flags/hcpv-observability-http/targeting?env=dev&env=int&env=production&selected-env=int
-	// t.Parallel()
+	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
 		HvnName:                  addTimestampSuffix("test-perf-hvn-1-"),
