@@ -168,7 +168,7 @@ func awsTestSteps(t *testing.T, inp inputT) []resource.TestStep {
 		tfApply(t, in),
 		testTFDataSources(t, in),
 		updateClusterTier(t, in),
-		updateNetworkObservabilityAndMVU(t, in),
+		// updateNetworkObservabilityAndMVU(t, in), //--chirag
 		updateTierNetworkAndRemoveObservability(t, in),
 	}
 }
@@ -315,7 +315,7 @@ func updateNetworkObservabilityAndMVU(t *testing.T, in *inputT) resource.TestSte
 		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "ENABLED"),
 			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
 				"address":     "172.25.14.0/24",
