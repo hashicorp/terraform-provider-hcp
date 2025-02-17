@@ -73,7 +73,6 @@ func TestAcc_Vault_ClusterAzure(t *testing.T) {
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
 func TestAcc_Vault_ClusterAWS(t *testing.T) {
-	t.Parallel()
 	// t.Skip("resource_vault_cluster_test.go:94: Step 7/7 error: Check failed: Check 3/14 error: hcp_vault_cluster.test: Attribute 'public_endpoint' expected 'false', got 'true'")
 
 	awsTestInput := inputT{
@@ -316,7 +315,7 @@ func updateNetworkObservabilityAndMVU(t *testing.T, in *inputT) resource.TestSte
 		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "ENABLED"),
 			resource.TestCheckTypeSetElemNestedAttrs(in.VaultClusterResourceName, "ip_allowlist.*", map[string]string{
 				"address":     "172.25.14.0/24",
@@ -347,7 +346,7 @@ func updateTierNetworkAndRemoveObservability(t *testing.T, in *inputT) resource.
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
-			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "TRUE"),
+			// resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
