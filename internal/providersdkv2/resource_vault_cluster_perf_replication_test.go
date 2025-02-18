@@ -63,7 +63,7 @@ func TestAcc_Vault_PerformanceReplicatiosn_ValidationsAws(t *testing.T) {
 		Region:                   awsRegion,
 		Tier:                     "PLUS_SMALL",
 		UpdateTier1:              "PLUS_MEDIUM",
-		UpdateTier2:              "DEV",
+		UpdateTier2:              "STANDARD_SMALL",
 		Secondary: &inputT{
 			HvnName:                  addTimestampSuffix("test-perf-hvn-2-"),
 			HvnCidr:                  "172.24.16.0/20",
