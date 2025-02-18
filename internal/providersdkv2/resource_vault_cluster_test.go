@@ -74,7 +74,6 @@ func TestAcc_Vault_ClusterAzure(t *testing.T) {
 // to shorten testing time.
 func TestAcc_Vault_ClusterAWS(t *testing.T) {
 	// t.Skip("resource_vault_cluster_test.go:94: Step 7/7 error: Check failed: Check 3/14 error: hcp_vault_cluster.test: Attribute 'public_endpoint' expected 'false', got 'true'")
-	t.Parallel()
 	awsTestInput := inputT{
 		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
 		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-aws"),
@@ -93,7 +92,7 @@ func TestAcc_Vault_ClusterAWS(t *testing.T) {
 	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
 	// save so e don't have to generate this again and again
 	awsTestInput.tf = tf
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
