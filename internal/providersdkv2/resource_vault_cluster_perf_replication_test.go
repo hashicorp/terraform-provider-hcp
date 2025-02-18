@@ -50,8 +50,6 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 }
 
 func TestAcc_Vault_PerformanceReplicatiosn_ValidationsAws(t *testing.T) {
-	// t.Skip("Error:http is not enabled as an observability provider")
-	// enabled LD flag https://app.launchdarkly.com/projects/cloud-services/flags/hcpv-observability-http/targeting?env=dev&env=int&env=production&selected-env=int
 	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
@@ -187,6 +185,7 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 		},
 		{
 			// add an http audit log provider
+			// enabled LD flag hcpv-observability-http for int env
 			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
 			resource "hcp_vault_cluster" "c1" {
 				cluster_id      = "{{ .VaultClusterName }}"
