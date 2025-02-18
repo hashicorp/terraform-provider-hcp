@@ -345,7 +345,7 @@ func updateTierNetworkAndRemoveObservability(t *testing.T, in *inputT) resource.
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
-			// resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
+			// resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
 			testAccCheckFullURL(in.VaultClusterResourceName, "vault_public_endpoint_url", "8200"),
