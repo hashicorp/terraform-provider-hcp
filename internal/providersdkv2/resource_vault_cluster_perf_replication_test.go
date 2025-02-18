@@ -52,7 +52,7 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 func TestAcc_Vault_PerformanceReplicatiosn_ValidationsAws(t *testing.T) {
 	// t.Skip("Error:http is not enabled as an observability provider")
 	// enabled LD flag https://app.launchdarkly.com/projects/cloud-services/flags/hcpv-observability-http/targeting?env=dev&env=int&env=production&selected-env=int
-	// t.Parallel()
+	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
 		HvnName:                  addTimestampSuffix("test-perf-hvn-1-"),
@@ -217,9 +217,9 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
 				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
-				// resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"),
-				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
-				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
+				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
+				resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
 			),
 			ExpectNonEmptyPlan: true,
 		},
