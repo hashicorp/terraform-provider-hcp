@@ -86,8 +86,9 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 			Optional:    true,
 			Attributes: map[string]schema.Attribute{
 				"scope": schema.StringAttribute{
-					Description: "The scope to which values apply. The valid options are GROUP and PROJECT",
+					Description: "The scope to which sync applies. Defaults to GROUP. The valid options are GROUP and PROJECT",
 					Optional:    true,
+					Computed:    true,
 					Validators: []validator.String{
 						stringvalidator.OneOf("GROUP", "PROJECT"),
 					},
@@ -95,6 +96,14 @@ func (r *resourceVaultSecretsSync) Schema(_ context.Context, _ resource.SchemaRe
 				"group_id": schema.StringAttribute{
 					Description: "ID of the group, if the scope is GROUP",
 					Optional:    true,
+					Validators: []validator.String{
+						stringvalidator.ConflictsWith(
+							path.MatchRelative().AtParent().AtName("project_id"),
+						),
+						stringvalidator.AtLeastOneOf(
+							path.MatchRelative().AtParent().AtName("project_id"),
+						),
+					},
 				},
 				"project_id": schema.StringAttribute{
 					Description: "ID of the project, if the scope is PROJECT",
@@ -237,14 +246,55 @@ func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnos
 			return diags
 		}
 
-		scope := secretmodels.SyncConfigGitlabScope(config.Scope.ValueString())
+		scopeStr := config.Scope.ValueString()
+		if scopeStr == "" {
+			if !config.GroupID.IsNull() {
+				scopeStr = "GROUP"
+			} else if !config.ProjectID.IsNull() {
+				scopeStr = "PROJECT"
+			} else {
+				return diag.Diagnostics{
+					diag.NewErrorDiagnostic(
+						"Invalid GitLab Configuration",
+						"Either group_id or project_id must be specified",
+					),
+				}
+			}
+		}
+
+		scope := secretmodels.SyncConfigGitlabScope(scopeStr)
+
+		var groupIDVal, projectIDVal string
+		if scope == secretmodels.SyncConfigGitlabScopeGROUP {
+			if config.GroupID.IsNull() {
+				return diag.Diagnostics{
+					diag.NewErrorDiagnostic(
+						"Invalid GitLab Configuration",
+						"group_id is required when scope is GROUP",
+					),
+				}
+			}
+			groupIDVal = config.GroupID.ValueString()
+			projectIDVal = ""
+		} else if scope == secretmodels.SyncConfigGitlabScopePROJECT {
+			if config.ProjectID.IsNull() {
+				return diag.Diagnostics{
+					diag.NewErrorDiagnostic(
+						"Invalid GitLab Configuration",
+						"project_id is required when scope is PROJECT",
+					),
+				}
+			}
+			groupIDVal = ""
+			projectIDVal = config.ProjectID.ValueString()
+		}
 
 		s.gitlabConfig = &secretmodels.Secrets20231128SyncConfigGitlab{
-			GroupID:   config.GroupID.ValueString(),
-			ProjectID: config.ProjectID.ValueString(),
+			Scope:     &scope,
+			GroupID:   groupIDVal,
+			ProjectID: projectIDVal,
 			Protected: false,
 			Raw:       false,
-			Scope:     &scope,
 		}
 	}
 
@@ -256,7 +306,10 @@ func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) d
 
 	syncModel, ok := model.(*secretmodels.Secrets20231128Sync)
 	if !ok {
-		diags.AddError("Invalid model type, this is a bug on the provider.", fmt.Sprintf("Expected *secretmodels.Secrets20231128Sync, got: %T", model))
+		diags.AddError(
+			"Invalid model type, this is a bug on the provider.",
+			fmt.Sprintf("Expected *secretmodels.Secrets20231128Sync, got: %T", model),
+		)
 		return diags
 	}
 
@@ -266,31 +319,49 @@ func (s *Sync) fromModel(ctx context.Context, orgID, projID string, model any) d
 	s.OrganizationID = types.StringValue(orgID)
 	s.ProjectID = types.StringValue(projID)
 
-	if syncModel.SyncConfigGitlab != nil {
-		scope := *syncModel.SyncConfigGitlab.Scope
-		var groupIDValue types.String
-		var projectIDValue types.String
+	if syncModel.SyncConfigGitlab == nil {
+		s.GitlabConfig = types.ObjectNull(map[string]attr.Type{
+			"scope":      types.StringType,
+			"group_id":   types.StringType,
+			"project_id": types.StringType,
+		})
 
-		if syncModel.SyncConfigGitlab.GroupID == "" {
-			groupIDValue = types.StringNull()
-		} else {
-			groupIDValue = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
-		}
+		return diags
+	}
 
-		if syncModel.SyncConfigGitlab.ProjectID == "" {
-			projectIDValue = types.StringNull()
-		} else {
-			projectIDValue = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
-		}
+	scopeVal := types.StringNull()
+	if syncModel.SyncConfigGitlab.Scope != nil {
+		scopeVal = types.StringValue(string(*syncModel.SyncConfigGitlab.Scope))
+	}
 
-		s.GitlabConfig, diags = types.ObjectValue(
-			s.GitlabConfig.AttributeTypes(ctx),
-			map[string]attr.Value{
-				"scope":      types.StringValue(string(scope)),
-				"group_id":   groupIDValue,
-				"project_id": projectIDValue,
-			},
-		)
+	var groupIDVal types.String
+	if syncModel.SyncConfigGitlab.GroupID != "" {
+		groupIDVal = types.StringValue(syncModel.SyncConfigGitlab.GroupID)
+	} else {
+		groupIDVal = types.StringNull()
+	}
+
+	var projectIDVal types.String
+	if syncModel.SyncConfigGitlab.ProjectID != "" {
+		projectIDVal = types.StringValue(syncModel.SyncConfigGitlab.ProjectID)
+	} else {
+		projectIDVal = types.StringNull()
+	}
+
+	s.GitlabConfig, diags = types.ObjectValue(
+		map[string]attr.Type{
+			"scope":      types.StringType,
+			"group_id":   types.StringType,
+			"project_id": types.StringType,
+		},
+		map[string]attr.Value{
+			"scope":      scopeVal,
+			"group_id":   groupIDVal,
+			"project_id": projectIDVal,
+		},
+	)
+	if diags.HasError() {
+		return diags
 	}
 
 	return diags

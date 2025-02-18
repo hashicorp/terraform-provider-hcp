@@ -52,14 +52,11 @@ resource "hcp_vault_secrets_sync" "example_gitlab_project_sync" {
 <a id="nestedatt--gitlab_config"></a>
 ### Nested Schema for `gitlab_config`
 
-Required:
-
-- `scope` (String) The scope to which values apply. The valid options are GROUP and PROJECT
-
 Optional:
 
 - `group_id` (String) ID of the group, if the scope is GROUP
 - `project_id` (String) ID of the project, if the scope is PROJECT
+- `scope` (String) The scope to which sync applies. Defaults to GROUP. The valid options are GROUP and PROJECT
 
 ## Import
 

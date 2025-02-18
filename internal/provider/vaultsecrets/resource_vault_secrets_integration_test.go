@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccVaultSecretsResourceIntegrationGitLab(t *testing.T) {
-	accessToken := checkRequiredEnvVarOrFail(t, "GITLAB_ACCESS_TOKEN")
+	accessToken := checkRequiredEnvVarOrFail(t, "VAULTSECRETS_GITLAB_ACCESS_TOKEN")
 
 	integrationName1 := generateRandomSlug()
 	integrationName2 := generateRandomSlug()

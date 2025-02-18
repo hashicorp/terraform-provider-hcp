@@ -25,7 +25,7 @@ func TestAccVaultSecretsResourceApp(t *testing.T) {
 		description2     = "my description 2"
 		projSyncName     = generateRandomSlug()
 		groupSyncName    = generateRandomSlug()
-		gitLabToken      = checkRequiredEnvVarOrFail(t, "GITLAB_ACCESS_TOKEN")
+		gitLabToken      = checkRequiredEnvVarOrFail(t, "VAULTSECRETS_GITLAB_ACCESS_TOKEN")
 	)
 
 	resource.Test(t, resource.TestCase{

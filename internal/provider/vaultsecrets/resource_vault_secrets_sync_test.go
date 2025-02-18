@@ -12,7 +12,7 @@ import (
 func TestAccVaultSecretsResourceSync(t *testing.T) {
 	syncName := generateRandomSlug()
 	integrationName := generateRandomSlug()
-	gitLabToken := checkRequiredEnvVarOrFail(t, "GITLAB_ACCESS_TOKEN")
+	gitLabToken := checkRequiredEnvVarOrFail(t, "VAULTSECRETS_GITLAB_ACCESS_TOKEN")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
