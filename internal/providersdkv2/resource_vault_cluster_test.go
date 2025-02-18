@@ -310,7 +310,7 @@ func updateNetworkObservabilityAndMVU(t *testing.T, in *inputT) resource.TestSte
 		},
 	}
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier2)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterPublicProxyObservabilityAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "true"),
@@ -340,10 +340,10 @@ func updateTierNetworkAndRemoveObservability(t *testing.T, in *inputT) resource.
 	newIn.PublicEndpoint = "false"
 	newIn.ProxyEndpoint = "DISABLED"
 	return resource.TestStep{
-		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier2)),
+		Config: testConfig(setTestAccVaultClusterConfig(t, updatedVaultClusterTierPublicProxyAndMVU, newIn, newIn.UpdateTier1)),
 		Check: resource.ComposeTestCheckFunc(
 			testAccCheckVaultClusterExists(in.VaultClusterResourceName),
-			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier2),
+			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "tier", in.UpdateTier1),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "public_endpoint", "false"),
 			resource.TestCheckResourceAttr(in.VaultClusterResourceName, "proxy_endpoint", "DISABLED"),
 			resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "vault_public_endpoint_url"),
