@@ -221,6 +221,7 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
 				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
 			),
+			ExpectNonEmptyPlan: true,
 		},
 		{
 			// secondary cluster creation failed as tier doesn't match the tier of primary
