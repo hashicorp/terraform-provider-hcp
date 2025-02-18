@@ -49,7 +49,7 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 	return tfResources.String()
 }
 
-func TestAcc_Vault_PerformanceReplicatiosn_ValidationsAws(t *testing.T) {
+func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
 	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
