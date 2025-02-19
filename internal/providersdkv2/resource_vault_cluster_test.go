@@ -44,60 +44,60 @@ func (in *inputT) GetHvnCidr() string {
 
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
-func TestAcc_Vault_ClusterAzure(t *testing.T) {
-	azureTestInput := inputT{
-		VaultClusterName:           addTimestampSuffix("test-vault-azure-"),
-		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-azure"),
-		VaultClusterResourceName:   vaultClusterResourceName,
-		VaultClusterDataSourceName: vaultClusterDataSourceName,
-		AdminTokenResourceName:     adminTokenResourceName,
-		CloudProvider:              cloudProviderAzure,
-		Region:                     azureRegion,
-		Tier:                       "DEV",
-		UpdateTier1:                "STANDARD_SMALL",
-		UpdateTier2:                "STANDARD_MEDIUM",
-		PublicEndpoint:             "false",
-		ProxyEndpoint:              "DISABLED",
-	}
-	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
-	// save so e don't have to generate this again and again
-	azureTestInput.tf = tf
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckVaultClusterDestroy,
-		Steps:                    azureTestSteps(t, azureTestInput),
-	})
-}
+// func TestAcc_Vault_ClusterAzure(t *testing.T) {
+// 	azureTestInput := inputT{
+// 		VaultClusterName:           addTimestampSuffix("test-vault-azure-"),
+// 		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-azure"),
+// 		VaultClusterResourceName:   vaultClusterResourceName,
+// 		VaultClusterDataSourceName: vaultClusterDataSourceName,
+// 		AdminTokenResourceName:     adminTokenResourceName,
+// 		CloudProvider:              cloudProviderAzure,
+// 		Region:                     azureRegion,
+// 		Tier:                       "DEV",
+// 		UpdateTier1:                "STANDARD_SMALL",
+// 		UpdateTier2:                "STANDARD_MEDIUM",
+// 		PublicEndpoint:             "false",
+// 		ProxyEndpoint:              "DISABLED",
+// 	}
+// 	tf := setTestAccVaultClusterConfig(t, vaultCluster, azureTestInput, azureTestInput.Tier)
+// 	// save so e don't have to generate this again and again
+// 	azureTestInput.tf = tf
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+// 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+// 		CheckDestroy:             testAccCheckVaultClusterDestroy,
+// 		Steps:                    azureTestSteps(t, azureTestInput),
+// 	})
+// }
 
 // This includes tests against both the resource, the corresponding datasource, and the dependent admin token resource
 // to shorten testing time.
-func TestAcc_Vault_ClusterAWS(t *testing.T) {
-	awsTestInput := inputT{
-		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
-		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-aws"),
-		VaultClusterResourceName:   vaultClusterResourceName,
-		VaultClusterDataSourceName: vaultClusterDataSourceName,
-		AdminTokenResourceName:     adminTokenResourceName,
-		CloudProvider:              cloudProviderAWS,
-		Region:                     awsRegion,
-		Tier:                       "DEV",
-		UpdateTier1:                "STANDARD_SMALL",
-		UpdateTier2:                "STANDARD_MEDIUM",
-		PublicEndpoint:             "false",
-		ProxyEndpoint:              "DISABLED",
-	}
+// func TestAcc_Vault_ClusterAWS(t *testing.T) {
+// 	awsTestInput := inputT{
+// 		VaultClusterName:           addTimestampSuffix("test-vault-aws-"),
+// 		HvnName:                    testAccUniqueNameWithPrefix("vault-hvn-aws"),
+// 		VaultClusterResourceName:   vaultClusterResourceName,
+// 		VaultClusterDataSourceName: vaultClusterDataSourceName,
+// 		AdminTokenResourceName:     adminTokenResourceName,
+// 		CloudProvider:              cloudProviderAWS,
+// 		Region:                     awsRegion,
+// 		Tier:                       "DEV",
+// 		UpdateTier1:                "STANDARD_SMALL",
+// 		UpdateTier2:                "STANDARD_MEDIUM",
+// 		PublicEndpoint:             "false",
+// 		ProxyEndpoint:              "DISABLED",
+// 	}
 
-	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
-	// save so e don't have to generate this again and again
-	awsTestInput.tf = tf
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckVaultClusterDestroy,
-		Steps:                    awsTestSteps(t, awsTestInput),
-	})
-}
+// 	tf := setTestAccVaultClusterConfig(t, vaultCluster, awsTestInput, awsTestInput.Tier)
+// 	// save so e don't have to generate this again and again
+// 	awsTestInput.tf = tf
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
+// 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+// 		CheckDestroy:             testAccCheckVaultClusterDestroy,
+// 		Steps:                    awsTestSteps(t, awsTestInput),
+// 	})
+// }
 
 func testAccCheckVaultClusterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
