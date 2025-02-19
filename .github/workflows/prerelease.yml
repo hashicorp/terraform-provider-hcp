@@ -7,6 +7,10 @@ on:
         description: "Patch Release (default: Minor)"
         type: boolean
         default: false
+      testacc-skip:
+        description: "Skip Acceptance Tests"
+        type: boolean
+        default: false
 
 concurrency:
   group: prerelease
@@ -21,6 +25,7 @@ jobs:
     secrets: inherit
 
   testacc:
+    if: ${{ !inputs.testacc-skip }}
     name: Run Acceptance Tests
     uses: ./.github/workflows/testacc.yml
     secrets: inherit
