@@ -192,10 +192,9 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				hvn_id          = hcp_hvn.hvn1.hvn_id
 				tier            = "{{ .Tier }}"
 				public_endpoint = true
-				audit_log_config {
-					http_uri    = "https://http-input-splunkcloud.com"
-					http_codec	= "JSON"
-					http_method	= "POST"
+				audit_log_config 		    {
+					datadog_api_key = "test_datadog"
+					datadog_region  = "us1"
 				}
 			}
 			`, in)),
@@ -216,6 +215,9 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "vault_private_endpoint_url"),
 				testAccCheckFullURL(primaryVaultResourceName, "vault_private_endpoint_url", ""),
 				resource.TestCheckResourceAttrSet(primaryVaultResourceName, "created_at"),
+				resource.TestCheckResourceAttrSet(in.VaultClusterResourceName, "audit_log_config.0.datadog_api_key"),
+				resource.TestCheckResourceAttr(in.VaultClusterResourceName, "audit_log_config.0.datadog_region", "us1"),
+
 				// resource.TestCheckResourceAttrSet(primaryVaultResourceName, "audit_log_config.0.http_uri"),
 				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_codec", "JSON"),
 				// resource.TestCheckResourceAttr(primaryVaultResourceName, "audit_log_config.0.http_method", "POST"),
