@@ -32,6 +32,7 @@ jobs:
 
   prerelease:
     name: Prerelease
+    if: always()
     needs:
       - test
       - testacc
