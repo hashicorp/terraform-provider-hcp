@@ -1,3 +1,17 @@
+## v0.103.0 (February 19, 2025)
+
+IMPROVEMENTS:
+
+* Add support for GitLab integration in HVS. [[GH-1189](https://github.com/hashicorp/terraform-provider-hcp/pull/1189)]
+* Update hcp_project calls to retry when encountering a 502, 503, or 504 error. [[GH-1181](https://github.com/hashicorp/terraform-provider-hcp/pull/1181)]
+* Updating the provider for HCP Boundary to allow for controller configuration settings upon hcp_boundary_cluster resource/data-source [[GH-1164](https://github.com/hashicorp/terraform-provider-hcp/pull/1164)]
+* hcp_log_streaming_destination: Generally Available [[GH-1207](https://github.com/hashicorp/terraform-provider-hcp/pull/1207)]
+* hcp_log_streaming_destination: manage resource with Log Streaming Service client [[GH-1174](https://github.com/hashicorp/terraform-provider-hcp/pull/1174)]
+
+BUG FIXES:
+
+* Fix a bug where updating an HVS secret name or app name would not recreate the resource as expected [[GH-1157](https://github.com/hashicorp/terraform-provider-hcp/pull/1157)]
+* diagnostics: Remove statuspage checks [[GH-1216](https://github.com/hashicorp/terraform-provider-hcp/pull/1216)]
 ## v0.102.0 (January 17, 2025)
 BREAKING CHANGES:
 
