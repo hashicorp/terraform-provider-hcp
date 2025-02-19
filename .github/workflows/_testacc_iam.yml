@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   acceptance_tests:
-    name: Acceptance Tests
+    name: IAM Acceptance Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
