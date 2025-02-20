@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   acceptance_tests:
-    name: Acceptance Tests
+    name: Consul Acceptance Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
