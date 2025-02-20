@@ -1,0 +1,3 @@
+```release-note:improvement
+Enabling failing HCP Vault Dedicates GHA pipeline tests with fix.
+```

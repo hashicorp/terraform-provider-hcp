@@ -1336,55 +1336,55 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 				configMap["cloudwatch_secret_access_key"] = config["cloudwatch_secret_access_key"].(string)
 			}
 		}
+	}
 
-		if elasticsearch := config.Elasticsearch; elasticsearch != nil {
-			configMap["elasticsearch_endpoint"] = elasticsearch.Endpoint
-			configMap["elasticsearch_dataset"] = elasticsearch.Dataset
-			configMap["elasticsearch_user"] = elasticsearch.User
+	if elasticsearch := config.Elasticsearch; elasticsearch != nil {
+		configMap["elasticsearch_endpoint"] = elasticsearch.Endpoint
+		configMap["elasticsearch_dataset"] = elasticsearch.Dataset
+		configMap["elasticsearch_user"] = elasticsearch.User
+
+		// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+		if elasticsearch.Password != "redacted" {
+			configMap["elasticsearch_password"] = elasticsearch.Password
+		} else {
+			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+				config := configParam.([]interface{})[0].(map[string]interface{})
+				configMap["elasticsearch_password"] = config["elasticsearch_password"].(string)
+			}
+		}
+	}
+
+	if http := config.HTTP; http != nil {
+		configMap["http_headers"] = http.Headers
+		configMap["http_codec"] = http.Codec
+		configMap["http_compression"] = http.Compression
+		configMap["http_method"] = http.Method
+		configMap["http_payload_prefix"] = http.PayloadPrefix
+		configMap["http_payload_suffix"] = http.PayloadSuffix
+		configMap["http_uri"] = http.URI
+
+		if http.Basic != nil {
+			configMap["http_basic_user"] = http.Basic.User
 
 			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
-			if elasticsearch.Password != "redacted" {
-				configMap["elasticsearch_password"] = elasticsearch.Password
+			if http.Basic.Password != "redacted" {
+				configMap["http_basic_password"] = http.Basic.Password
 			} else {
 				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 					config := configParam.([]interface{})[0].(map[string]interface{})
-					configMap["elasticsearch_password"] = config["elasticsearch_password"].(string)
+					configMap["http_basic_password"] = config["http_basic_password"].(string)
 				}
 			}
 		}
 
-		if http := config.HTTP; http != nil {
-			configMap["http_headers"] = http.Headers
-			configMap["http_codec"] = http.Codec
-			configMap["http_compression"] = http.Compression
-			configMap["http_method"] = http.Method
-			configMap["http_payload_prefix"] = http.PayloadPrefix
-			configMap["http_payload_suffix"] = http.PayloadSuffix
-			configMap["http_uri"] = http.URI
-
-			if http.Basic != nil {
-				configMap["http_basic_user"] = http.Basic.User
-
-				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
-				if http.Basic.Password != "redacted" {
-					configMap["http_basic_password"] = http.Basic.Password
-				} else {
-					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
-						config := configParam.([]interface{})[0].(map[string]interface{})
-						configMap["http_basic_password"] = config["http_basic_password"].(string)
-					}
-				}
-			}
-
-			if http.Bearer != nil {
-				// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
-				if http.Bearer.Token != "redacted" {
-					configMap["http_bearer_token"] = http.Bearer.Token
-				} else {
-					if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
-						config := configParam.([]interface{})[0].(map[string]interface{})
-						configMap["http_bearer_token"] = config["http_bearer_token"].(string)
-					}
+		if http.Bearer != nil {
+			// Since the API return this sensitive fields as redacted, we don't update it on the config in this situations
+			if http.Bearer.Token != "redacted" {
+				configMap["http_bearer_token"] = http.Bearer.Token
+			} else {
+				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
+					config := configParam.([]interface{})[0].(map[string]interface{})
+					configMap["http_bearer_token"] = config["http_bearer_token"].(string)
 				}
 			}
 		}
