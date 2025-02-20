@@ -55,7 +55,7 @@ EOF
 
 ### Optional
 
-- `actions` (List of String) List of actions by 'id' to assign to this Template. Applications created from this template will have these actions assigned to them. Only 'ID' is supported.
+- `actions` (List of String) List of actions by 'ID' to assign to this Template. Applications created from this Template will have these actions assigned to them. Only 'ID' is supported.
 - `description` (String) A description of the template, along with when and why it should be used, up to 500 characters
 - `labels` (List of String) List of labels attached to this Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Template is located.

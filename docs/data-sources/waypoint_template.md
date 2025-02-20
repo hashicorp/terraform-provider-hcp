@@ -23,7 +23,7 @@ data "hcp_waypoint_template" "example" {
 
 ### Optional
 
-- `actions` (List of String) List of actions by 'id' to assign to this Template. Applications created from this template will have these actions assigned to them. Only 'ID' is supported.
+- `actions` (List of String) List of actions by 'ID' to assign to this Template. Applications created from this Template will have these actions assigned to them. Only 'ID' is supported.
 - `id` (String) The ID of the Template.
 - `name` (String) The name of the Template.
 - `project_id` (String) The ID of the HCP project where the Waypoint Template is located.

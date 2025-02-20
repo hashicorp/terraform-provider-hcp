@@ -136,8 +136,8 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"actions": schema.ListAttribute{
 				Optional: true,
-				Description: "List of actions by 'id' to assign to this Template. " +
-					"Applications created from this template will have these actions " +
+				Description: "List of actions by 'ID' to assign to this Template. " +
+					"Applications created from this Template will have these actions " +
 					"assigned to them. Only 'ID' is supported.",
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
