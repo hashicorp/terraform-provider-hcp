@@ -50,7 +50,6 @@ func setTestAccPerformanceReplicationE2E(t *testing.T, tfCode string, in *inputT
 }
 
 func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
-	t.Skip("Error:http is not enabled as an observability provider")
 	t.Parallel()
 
 	awsPerfReplicationTestInput := &inputT{
@@ -62,7 +61,7 @@ func TestAcc_Vault_PerformanceReplication_ValidationsAws(t *testing.T) {
 		Region:                   awsRegion,
 		Tier:                     "PLUS_SMALL",
 		UpdateTier1:              "PLUS_MEDIUM",
-		UpdateTier2:              "DEV",
+		UpdateTier2:              "STANDARD_SMALL",
 		Secondary: &inputT{
 			HvnName:                  addTimestampSuffix("test-perf-hvn-2-"),
 			HvnCidr:                  "172.24.16.0/20",
@@ -186,6 +185,7 @@ func performanceReplicationSteps(t *testing.T, in *inputT) []resource.TestStep {
 		},
 		{
 			// add an http audit log provider
+			// enabled LD flag hcpv-observability-http for int env
 			Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
 			resource "hcp_vault_cluster" "c1" {
 				cluster_id      = "{{ .VaultClusterName }}"
