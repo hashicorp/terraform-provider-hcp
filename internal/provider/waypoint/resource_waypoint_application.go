@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -317,7 +317,7 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationFromTemplateBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationFromTemplateBody{
 		Name:          plan.Name.ValueString(),
 		ActionCfgRefs: actionRefs,
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointRefApplicationTemplate{
@@ -327,8 +327,9 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationFromTemplateParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	app, err := r.client.Waypoint.WaypointServiceCreateApplicationFromTemplate(params, nil)
 	if err != nil {
@@ -639,7 +640,7 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationBody{
 		// this is the updated name
 		Name:           plan.Name.ValueString(),
 		ReadmeMarkdown: readmeBytes,
@@ -647,9 +648,10 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationParams{
-		ApplicationID: plan.ID.ValueString(),
-		NamespaceID:   ns.ID,
-		Body:          modelBody,
+		ApplicationID:                   plan.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	app, err := r.client.Waypoint.WaypointServiceUpdateApplication(params, nil)
 	if err != nil {
@@ -735,22 +737,13 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error deleting application",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDestroyApplicationParams{
-		NamespaceID:   ns.ID,
-		ApplicationID: data.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ApplicationID:                   data.ID.ValueString(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDestroyApplication(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDestroyApplication(params, nil)
 
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {

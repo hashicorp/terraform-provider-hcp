@@ -28,7 +28,7 @@ Waypoint Add-on resource
 ### Read-Only
 
 - `add_on_definition_input_variables` (Attributes Set) Input variables set for the add-on definition. (see [below for nested schema](#nestedatt--add_on_definition_input_variables))
-- `created_by` (String) The user who created the Add-on.
+- `created_by` (String, Deprecated) The user who created the Add-on.
 - `description` (String) A longer description of the Add-on.
 - `id` (String) The ID of the Add-on.
 - `install_count` (Number) The number of installed Add-ons for the same Application that share the same Add-on Definition.

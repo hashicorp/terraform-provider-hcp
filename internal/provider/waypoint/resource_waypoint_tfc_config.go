@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -133,17 +133,7 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateTFCConfigBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateTFCConfigBody{
 		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
@@ -151,8 +141,9 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	params := &waypoint_service.WaypointServiceCreateTFCConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 
 	config, err := r.client.Waypoint.WaypointServiceCreateTFCConfig(params, nil)
@@ -197,18 +188,9 @@ func (r *TfcConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceGetTFCConfigParams{
-		NamespaceID: ns.ID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 	config, err := r.client.Waypoint.WaypointServiceGetTFCConfig(params, nil)
 	if err != nil {
@@ -257,17 +239,7 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateTFCConfigBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateTFCConfigBody{
 		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
@@ -275,8 +247,9 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateTFCConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 
 	config, err := r.client.Waypoint.WaypointServiceUpdateTFCConfig(params, nil)
@@ -320,21 +293,12 @@ func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteReque
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDeleteTFCConfigParams{
-		NamespaceID: ns.ID,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDeleteTFCConfig(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteTFCConfig(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "TFC Config not found for organization during delete call, ignoring")
