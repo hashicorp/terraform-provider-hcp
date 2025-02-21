@@ -111,6 +111,59 @@ func TestAcc_Waypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
 	})
 }
 
+// TestAcc_Waypoint_Application_Action_Assign tests that an application can be
+// created with an action assigned to it.
+func TestAcc_Waypoint_Application_Action_Assign(t *testing.T) {
+	t.Parallel()
+
+	var (
+		applicationModel waypoint.ApplicationResourceModel
+		actionCfgModel   waypoint.ActionResourceModel
+		appTemplateModel waypoint.TemplateResourceModel
+	)
+	templateResourceName := "hcp_waypoint_template.actions_template_test"
+	resourceName := "hcp_waypoint_application.actions_application_test"
+	actionResourceName := "hcp_waypoint_action.test"
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
+	actionName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			if err := testAccCheckWaypointApplicationDestroy(t, &applicationModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointTemplateDestroy(t, &appTemplateModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointActionDestroy(t, &actionCfgModel)(s); err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateWithAppAndActionsConfig(templateName, applicationName, actionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
+					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
+
+					testAccCheckWaypointTemplateExists(t, templateResourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, templateName),
+					resource.TestCheckResourceAttr(templateResourceName, "name", templateName),
+
+					testAccCheckWaypointActionExists(t, actionResourceName, &actionCfgModel),
+					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
+					resource.TestCheckResourceAttr(actionResourceName, "name", actionName),
+				),
+			},
+		},
+	})
+}
+
 // simple attribute check on the application receved from the API
 func testAccCheckWaypointApplicationName(_ *testing.T, applicationModel *waypoint.ApplicationResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -312,4 +365,47 @@ resource "hcp_waypoint_application" "test_var_opts" {
   name    			      = "%s"
   template_id = hcp_waypoint_template.test_var_opts.id
 }`, tempName, appName)
+}
+
+func testTemplateWithAppAndActionsConfig(
+	templateName string,
+	applicationName string,
+	actionName string,
+) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_action" "test" {
+	name = "%[3]s"
+	description = "Test action"
+	request = {
+	    custom = {
+			method = "GET"
+			url = "https://example.com"
+			headers = {
+				Test-Header = "test"
+			}
+			body = "test"
+		}
+	}
+}
+
+resource "hcp_waypoint_template" "actions_template_test" {
+  name                     = "%[1]s"
+  summary                  = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  terraform_execution_mode = "remote"
+}
+
+resource "hcp_waypoint_application" "actions_application_test" {
+  name        = "%[2]s"
+  template_id = hcp_waypoint_template.actions_template_test.id
+
+  actions = [hcp_waypoint_action.test.id]
+}`, templateName, applicationName, actionName)
 }

@@ -55,6 +55,49 @@ func TestAcc_Waypoint_Template_basic(t *testing.T) {
 	})
 }
 
+// A test that ensures a template can be assigned with an action, and that
+// action gets created prior to the terraform resource. Creating a template
+// resource will fail if that action does not exist.
+func TestAcc_Waypoint_Create_Template_with_actions(t *testing.T) {
+	t.Parallel()
+
+	var (
+		appTemplateModel waypoint.TemplateResourceModel
+		actionCfgModel   waypoint.ActionResourceModel
+	)
+	resourceName := "hcp_waypoint_template.actions_template_test"
+	actionResourceName := "hcp_waypoint_action.test"
+	name := generateRandomName()
+	actionName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			if err := testAccCheckWaypointTemplateDestroy(t, &appTemplateModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointActionDestroy(t, &actionCfgModel)(s); err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateWithActionsConfig(name, actionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointTemplateExists(t, resourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					testAccCheckWaypointActionExists(t, actionResourceName, &actionCfgModel),
+					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
+					resource.TestCheckResourceAttr(actionResourceName, "name", actionName),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_Waypoint_template_with_variable_options(t *testing.T) {
 	t.Parallel()
 
@@ -173,6 +216,44 @@ resource "hcp_waypoint_template" "test" {
   labels = ["one", "two"]
   terraform_execution_mode = "remote"
 }`, name)
+}
+
+func testTemplateWithActionsConfig(
+	templateName string,
+	actionName string,
+) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_action" "test" {
+	name = "%[2]s"
+	description = "Test action"
+	request = {
+	    custom = {
+			method = "GET"
+			url = "https://example.com"
+			headers = {
+				Test-Header = "test"
+			}
+			body = "test"
+		}
+	}
+}
+
+resource "hcp_waypoint_template" "actions_template_test" {
+  name                     = "%[1]s"
+  summary                  = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  labels = ["one", "two"]
+  terraform_execution_mode = "remote"
+
+  actions = [hcp_waypoint_action.test.id]
+}`, templateName, actionName)
 }
 
 func testTemplateConfigWithVarOpts(name string) string {
