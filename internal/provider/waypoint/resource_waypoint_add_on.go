@@ -9,8 +9,8 @@ import (
 	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -133,8 +133,9 @@ func (r *AddOnResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 			},
 			"created_by": schema.StringAttribute{
-				Description: "The user who created the Add-on.",
-				Computed:    true,
+				Description:        "The user who created the Add-on.",
+				Computed:           true,
+				DeprecationMessage: "This attribute is deprecated and will be removed in a future version of the provider.",
 			},
 			"install_count": schema.Int64Attribute{
 				Description: "The number of installed Add-ons for the same Application that share the same " +
@@ -268,14 +269,6 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
 
 	// varTypes is used to store the variable type for each input variable
 	// to be used later when fetching the input variables from the API
@@ -343,7 +336,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateAddOnBody{
 		Name:        plan.Name.ValueString(),
 		Application: applicationRefModel,
 		Definition:  definitionRefModel,
@@ -351,8 +344,9 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	params := &waypoint_service.WaypointServiceCreateAddOnParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	responseAddOn, err := r.client.Waypoint.WaypointServiceCreateAddOn(params, nil)
 	if err != nil {
@@ -408,7 +402,7 @@ func (r *AddOnResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
-	plan.CreatedBy = types.StringValue(addOn.CreatedBy)
+	plan.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
@@ -546,7 +540,7 @@ func (r *AddOnResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 	state.Labels = labels
 
-	state.CreatedBy = types.StringValue(addOn.CreatedBy)
+	state.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
@@ -638,24 +632,15 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateAddOnBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateAddOnBody{
 		Name: plan.Name.ValueString(),
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateAddOnParams{
-		NamespaceID:     ns.ID,
-		Body:            modelBody,
-		ExistingAddOnID: plan.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
+		ExistingAddOnID:                 plan.ID.ValueString(),
 	}
 	def, err := r.client.Waypoint.WaypointServiceUpdateAddOn(params, nil)
 	if err != nil {
@@ -711,7 +696,7 @@ func (r *AddOnResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	plan.CreatedBy = types.StringValue(addOn.CreatedBy)
+	plan.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
@@ -766,22 +751,13 @@ func (r *AddOnResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDestroyAddOnParams{
-		NamespaceID: ns.ID,
-		AddOnID:     state.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		AddOnID:                         state.ID.ValueString(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDestroyAddOn(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDestroyAddOn(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Add-on not found for organization during delete call, ignoring")

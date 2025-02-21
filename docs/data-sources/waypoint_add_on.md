@@ -23,7 +23,7 @@ The Waypoint Add-on data source retrieves information on a given Add-on.
 ### Read-Only
 
 - `application_id` (String) The ID of the Application that this Add-on is created for.
-- `created_by` (String) The user who created the Add-on.
+- `created_by` (String, Deprecated) The user who created the Add-on.
 - `definition_id` (String) The ID of the Add-on Definition that this Add-on is created from.
 - `description` (String) A longer description of the Add-on.
 - `install_count` (Number) The number of installed Add-ons for the same Application that share the same Add-on Definition.

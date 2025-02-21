@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -277,16 +277,6 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
@@ -330,7 +320,7 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		})
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
@@ -360,8 +350,9 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	createTplResp, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
 	if err != nil {
@@ -607,16 +598,6 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
@@ -658,7 +639,7 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		ProjectID: tfProjID,
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
 			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
@@ -688,9 +669,10 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{
-		NamespaceID:                   ns.ID,
-		Body:                          modelBody,
-		ExistingApplicationTemplateID: plan.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
+		ExistingApplicationTemplateID:   plan.ID.ValueString(),
 	}
 	app, err := r.client.Waypoint.WaypointServiceUpdateApplicationTemplate(params, nil)
 	if err != nil {
@@ -795,22 +777,13 @@ func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDeleteApplicationTemplateParams{
-		NamespaceID:           ns.ID,
-		ApplicationTemplateID: data.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ApplicationTemplateID:           data.ID.ValueString(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Template not found for organization during delete call, ignoring")

@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -105,8 +105,9 @@ func (d *DataSourceAddOn) Schema(ctx context.Context, req datasource.SchemaReque
 				ElementType: types.StringType,
 			},
 			"created_by": schema.StringAttribute{
-				Description: "The user who created the Add-on.",
-				Computed:    true,
+				Description:        "The user who created the Add-on.",
+				Computed:           true,
+				DeprecationMessage: "This attribute is deprecated and will be removed in a future version of the provider.",
 			},
 			"install_count": schema.Int64Attribute{
 				Description: "The number of installed Add-ons for the same Application that share the same " +
@@ -256,7 +257,7 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		state.ReadmeMarkdown = types.StringNull()
 	}
 
-	state.CreatedBy = types.StringValue(addOn.CreatedBy)
+	state.CreatedBy = types.StringNull()
 
 	// If we can process status as an int64, add it to the plan
 	statusNum, err := strconv.ParseInt(addOn.Count, 10, 64)
