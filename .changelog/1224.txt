@@ -1,0 +1,3 @@
+```release-note:improvement
+Add way to assign actions to a Waypoint template or application on create or update.
+```
