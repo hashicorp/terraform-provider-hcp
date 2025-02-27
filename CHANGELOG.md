@@ -1,3 +1,14 @@
+## v0.104.0 (February 27, 2025)
+
+IMPROVEMENTS:
+
+* Add way to assign actions to a Waypoint template or application on create or update. [[GH-1224](https://github.com/hashicorp/terraform-provider-hcp/pull/1224)]
+* Enabling failing HCP Vault Dedicates GHA pipeline tests with fix. [[GH-1218](https://github.com/hashicorp/terraform-provider-hcp/pull/1218)]
+
+DEPRECATIONS:
+
+* The following attribute is deprecated for Waypoint the add-on resource and data source:
+  - `hcp_waypoint_add_on_created_by` [[GH-1208](https://github.com/hashicorp/terraform-provider-hcp/pull/1208)]
 ## v0.103.0 (February 19, 2025)
 
 IMPROVEMENTS:
