@@ -1,12 +1,20 @@
-# See GitHub's docs for more information on this file:
-# https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates
+---
 version: 2
+
 updates:
-  # Maintain dependencies for Go modules
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      # Check for updates to Go modules every weekday
-      interval: "daily"
-    labels:
-      - "pr/no-changelog"
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    groups:
+      gomod-breaking:
+        update-types:
+          - major
+      gomod-backward-compatible:
+        update-types:
+          - minor
+          - patch
+    open-pull-requests-limit: 1
