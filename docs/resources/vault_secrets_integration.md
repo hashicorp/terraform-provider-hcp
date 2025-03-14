@@ -200,7 +200,7 @@ Read-Only:
 
 Required:
 
-- `token` (String, Sensitive) Access token used to authenticate against the target GitLab account.
+- `token` (String, Sensitive) Access token used to authenticate against the target GitLab account. This token must have privilege to create CI/CD variables.
 
 
 <a id="nestedatt--mongodb_atlas_static_credentials"></a>

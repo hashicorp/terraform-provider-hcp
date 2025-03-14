@@ -157,6 +157,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultsecrets.NewVaultSecretsIntegrationResource,
 		vaultsecrets.NewVaultSecretsDynamicSecretResource,
 		vaultsecrets.NewVaultSecretsRotatingSecretResource,
+		vaultsecrets.NewVaultSecretsSyncResource,
 		// Vault Secrets Deprecated
 		vaultsecrets.NewVaultSecretsIntegrationAWSResource,
 		vaultsecrets.NewVaultSecretsIntegrationAzureResource,
