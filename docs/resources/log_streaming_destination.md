@@ -100,5 +100,5 @@ Optional:
 
 Required:
 
-- `endpoint` (String) The Splunk Cloud endpoint to send logs to.
+- `endpoint` (String) The Splunk Cloud endpoint to send logs to. Streaming to free trial instances is not supported.
 - `token` (String, Sensitive) The authentication token that will be used by the platform to access Splunk Cloud.

@@ -67,7 +67,7 @@ func (r *resourceHCPLogStreamingDestination) Schema(_ context.Context, _ resourc
 			"splunk_cloud": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"endpoint": schema.StringAttribute{
-						Description: "The Splunk Cloud endpoint to send logs to.",
+						Description: "The Splunk Cloud endpoint to send logs to. Streaming to free trial instances is not supported.",
 						Required:    true,
 					},
 					"token": schema.StringAttribute{
