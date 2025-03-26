@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed a bug when `tfe_waypoint_template.variable_options` did not specify `options` list.
+```
