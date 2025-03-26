@@ -285,13 +285,6 @@ resource "hcp_waypoint_template" "var_opts_test" {
       name          = "faction"
       variable_type = "string"
       user_editable = true
-      options       = [
-        "ncr",
-        "brotherhood-of-steel",
-        "caesars-legion",
-        "raiders",
-        "institute"
-      ]
     }
   ]
 }`, name)
