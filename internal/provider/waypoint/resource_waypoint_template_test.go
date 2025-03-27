@@ -294,7 +294,7 @@ resource "hcp_waypoint_template" "var_opts_test" {
       ]
     },
     {
-      name          = "optionless_variable"
+      name          = "vault_dweller_shelter"
       variable_type = "string"
       user_editable = true
     }

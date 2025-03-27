@@ -93,7 +93,7 @@ func TestAcc_Waypoint_Data_template_with_variable_options(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.0.variable_type", "string"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.1.name", "vault_dweller_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.1.variable_type", "string"),
-					resource.TestCheckResourceAttr(dataSourceName, "variable_options.2.name", "optionless_variable"),
+					resource.TestCheckResourceAttr(dataSourceName, "variable_options.2.name", "vault_dweller_shelter"),
 					resource.TestCheckResourceAttr(dataSourceName, "variable_options.2.variable_type", "string"),
 				),
 			},
