@@ -66,7 +66,7 @@ func TestAcc_Waypoint_AddOnInputVariables(t *testing.T) {
 					testAccCheckWaypointAddOnExists(t, resourceName, &addOnModel),
 					testAccCheckWaypointAddOnName(t, &addOnModel, addOnName),
 					resource.TestCheckResourceAttr(resourceName, "name", addOnName),
-					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.name", "faction"),
 					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.value", "brotherhood-of-steel"),
 					resource.TestCheckResourceAttr(resourceName, "add_on_input_variables.0.variable_type", "string"),
@@ -289,6 +289,11 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
         "institute"
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
@@ -307,6 +312,11 @@ resource "hcp_waypoint_add_on" "test_var_opts" {
       name          = "vault_dweller_name"
       variable_type = "string"
       value         = "courier"
+    },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
     }
   ]
 }
@@ -365,6 +375,11 @@ resource "hcp_waypoint_add_on_definition" "test_var_opts" {
         "brotherhood-of-steel",
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
