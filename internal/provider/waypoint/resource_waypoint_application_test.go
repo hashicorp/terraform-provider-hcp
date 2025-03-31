@@ -331,7 +331,7 @@ resource "hcp_waypoint_application" "test_var_opts" {
     {
       name          = "vault_dweller_shelter"
       variable_type = "string"
-      user_editable = true
+	  value 		= "vault101"
     }
   ]
 }`, tempName, appName)

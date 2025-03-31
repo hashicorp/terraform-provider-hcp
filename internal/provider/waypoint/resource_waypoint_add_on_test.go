@@ -316,7 +316,7 @@ resource "hcp_waypoint_add_on" "test_var_opts" {
     {
       name          = "vault_dweller_shelter"
       variable_type = "string"
-      user_editable = true
+      value         = "value101"
     }
   ]
 }
