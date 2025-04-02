@@ -1,6 +1,8 @@
 module github.com/hashicorp/terraform-provider-hcp
 
-go 1.22.11
+go 1.23
+
+toolchain go1.23.6
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -119,3 +121,5 @@ require (
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/hashicorp/hcp-sdk-go => ../hcp-sdk-go-internal

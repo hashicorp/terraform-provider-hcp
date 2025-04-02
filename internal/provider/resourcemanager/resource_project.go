@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"net/http"
 
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
@@ -128,6 +129,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	res, err := clients.CreateProjectWithRetry(r.client, createParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating project", err.Error())
+		return
+	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: r.client.Config.OrganizationID, ProjectID: res.Payload.Project.ID}
+
+	// Wait for the project to be created.
+	if err = clients.WaitForOperation(ctx, r.client, "create project", loc, "-"); err != nil {
+		resp.Diagnostics.AddError("Error waiting for project creation", err.Error())
 		return
 	}
 
@@ -255,7 +264,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 
 	getParams := project_service.NewProjectServiceDeleteParams()
 	getParams.ID = state.ResourceID.ValueString()
-	_, err := r.client.Project.ProjectServiceDelete(getParams, nil)
+	res, err := r.client.Project.ProjectServiceDelete(getParams, nil)
 	if err != nil {
 		var deleteErr *project_service.ProjectServiceDeleteDefault
 		if errors.As(err, &deleteErr) && deleteErr.IsCode(http.StatusNotFound) {
@@ -265,6 +274,15 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		resp.Diagnostics.AddError("Error deleting project", err.Error())
 		return
 	}
+
+	loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: r.client.Config.OrganizationID, ProjectID: "-"}
+
+	// Wait for the project to be created.
+	if err = clients.WaitForOperation(ctx, r.client, "create project", loc, res.Payload.Operation.ID); err != nil {
+		resp.Diagnostics.AddError("Error waiting for project creation", err.Error())
+		return
+	}
+
 }
 
 func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
