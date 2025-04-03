@@ -292,6 +292,11 @@ resource "hcp_waypoint_template" "var_opts_test" {
         "raiders",
         "institute"
       ]
+    },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
     }
   ]
 }`, name)

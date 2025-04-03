@@ -286,9 +286,11 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
-		diags = v.Options.ElementsAs(ctx, &strOpts, false)
-		if diags.HasError() {
-			return
+		if len(v.Options.Elements()) != 0 {
+			diags = v.Options.ElementsAs(ctx, &strOpts, false)
+			if diags.HasError() {
+				return
+			}
 		}
 
 		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{

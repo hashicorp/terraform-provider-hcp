@@ -76,7 +76,7 @@ func TestAcc_Waypoint_AddOn_DataSource_WithInputVars(t *testing.T) {
 				Config: testDataAddOnWithInputVarsConfig(templateName, appName, defName, addOnName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", addOnName),
-					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "6"),
 				),
 			},
 		},

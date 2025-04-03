@@ -161,7 +161,8 @@ func (r *AddOnDefinitionResource) Schema(ctx context.Context, req resource.Schem
 						},
 						"options": &schema.ListAttribute{
 							ElementType: types.StringType,
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 							Description: "List of options",
 						},
 						"user_editable": &schema.BoolAttribute{
@@ -244,10 +245,13 @@ func (r *AddOnDefinitionResource) Create(ctx context.Context, req resource.Creat
 	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
-		diags := v.Options.ElementsAs(ctx, &strOpts, false)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
+		if len(v.Options.Elements()) != 0 {
+
+			diags := v.Options.ElementsAs(ctx, &strOpts, false)
+			if diags.HasError() {
+				resp.Diagnostics.Append(diags...)
+				return
+			}
 		}
 
 		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{

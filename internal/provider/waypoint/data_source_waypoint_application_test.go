@@ -75,7 +75,7 @@ func TestAcc_Waypoint_Application_DataSource_WithInputVars(t *testing.T) {
 				Config: testDataApplicationWithInputVarsConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "4"),
 				),
 			},
 		},

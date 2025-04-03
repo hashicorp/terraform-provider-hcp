@@ -61,7 +61,7 @@ func TestAcc_Waypoint_ApplicationInputVariables(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(resourceName, "application_input_variables.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "application_input_variables.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.name", "faction"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.value", "brotherhood-of-steel"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.variable_type", "string"),
@@ -305,6 +305,11 @@ resource "hcp_waypoint_template" "test_var_opts" {
         "institute"
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
@@ -322,6 +327,11 @@ resource "hcp_waypoint_application" "test_var_opts" {
       name  		= "vault_dweller_name"
       variable_type = "string"
 	  value 		= "courier"
+    },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+	  value 		= "vault101"
     }
   ]
 }`, tempName, appName)
@@ -358,6 +368,11 @@ resource "hcp_waypoint_template" "test_var_opts" {
         "brotherhood-of-steel",
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
