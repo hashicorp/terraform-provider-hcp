@@ -209,6 +209,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		iam.NewServicePrincipalDataSource,
 		iam.NewGroupDataSource,
 		iam.NewUserPrincipalDataSource,
+		iam.NewUserPrincipalsDataSource,
 		// Waypoint
 		waypoint.NewActionDataSource,
 		waypoint.NewApplicationDataSource,
