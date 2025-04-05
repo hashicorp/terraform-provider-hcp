@@ -8,20 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 )
-
-func newInvalidTerraformValueError(valuePath path.Path, err error) diag.Diagnostic {
-	return diag.NewAttributeErrorDiagnostic(
-		valuePath,
-		"Invalid Terraform Value",
-		"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
-			"This generally is an issue with the provider schema implementation. "+
-			"Please contact the provider developers.\n\n"+
-			"Path: "+valuePath.String()+"\n"+
-			"Error: "+err.Error(),
-	)
-}
 
 func newSemanticEqualityCheckTypeError[V attr.Value](expected V, got V) diag.Diagnostic {
 	return diag.NewErrorDiagnostic(

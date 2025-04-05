@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-hcp/internal/input"
 )
 
-// SlugType is a custom type for Slugs
+var (
+	_ basetypes.StringTypable = &SlugType{}
+)
+
 type SlugType struct {
 	basetypes.StringType
 }
-
-var _ basetypes.StringTypable = &SlugType{}
-var _ xattr.TypeWithValidate = SlugType{}
 
 func (t SlugType) String() string {
 	return "SlugType"
@@ -66,18 +66,15 @@ func (t SlugType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (att
 	return slugValue, nil
 }
 
-func NewSlugValue(value string) SlugValue {
-	return SlugValue{
-		StringValue: basetypes.NewStringValue(value),
-	}
-}
+var (
+	_ basetypes.StringValuable       = &SlugValue{}
+	_ xattr.ValidateableAttribute    = &SlugValue{}
+	_ function.ValidateableParameter = &SlugValue{}
+)
 
-// SlugValue is a custom value used to validate that a string is a Slug
 type SlugValue struct {
 	basetypes.StringValue
 }
-
-var _ basetypes.StringValuable = SlugValue{}
 
 func (v SlugValue) Type(context.Context) attr.Type {
 	return SlugType{}
@@ -92,28 +89,37 @@ func (v SlugValue) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-// Validate checks that the value is a valid Slug, if it is known and not null.
-func (t SlugType) Validate(ctx context.Context, value tftypes.Value, valuePath path.Path) diag.Diagnostics {
-	if value.IsNull() || !value.IsKnown() {
-		return nil
+func (v SlugValue) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
 	}
 
-	var diags diag.Diagnostics
-	var valueString string
+	if !input.IsSlug(v.ValueString()) {
+		resp.Diagnostics.Append(
+			diag.NewAttributeErrorDiagnostic(
+				req.Path,
+				"expected a valid Slug",
+				"slugs must be of length 3-36 and contain only alphanumeric characters and hyphens",
+			),
+		)
+	}
+}
 
-	if err := value.As(&valueString); err != nil {
-		diags.Append(newInvalidTerraformValueError(valuePath, err))
-		return diags
+func (v SlugValue) ValidateParameter(ctx context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
+	if v.IsUnknown() || v.IsNull() {
+		return
 	}
 
-	if !input.IsSlug(valueString) {
-		diags.AddAttributeError(
-			valuePath,
-			"expected a valid Slug",
+	if !input.IsSlug(v.ValueString()) {
+		resp.Error = function.NewArgumentFuncError(
+			req.Position,
 			"slugs must be of length 3-36 and contain only alphanumeric characters and hyphens",
 		)
-		return diags
 	}
+}
 
-	return diags
+func NewSlugValue(value string) SlugValue {
+	return SlugValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
 }
