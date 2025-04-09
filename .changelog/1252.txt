@@ -1,0 +1,3 @@
+```release-note:improvement
+Added an `aws_route` resource to the example code for `hcp_aws_transit_gateway_attachment`.
+```
