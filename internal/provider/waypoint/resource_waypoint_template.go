@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -50,6 +50,7 @@ type TemplateResourceModel struct {
 	Description            types.String `tfsdk:"description"`
 	ReadmeMarkdownTemplate types.String `tfsdk:"readme_markdown_template"`
 	UseModuleReadme        types.Bool   `tfsdk:"use_module_readme"`
+	Actions                types.List   `tfsdk:"actions"`
 
 	TerraformProjectID          types.String         `tfsdk:"terraform_project_id"`
 	TerraformCloudWorkspace     *tfcWorkspace        `tfsdk:"terraform_cloud_workspace_details"`
@@ -132,6 +133,16 @@ func (r *TemplateResource) Schema(ctx context.Context, req resource.SchemaReques
 			"use_module_readme": schema.BoolAttribute{
 				Optional:    true,
 				Description: "If true, will auto-import the readme form the Terraform module used. If this is set to true, users should not also set `readme_markdown_template`.",
+			},
+			"actions": schema.ListAttribute{
+				Optional: true,
+				Description: "List of actions by 'ID' to assign to this Template. " +
+					"Applications created from this Template will have these actions " +
+					"assigned to them. Only 'ID' is supported.",
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"labels": schema.ListAttribute{
 				// Computed:    true,
@@ -266,16 +277,6 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
@@ -285,9 +286,11 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	var varOpts []*waypoint_models.HashicorpCloudWaypointTFModuleVariable
 	for _, v := range plan.TerraformVariableOptions {
 		strOpts := []string{}
-		diags = v.Options.ElementsAs(ctx, &strOpts, false)
-		if diags.HasError() {
-			return
+		if len(v.Options.Elements()) != 0 {
+			diags = v.Options.ElementsAs(ctx, &strOpts, false)
+			if diags.HasError() {
+				return
+			}
 		}
 
 		varOpts = append(varOpts, &waypoint_models.HashicorpCloudWaypointTFModuleVariable{
@@ -305,8 +308,23 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 		ProjectID: tfProjID,
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateApplicationTemplateBody{
+	var (
+		actionIDs []string
+		actions   []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	)
+	diags = plan.Actions.ElementsAs(ctx, &actionIDs, false)
+	if diags.HasError() {
+		return
+	}
+	for _, n := range actionIDs {
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			ID: n,
+		})
+	}
+
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
 			Labels:                         strLabels,
@@ -334,8 +352,9 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	params := &waypoint_service.WaypointServiceCreateApplicationTemplateParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
 	}
 	createTplResp, err := r.client.Waypoint.WaypointServiceCreateApplicationTemplate(params, nil)
 	if err != nil {
@@ -376,8 +395,21 @@ func (r *TemplateResource) Create(ctx context.Context, req resource.CreateReques
 	if len(labels.Elements()) == 0 {
 		labels = types.ListNull(types.StringType)
 	}
-
 	plan.Labels = labels
+
+	var planActionIDs []string
+	for _, action := range appTemplate.ActionCfgRefs {
+		planActionIDs = append(planActionIDs, action.ID)
+	}
+	actionPlan, diags := types.ListValueFrom(ctx, types.StringType, planActionIDs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		actionPlan = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
 
 	// set plan.description if it's not null or appTemplate.description is not
 	// empty
@@ -505,6 +537,24 @@ func (r *TemplateResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	data.Labels = labels
 
+	data.Actions = types.ListNull(types.StringType)
+	if appTemplate.ActionCfgRefs != nil {
+		var actionIDs []string
+		for _, action := range appTemplate.ActionCfgRefs {
+			actionIDs = append(actionIDs, action.ID)
+		}
+
+		actions, diags := types.ListValueFrom(ctx, types.StringType, actionIDs)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			actions = types.ListNull(types.StringType)
+		}
+		data.Actions = actions
+	}
+
 	// set data.description if it's not null or appTemplate.description is not
 	// empty
 	data.Description = types.StringValue(appTemplate.Description)
@@ -550,20 +600,22 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
 	strLabels := []string{}
 	diags := plan.Labels.ElementsAs(ctx, &strLabels, false)
 	if diags.HasError() {
 		return
+	}
+
+	strActions := []string{}
+	diags = plan.Actions.ElementsAs(ctx, &strActions, false)
+	if diags.HasError() {
+		return
+	}
+	var actions []*waypoint_models.HashicorpCloudWaypointActionCfgRef
+	for _, n := range strActions {
+		actions = append(actions, &waypoint_models.HashicorpCloudWaypointActionCfgRef{
+			ID: n,
+		})
 	}
 
 	varOpts := []*waypoint_models.HashicorpCloudWaypointTFModuleVariable{}
@@ -589,8 +641,9 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		ProjectID: tfProjID,
 	}
 
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateApplicationTemplateBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateApplicationTemplateBody{
 		ApplicationTemplate: &waypoint_models.HashicorpCloudWaypointApplicationTemplate{
+			ActionCfgRefs:                  actions,
 			Name:                           plan.Name.ValueString(),
 			Summary:                        plan.Summary.ValueString(),
 			Labels:                         strLabels,
@@ -618,9 +671,10 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateApplicationTemplateParams{
-		NamespaceID:                   ns.ID,
-		Body:                          modelBody,
-		ExistingApplicationTemplateID: plan.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		Body:                            modelBody,
+		ExistingApplicationTemplateID:   plan.ID.ValueString(),
 	}
 	app, err := r.client.Waypoint.WaypointServiceUpdateApplicationTemplate(params, nil)
 	if err != nil {
@@ -659,6 +713,20 @@ func (r *TemplateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 	plan.Labels = labels
+
+	var planActionIDs []string
+	for _, action := range appTemplate.ActionCfgRefs {
+		planActionIDs = append(planActionIDs, action.ID)
+	}
+	actionPlan, diags := types.ListValueFrom(ctx, types.StringType, planActionIDs)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(actionPlan.Elements()) == 0 {
+		plan.Actions = types.ListNull(types.StringType)
+	}
+	plan.Actions = actionPlan
 
 	plan.Description = types.StringValue(appTemplate.Description)
 	if appTemplate.Description == "" {
@@ -711,22 +779,13 @@ func (r *TemplateResource) Delete(ctx context.Context, req resource.DeleteReques
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting TFC Config",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDeleteApplicationTemplateParams{
-		NamespaceID:           ns.ID,
-		ApplicationTemplateID: data.ID.ValueString(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ApplicationTemplateID:           data.ID.ValueString(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteApplicationTemplate(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Template not found for organization during delete call, ignoring")

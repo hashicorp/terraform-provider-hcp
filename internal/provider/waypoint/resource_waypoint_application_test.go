@@ -61,7 +61,7 @@ func TestAcc_Waypoint_ApplicationInputVariables(t *testing.T) {
 					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
 					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
 					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(resourceName, "application_input_variables.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "application_input_variables.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.name", "faction"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.value", "brotherhood-of-steel"),
 					resource.TestCheckResourceAttr(resourceName, "application_input_variables.0.variable_type", "string"),
@@ -105,6 +105,59 @@ func TestAcc_Waypoint_ApplicationInputVariables_OnTemplate(t *testing.T) {
 					// resource.TestCheckResourceAttr(resourceName, "template_input_variables.1.variable_type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "template_input_variables.2.name", "waypoint_application"),
 					resource.TestCheckResourceAttr(resourceName, "template_input_variables.2.value", applicationName),
+				),
+			},
+		},
+	})
+}
+
+// TestAcc_Waypoint_Application_Action_Assign tests that an application can be
+// created with an action assigned to it.
+func TestAcc_Waypoint_Application_Action_Assign(t *testing.T) {
+	t.Parallel()
+
+	var (
+		applicationModel waypoint.ApplicationResourceModel
+		actionCfgModel   waypoint.ActionResourceModel
+		appTemplateModel waypoint.TemplateResourceModel
+	)
+	templateResourceName := "hcp_waypoint_template.actions_template_test"
+	resourceName := "hcp_waypoint_application.actions_application_test"
+	actionResourceName := "hcp_waypoint_action.test"
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
+	actionName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			if err := testAccCheckWaypointApplicationDestroy(t, &applicationModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointTemplateDestroy(t, &appTemplateModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointActionDestroy(t, &actionCfgModel)(s); err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testTemplateWithAppAndActionsConfig(templateName, applicationName, actionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
+					testAccCheckWaypointApplicationName(t, &applicationModel, applicationName),
+					resource.TestCheckResourceAttr(resourceName, "name", applicationName),
+
+					testAccCheckWaypointTemplateExists(t, templateResourceName, &appTemplateModel),
+					testAccCheckWaypointTemplateName(t, &appTemplateModel, templateName),
+					resource.TestCheckResourceAttr(templateResourceName, "name", templateName),
+
+					testAccCheckWaypointActionExists(t, actionResourceName, &actionCfgModel),
+					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
+					resource.TestCheckResourceAttr(actionResourceName, "name", actionName),
 				),
 			},
 		},
@@ -252,6 +305,11 @@ resource "hcp_waypoint_template" "test_var_opts" {
         "institute"
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
@@ -269,6 +327,11 @@ resource "hcp_waypoint_application" "test_var_opts" {
       name  		= "vault_dweller_name"
       variable_type = "string"
 	  value 		= "courier"
+    },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+	  value 		= "vault101"
     }
   ]
 }`, tempName, appName)
@@ -305,6 +368,11 @@ resource "hcp_waypoint_template" "test_var_opts" {
         "brotherhood-of-steel",
       ]
     },
+    {
+      name          = "vault_dweller_shelter"
+      variable_type = "string"
+      user_editable = true
+    }
   ]
 }
 
@@ -312,4 +380,47 @@ resource "hcp_waypoint_application" "test_var_opts" {
   name    			      = "%s"
   template_id = hcp_waypoint_template.test_var_opts.id
 }`, tempName, appName)
+}
+
+func testTemplateWithAppAndActionsConfig(
+	templateName string,
+	applicationName string,
+	actionName string,
+) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_action" "test" {
+	name = "%[3]s"
+	description = "Test action"
+	request = {
+	    custom = {
+			method = "GET"
+			url = "https://example.com"
+			headers = {
+				Test-Header = "test"
+			}
+			body = "test"
+		}
+	}
+}
+
+resource "hcp_waypoint_template" "actions_template_test" {
+  name                     = "%[1]s"
+  summary                  = "some summary for fun"
+  readme_markdown_template = base64encode("# Some Readme")
+  terraform_no_code_module_source = "private/waypoint-tfc-testing/waypoint-template-starter/null"
+  terraform_no_code_module_id = "nocode-7ZQjQoaPXvzs6Hvp"
+  terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  terraform_cloud_workspace_details = {
+    name                 = "Default Project"
+    terraform_project_id = "prj-gfVyPJ2q2Aurn25o"
+  }
+  terraform_execution_mode = "remote"
+}
+
+resource "hcp_waypoint_application" "actions_application_test" {
+  name        = "%[2]s"
+  template_id = hcp_waypoint_template.actions_template_test.id
+
+  actions = [hcp_waypoint_action.test.id]
+}`, templateName, applicationName, actionName)
 }

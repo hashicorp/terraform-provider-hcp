@@ -1,0 +1,7 @@
+```release-note:bug
+Fixed a bug when `tfe_waypoint_template.variable_options` did not specify `options` list.
+```
+
+```release-note:bug
+Fixed a bug for `hcp_waypoint_add_on_definition.variable_options` which incorrectly required `options`. 
+```

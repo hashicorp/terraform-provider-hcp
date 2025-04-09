@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/acctest"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 )
@@ -74,7 +75,60 @@ func TestAcc_Waypoint_Application_DataSource_WithInputVars(t *testing.T) {
 				Config: testDataApplicationWithInputVarsConfig(templateName, applicationName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", applicationName),
-					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "input_variables.#", "4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Waypoint_Application_DataSource_WithActions(t *testing.T) {
+	t.Parallel()
+
+	var (
+		appTemplateModel waypoint.TemplateResourceModel
+		applicationModel waypoint.ApplicationResourceModel
+		actionCfgModel   waypoint.ActionResourceModel
+	)
+	templateResourceName := "hcp_waypoint_template.actions_template_test"
+	resourceName := "hcp_waypoint_application.actions_application_test"
+	actionResourceName := "hcp_waypoint_action.test"
+	dataSourceName := "data." + resourceName
+	templateName := generateRandomName()
+	applicationName := generateRandomName()
+	actionName := generateRandomName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			if err := testAccCheckWaypointApplicationDestroy(t, &applicationModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointTemplateDestroy(t, &appTemplateModel)(s); err != nil {
+				return err
+			}
+			if err := testAccCheckWaypointActionDestroy(t, &actionCfgModel)(s); err != nil {
+				return err
+			}
+			return nil
+		},
+		Steps: []resource.TestStep{
+			{
+				// establish the base template and app
+				Config: testTemplateWithAppAndActionsConfig(templateName, applicationName, actionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointApplicationExists(t, resourceName, &applicationModel),
+					testAccCheckWaypointTemplateExists(t, templateResourceName, &appTemplateModel),
+					testAccCheckWaypointActionExists(t, actionResourceName, &actionCfgModel),
+				),
+			},
+			{
+				// add a data source config to read the template
+				Config: testDataApplicationWithAction(templateName, applicationName, actionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "name", applicationName),
+					resource.TestCheckResourceAttr(dataSourceName, "actions.#", "1"),
 				),
 			},
 		},
@@ -95,4 +149,12 @@ func testDataApplicationWithInputVarsConfig(templateName, applicationName string
 data "hcp_waypoint_application" "test_var_opts" {
   name    = hcp_waypoint_application.test_var_opts.name
 }`, testApplicationWithInputVarsConfig(templateName, applicationName))
+}
+
+func testDataApplicationWithAction(templateName, applicationName, actionName string) string {
+	return fmt.Sprintf(`%s
+
+data "hcp_waypoint_application" "actions_application_test" {
+  name		= hcp_waypoint_application.actions_application_test.name
+}`, testTemplateWithAppAndActionsConfig(templateName, applicationName, actionName))
 }

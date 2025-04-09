@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -80,6 +80,13 @@ func (d *DataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			"namespace_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Internal Namespace ID.",
+			},
+			"actions": schema.ListAttribute{
+				Optional: true,
+				Description: "List of actions by 'ID' to assign to this Template. " +
+					"Applications created from this Template will have these actions " +
+					"assigned to them. Only 'ID' is supported.",
+				ElementType: types.StringType,
 			},
 			"input_variables": schema.SetNestedAttribute{
 				Optional:    true,
@@ -156,6 +163,7 @@ type ApplicationDataSourceModel struct {
 	TemplateID     types.String `tfsdk:"template_id"`
 	TemplateName   types.String `tfsdk:"template_name"`
 	NamespaceID    types.String `tfsdk:"namespace_id"`
+	Actions        types.List   `tfsdk:"actions"`
 
 	// deferred for now
 	// Tags       types.List `tfsdk:"tags"`
@@ -206,6 +214,26 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	data.ID = types.StringValue(application.ID)
 	data.OrgID = types.StringValue(client.Config.OrganizationID)
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
+
+	data.Actions = types.ListNull(types.StringType)
+	if application.ActionCfgRefs != nil {
+		var actionIDs []string
+		for _, action := range application.ActionCfgRefs {
+			actionIDs = append(actionIDs, action.ID)
+		}
+
+		actions, diags := types.ListValueFrom(ctx, types.StringType, actionIDs)
+		resp.Diagnostics.Append(diags...)
+		if diags.HasError() {
+			return
+		}
+		if len(actions.Elements()) == 0 {
+			data.Actions = types.ListNull(types.StringType)
+		} else {
+			data.Actions = actions
+		}
+	}
+
 	// set data.readme if it's not null or application.readme is not
 	// empty
 	data.ReadmeMarkdown = types.StringValue(application.ReadmeMarkdown.String())
@@ -219,6 +247,8 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		resp.Diagnostics.AddError(err.Error(), "Failed to fetch application's input variables.")
 		return
 	}
+
+	var diags diag.Diagnostics
 
 	inputVariables := make([]*InputVar, 0)
 	for _, iv := range inputVars {
@@ -237,8 +267,6 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	} else {
 		data.InputVars = types.SetNull(types.ObjectType{AttrTypes: InputVar{}.attrTypes()})
 	}
-
-	var diags diag.Diagnostics
 
 	// Read the output values from the application and set them in the plan
 	ol := readOutputs(application.OutputValues)

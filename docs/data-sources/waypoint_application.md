@@ -16,6 +16,7 @@ The Waypoint Application data source retrieves information on a given Applicatio
 
 ### Optional
 
+- `actions` (List of String) List of actions by 'ID' to assign to this Template. Applications created from this Template will have these actions assigned to them. Only 'ID' is supported.
 - `id` (String) The ID of the Application.
 - `input_variables` (Attributes Set) Input variables for the Application. (see [below for nested schema](#nestedatt--input_variables))
 - `name` (String) The name of the Application.

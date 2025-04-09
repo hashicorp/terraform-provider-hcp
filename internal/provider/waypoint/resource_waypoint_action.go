@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/client/waypoint_service"
-	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2023-08-18/models"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
+	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -158,22 +158,8 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceCreateActionConfigBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateActionConfigBody{
 		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
 			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
 		},
@@ -218,8 +204,9 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	params := &waypoint_service.WaypointServiceCreateActionConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
 	}
 
 	aCfg, err := r.client.Waypoint.WaypointServiceCreateActionConfig(params, nil)
@@ -355,22 +342,8 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	orgID := r.client.Config.OrganizationID
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: orgID,
-		ProjectID:      projectID,
-	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"error getting namespace by location",
-			err.Error(),
-		)
-		return
-	}
-
-	modelBody := &waypoint_models.HashicorpCloudWaypointWaypointServiceUpdateActionConfigBody{
+	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateActionConfigBody{
 		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
 			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
 		},
@@ -413,8 +386,9 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateActionConfigParams{
-		NamespaceID: ns.ID,
-		Body:        modelBody,
+		NamespaceLocationOrganizationID: orgID,
+		NamespaceLocationProjectID:      projectID,
+		Body:                            modelBody,
 	}
 
 	actionCfg, err := r.client.Waypoint.WaypointServiceUpdateActionConfig(params, nil)
@@ -485,23 +459,14 @@ func (r *ActionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		ProjectID:      projectID,
 	}
 
-	client := r.client
-	ns, err := getNamespaceByLocation(ctx, client, loc)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting Action",
-			err.Error(),
-		)
-		return
-	}
-
 	params := &waypoint_service.WaypointServiceDeleteActionConfigParams{
-		NamespaceID: ns.ID,
-		ActionID:    data.ID.ValueStringPointer(),
-		ActionName:  data.Name.ValueStringPointer(),
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+		ActionID:                        data.ID.ValueStringPointer(),
+		ActionName:                      data.Name.ValueStringPointer(),
 	}
 
-	_, err = r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
+	_, err := r.client.Waypoint.WaypointServiceDeleteActionConfig(params, nil)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			tflog.Info(ctx, "Action not found for organization during delete call, ignoring")
