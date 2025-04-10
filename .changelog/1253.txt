@@ -1,3 +1,3 @@
 ```release-note:improvement
-Added an `aws_route` resource to the example code for `hcp_aws_transit_gateway_attachment`.
+Added resources that are required for full functionality to the example code for `hcp_aws_transit_gateway_attachment`:  , `aws_subnet`, `aws_ec2_transit_gateway_vpc_attachment, and `aws_ `aws_route` pointing back to the HVN attachment.
 ```
