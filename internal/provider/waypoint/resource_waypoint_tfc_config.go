@@ -134,7 +134,7 @@ func (r *TfcConfigResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateTFCConfigBody{
-		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
+		TfcConfig: &waypoint_models.HashicorpCloudWaypointV20241122TFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
 		},
@@ -240,7 +240,7 @@ func (r *TfcConfigResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateTFCConfigBody{
-		TfcConfig: &waypoint_models.HashicorpCloudWaypointTFCConfig{
+		TfcConfig: &waypoint_models.HashicorpCloudWaypointV20241122TFCConfig{
 			OrganizationName: plan.TfcOrgName.ValueString(),
 			Token:            plan.Token.ValueString(),
 		},
@@ -314,7 +314,7 @@ func (r *TfcConfigResource) Delete(ctx context.Context, req resource.DeleteReque
 
 // getNamespaceByLocation will retrieve a namespace by location information
 // provided by HCP
-func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointNamespace, error) {
+func getNamespaceByLocation(_ context.Context, client *clients.Client, loc *sharedmodels.HashicorpCloudLocationLocation) (*waypoint_models.HashicorpCloudWaypointV20241122Namespace, error) {
 	// TODO:(clint) consolidate this either in the wrapper or something
 	namespaceParams := &waypoint_service.WaypointServiceGetNamespaceParams{
 		LocationOrganizationID: loc.OrganizationID,

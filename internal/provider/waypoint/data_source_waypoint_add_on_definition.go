@@ -198,7 +198,7 @@ func (d *DataSourceAddOnDefinition) Read(ctx context.Context, req datasource.Rea
 		ProjectID:      projectID,
 	}
 
-	var definition *waypoint_models.HashicorpCloudWaypointAddOnDefinition
+	var definition *waypoint_models.HashicorpCloudWaypointV20241122AddOnDefinition
 	var err error
 
 	if state.ID.IsNull() {
