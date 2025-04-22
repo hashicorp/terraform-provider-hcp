@@ -142,7 +142,7 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 		ProjectID:      projectID,
 	}
 
-	var actionModel *waypoint_models.HashicorpCloudWaypointActionConfig
+	var actionModel *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig
 	var err error
 
 	actionModel, err = clients.GetAction(ctx, client, loc, data.ID.ValueString(), data.Name.ValueString())

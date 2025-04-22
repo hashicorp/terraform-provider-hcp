@@ -214,7 +214,7 @@ func (d *DataSourceAddOn) Read(ctx context.Context, req datasource.ReadRequest, 
 		ProjectID:      client.Config.ProjectID,
 	}
 
-	var addOn *waypoint_models.HashicorpCloudWaypointAddOn
+	var addOn *waypoint_models.HashicorpCloudWaypointV20241122AddOn
 	var err error
 
 	if state.ID.IsNull() {

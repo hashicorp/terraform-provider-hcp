@@ -160,8 +160,8 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	orgID := r.client.Config.OrganizationID
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
-			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+		ActionConfig: &waypoint_models.HashicorpCloudWaypointV20241122ActionConfig{
+			Request: &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigRequest{},
 		},
 	}
 
@@ -175,9 +175,9 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
-		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
 
-		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
+		method := waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -188,7 +188,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 				return
 			}
 			for key, value := range elements {
-				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomHeader{
 					Key:   key,
 					Value: value.ValueString(),
 				})
@@ -215,7 +215,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	var aCfgModel *waypoint_models.HashicorpCloudWaypointActionConfig
+	var aCfgModel *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig
 	if aCfg.Payload != nil {
 		aCfgModel = aCfg.Payload.ActionConfig
 	}
@@ -344,8 +344,8 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	orgID := r.client.Config.OrganizationID
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateActionConfigBody{
-		ActionConfig: &waypoint_models.HashicorpCloudWaypointActionConfig{
-			Request: &waypoint_models.HashicorpCloudWaypointActionConfigRequest{},
+		ActionConfig: &waypoint_models.HashicorpCloudWaypointV20241122ActionConfig{
+			Request: &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigRequest{},
 		},
 	}
 
@@ -357,9 +357,9 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
-		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustom{}
+		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
 
-		method := waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
+		method := waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
 		modelBody.ActionConfig.Request.Custom.Method = &method
 
 		if !plan.Request.Custom.Headers.IsUnknown() && !plan.Request.Custom.Headers.IsNull() {
@@ -370,7 +370,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 				return
 			}
 			for key, value := range elements {
-				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointActionConfigFlavorCustomHeader{
+				modelBody.ActionConfig.Request.Custom.Headers = append(modelBody.ActionConfig.Request.Custom.Headers, &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomHeader{
 					Key:   key,
 					Value: value.ValueString(),
 				})
@@ -397,7 +397,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	var aCfgModel *waypoint_models.HashicorpCloudWaypointActionConfig
+	var aCfgModel *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig
 	if actionCfg.Payload != nil {
 		aCfgModel = actionCfg.Payload.ActionConfig
 	}
@@ -486,7 +486,7 @@ func (r *ActionResource) ImportState(ctx context.Context, req resource.ImportSta
 func readCustomAction(
 	ctx context.Context,
 	data *ActionResourceModel,
-	actionCfg *waypoint_models.HashicorpCloudWaypointActionConfig,
+	actionCfg *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig,
 ) diag.Diagnostics {
 	data.Request.Custom = &customRequest{}
 	headerMap := make(map[string]string)

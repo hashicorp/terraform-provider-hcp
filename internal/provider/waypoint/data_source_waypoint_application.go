@@ -198,7 +198,7 @@ func (d *DataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		ProjectID:      projectID,
 	}
 
-	var application *waypoint_models.HashicorpCloudWaypointApplication
+	var application *waypoint_models.HashicorpCloudWaypointV20241122Application
 	var err error
 
 	if data.ID.IsNull() {

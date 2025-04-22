@@ -13,7 +13,7 @@ import (
 
 // GetAction will retrieve an Action using the provided ID by default
 // or by name if the ID is not provided
-func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models.HashicorpCloudWaypointActionConfig, error) {
+func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, actionID string, actionName string) (*waypoint_models.HashicorpCloudWaypointV20241122ActionConfig, error) {
 	params := &waypoint_service.WaypointServiceGetActionConfigParams{
 		ActionID:                        &actionID,
 		ActionName:                      &actionName,
@@ -29,7 +29,7 @@ func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpC
 }
 
 // GetApplicationTemplateByName will retrieve a template by name
-func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
+func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointV20241122ApplicationTemplate, error) {
 	params := &waypoint_service.WaypointServiceGetApplicationTemplate2Params{
 		ApplicationTemplateName:         appName,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -44,7 +44,7 @@ func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *shar
 }
 
 // GetApplicationTemplateByID will retrieve a template by ID
-func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplicationTemplate, error) {
+func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointV20241122ApplicationTemplate, error) {
 	params := &waypoint_service.WaypointServiceGetApplicationTemplateParams{
 		ApplicationTemplateID:           appID,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -59,7 +59,7 @@ func GetApplicationTemplateByID(ctx context.Context, client *Client, loc *shared
 }
 
 // GetAddOnDefinitionByName will retrieve an add-on definition by name
-func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
+func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointV20241122AddOnDefinition, error) {
 	params := &waypoint_service.WaypointServiceGetAddOnDefinition2Params{
 		AddOnDefinitionName:             defName,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -74,7 +74,7 @@ func GetAddOnDefinitionByName(ctx context.Context, client *Client, loc *sharedmo
 }
 
 // GetAddOnDefinitionByID will retrieve an add-on definition by ID
-func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointAddOnDefinition, error) {
+func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointV20241122AddOnDefinition, error) {
 	params := &waypoint_service.WaypointServiceGetAddOnDefinitionParams{
 		AddOnDefinitionID:               defID,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -89,7 +89,7 @@ func GetAddOnDefinitionByID(ctx context.Context, client *Client, loc *sharedmode
 }
 
 // GetApplicationByName will retrieve an application by name
-func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
+func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointV20241122Application, error) {
 	params := &waypoint_service.WaypointServiceGetApplication2Params{
 		ApplicationName:                 appName,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -104,7 +104,7 @@ func GetApplicationByName(ctx context.Context, client *Client, loc *sharedmodels
 }
 
 // GetApplicationByID will retrieve an application by ID
-func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointApplication, error) {
+func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appID string) (*waypoint_models.HashicorpCloudWaypointV20241122Application, error) {
 	params := &waypoint_service.WaypointServiceGetApplicationParams{
 		ApplicationID:                   appID,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -119,7 +119,7 @@ func GetApplicationByID(ctx context.Context, client *Client, loc *sharedmodels.H
 }
 
 // GetAddOnByName will retrieve an add-on by name
-func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointAddOn, error) {
+func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defName string) (*waypoint_models.HashicorpCloudWaypointV20241122AddOn, error) {
 	params := &waypoint_service.WaypointServiceGetAddOn2Params{
 		AddOnName:                       defName,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -134,7 +134,7 @@ func GetAddOnByName(ctx context.Context, client *Client, loc *sharedmodels.Hashi
 }
 
 // GetAddOnByID will retrieve an add-on by ID
-func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointAddOn, error) {
+func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, defID string) (*waypoint_models.HashicorpCloudWaypointV20241122AddOn, error) {
 	params := &waypoint_service.WaypointServiceGetAddOnParams{
 		AddOnID:                         defID,
 		NamespaceLocationOrganizationID: loc.OrganizationID,
@@ -148,7 +148,7 @@ func GetAddOnByID(ctx context.Context, client *Client, loc *sharedmodels.Hashico
 	return getResp.GetPayload().AddOn, nil
 }
 
-func GetInputVariables(ctx context.Context, client *Client, workspaceName string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*waypoint_models.HashicorpCloudWaypointInputVariable, error) {
+func GetInputVariables(ctx context.Context, client *Client, workspaceName string, loc *sharedmodels.HashicorpCloudLocationLocation) ([]*waypoint_models.HashicorpCloudWaypointV20241122InputVariable, error) {
 	params := &waypoint_service.WaypointServiceGetTFRunStatusParams{
 		WorkspaceName:                   workspaceName,
 		NamespaceLocationOrganizationID: loc.OrganizationID,

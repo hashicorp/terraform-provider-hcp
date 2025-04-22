@@ -206,7 +206,7 @@ func (d *DataSourceTemplate) Read(ctx context.Context, req datasource.ReadReques
 		ProjectID:      projectID,
 	}
 
-	var appTemplate *waypoint_models.HashicorpCloudWaypointApplicationTemplate
+	var appTemplate *waypoint_models.HashicorpCloudWaypointV20241122ApplicationTemplate
 	var err error
 
 	if data.ID.IsNull() {
