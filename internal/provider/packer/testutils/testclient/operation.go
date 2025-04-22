@@ -4,6 +4,7 @@
 package testclient
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -45,10 +46,10 @@ func WaitForOperation(
 		switch *resp.Payload.Operation.State {
 		case sharedmodels.HashicorpCloudOperationOperationStatePENDING:
 			msg := fmt.Sprintf("==> Operation \"%s\" pending...", operationName)
-			return fmt.Errorf(msg)
+			return errors.New(msg)
 		case sharedmodels.HashicorpCloudOperationOperationStateRUNNING:
 			msg := fmt.Sprintf("==> Operation \"%s\" running...", operationName)
-			return fmt.Errorf(msg)
+			return errors.New(msg)
 		case sharedmodels.HashicorpCloudOperationOperationStateDONE:
 		default:
 			t.Errorf("Operation returned unknown state: %s", *resp.Payload.Operation.State)
