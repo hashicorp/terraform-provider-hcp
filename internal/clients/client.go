@@ -67,7 +67,15 @@ import (
 	radar_resource_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/resource_service"
 
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
+	hcpConfigGeography "github.com/hashicorp/hcp-sdk-go/config/geography"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
+)
+
+const (
+	// TODO: replace these two with the constants as defined in
+	// hcp-sdk-go/config/geography
+	GeographyUS = "us"
+	GeographyEU = "eu"
 )
 
 // Client is an HCP client capable of making requests on behalf of a service principal
@@ -104,6 +112,7 @@ type ClientConfig struct {
 	ClientID       string
 	ClientSecret   string
 	CredentialFile string
+	Geography      string
 
 	// WorkloadIdentityTokenFile and WorkloadIdentityResourceName can be set to
 	// indicate that authentication should occur by using workload identity
@@ -139,6 +148,17 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
 	} else if cf := loadCredentialFile(config); cf != nil {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
+	}
+
+	// TODO: once the naming in hcp-sdk-go has been finalized, the following can
+	// be changed to
+	// 		if config.Geography != "" {
+	//			opts = append(opts, hcpConfig.WithGeography(config.Geography))
+	// 		}
+	if config.Geography == GeographyUS {
+		opts = append(opts, hcpConfig.WithGeography(string(hcpConfigGeography.US)))
+	} else if config.Geography == GeographyEU {
+		opts = append(opts, hcpConfig.WithGeography(string(hcpConfigGeography.EU)))
 	}
 
 	// Create the HCP Config
