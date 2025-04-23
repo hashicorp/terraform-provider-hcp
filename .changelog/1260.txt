@@ -1,0 +1,3 @@
+```release-note:improvement
+Group operations (create, delete, update, update members) now block client-side if an operationID is present in the response.
+```
