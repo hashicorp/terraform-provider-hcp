@@ -11,19 +11,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/oklog/ulid"
 )
 
-// ULIDType is a custom type for ULIDs
+var (
+	_ basetypes.StringTypable = &ULIDType{}
+)
+
 type ULIDType struct {
 	basetypes.StringType
 }
-
-var _ basetypes.StringTypable = &ULIDType{}
-var _ xattr.TypeWithValidate = ULIDType{}
 
 func (t ULIDType) String() string {
 	return "ULIDType"
@@ -67,18 +67,15 @@ func (t ULIDType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (att
 	return ulidValue, nil
 }
 
-func NewULIDValue(value string) ULIDValue {
-	return ULIDValue{
-		StringValue: basetypes.NewStringValue(value),
-	}
-}
+var (
+	_ basetypes.StringValuableWithSemanticEquals = &ULIDValue{}
+	_ xattr.ValidateableAttribute                = &ULIDValue{}
+	_ function.ValidateableParameter             = &ULIDValue{}
+)
 
-// ULIDValue is a custom value used to validate that a string is a ULID
 type ULIDValue struct {
 	basetypes.StringValue
 }
-
-var _ basetypes.StringValuableWithSemanticEquals = ULIDValue{}
 
 func (v ULIDValue) Type(context.Context) attr.Type {
 	return ULIDType{}
@@ -118,28 +115,38 @@ func (v ULIDValue) StringSemanticEquals(ctx context.Context, newValuable basetyp
 	return reflect.DeepEqual(oldULID, newULID), diags
 }
 
-// Validate checks that the value is a valid ULID, if it is known and not null.
-func (t ULIDType) Validate(ctx context.Context, value tftypes.Value, valuePath path.Path) diag.Diagnostics {
-	if value.IsNull() || !value.IsKnown() {
-		return nil
+func (v ULIDValue) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
 	}
 
-	var diags diag.Diagnostics
-	var valueString string
-
-	if err := value.As(&valueString); err != nil {
-		diags.Append(newInvalidTerraformValueError(valuePath, err))
-		return diags
+	if _, err := ulid.Parse(v.ValueString()); err != nil {
+		resp.Diagnostics.Append(
+			diag.NewAttributeErrorDiagnostic(
+				req.Path,
+				"expected a valid ULID",
+				err.Error(),
+			),
+		)
 	}
 
-	if _, err := ulid.Parse(valueString); err != nil {
-		diags.AddAttributeError(
-			valuePath,
-			"expected a valid ULID",
+}
+
+func (v ULIDValue) ValidateParameter(ctx context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
+	if v.IsUnknown() || v.IsNull() {
+		return
+	}
+
+	if _, err := ulid.Parse(v.ValueString()); err != nil {
+		resp.Error = function.NewArgumentFuncError(
+			req.Position,
 			err.Error(),
 		)
-		return diags
 	}
+}
 
-	return diags
+func NewULIDValue(value string) ULIDValue {
+	return ULIDValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
 }

@@ -12,18 +12,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+)
+
+var (
+	_ basetypes.StringTypable = &UUIDType{}
 )
 
 // UUIDType is a custom type for UUIDs
 type UUIDType struct {
 	basetypes.StringType
 }
-
-var _ basetypes.StringTypable = &UUIDType{}
-var _ xattr.TypeWithValidate = UUIDType{}
 
 func (t UUIDType) String() string {
 	return "UUIDType"
@@ -67,18 +68,15 @@ func (t UUIDType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (att
 	return uuidValue, nil
 }
 
-func NewUUIDValue(value string) UUIDValue {
-	return UUIDValue{
-		StringValue: basetypes.NewStringValue(value),
-	}
-}
+var (
+	_ basetypes.StringValuableWithSemanticEquals = &UUIDValue{}
+	_ xattr.ValidateableAttribute                = &UUIDValue{}
+	_ function.ValidateableParameter             = &UUIDValue{}
+)
 
-// UUIDValue is a custom value used to validate that a string is a UUID
 type UUIDValue struct {
 	basetypes.StringValue
 }
-
-var _ basetypes.StringValuableWithSemanticEquals = UUIDValue{}
 
 func (v UUIDValue) Type(context.Context) attr.Type {
 	return UUIDType{}
@@ -118,28 +116,37 @@ func (v UUIDValue) StringSemanticEquals(ctx context.Context, newValuable basetyp
 	return reflect.DeepEqual(oldUUID, newUUID), diags
 }
 
-// Validate checks that the value is a valid UUID, if it is known and not null.
-func (t UUIDType) Validate(ctx context.Context, value tftypes.Value, valuePath path.Path) diag.Diagnostics {
-	if value.IsNull() || !value.IsKnown() {
-		return nil
+func (v UUIDValue) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
 	}
 
-	var diags diag.Diagnostics
-	var valueString string
+	if _, err := uuid.ParseUUID(v.ValueString()); err != nil {
+		resp.Diagnostics.Append(
+			diag.NewAttributeErrorDiagnostic(
+				req.Path,
+				"expected a valid UUID",
+				err.Error(),
+			),
+		)
+	}
+}
 
-	if err := value.As(&valueString); err != nil {
-		diags.Append(newInvalidTerraformValueError(valuePath, err))
-		return diags
+func (v UUIDValue) ValidateParameter(ctx context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
 	}
 
-	if _, err := uuid.ParseUUID(valueString); err != nil {
-		diags.AddAttributeError(
-			valuePath,
-			"expected a valid UUID",
+	if _, err := uuid.ParseUUID(v.ValueString()); err != nil {
+		resp.Error = function.NewArgumentFuncError(
+			req.Position,
 			err.Error(),
 		)
-		return diags
 	}
+}
 
-	return diags
+func NewUUIDValue(value string) UUIDValue {
+	return UUIDValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
 }

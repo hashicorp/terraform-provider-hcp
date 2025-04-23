@@ -11,18 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-// PackerFingerprintType is a custom type for HCP Packer Fingerprints
+var (
+	_ basetypes.StringTypable = &PackerFingerprintType{}
+)
+
 type PackerFingerprintType struct {
 	basetypes.StringType
 }
-
-var _ basetypes.StringTypable = &PackerFingerprintType{}
-var _ xattr.TypeWithValidate = PackerFingerprintType{}
 
 func (t PackerFingerprintType) String() string {
 	return "PackerFingerprintType"
@@ -66,13 +66,12 @@ func (t PackerFingerprintType) ValueFromTerraform(ctx context.Context, in tftype
 	return fingerprintValue, nil
 }
 
-func NewPackerFingerprintValue(value string) PackerFingerprintValue {
-	return PackerFingerprintValue{
-		StringValue: basetypes.NewStringValue(value),
-	}
-}
+var (
+	_ basetypes.StringValuable       = &PackerFingerprintValue{}
+	_ xattr.ValidateableAttribute    = &PackerFingerprintValue{}
+	_ function.ValidateableParameter = &PackerFingerprintValue{}
+)
 
-// PackerFingerprintValue is a custom value used to validate that a string is an HCP Packer Fingerprint
 type PackerFingerprintValue struct {
 	basetypes.StringValue
 }
@@ -92,38 +91,66 @@ func (v PackerFingerprintValue) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-// Validate checks that the value is a valid PackerFingerprint, if it is known and not null.
-func (t PackerFingerprintType) Validate(ctx context.Context, value tftypes.Value, valuePath path.Path) diag.Diagnostics {
-	if value.IsNull() || !value.IsKnown() {
-		return nil
+func (v PackerFingerprintValue) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsUnknown() || v.IsNull() {
+		return
 	}
 
-	var diags diag.Diagnostics
-	var valueString string
-
-	if err := value.As(&valueString); err != nil {
-		diags.Append(newInvalidTerraformValueError(valuePath, err))
-		return diags
-	}
+	valueString := v.ValueString()
 
 	if len(valueString) < 1 || len(valueString) > 40 {
-		diags.AddAttributeError(
-			valuePath,
-			"invalid format for an HCP Packer Fingerprint",
-			"must be between 1 and 40 characters long, inclusive",
+		resp.Diagnostics.Append(
+			diag.NewAttributeErrorDiagnostic(
+				req.Path,
+				"invalid format for an HCP Packer Fingerprint",
+				"must be between 1 and 40 characters long, inclusive",
+			),
 		)
+		return
 	}
 
 	if !regexp.MustCompile(`^[a-zA-Z0-9_\-\.\"]+$`).MatchString(valueString) {
-		diags.AddAttributeError(
-			valuePath,
-			"invalid format for an HCP Packer Fingerprint",
+		resp.Diagnostics.Append(
+			diag.NewAttributeErrorDiagnostic(
+				req.Path,
+				"invalid format for an HCP Packer Fingerprint",
+				// TODO: The regex also allows double quotes, and does not check the first or last characters.
+				// This is because the v1 HCP Packer API allowed quotes. Once that API is deprecated,
+				// and there are no more offending versions, we can add the strict validation.
+				"must contain only alphanumeric characters, underscores, dashes, and periods",
+			),
+		)
+	}
+}
+
+func (v PackerFingerprintValue) ValidateParameter(ctx context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
+	if v.IsUnknown() || v.IsNull() {
+		return
+	}
+
+	valueString := v.ValueString()
+
+	if len(valueString) < 1 || len(valueString) > 40 {
+		resp.Error = function.NewArgumentFuncError(
+			req.Position,
+			"HCP Packer Fingerprint must be between 1 and 40 characters long, inclusive",
+		)
+		return
+	}
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-\.\"]+$`).MatchString(valueString) {
+		resp.Error = function.NewArgumentFuncError(
+			req.Position,
 			// TODO: The regex also allows double quotes, and does not check the first or last characters.
 			// This is because the v1 HCP Packer API allowed quotes. Once that API is deprecated,
 			// and there are no more offending versions, we can add the strict validation.
-			"must contain only alphanumeric characters, underscores, dashes, and periods",
+			"HCP Packer Fingerprint must contain only alphanumeric characters, underscores, dashes, and periods",
 		)
 	}
+}
 
-	return diags
+func NewPackerFingerprintValue(value string) PackerFingerprintValue {
+	return PackerFingerprintValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
 }
