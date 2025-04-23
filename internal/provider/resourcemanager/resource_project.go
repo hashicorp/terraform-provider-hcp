@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	billingModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/models"
@@ -255,6 +256,9 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 
 	getParams := project_service.NewProjectServiceDeleteParams()
 	getParams.ID = state.ResourceID.ValueString()
+	// Increasing this timeout to account for long syncing times of projects to TFC
+	// This can be removed once client-side blocking is implemented
+	getParams.WithTimeout(45 * time.Second)
 	_, err := r.client.Project.ProjectServiceDelete(getParams, nil)
 	if err != nil {
 		var deleteErr *project_service.ProjectServiceDeleteDefault

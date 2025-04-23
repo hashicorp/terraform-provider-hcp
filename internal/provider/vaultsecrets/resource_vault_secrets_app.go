@@ -10,7 +10,9 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/client/secret_service"
 	secretmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-secrets/stable/2023-11-28/models"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -30,6 +32,9 @@ type App struct {
 	ProjectID      types.String `tfsdk:"project_id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
 	ResourceName   types.String `tfsdk:"resource_name"`
+	SyncNames      types.Set    `tfsdk:"sync_names"`
+
+	syncNames []string `tfsdk:"-"`
 }
 
 var _ resource.Resource = &resourceVaultSecretsApp{}
@@ -90,7 +95,16 @@ func (r *resourceVaultSecretsApp) Schema(_ context.Context, _ resource.SchemaReq
 				Computed:    true,
 				Description: "The app's resource name in the format secrets/project/<project ID>/app/<app Name>.",
 			},
-		},
+			"sync_names": schema.SetAttribute{
+				Description: "Set of sync names to associate with this app.",
+				Optional:    true,
+				ElementType: types.StringType,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						slugValidator,
+					),
+				},
+			}},
 	}
 }
 
@@ -124,6 +138,7 @@ func (r *resourceVaultSecretsApp) Create(ctx context.Context, req resource.Creat
 			Body: &secretmodels.SecretServiceCreateAppBody{
 				Name:        app.AppName.ValueString(),
 				Description: app.Description.ValueString(),
+				SyncNames:   app.syncNames,
 			},
 			OrganizationID: app.OrganizationID.ValueString(),
 			ProjectID:      app.ProjectID.ValueString(),
@@ -170,6 +185,7 @@ func (r *resourceVaultSecretsApp) Update(ctx context.Context, req resource.Updat
 		response, err := r.client.VaultSecrets.UpdateApp(&secret_service.UpdateAppParams{
 			Body: &secretmodels.SecretServiceUpdateAppBody{
 				Description: app.Description.ValueString(),
+				SyncNames:   app.syncNames,
 			},
 			Name:           app.AppName.ValueString(),
 			OrganizationID: app.OrganizationID.ValueString(),
@@ -216,9 +232,11 @@ func (a *App) projectID() types.String {
 	return a.ProjectID
 }
 
-func (a *App) initModel(_ context.Context, orgID, projID string) diag.Diagnostics {
+func (a *App) initModel(ctx context.Context, orgID, projID string) diag.Diagnostics {
 	a.OrganizationID = types.StringValue(orgID)
 	a.ProjectID = types.StringValue(projID)
+	a.syncNames = make([]string, 0, len(a.SyncNames.Elements()))
+	a.SyncNames.ElementsAs(ctx, &a.syncNames, false)
 
 	return diag.Diagnostics{}
 }
@@ -236,6 +254,18 @@ func (a *App) fromModel(_ context.Context, orgID, projID string, model any) diag
 	a.ProjectID = types.StringValue(projID)
 	a.ID = types.StringValue(appModel.ResourceID)
 	a.ResourceName = types.StringValue(appModel.ResourceName)
+
+	var syncs []attr.Value
+	for _, c := range appModel.SyncNames {
+		syncs = append(syncs, types.StringValue(c))
+	}
+
+	if len(syncs) > 0 {
+		a.SyncNames, diags = types.SetValue(types.StringType, syncs)
+		if diags.HasError() {
+			return diags
+		}
+	}
 
 	return diags
 }
