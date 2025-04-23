@@ -5,6 +5,7 @@ package clients
 
 import (
 	"github.com/cenkalti/backoff/v4"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/groups_service"
 )
@@ -19,7 +20,14 @@ func CreateGroupRetry(client *Client, params *groups_service.GroupsServiceCreate
 	op := func() error {
 		var err error
 		res, err = client.Groups.GroupsServiceCreateGroup(params, nil)
-		return err
+		if err != nil {
+			return err
+		}
+		if res.Payload.OperationID != "" {
+			loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: client.Config.OrganizationID}
+			return WaitForOperation(params.Context, client, "create group", loc, res.Payload.OperationID)
+		}
+		return nil
 	}
 
 	serviceErr := &groups_service.GroupsServiceCreateGroupDefault{}
@@ -34,7 +42,14 @@ func UpdateGroupRetry(client *Client, params *groups_service.GroupsServiceUpdate
 	op := func() error {
 		var err error
 		res, err = client.Groups.GroupsServiceUpdateGroup2(params, nil)
-		return err
+		if err != nil {
+			return err
+		}
+		if res.Payload.OperationID != "" {
+			loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: client.Config.OrganizationID}
+			return WaitForOperation(params.Context, client, "update group", loc, res.Payload.OperationID)
+		}
+		return nil
 	}
 
 	serviceErr := &groups_service.GroupsServiceUpdateGroup2Default{}
@@ -49,7 +64,14 @@ func DeleteGroupRetry(client *Client, params *groups_service.GroupsServiceDelete
 	op := func() error {
 		var err error
 		res, err = client.Groups.GroupsServiceDeleteGroup(params, nil)
-		return err
+		if err != nil {
+			return err
+		}
+		if res.Payload.OperationID != "" {
+			loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: client.Config.OrganizationID}
+			return WaitForOperation(params.Context, client, "delete group", loc, res.Payload.OperationID)
+		}
+		return nil
 	}
 
 	serviceErr := &groups_service.GroupsServiceDeleteGroupDefault{}
@@ -66,7 +88,14 @@ func UpdateGroupMembersRetry(client *Client, params *groups_service.GroupsServic
 	op := func() error {
 		var err error
 		res, err = client.Groups.GroupsServiceUpdateGroupMembers(params, nil)
-		return err
+		if err != nil {
+			return err
+		}
+		if res.Payload.OperationID != "" {
+			loc := &sharedmodels.HashicorpCloudLocationLocation{OrganizationID: client.Config.OrganizationID}
+			return WaitForOperation(params.Context, client, "update group members", loc, res.Payload.OperationID)
+		}
+		return nil
 	}
 
 	serviceErr := &groups_service.GroupsServiceUpdateGroupMembersDefault{}

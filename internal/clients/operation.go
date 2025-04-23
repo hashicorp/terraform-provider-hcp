@@ -29,7 +29,11 @@ func WaitForOperation(ctx context.Context, client *Client, operationName string,
 	waitParams.ID = operationID
 	waitParams.Timeout = &waitTimeout
 	waitParams.LocationOrganizationID = loc.OrganizationID
-	waitParams.LocationProjectID = loc.ProjectID
+	if loc.ProjectID == "" {
+		waitParams.LocationProjectID = "-"
+	} else {
+		waitParams.LocationProjectID = loc.ProjectID
+	}
 
 	// Start with no consecutive errors.
 	consecutiveErrors := 0
