@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // This is an implementation using the Provider framework
@@ -46,6 +48,7 @@ type ProviderFrameworkModel struct {
 	CredentialFile   types.String `tfsdk:"credential_file"`
 	ProjectID        types.String `tfsdk:"project_id"`
 	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
+	Geography        types.String `tfsdk:"geography"`
 }
 
 type WorkloadIdentityFrameworkModel struct {
@@ -60,6 +63,7 @@ func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataR
 }
 
 func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	tflog.Info(ctx, "Configuring hcp schema")
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"client_id": schema.StringAttribute{
@@ -90,6 +94,13 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 					"credentials or dynamically based on Workload Identity Federation.",
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
+				},
+			},
+			"geography": schema.StringAttribute{
+				Optional:    true,
+				Description: "The geography in which resources should be created.",
+				Validators: []validator.String{
+					stringvalidator.OneOf(clients.GeographyUS, clients.GeographyEU),
 				},
 			},
 		},
@@ -223,6 +234,8 @@ func NewFrameworkProvider(version string) func() provider.Provider {
 }
 
 func (p *ProviderFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Configuring hcp provider")
+
 	// Sets up HCP SDK client.
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -251,6 +264,14 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		}
 	}
 
+	if data.Geography.IsNull() {
+		tflog.Info(ctx, "Geography is null; using default")
+	} else {
+		clientConfig.Geography = data.Geography.ValueString()
+	}
+	tflog.Info(ctx, "Configure creating a new client", map[string]interface{}{
+		"geography": clientConfig.Geography,
+	})
 	client, err := clients.NewClient(clientConfig)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("unable to create HCP api client: %v", err), "")
