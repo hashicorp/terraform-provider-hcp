@@ -84,6 +84,12 @@ func New() func() *schema.Provider {
 						"Using a credential file allows you to authenticate the provider as a service principal via client " +
 						"credentials or dynamically based on Workload Identity Federation.",
 				},
+				"geography": {
+					Type:     schema.TypeString,
+					Optional: true,
+					// Required:    true,
+					Description: "The geography in which resources should be created.",
+				},
 				"workload_identity": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -147,6 +153,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			ClientSecret:   d.Get("client_secret").(string),
 			CredentialFile: d.Get("credential_file").(string),
 			ProjectID:      d.Get("project_id").(string),
+			Geography:      d.Get("geography").(string),
 			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
 		}
 
