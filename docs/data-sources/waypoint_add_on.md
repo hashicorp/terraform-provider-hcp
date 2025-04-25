@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_add_on `Data Source`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 The Waypoint Add-on data source retrieves information on a given Add-on.
 
