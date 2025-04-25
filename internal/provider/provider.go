@@ -40,10 +40,6 @@ type ProviderFramework struct {
 	version string
 }
 
-type ProviderFrameworkConfiguration struct {
-	Client *clients.Client
-}
-
 type ProviderFrameworkModel struct {
 	ClientSecret     types.String `tfsdk:"client_secret"`
 	ClientID         types.String `tfsdk:"client_id"`
@@ -298,8 +294,6 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		client.Config.ProjectID = project.ID
 	}
 
-	var config ProviderFrameworkConfiguration
-	config.Client = client
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
