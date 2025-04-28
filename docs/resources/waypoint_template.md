@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_template `Resource`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 Waypoint Template resource
 

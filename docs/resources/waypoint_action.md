@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_action `Resource`
 
--> **Note:** HCP Waypoint is currently in public beta.
+-> **Note:** HCP Waypoint actions is currently in beta.
 
 The Waypoint Action resource manages the lifecycle of an Action.
 

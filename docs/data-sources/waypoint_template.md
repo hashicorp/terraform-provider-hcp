@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_template `Data Source`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 The Waypoint Template data source retrieves information on a given Template.
 

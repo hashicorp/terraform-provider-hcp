@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_application `Data Source`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 The Waypoint Application data source retrieves information on a given Application.
 

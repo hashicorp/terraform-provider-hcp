@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_tfc_config `Resource`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 TFC Configuration used by Waypoint to administer TFC workspaces and applications.
 

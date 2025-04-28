@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_add_on_definition `Resource`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 Waypoint Add-on Definition resource
 
