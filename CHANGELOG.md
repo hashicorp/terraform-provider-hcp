@@ -1,3 +1,21 @@
+## v0.105.0 (April 29, 2025)
+
+FEATURES:
+
+* Add support for sync resource in HCP Vault Secrets [[GH-1196](https://github.com/hashicorp/terraform-provider-hcp/pull/1196)]
+
+IMPROVEMENTS:
+
+* Added resources that are required for full functionality to the example code for `hcp_aws_transit_gateway_attachment`:  , `aws_subnet`, `aws_ec2_transit_gateway_vpc_attachment, and `aws_ `aws_route` pointing back to the HVN attachment. [[GH-1253](https://github.com/hashicorp/terraform-provider-hcp/pull/1253)]
+* Allow users to assign one or more syncs with an HCP Vault Secrets App [[GH-1196](https://github.com/hashicorp/terraform-provider-hcp/pull/1196)]
+* Group operations (create, delete, update, update members) now block client-side if an operationID is present in the response. [[GH-1260](https://github.com/hashicorp/terraform-provider-hcp/pull/1260)]
+* Increase project deletion timeout [[GH-1246](https://github.com/hashicorp/terraform-provider-hcp/pull/1246)]
+* Upgrade terraform-plugin-go to v0.26.0 [[GH-1231](https://github.com/hashicorp/terraform-provider-hcp/pull/1231)]
+
+BUG FIXES:
+
+* Fixed a bug for `hcp_waypoint_add_on_definition.variable_options` which incorrectly required `options`. [[GH-1242](https://github.com/hashicorp/terraform-provider-hcp/pull/1242)]
+* Fixed a bug when `tfe_waypoint_template.variable_options` did not specify `options` list. [[GH-1242](https://github.com/hashicorp/terraform-provider-hcp/pull/1242)]
 ## v0.104.0 (February 27, 2025)
 
 IMPROVEMENTS:
