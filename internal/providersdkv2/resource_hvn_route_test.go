@@ -495,17 +495,17 @@ func testHvnRouteGateway(t *testing.T, adConfig string) {
 // Test Azure Route with invalid config
 func TestAcc_Platform_HvnRouteAzureInvalidConfig(t *testing.T) {
 	t.Parallel()
-
-	testHvnRouteInvalidConfig(t, hvnRouteAzureAdConfig("fail"))
+	hvnRouteUniqueName := testAccUniqueNameWithPrefix("p-az-invalid")
+	testHvnRouteInvalidConfig(t, hvnRouteUniqueName, hvnRouteAzureAdConfig(hvnRouteUniqueName))
 }
 
 func TestAccHvnRouteAzureInvalidConfigInternal(t *testing.T) {
 	t.Skip("Internal test should not be run on CI.")
 
-	testHvnRouteInvalidConfig(t, "") // No AD SP; create manually via Doormat
+	testHvnRouteInvalidConfig(t, "", "") // No AD SP; create manually via Doormat
 }
 
-func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
+func testHvnRouteInvalidConfig(t *testing.T, hvnRouteUniqueName string, adConfig string) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -517,7 +517,7 @@ func testHvnRouteInvalidConfig(t *testing.T, adConfig string) {
 		Steps: []resource.TestStep{
 			// Testing invalid azure_config based on next_hop_type value
 			{
-				Config:      testConfig(testAccHvnRouteConfigAzure("fail", azConfigInvalidNextHopType, adConfig)),
+				Config:      testConfig(testAccHvnRouteConfigAzure(hvnRouteUniqueName, azConfigInvalidNextHopType, adConfig)),
 				ExpectError: regexp.MustCompile(`azure configuration is invalid: Next hop IP addresses are only allowed in routes where next hop type is VIRTUAL_APPLIANCE`),
 			},
 		},

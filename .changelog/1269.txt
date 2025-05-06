@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed Platform Acceptance test failure by making `azurerm_role_definition.name` unique. 
+```
