@@ -1,3 +1,12 @@
+## v0.106.0 (May 06, 2025)
+
+IMPROVEMENTS:
+
+* update hcp-sdk-go [[GH-1270](https://github.com/hashicorp/terraform-provider-hcp/pull/1270)]
+
+BUG FIXES:
+
+* Fixed Platform Acceptance test failure by making `azurerm_role_definition.name` unique. [[GH-1269](https://github.com/hashicorp/terraform-provider-hcp/pull/1269)]
 ## v0.105.0 (April 29, 2025)
 
 FEATURES:
