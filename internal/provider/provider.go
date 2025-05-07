@@ -194,6 +194,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 	return append([]func() datasource.DataSource{
 		// Resource Manager
 		resourcemanager.NewProjectDataSource,
+		resourcemanager.NewProjectsDataSource,
 		resourcemanager.NewOrganizationDataSource,
 		resourcemanager.NewIAMPolicyDataSource,
 		// Vault Secrets
