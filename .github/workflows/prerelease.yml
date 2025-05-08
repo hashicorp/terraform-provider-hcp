@@ -32,7 +32,7 @@ jobs:
 
   prerelease:
     name: Prerelease
-    if: always()
+    if: ${{ always() && !failure() && !cancelled() }} 
     needs:
       - test
       - testacc
