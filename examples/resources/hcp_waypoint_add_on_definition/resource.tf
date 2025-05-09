@@ -14,6 +14,7 @@ EOF
       name          = "size"
       user_editable = true
       options       = ["small", "medium", "large"]
+      variable_type = "string"
     }
   ]
 }
