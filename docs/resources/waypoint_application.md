@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_application `Resource`
 
--> **Note:** HCP Waypoint is currently in public beta.
+
 
 The Waypoint Application resource managed the lifecycle of an Application that's based off of a Template.
 

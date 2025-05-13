@@ -104,7 +104,7 @@ func (r *resourceBinding) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes:          r.parentSchema.Attributes,
 	}
 
-	if resp.Schema.Attributes == nil || len(resp.Schema.Attributes) == 0 {
+	if len(resp.Schema.Attributes) == 0 {
 		resp.Schema.Attributes = baseBindingSchema
 	} else {
 		for k, v := range baseBindingSchema {

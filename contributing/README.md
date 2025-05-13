@@ -55,7 +55,9 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Generating Docs
 
-To generate or update documentation, run `go generate`.
+Documentation is generated from `*.md.tmpl` files in the `templates/` directory, and code samples are sourced from the `examples/` directory.
+
+To generate or update documentation after modifying the files in the above locations, run `go generate`.
 ```shell script
 $ go generate
 ```
