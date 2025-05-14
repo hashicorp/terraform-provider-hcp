@@ -41,7 +41,37 @@ type DataSourceIAMPolicyModel struct {
 
 func (d *DataSourceIAMPolicyModel) extract(ctx context.Context) diag.Diagnostics {
 	d.bindings = make([]*Binding, 0, len(d.Bindings.Elements()))
-	return d.Bindings.ElementsAs(ctx, &d.bindings, false)
+
+	if !d.Bindings.IsUnknown() {
+		return d.Bindings.ElementsAs(ctx, &d.bindings, false)
+	}
+
+	for _, value := range d.Bindings.Elements() {
+		terraformVaule, err := value.ToTerraformValue(ctx)
+		if err != nil {
+			return diag.Diagnostics{
+				diag.NewErrorDiagnostic(
+					"Set Element Conversion Error",
+					"An unexpected error was encountered trying to convert set elements. This is alwasy an error in the provider. Please report the following to tht provider developer:\n\n"+err.Error(),
+				),
+			}
+		}
+
+		binding := &Binding{}
+		err = terraformVaule.As(binding)
+		if err != nil {
+			return diag.Diagnostics{
+				diag.NewErrorDiagnostic(
+					"Set Element Conversion Error",
+					"An unexpected error was encountered trying to convert set elements. This is alwasy an error in the provider. Please report the following to tht provider developer:\n\n"+err.Error(),
+				),
+			}
+		}
+
+		d.bindings = append(d.bindings, binding)
+	}
+
+	return diag.Diagnostics{}
 }
 
 type Binding struct {
