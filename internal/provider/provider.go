@@ -187,6 +187,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultradar.NewIntegrationJiraSubscriptionResource,
 		vaultradar.NewIntegrationSlackConnectionResource,
 		vaultradar.NewIntegrationSlackSubscriptionResource,
+		vaultradar.NewRadarAssignmentsResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
