@@ -16,11 +16,13 @@ EOF
       name          = "resource_size"
       user_editable = true
       options       = ["small", "medium", "large"]
+      variable_type = "string"
     },
     {
       name          = "service_port"
       user_editable = false
       options       = ["8080"]
+      variable_type = "string"
     },
   ]
 }
