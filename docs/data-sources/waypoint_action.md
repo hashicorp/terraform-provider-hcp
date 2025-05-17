@@ -7,7 +7,7 @@ description: |-
 
 # hcp_waypoint_action `Data Source`
 
--> **Note:** HCP Waypoint is currently in public beta.
+-> **Note:** HCP Waypoint actions is currently in beta.
 
 The Waypoint Action data source retrieves information on a given Action.
 
