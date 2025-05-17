@@ -1,0 +1,3 @@
+```release-note:bug
+Fix hcp_waypoint_template documentation example - variable_options argument requires variable_type
+```
