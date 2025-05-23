@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
+	"github.com/hashicorp/terraform-provider-hcp/internal/statuspage"
 )
 
 // This is an implementation using the Provider framework
@@ -223,6 +224,13 @@ func NewFrameworkProvider(version string) func() provider.Provider {
 }
 
 func (p *ProviderFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
+	// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
+	if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
+		// This helper verifies HCP's status and returns a warning for degraded performance
+		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework()...)
+	}
+
 	// Sets up HCP SDK client.
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
