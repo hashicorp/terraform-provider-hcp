@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/statuspage"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
@@ -127,6 +128,12 @@ func New() func() *schema.Provider {
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		var diags diag.Diagnostics
+		// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
+		// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
+		if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
+			// This helper verifies HCP's status and returns a warning for degraded performance
+			diags = statuspage.IsHCPOperationalSDKv2()
+		}
 
 		clientConfig := clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
