@@ -5,6 +5,7 @@ package waypoint
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
@@ -46,6 +47,7 @@ type ActionResourceModel struct {
 
 type actionRequest struct {
 	Custom *customRequest `tfsdk:"custom"`
+	Agent  *agentRequest  `tfsdk:"agent"`
 }
 
 type customRequest struct {
@@ -53,6 +55,13 @@ type customRequest struct {
 	Headers types.Map    `tfsdk:"headers"`
 	URL     types.String `tfsdk:"url"`
 	Body    types.String `tfsdk:"body"`
+}
+
+type agentRequest struct {
+	OperationID types.String `tfsdk:"operation_id"`
+	Body        types.String `tfsdk:"body"`
+	ActionRunID types.String `tfsdk:"action_run_id"`
+	Group       types.String `tfsdk:"group"`
 }
 
 func (r *ActionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -117,6 +126,28 @@ func (r *ActionResource) Schema(ctx context.Context, req resource.SchemaRequest,
 							},
 						},
 					},
+					"agent": schema.SingleNestedAttribute{
+						Description: "Agent mode allows users to define the agent to use for the request.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"operation_id": schema.StringAttribute{
+								Description: "The identifying name of the operation in the agent config file.",
+								Required:    true,
+							},
+							"body": schema.StringAttribute{
+								Description: "Arguments to the operation, specified as JSON.",
+								Optional:    true,
+							},
+							"action_run_id": schema.StringAttribute{
+								Description: "An optional action run id. If specified the agent will interact with the actions subsystem.",
+								Optional:    true,
+							},
+							"group": schema.StringAttribute{
+								Description: "The name of the group that the operation is in.",
+								Required:    true,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -171,8 +202,11 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		modelBody.ActionConfig.Description = plan.Description.ValueString()
 	}
 
+	// TODO(henry): Error here if multiple request types are set?
+
 	var diags diag.Diagnostics
 
+	// TODO(henry): The following code is very similar to the Update method, consider refactoring to a common function
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
@@ -200,6 +234,29 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		if !plan.Request.Custom.Body.IsUnknown() && !plan.Request.Custom.Body.IsNull() {
 			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
 
+		}
+	} else if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{}
+
+		modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
+		modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+
+		if !plan.Request.Agent.Body.IsUnknown() && !plan.Request.Agent.Body.IsNull() {
+			// The body is expected to be a base64 encoded string, so we decode it
+			bodyBytes, err := base64.StdEncoding.DecodeString(plan.Request.Agent.Body.ValueString())
+			// If there is an error, we immediately return an error to the user
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error decoding Agent Body",
+					fmt.Sprintf("The Agent Body must be a base64 encoded string, got: %q", plan.Request.Agent.Body.ValueString()),
+				)
+				return
+			} else {
+				modelBody.ActionConfig.Request.Agent.Op.Body = bodyBytes
+			}
+		}
+		if !plan.Request.Agent.ActionRunID.IsUnknown() && !plan.Request.Agent.ActionRunID.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.ActionRunID = plan.Request.Agent.ActionRunID.ValueString()
 		}
 	}
 
@@ -243,6 +300,12 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	if aCfgModel.Request.Custom != nil {
 		diags = readCustomAction(ctx, plan, aCfgModel)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+	} else if aCfgModel.Request.Agent != nil {
+		diags = readAgentAction(ctx, plan, aCfgModel)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -310,6 +373,12 @@ func (r *ActionResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	if actionCfg.Request.Custom != nil {
 		diags := readCustomAction(ctx, data, actionCfg)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+	} else if actionCfg.Request.Agent != nil {
+		diags := readAgentAction(ctx, data, actionCfg)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -383,6 +452,30 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
 
 		}
+		// This is a proxy for the request type, as Agent.OperationID is required for Agent requests
+	} else if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{}
+
+		modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
+		modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+
+		if !plan.Request.Agent.Body.IsUnknown() && !plan.Request.Agent.Body.IsNull() {
+			// The body is expected to be a base64 encoded string, so we decode it
+			bodyBytes, err := base64.StdEncoding.DecodeString(plan.Request.Agent.Body.ValueString())
+			// If there is an error, we immediately return an error to the user
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error decoding Agent Body",
+					fmt.Sprintf("The Agent Body must be a base64 encoded string, got: %q", plan.Request.Agent.Body.ValueString()),
+				)
+				return
+			} else {
+				modelBody.ActionConfig.Request.Agent.Op.Body = bodyBytes
+			}
+		}
+		if !plan.Request.Agent.ActionRunID.IsUnknown() && !plan.Request.Agent.ActionRunID.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.ActionRunID = plan.Request.Agent.ActionRunID.ValueString()
+		}
 	}
 
 	params := &waypoint_service.WaypointServiceUpdateActionConfigParams{
@@ -425,6 +518,12 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	if aCfgModel.Request.Custom != nil {
 		diags = readCustomAction(ctx, plan, aCfgModel)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+	} else if aCfgModel.Request.Agent != nil {
+		diags = readAgentAction(ctx, plan, aCfgModel)
 		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
 			return
@@ -518,6 +617,37 @@ func readCustomAction(
 		data.Request.Custom.Body = types.StringValue(actionCfg.Request.Custom.Body)
 	} else {
 		data.Request.Custom.Body = types.StringNull()
+	}
+	return diags
+}
+
+func readAgentAction(
+	ctx context.Context,
+	data *ActionResourceModel,
+	actionCfg *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig,
+) diag.Diagnostics {
+	data.Request.Agent = &agentRequest{}
+	var diags diag.Diagnostics
+	if actionCfg.Request.Agent.Op.ID != "" {
+		data.Request.Agent.OperationID = types.StringValue(actionCfg.Request.Agent.Op.ID)
+	} else {
+		data.Request.Agent.OperationID = types.StringNull()
+	}
+	if actionCfg.Request.Agent.Op.Group != "" {
+		data.Request.Agent.Group = types.StringValue(actionCfg.Request.Agent.Op.Group)
+	} else {
+		data.Request.Agent.Group = types.StringNull()
+	}
+	if actionCfg.Request.Agent.Op.Body != nil {
+		//TODO(henry): Test this
+		data.Request.Agent.Body = types.StringValue(base64.StdEncoding.EncodeToString(actionCfg.Request.Agent.Op.Body))
+	} else {
+		data.Request.Agent.Body = types.StringNull()
+	}
+	if actionCfg.Request.Agent.Op.ActionRunID != "" {
+		data.Request.Agent.ActionRunID = types.StringValue(actionCfg.Request.Agent.Op.ActionRunID)
+	} else {
+		data.Request.Agent.ActionRunID = types.StringNull()
 	}
 	return diags
 }

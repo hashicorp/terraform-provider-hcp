@@ -49,12 +49,40 @@ func TestAcc_Waypoint_Action_DataSource_basic(t *testing.T) {
 			},
 		},
 	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionModel),
+		Steps: []resource.TestStep{
+			{
+				// establish the base action config with agent
+				Config: testAgentAction(actionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointActionExists(t, resourceName, &actionModel),
+				),
+			},
+			{
+				// add a data source config to read the action config with agent
+				Config: testDataActionConfigAgent(actionName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "name", actionName),
+				),
+			},
+		},
+	})
 }
 
 func testDataActionConfig(actionName string) string {
 	return fmt.Sprintf(`%s
-
 data "hcp_waypoint_action" "test" {
   name    = hcp_waypoint_action.test.name
 }`, testAction(actionName))
+}
+
+func testDataActionConfigAgent(actionName string) string {
+	return fmt.Sprintf(`%s
+data "hcp_waypoint_action" "test" {
+  name    = hcp_waypoint_action.test.name
+}`, testAgentAction(actionName))
 }
