@@ -109,6 +109,12 @@ func New() func() *schema.Provider {
 						},
 					},
 				},
+				"disable_status_check": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Disable the HCP status page check. When set to true, the provider will not check the HCP status page for service outages or return warnings.",
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -128,9 +134,9 @@ func New() func() *schema.Provider {
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		var diags diag.Diagnostics
-		// In order to avoid disrupting testing and development, the HCP status check only runs on prod.
-		// HCP_API_HOST is used to point the provider at test environments. When unset, the provider points to prod.
-		if os.Getenv("HCP_API_HOST") == "" || os.Getenv("HCP_API_HOST") == "api.cloud.hashicorp.com" {
+		// Determine if status check is disabled via provider configuration or environment variable
+		disableStatusCheck := d.Get("disable_status_check").(bool) || os.Getenv("HCP_DISABLE_STATUS_CHECK") == "true"
+		if !disableStatusCheck {
 			// This helper verifies HCP's status and returns a warning for degraded performance
 			diags = statuspage.IsHCPOperationalSDKv2()
 		}
