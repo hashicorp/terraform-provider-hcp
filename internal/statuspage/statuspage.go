@@ -16,8 +16,12 @@ import (
 	sdkv2Diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-const (
+var (
 	statuspageURL = "https://status.hashicorp.com/api/v1/summary"
+	clientTimeout = 1 * time.Second
+)
+
+const (
 	warnSummary   = "You may experience issues using HCP."
 	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check https://status.hashicorp.com for more details."
 )
@@ -56,10 +60,24 @@ type affectedComponent struct {
 	CurrentStatus string `json:"current_status"`
 }
 
+// Two types of diagnostic messages we might return
 type statusCheckResult struct {
-	errorMessage  string
-	operational   bool
-	statusMessage string
+	errorMessage  string // For HTTP errors, JSON parsing errors
+	statusMessage string // For actual HCP service outages
+}
+
+func (s statusCheckResult) hasDiagnostics() bool {
+	return s.errorMessage != "" || s.statusMessage != ""
+}
+
+func (s statusCheckResult) diagnosticMessage() string {
+	if s.errorMessage != "" {
+		return s.errorMessage
+	}
+	if s.statusMessage != "" {
+		return fmt.Sprintf(warnDetailFmt, s.statusMessage)
+	}
+	return ""
 }
 
 // Determine whether the components returned in the API are relevant
@@ -74,10 +92,9 @@ func isHCPComponentAffected(comp affectedComponent) bool {
 	return slices.Contains(hcpGroupNames, comp.GroupName)
 }
 
+// Fetch and parse the API response
 func checkHCPStatus() statusCheckResult {
-	result := statusCheckResult{
-		operational: true,
-	}
+	var result statusCheckResult
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
@@ -86,7 +103,7 @@ func checkHCPStatus() statusCheckResult {
 	}
 
 	var cl = http.Client{
-		Timeout: 3 * time.Second,
+		Timeout: clientTimeout,
 	}
 	resp, err := cl.Do(req)
 	if err != nil {
@@ -114,7 +131,6 @@ func checkHCPStatus() statusCheckResult {
 		reported := make([]string, 0, len(inc.AffectedComponents))
 		for _, comp := range inc.AffectedComponents {
 			if isHCPComponentAffected(comp) {
-				result.operational = false
 				prefix := comp.Name
 				if comp.GroupName != "" {
 					prefix = fmt.Sprintf("%s (%s)", comp.GroupName, comp.Name)
@@ -124,7 +140,7 @@ func checkHCPStatus() statusCheckResult {
 		}
 
 		if len(reported) > 0 {
-			fmt.Fprintf(&statusBuilder, "\n[Status: %s] %s\n- %s\n",
+			fmt.Fprintf(&statusBuilder, "\n[status: %s] %s - %s\n",
 				inc.Status, inc.Name, strings.Join(reported, ", "))
 		}
 	}
@@ -134,39 +150,23 @@ func checkHCPStatus() statusCheckResult {
 }
 
 func IsHCPOperationalFramework() (diags frameworkDiag.Diagnostics) {
+	status := checkHCPStatus()
 
-	result := checkHCPStatus()
-
-	if result.errorMessage != "" {
-		diags.AddWarning(warnSummary, result.errorMessage)
-		return diags
-	}
-
-	if !result.operational {
-		diags.AddWarning(warnSummary, fmt.Sprintf(warnDetailFmt, result.statusMessage))
+	if status.hasDiagnostics() {
+		diags.AddWarning(warnSummary, status.diagnosticMessage())
 	}
 
 	return diags
 }
 
 func IsHCPOperationalSDKv2() (diags sdkv2Diag.Diagnostics) {
+	status := checkHCPStatus()
 
-	result := checkHCPStatus()
-
-	if result.errorMessage != "" {
+	if status.hasDiagnostics() {
 		diags = append(diags, sdkv2Diag.Diagnostic{
 			Severity: sdkv2Diag.Warning,
 			Summary:  warnSummary,
-			Detail:   result.errorMessage,
-		})
-		return diags
-	}
-
-	if !result.operational {
-		diags = append(diags, sdkv2Diag.Diagnostic{
-			Severity: sdkv2Diag.Warning,
-			Summary:  warnSummary,
-			Detail:   fmt.Sprintf(warnDetailFmt, result.statusMessage),
+			Detail:   status.diagnosticMessage(),
 		})
 	}
 
