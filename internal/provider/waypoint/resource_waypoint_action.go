@@ -639,7 +639,7 @@ func readAgentAction(
 		data.Request.Agent.Group = types.StringNull()
 	}
 	if actionCfg.Request.Agent.Op.Body != nil {
-		//TODO(henry): Test this
+		// TODO(henry): Test this
 		data.Request.Agent.Body = types.StringValue(base64.StdEncoding.EncodeToString(actionCfg.Request.Agent.Op.Body))
 	} else {
 		data.Request.Agent.Body = types.StringNull()
