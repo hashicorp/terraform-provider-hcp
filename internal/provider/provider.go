@@ -42,12 +42,12 @@ type ProviderFramework struct {
 }
 
 type ProviderFrameworkModel struct {
-	ClientSecret       types.String `tfsdk:"client_secret"`
-	ClientID           types.String `tfsdk:"client_id"`
-	CredentialFile     types.String `tfsdk:"credential_file"`
-	ProjectID          types.String `tfsdk:"project_id"`
-	WorkloadIdentity   types.List   `tfsdk:"workload_identity"`
-	DisableStatusCheck types.Bool   `tfsdk:"disable_status_check"`
+	ClientSecret     types.String `tfsdk:"client_secret"`
+	ClientID         types.String `tfsdk:"client_id"`
+	CredentialFile   types.String `tfsdk:"credential_file"`
+	ProjectID        types.String `tfsdk:"project_id"`
+	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
+	SkipStatusCheck  types.Bool   `tfsdk:"skip_status_check"`
 }
 
 type WorkloadIdentityFrameworkModel struct {
@@ -94,9 +94,9 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
 				},
 			},
-			"disable_status_check": schema.BoolAttribute{
+			"skip_status_check": schema.BoolAttribute{
 				Optional:    true,
-				Description: "Disable the HCP status page check. When set to true, the provider will not check the HCP status page for service outages or return warnings.",
+				Description: "When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -233,10 +233,11 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	// Determine if status check is disabled via provider configuration or environment variable
-	disableStatusCheck := data.DisableStatusCheck.ValueBool() || os.Getenv("HCP_DISABLE_STATUS_CHECK") == "true"
-	if !disableStatusCheck {
-		// This helper verifies HCP's status and returns a warning for degraded performance
+	// Determine if status check should be skipped via provider configuration or environment variable.
+	// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
+	skipStatusCheck := data.SkipStatusCheck.ValueBool() || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+	if !skipStatusCheck {
+		// This helper verifies HCP's status and returns a warning for degraded performance.
 		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework()...)
 	}
 

@@ -26,7 +26,8 @@ const (
 	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check https://status.hashicorp.com for more details."
 )
 
-// IDs from the incident.io status page for components relevant to this provider
+// Creating components on the incident.io status page generates a unique ID that can be found in the DOM and API response
+// Component names are not unique, so we include both here to ensure we report on the correct components
 var hcpComponentNames = map[string]string{
 	"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
 	"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
@@ -37,7 +38,8 @@ var hcpComponentNames = map[string]string{
 	"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
 }
 
-// These groups contain many regions and have a top-level ID that is not returned in the API response
+// Components can be grouped into named folders, in this case containing many cloud regions
+// Groups have a top-level ID that are not returned in the API response so we rely on the group names
 var hcpGroupNames = []string{
 	"HCP Consul Dedicated",
 	"HCP Vault Dedicated",
