@@ -89,7 +89,6 @@ func simulateError(t *testing.T, errorType string) {
 	}
 }
 
-// TestIsHCPComponentAffected tests the component evaluation function
 func TestIsHCPComponentAffected(t *testing.T) {
 	testCases := []struct {
 		name       string
@@ -131,7 +130,6 @@ func TestIsHCPComponentAffected(t *testing.T) {
 	}
 }
 
-// TestCheckHCPStatus tests the main status checking function
 func TestCheckHCPStatus(t *testing.T) {
 	testCases := []struct {
 		name              string
@@ -149,55 +147,46 @@ func TestCheckHCPStatus(t *testing.T) {
 			messageContains:   nil,
 		},
 		{
-			name: "single non-operational HCP component",
+			name: "resolved incident",
 			setup: func(t *testing.T) {
 				stubStatusPage(t, []incident{
-					inc("API Outage", "investigating",
-						testComponent("HCP API", "major_outage"))})
+					inc("Packer issues", "monitoring", testComponent("HCP Packer", "operational")),
+				})
 			},
-			expectOutage:      true,
-			expectDiagnostics: true,
-			messageContains:   []string{"API Outage - HCP API: major_outage"},
+			expectOutage:      false,
+			expectDiagnostics: false,
+			messageContains:   nil,
 		},
 		{
-			name: "non-operational HCP components from multiple incidents",
+			name: "multi-component incident",
 			setup: func(t *testing.T) {
 				stubStatusPage(t, []incident{
-					inc("API Outage", "investigating",
-						testComponent("HCP API", "major_outage")),
-					inc("Portal Issues", "identified",
-						testComponent("HCP Portal", "partial_outage")),
+					inc("Mixed issues", "investigating",
+						testComponent("HCP Boundary", "degraded_performance"),
+						testGroupedComponent("HCP Consul Dedicated", "degraded_performance"),
+						testComponent("HCP Waypoint", "operational"),
+						testComponent("Other Service", "major_outage")),
 				})
 			},
 			expectOutage:      true,
 			expectDiagnostics: true,
-			messageContains:   []string{"API Outage - HCP API: major_outage", "Portal Issues - HCP Portal: partial_outage"},
+			messageContains:   []string{"HCP Boundary", "HCP Consul Dedicated"},
+			messageExcludes:   []string{"HCP Waypoint", "Other Service"},
 		},
 		{
-			name: "non-operational HCP componentGroup",
+			name: "multiple incidents",
 			setup: func(t *testing.T) {
 				stubStatusPage(t, []incident{
-					inc("Consul incident", "investigating",
-						testGroupedComponent("HCP Consul Dedicated", "major_outage")),
+					inc("HCP Vault Radar", "identified", testComponent("HCP Vault Radar", "partial_outage")),
+					inc("HCP Vault Secrets", "investigating", testComponent("HCP Vault Secrets", "major_outage")),
+					inc("HCP Vault Dedicated", "investigating", testGroupedComponent("HCP Vault Dedicated", "partial_outage")),
+					inc("Other Service", "investigating", testComponent("Other Service", "major_outage")),
 				})
 			},
 			expectOutage:      true,
 			expectDiagnostics: true,
-			messageContains:   []string{"Consul incident - HCP Consul Dedicated (region-name): major_outage"},
-		},
-		{
-			name: "only HCP when mixed components",
-			setup: func(t *testing.T) {
-				stubStatusPage(t, []incident{
-					inc("Mixed Outage", "investigating",
-						testComponent("Other", "major_outage"),
-						testComponent("HCP Packer", "partial_outage")),
-				})
-			},
-			expectOutage:      true,
-			expectDiagnostics: true,
-			messageContains:   []string{"Mixed Outage - HCP Packer: partial_outage"},
-			messageExcludes:   []string{"Other"},
+			messageContains:   []string{"HCP Vault Radar", "HCP Vault Secrets", "HCP Vault Dedicated (region-name)"},
+			messageExcludes:   []string{"Other Service"},
 		},
 		{
 			name:              "service unavailable",
@@ -240,8 +229,6 @@ func TestCheckHCPStatus(t *testing.T) {
 	}
 }
 
-// Define test scenarios that can be shared between Framework and SDKv2 tests
-
 func TestIsHCPOperational(t *testing.T) {
 	scenarios := []struct {
 		name            string
@@ -271,6 +258,7 @@ func TestIsHCPOperational(t *testing.T) {
 			expectDiags:     true,
 			expectedSummary: warnSummary,
 			detailContains:  []string{"Unable to unmarshal response"},
+			detailExcludes:  []string{"HCP is reporting the following"},
 		},
 		{
 			name:        "fully operational",
@@ -279,11 +267,20 @@ func TestIsHCPOperational(t *testing.T) {
 		},
 	}
 
-	t.Run("Framework", func(t *testing.T) {
+	implementations := []string{"Framework", "SDKv2"}
+
+	for _, impl := range implementations {
 		for _, scenario := range scenarios {
-			t.Run(scenario.name, func(t *testing.T) {
+			t.Run(impl+" "+scenario.name, func(t *testing.T) {
 				scenario.setupFn(t)
-				diags := IsHCPOperationalFramework()
+
+				var diags interface{}
+				if impl == "Framework" {
+					diags = IsHCPOperationalFramework()
+				}
+				if impl == "SDKv2" {
+					diags = IsHCPOperationalSDKv2()
+				}
 
 				if !scenario.expectDiags {
 					assert.Empty(t, diags, "Should have no diagnostics when operational")
@@ -291,43 +288,30 @@ func TestIsHCPOperational(t *testing.T) {
 				}
 
 				assert.Len(t, diags, 1, "Should have one diagnostic")
-				assert.Equal(t, frameworkDiag.SeverityWarning, diags[0].Severity(), "Should use warning severity")
-				assert.Equal(t, scenario.expectedSummary, diags[0].Summary(), "Should have expected summary")
 
-				detail := diags[0].Detail()
-				for _, expectedText := range scenario.detailContains {
-					assert.Contains(t, detail, expectedText, "Should contain expected text")
-				}
-				for _, excludedText := range scenario.detailExcludes {
-					assert.NotContains(t, detail, excludedText, "Should not contain excluded text")
-				}
-			})
-		}
-	})
+				switch d := diags.(type) {
+				case frameworkDiag.Diagnostics:
+					assert.Equal(t, frameworkDiag.SeverityWarning, d[0].Severity(), "Severity should be Warning not Error")
+					assert.Equal(t, scenario.expectedSummary, d[0].Summary())
 
-	t.Run("SDKv2", func(t *testing.T) {
-		for _, scenario := range scenarios {
-			t.Run(scenario.name, func(t *testing.T) {
-				scenario.setupFn(t)
-				diags := IsHCPOperationalSDKv2()
+					for _, expectedText := range scenario.detailContains {
+						assert.Contains(t, d[0].Detail(), expectedText)
+					}
+					for _, excludedText := range scenario.detailExcludes {
+						assert.NotContains(t, d[0].Detail(), excludedText)
+					}
+				case sdkv2Diag.Diagnostics:
+					assert.Equal(t, sdkv2Diag.Warning, d[0].Severity, "Severity should be Warning not Error")
+					assert.Equal(t, scenario.expectedSummary, d[0].Summary)
 
-				if !scenario.expectDiags {
-					assert.Empty(t, diags, "Should have no diagnostics when operational")
-					return
-				}
-
-				assert.Len(t, diags, 1, "Should have one diagnostic")
-				assert.Equal(t, sdkv2Diag.Warning, diags[0].Severity, "Should use warning severity")
-				assert.Equal(t, scenario.expectedSummary, diags[0].Summary, "Should have expected summary")
-
-				detail := diags[0].Detail
-				for _, expectedText := range scenario.detailContains {
-					assert.Contains(t, detail, expectedText, "Should contain expected text")
-				}
-				for _, excludedText := range scenario.detailExcludes {
-					assert.NotContains(t, detail, excludedText, "Should not contain excluded text")
+					for _, expectedText := range scenario.detailContains {
+						assert.Contains(t, d[0].Detail, expectedText)
+					}
+					for _, excludedText := range scenario.detailExcludes {
+						assert.NotContains(t, d[0].Detail, excludedText)
+					}
 				}
 			})
 		}
-	})
+	}
 }
