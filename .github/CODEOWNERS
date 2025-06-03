@@ -34,9 +34,8 @@
 # all Waypoint resources and clients are owned by the waypoint team
 **/waypoint @hashicorp/cloud-waypoint
 
-# Statuspage.io configuration is owned by the Core SRE team
-/internal/provider/statuspage.go @hashicorp/core-sre
-/internal/providersdkv2/statuspage.go @hashicorp/core-sre
+# Status page configuration is owned by the FIRE team
+/internal/statuspage/ @hashicorp/team-fire
 
 # all Vault Radar resources and clients are owned by the vault-scanning team
 *vaultradar*  @hashicorp/vault-scanning
