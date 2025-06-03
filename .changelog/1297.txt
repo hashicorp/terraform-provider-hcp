@@ -1,0 +1,3 @@
+```release-note:improvement
+diagnostics: Restore status page check and make it optional via provider config bool skip_status_check or env HCP_SKIP_STATUS_CHECK.
+```
