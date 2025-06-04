@@ -108,6 +108,8 @@ func testAccCheckWaypointActionExists(t *testing.T, resourceName string, actionC
 		if actionCfgModel != nil {
 			actionCfgModel.Name = types.StringValue(actionCfg.Name)
 			actionCfgModel.ID = types.StringValue(actionCfg.ID)
+		} else {
+			return fmt.Errorf("actionCfgModel is nil when it should not be")
 		}
 
 		return nil

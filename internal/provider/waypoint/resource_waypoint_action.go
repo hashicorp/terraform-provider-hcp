@@ -11,6 +11,7 @@ import (
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/client/waypoint_service"
 	waypoint_models "github.com/hashicorp/hcp-sdk-go/clients/cloud-waypoint-service/preview/2024-11-22/models"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -34,7 +35,7 @@ type ActionResource struct {
 	client *clients.Client
 }
 
-// ActionModel describes the resource data model.
+// ActionResourceModel describes the resource data model.
 type ActionResourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -178,7 +179,6 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -208,7 +208,7 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// TODO(henry): The following code is very similar to the Update method, consider refactoring to a common function
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
-	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
+	if plan.Request.Custom != nil && !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
 
 		method := waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
@@ -235,11 +235,16 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
 
 		}
-	} else if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
-		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{}
-
-		modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
-		modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+	} else if plan.Request.Agent != nil && !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{
+			Op: &waypoint_models.HashicorpCloudWaypointV20241122AgentOperation{},
+		}
+		if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
+		}
+		if !plan.Request.Agent.Group.IsUnknown() && !plan.Request.Agent.Group.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+		}
 
 		if !plan.Request.Agent.Body.IsUnknown() && !plan.Request.Agent.Body.IsNull() {
 			// The body is expected to be a base64 encoded string, so we decode it
@@ -275,7 +280,11 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 	var aCfgModel *waypoint_models.HashicorpCloudWaypointV20241122ActionConfig
 	if aCfg.Payload != nil {
 		aCfgModel = aCfg.Payload.ActionConfig
+	} else {
+		resp.Diagnostics.AddError("Error creating Action", "The response payload was nil.")
+		return
 	}
+
 	if aCfgModel == nil {
 		resp.Diagnostics.AddError("Unknown error creating Action", "Empty Action returned")
 		return
@@ -425,7 +434,7 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 	var diags diag.Diagnostics
 
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
-	if !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
+	if plan.Request.Custom != nil && !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
 
 		method := waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustomMethod(plan.Request.Custom.Method.ValueString())
@@ -453,11 +462,17 @@ func (r *ActionResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 		}
 		// This is a proxy for the request type, as Agent.OperationID is required for Agent requests
-	} else if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
-		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{}
+	} else if plan.Request.Agent != nil && !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{
+			Op: &waypoint_models.HashicorpCloudWaypointV20241122AgentOperation{},
+		}
 
-		modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
-		modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+		if !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.ID = plan.Request.Agent.OperationID.ValueString()
+		}
+		if !plan.Request.Agent.Group.IsUnknown() && !plan.Request.Agent.Group.IsNull() {
+			modelBody.ActionConfig.Request.Agent.Op.Group = plan.Request.Agent.Group.ValueString()
+		}
 
 		if !plan.Request.Agent.Body.IsUnknown() && !plan.Request.Agent.Body.IsNull() {
 			// The body is expected to be a base64 encoded string, so we decode it
@@ -578,6 +593,7 @@ func (r *ActionResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 }
+
 func (r *ActionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
