@@ -233,7 +233,6 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 		if !plan.Request.Custom.Body.IsUnknown() && !plan.Request.Custom.Body.IsNull() {
 			modelBody.ActionConfig.Request.Custom.Body = plan.Request.Custom.Body.ValueString()
-
 		}
 	} else if plan.Request.Agent != nil && !plan.Request.Agent.OperationID.IsUnknown() && !plan.Request.Agent.OperationID.IsNull() {
 		modelBody.ActionConfig.Request.Agent = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorAgent{
@@ -256,9 +255,8 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 					fmt.Sprintf("The Agent Body must be a base64 encoded string, got: %q", plan.Request.Agent.Body.ValueString()),
 				)
 				return
-			} else {
-				modelBody.ActionConfig.Request.Agent.Op.Body = bodyBytes
 			}
+			modelBody.ActionConfig.Request.Agent.Op.Body = bodyBytes
 		}
 		if !plan.Request.Agent.ActionRunID.IsUnknown() && !plan.Request.Agent.ActionRunID.IsNull() {
 			modelBody.ActionConfig.Request.Agent.Op.ActionRunID = plan.Request.Agent.ActionRunID.ValueString()
@@ -634,6 +632,10 @@ func readCustomAction(
 	} else {
 		data.Request.Custom.Body = types.StringNull()
 	}
+
+	// Ensure Agent is nil if Custom is set
+	data.Request.Agent = nil
+
 	return diags
 }
 
@@ -654,7 +656,7 @@ func readAgentAction(
 	} else {
 		data.Request.Agent.Group = types.StringNull()
 	}
-	if actionCfg.Request.Agent.Op.Body != nil {
+	if actionCfg.Request.Agent.Op.Body.String() != "" {
 		// TODO(henry): Test this
 		data.Request.Agent.Body = types.StringValue(base64.StdEncoding.EncodeToString(actionCfg.Request.Agent.Op.Body))
 	} else {
@@ -665,5 +667,9 @@ func readAgentAction(
 	} else {
 		data.Request.Agent.ActionRunID = types.StringNull()
 	}
+
+	// Ensure Custom is nil if Agent is set
+	data.Request.Custom = nil
+
 	return diags
 }
