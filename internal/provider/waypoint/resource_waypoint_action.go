@@ -202,11 +202,8 @@ func (r *ActionResource) Create(ctx context.Context, req resource.CreateRequest,
 		modelBody.ActionConfig.Description = plan.Description.ValueString()
 	}
 
-	// TODO(henry): Error here if multiple request types are set?
-
 	var diags diag.Diagnostics
 
-	// TODO(henry): The following code is very similar to the Update method, consider refactoring to a common function
 	// This is a proxy for the request type, as Custom.Method is required for Custom requests
 	if plan.Request.Custom != nil && !plan.Request.Custom.Method.IsUnknown() && !plan.Request.Custom.Method.IsNull() {
 		modelBody.ActionConfig.Request.Custom = &waypoint_models.HashicorpCloudWaypointV20241122ActionConfigFlavorCustom{}
@@ -657,7 +654,6 @@ func readAgentAction(
 		data.Request.Agent.Group = types.StringNull()
 	}
 	if actionCfg.Request.Agent.Op.Body.String() != "" {
-		// TODO(henry): Test this
 		data.Request.Agent.Body = types.StringValue(base64.StdEncoding.EncodeToString(actionCfg.Request.Agent.Op.Body))
 	} else {
 		data.Request.Agent.Body = types.StringNull()
