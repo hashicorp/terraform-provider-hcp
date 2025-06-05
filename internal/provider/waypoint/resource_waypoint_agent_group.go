@@ -49,10 +49,6 @@ func (r *AgentGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 		MarkdownDescription: "The Waypoint Agent Group resource manages the lifecycle of an Agent Group.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "The ID for the Agent Group.",
-				Computed:    true,
-			},
 			"name": schema.StringAttribute{
 				Description: "The name of the Agent Group.",
 				Required:    true,
@@ -65,6 +61,7 @@ func (r *AgentGroupResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the Waypoint organization to which the Agent Group belongs.",
 				Computed:    true,
+				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "A description of the Agent Group.",
@@ -103,11 +100,14 @@ func (r *AgentGroupResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !plan.ProjectID.IsUnknown() {
+	if !plan.ProjectID.IsUnknown() && !plan.ProjectID.IsNull() {
 		projectID = plan.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
+	if !plan.OrgID.IsUnknown() && !plan.OrgID.IsNull() {
+		orgID = plan.OrgID.ValueString()
+	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceCreateAgentGroupBody{
 		Group: &waypoint_models.HashicorpCloudWaypointV20241122AgentGroup{},
@@ -168,6 +168,13 @@ func (r *AgentGroupResource) Create(ctx context.Context, req resource.CreateRequ
 		plan.Name = types.StringNull()
 	}
 
+	if plan.ProjectID.IsUnknown() {
+		plan.ProjectID = types.StringValue(projectID)
+	}
+	if plan.OrgID.IsUnknown() {
+		plan.OrgID = types.StringValue(orgID)
+	}
+
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
 	tflog.Trace(ctx, "Created Agent group resource")
@@ -187,11 +194,14 @@ func (r *AgentGroupResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !data.ProjectID.IsUnknown() {
+	if !data.ProjectID.IsUnknown() && !data.ProjectID.IsNull() {
 		projectID = data.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
+	if !data.OrgID.IsUnknown() && !data.OrgID.IsNull() {
+		orgID = data.OrgID.ValueString()
+	}
 
 	client := r.client
 
@@ -222,6 +232,13 @@ func (r *AgentGroupResource) Read(ctx context.Context, req resource.ReadRequest,
 		data.Name = types.StringNull()
 	}
 
+	if data.ProjectID.IsUnknown() {
+		data.ProjectID = types.StringValue(projectID)
+	}
+	if data.OrgID.IsUnknown() {
+		data.OrgID = types.StringValue(orgID)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -242,12 +259,14 @@ func (r *AgentGroupResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	projectID := r.client.Config.ProjectID
-
-	if !plan.ProjectID.IsUnknown() {
+	if !plan.ProjectID.IsUnknown() && !plan.ProjectID.IsNull() {
 		projectID = plan.ProjectID.ValueString()
 	}
 
 	orgID := r.client.Config.OrganizationID
+	if !plan.OrgID.IsUnknown() && !plan.OrgID.IsNull() {
+		orgID = plan.OrgID.ValueString()
+	}
 
 	modelBody := &waypoint_models.HashicorpCloudWaypointV20241122WaypointServiceUpdateAgentGroupBody{}
 
@@ -276,6 +295,13 @@ func (r *AgentGroupResource) Update(ctx context.Context, req resource.UpdateRequ
 		plan.Description = types.StringValue(agentGroup.Payload.Group.Description)
 	} else {
 		plan.Description = types.StringNull()
+	}
+
+	if plan.ProjectID.IsUnknown() {
+		plan.ProjectID = types.StringValue(projectID)
+	}
+	if plan.OrgID.IsUnknown() {
+		plan.OrgID = types.StringValue(orgID)
 	}
 
 	// Write logs using the tflog package

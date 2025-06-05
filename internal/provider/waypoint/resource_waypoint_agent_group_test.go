@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -63,13 +64,16 @@ func testAccCheckWaypointAgentGroupExists(t *testing.T, resourceName string, age
 		// Retrieve the agent group using the client
 		agentGroup, err := clients.GetAgentGroup(context.Background(), client, loc, groupName)
 		if err != nil {
-			return fmt.Errorf("error retrieving agent group %s: %w", groupName, err)
+			return fmt.Errorf("error retrieving agent group %q: %w", groupName, err)
 		}
 
 		// Verify the agent group exists
 		if agentGroup == nil {
-			return fmt.Errorf("agent group %s not found", groupName)
+			return fmt.Errorf("agent group %q not found", groupName)
 		}
+
+		agentGroupModel.Name = types.StringValue(agentGroup.Name)
+		agentGroupModel.Description = types.StringValue(agentGroup.Description)
 
 		return nil
 	}
@@ -78,7 +82,7 @@ func testAccCheckWaypointAgentGroupExists(t *testing.T, resourceName string, age
 func testAccCheckWaypointAgentGroupName(_ *testing.T, agentGroupModel *waypoint.AgentGroupResourceModel, nameValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if agentGroupModel.Name.ValueString() != nameValue {
-			return fmt.Errorf("expected agent group name to be %s, but got %s", nameValue, agentGroupModel.Name.ValueString())
+			return fmt.Errorf("expected agent group name to be %q, but got %q", nameValue, agentGroupModel.Name.ValueString())
 		}
 		return nil
 	}
@@ -118,8 +122,8 @@ func testAccCheckWaypointAgentGroupDestroy(t *testing.T, agentGroupModel *waypoi
 func testAgentGroup(groupName string) string {
 	return fmt.Sprintf(`
 resource "hcp_waypoint_agent_group" "test" {
-  name        = "%s"
-  description = "Test Agent Group"
+	name        = %q
+	description = "Test Agent Group"
 }
 `, groupName)
 }

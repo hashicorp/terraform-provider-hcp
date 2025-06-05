@@ -49,6 +49,22 @@ func TestAcc_Waypoint_Action_DataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Waypoint_Action_DataSource_Agent(t *testing.T) {
+	t.Parallel()
+
+	// Skip this test unless the appropriate environment variable is set
+	// This is to prevent running this test by default
+	if os.Getenv("HCP_WAYP_ACTION_TEST") == "" {
+		t.Skipf("Waypoint Action tests skipped unless env '%s' set",
+			"HCP_WAYP_ACTION_TEST")
+		return
+	}
+	var actionModel waypoint.ActionResourceModel
+	resourceName := "hcp_waypoint_action.test_agent"
+	dataSourceName := "data." + resourceName
+	actionName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -82,7 +98,7 @@ data "hcp_waypoint_action" "test" {
 
 func testDataActionConfigAgent(actionName string) string {
 	return fmt.Sprintf(`%s
-data "hcp_waypoint_action" "test" {
-  name    = hcp_waypoint_action.test.name
+data "hcp_waypoint_action" "test_agent" {
+  name    = hcp_waypoint_action.test_agent.name
 }`, testAgentAction(actionName))
 }
