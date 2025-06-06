@@ -126,8 +126,6 @@ github.com/hashicorp/hc-install v0.9.2 h1:v80EtNX4fCVHqzL9Lg/2xkp62bbvQMnvPQ0G+O
 github.com/hashicorp/hc-install v0.9.2/go.mod h1:XUqBQNnuT4RsxoxiM9ZaUk0NX8hi2h+Lb6/c0OZnC/I=
 github.com/hashicorp/hcl/v2 v2.23.0 h1:Fphj1/gCylPxHutVSEOf2fBOh1VE4AuLV7+kbJf3qos=
 github.com/hashicorp/hcl/v2 v2.23.0/go.mod h1:62ZYHrXgPoX8xBnzl8QzbWq4dyDsDtfCRgIq1rbJEvA=
-github.com/hashicorp/hcp-sdk-go v0.144.0 h1:6zGpBE2smZzVEAv/e2D4/Nw37n9rfiiHYR9b3EeKXJ0=
-github.com/hashicorp/hcp-sdk-go v0.144.0/go.mod h1:HYHwfLOi7gvZwtqTQfPRYlK+XDup9NWhVRDU6N24tOs=
 github.com/hashicorp/hcp-sdk-go v0.144.1-0.20250604165628-0709dea2446c h1:Lzk3Hpd+RGGxdkjFg3JviSRMOgYpLHwHJ0XEPIuV21k=
 github.com/hashicorp/hcp-sdk-go v0.144.1-0.20250604165628-0709dea2446c/go.mod h1:HYHwfLOi7gvZwtqTQfPRYlK+XDup9NWhVRDU6N24tOs=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
