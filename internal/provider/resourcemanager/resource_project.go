@@ -7,13 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"time"
-
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	billingModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"net/http"
 )
 
 const (
@@ -132,6 +131,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	// Wait for the project to be created.
+	operationName := "create project"
+	err = waitForProjectOperation(ctx, r.client, operationName, res.Payload.Project.ID, res.Payload.OperationID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for project creation", err.Error())
+		return
+	}
+
 	p := res.GetPayload().Project
 	plan.ResourceID = types.StringValue(p.ID)
 	plan.ResourceName = types.StringValue(fmt.Sprintf("project/%s", p.ID))
@@ -221,9 +228,16 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			Name: plan.Name.ValueString(),
 		}
 
-		_, err := clients.SetProjectNameWithRetry(r.client, setNameReq)
+		res, err := clients.SetProjectNameWithRetry(r.client, setNameReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating project name", err.Error())
+			return
+		}
+
+		// Wait for the project name to be updated.
+		err = waitForProjectOperation(ctx, r.client, "update project name", plan.ResourceID.ValueString(), res.Payload.OperationID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for project name update", err.Error())
 			return
 		}
 	}
@@ -236,11 +250,19 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			Description: plan.Description.ValueString(),
 		}
 
-		_, err := clients.SetProjectDescriptionWithRetry(r.client, setDescReq)
+		res, err := clients.SetProjectDescriptionWithRetry(r.client, setDescReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating project description", err.Error())
 			return
 		}
+
+		// Wait for the project description to be updated.
+		err = waitForProjectOperation(ctx, r.client, "update project description", plan.ResourceID.ValueString(), res.Payload.OperationID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for project description update", err.Error())
+			return
+		}
+
 	}
 
 	// Store the updated values
@@ -256,10 +278,8 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 
 	getParams := project_service.NewProjectServiceDeleteParams()
 	getParams.ID = state.ResourceID.ValueString()
-	// Increasing this timeout to account for long syncing times of projects to TFC
-	// This can be removed once client-side blocking is implemented
-	getParams.WithTimeout(45 * time.Second)
-	_, err := r.client.Project.ProjectServiceDelete(getParams, nil)
+
+	res, err := r.client.Project.ProjectServiceDelete(getParams, nil)
 	if err != nil {
 		var deleteErr *project_service.ProjectServiceDeleteDefault
 		if errors.As(err, &deleteErr) && deleteErr.IsCode(http.StatusNotFound) {
@@ -269,8 +289,24 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		resp.Diagnostics.AddError("Error deleting project", err.Error())
 		return
 	}
+
+	// Wait for the project to be deleted.
+	err = waitForProjectOperation(ctx, r.client, "delete project", "", res.Payload.Operation.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for project deletion", err.Error())
+		return
+	}
 }
 
 func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("resource_id"), req, resp)
+}
+
+func waitForProjectOperation(ctx context.Context, client *clients.Client, operationName, projectID string, operationID string) error {
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
+
+	return clients.WaitForOperation(ctx, client, operationName, loc, operationID)
 }
