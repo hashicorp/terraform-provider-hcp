@@ -96,6 +96,28 @@ func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequ
 							},
 						},
 					},
+					"agent": schema.SingleNestedAttribute{
+						Description: "Agent mode allows users to define the agent to use for the request.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"operation_id": schema.StringAttribute{
+								Description: "The identifying name of the operation in the agent config file.",
+								Required:    true,
+							},
+							"body": schema.StringAttribute{
+								Description: "Arguments to the operation, specified as JSON.",
+								Optional:    true,
+							},
+							"action_run_id": schema.StringAttribute{
+								Description: "An optional action run id. If specified the agent will interact with the actions subsystem.",
+								Optional:    true,
+							},
+							"group": schema.StringAttribute{
+								Description: "The name of the group that the operation is in.",
+								Required:    true,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -119,7 +141,7 @@ func (d *DataSourceAction) Configure(ctx context.Context, req datasource.Configu
 }
 
 func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ActionResourceModel
+	var data *ActionResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -159,36 +181,24 @@ func (d *DataSourceAction) Read(ctx context.Context, req datasource.ReadRequest,
 	data.ProjectID = types.StringValue(client.Config.ProjectID)
 
 	data.Request = &actionRequest{}
-	headerMap := make(map[string]string)
 
 	var diags diag.Diagnostics
 
 	// In the future, expand this to accommodate other types of requests
 
-	data.Request.Custom = &customRequest{}
-	if actionModel.Request.Custom.Method != nil {
-		data.Request.Custom.Method = types.StringValue(string(*actionModel.Request.Custom.Method))
-	} else {
-		data.Request.Custom.Method = types.StringNull()
-	}
-	if actionModel.Request.Custom.Headers != nil {
-		for _, header := range actionModel.Request.Custom.Headers {
-			headerMap[header.Key] = header.Value
-		}
-		if len(headerMap) > 0 {
-			data.Request.Custom.Headers, diags = types.MapValueFrom(ctx, types.StringType, headerMap)
+	if actionModel.Request.Custom != nil {
+		diags = readCustomAction(ctx, data, actionModel)
+		if diags.HasError() {
 			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-		} else {
-			data.Request.Custom.Headers = types.MapNull(types.StringType)
+			return
 		}
-	} else {
-		data.Request.Custom.Headers = types.MapNull(types.StringType)
+	} else if actionModel.Request.Agent != nil {
+		diags = readAgentAction(ctx, data, actionModel)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
 	}
-	data.Request.Custom.URL = types.StringValue(actionModel.Request.Custom.URL)
-	data.Request.Custom.Body = types.StringValue(actionModel.Request.Custom.Body)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
