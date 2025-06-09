@@ -14,7 +14,6 @@ import (
 )
 
 func TestAcc_Waypoint_Action_DataSource_basic(t *testing.T) {
-	t.Parallel()
 
 	// Skip this test unless the appropriate environment variable is set
 	// This is to prevent running this test by default
@@ -52,7 +51,6 @@ func TestAcc_Waypoint_Action_DataSource_basic(t *testing.T) {
 }
 
 func TestAcc_Waypoint_Action_DataSource_Agent(t *testing.T) {
-	t.Parallel()
 
 	// Skip this test unless the appropriate environment variable is set
 	// This is to prevent running this test by default
