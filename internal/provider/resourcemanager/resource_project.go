@@ -132,12 +132,13 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	// Wait for the project to be created.
-	operationName := "create project"
-	err = waitForProjectOperation(ctx, r.client, operationName, res.Payload.Project.ID, res.Payload.OperationID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error waiting for project creation", err.Error())
-		return
+	// Wait for the project to be created, if an operation ID is returned.
+	if res.Payload.OperationID != "" {
+		err = waitForProjectOperation(ctx, r.client, "create project", res.Payload.Project.ID, res.Payload.OperationID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for project creation", err.Error())
+			return
+		}
 	}
 
 	p := res.GetPayload().Project
@@ -235,11 +236,14 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		// Wait for the project name to be updated.
-		err = waitForProjectOperation(ctx, r.client, "update project name", plan.ResourceID.ValueString(), res.Payload.OperationID)
-		if err != nil {
-			resp.Diagnostics.AddError("Error waiting for project name update", err.Error())
-			return
+		// Wait for the project name to be updated, if an operation ID is returned.
+		if res.Payload.OperationID != "" {
+			// Wait for the project name to be updated.
+			err = waitForProjectOperation(ctx, r.client, "update project name", plan.ResourceID.ValueString(), res.Payload.OperationID)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for project name update", err.Error())
+				return
+			}
 		}
 	}
 
@@ -257,11 +261,13 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		// Wait for the project description to be updated.
-		err = waitForProjectOperation(ctx, r.client, "update project description", plan.ResourceID.ValueString(), res.Payload.OperationID)
-		if err != nil {
-			resp.Diagnostics.AddError("Error waiting for project description update", err.Error())
-			return
+		// Wait for the project description to be updated, if an operation ID is returned.
+		if res.Payload.OperationID != "" {
+			err = waitForProjectOperation(ctx, r.client, "update project description", plan.ResourceID.ValueString(), res.Payload.OperationID)
+			if err != nil {
+				resp.Diagnostics.AddError("Error waiting for project description update", err.Error())
+				return
+			}
 		}
 
 	}
@@ -291,11 +297,15 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	// Wait for the project to be deleted.
-	err = waitForProjectOperation(ctx, r.client, "delete project", "", res.Payload.Operation.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Error waiting for project deletion", err.Error())
-		return
+	// Wait for the project to be deleted, if an operation ID is returned.
+	if res.Payload.Operation.ID != "" {
+		// For delete operations, the operation is scoped at the organization level
+		projectID := ""
+		err = waitForProjectOperation(ctx, r.client, "delete project", projectID, res.Payload.Operation.ID)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for project deletion", err.Error())
+			return
+		}
 	}
 }
 
