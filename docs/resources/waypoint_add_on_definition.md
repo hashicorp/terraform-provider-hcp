@@ -13,6 +13,8 @@ Waypoint Add-on Definition resource
 
 ## Example Usage
 
+If you are using [tfe_registry_module](https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/data-sources/registry_module) datasource, use the `no_code_module_id` and `no_code_module_source` attributes for the inputs in the addon definition.
+
 ```terraform
 resource "hcp_waypoint_add_on_definition" "add_on_definition" {
   name                            = "postgres"
@@ -30,6 +32,7 @@ EOF
       name          = "size"
       user_editable = true
       options       = ["small", "medium", "large"]
+      variable_type = "string"
     }
   ]
 }
