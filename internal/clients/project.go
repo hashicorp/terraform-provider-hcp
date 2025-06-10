@@ -62,11 +62,14 @@ func CreateProjectWithRetry(client *Client, params *project_service.ProjectServi
 	op := func() error {
 		var err error
 		res, err = client.Project.ProjectServiceCreate(params, nil)
+		if err != nil {
+			return err
+		}
 		// Wait for the project to be created, if an operation ID is returned.
 		if res.Payload.OperationID != "" {
 			return waitForProjectOperation(params.Context, client, "create project", res.Payload.Project.ID, res.Payload.OperationID)
 		}
-		return err
+		return nil
 	}
 
 	serviceErr := &project_service.ProjectServiceCreateDefault{}
@@ -81,11 +84,14 @@ func SetProjectNameWithRetry(client *Client, params *project_service.ProjectServ
 	op := func() error {
 		var err error
 		res, err = client.Project.ProjectServiceSetName(params, nil)
+		if err != nil {
+			return err
+		}
 		// Wait for the project name to be set, if an operation ID is returned.
 		if res.Payload.OperationID != "" {
 			return waitForProjectOperation(params.Context, client, "set project name", params.ID, res.Payload.OperationID)
 		}
-		return err
+		return nil
 	}
 
 	serviceErr := &project_service.ProjectServiceSetNameDefault{}
@@ -100,11 +106,14 @@ func SetProjectDescriptionWithRetry(client *Client, params *project_service.Proj
 	op := func() error {
 		var err error
 		res, err = client.Project.ProjectServiceSetDescription(params, nil)
+		if err != nil {
+			return err
+		}
 		// Wait for the project description to be set, if an operation ID is returned.
 		if res.Payload.OperationID != "" {
 			return waitForProjectOperation(params.Context, client, "set project description", params.ID, res.Payload.OperationID)
 		}
-		return err
+		return nil
 	}
 
 	serviceErr := &project_service.ProjectServiceSetDescriptionDefault{}
@@ -119,13 +128,16 @@ func DeleteProjectWithRetry(client *Client, params *project_service.ProjectServi
 	op := func() error {
 		var err error
 		res, err = client.Project.ProjectServiceDelete(params, nil)
+		if err != nil {
+			return err
+		}
 		// Wait for the project to be deleted, if an operation ID is returned.
 		if res.Payload.Operation.ID != "" {
 			// For delete operations, the operation is scoped at the organization level
 			projectID := ""
 			return waitForProjectOperation(params.Context, client, "delete project", projectID, res.Payload.Operation.ID)
 		}
-		return err
+		return nil
 	}
 
 	serviceErr := &project_service.ProjectServiceDeleteDefault{}
