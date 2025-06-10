@@ -116,14 +116,15 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 
 	parentType := models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION
 	createParams := project_service.NewProjectServiceCreateParams()
-	createParams.Body = &models.HashicorpCloudResourcemanagerProjectCreateRequest{
+	createParams.SetBody(&models.HashicorpCloudResourcemanagerProjectCreateRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Parent: &models.HashicorpCloudResourcemanagerResourceID{
 			ID:   r.client.Config.OrganizationID,
 			Type: &parentType,
 		},
-	}
+	})
+	createParams.SetContext(ctx)
 
 	res, err := clients.CreateProjectWithRetry(r.client, createParams)
 	if err != nil {
@@ -215,10 +216,11 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	// Check if the name was updated
 	if !plan.Name.Equal(state.Name) {
 		setNameReq := project_service.NewProjectServiceSetNameParams()
-		setNameReq.ID = plan.ResourceID.ValueString()
-		setNameReq.Body = project_service.ProjectServiceSetNameBody{
+		setNameReq.SetID(plan.ResourceID.ValueString())
+		setNameReq.SetBody(project_service.ProjectServiceSetNameBody{
 			Name: plan.Name.ValueString(),
-		}
+		})
+		setNameReq.SetContext(ctx)
 
 		_, err := clients.SetProjectNameWithRetry(r.client, setNameReq)
 		if err != nil {
@@ -230,10 +232,11 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	// Check if the description was updated
 	if !plan.Description.Equal(state.Description) {
 		setDescReq := project_service.NewProjectServiceSetDescriptionParams()
-		setDescReq.ID = plan.ResourceID.ValueString()
-		setDescReq.Body = project_service.ProjectServiceSetDescriptionBody{
+		setDescReq.SetID(plan.ResourceID.ValueString())
+		setDescReq.SetBody(project_service.ProjectServiceSetDescriptionBody{
 			Description: plan.Description.ValueString(),
-		}
+		})
+		setDescReq.SetContext(ctx)
 
 		_, err := clients.SetProjectDescriptionWithRetry(r.client, setDescReq)
 		if err != nil {
@@ -255,7 +258,8 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	deleteParams := project_service.NewProjectServiceDeleteParams()
-	deleteParams.ID = state.ResourceID.ValueString()
+	deleteParams.SetID(state.ResourceID.ValueString())
+	deleteParams.SetContext(ctx)
 
 	_, err := clients.DeleteProjectWithRetry(r.client, deleteParams)
 	if err != nil {
