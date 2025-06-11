@@ -38,7 +38,7 @@ resource "time_rotating" "key_rotation" {
 
 resource "hcp_service_principal_key" "key" {
   service_principal = hcp_service_principal.example.resource_name
-  rotation_triggers {
+  rotate_triggers = {
     rotation_time = time_rotating.key_rotation.rotation_rfc3339
   }
 }
