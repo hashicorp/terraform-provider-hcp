@@ -29,9 +29,8 @@ func WaitForOperation(ctx context.Context, client *Client, operationName string,
 	waitParams.ID = operationID
 	waitParams.Timeout = &waitTimeout
 	waitParams.LocationOrganizationID = loc.OrganizationID
-	if loc.ProjectID == "" {
-		waitParams.LocationProjectID = "-"
-	} else {
+	waitParams.LocationProjectID = "-"
+	if loc.ProjectID != "" {
 		waitParams.LocationProjectID = loc.ProjectID
 	}
 

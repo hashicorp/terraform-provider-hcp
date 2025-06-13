@@ -67,6 +67,7 @@ Running a specific test package:
 $ make testacc TEST="./internal/provider/iam"
 ==> Checking that code complies with gofmt requirements...
 golangci-lint run --config ./golangci-config.yml 
+# Required golangci-lint version: v1.64.8
 TF_ACC=1 go test ./internal/provider/iam -v  -timeout 360m -parallel=10
 === RUN   TestAccGroupDataSource
 --- PASS: TestAccGroupDataSource (8.69s)
