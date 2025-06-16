@@ -79,3 +79,15 @@ event "promote-production" {
     on = "always"
   }
 }
+
+event "bump-version-patch" {
+  depends = ["promote-production-packaging"]
+  action "bump-version" {
+    organization = "hashicorp"
+    repository = "crt-workflows-common"
+    workflow = "bump-version"
+  }
+  notification {
+    on = "fail"
+  }
+}
