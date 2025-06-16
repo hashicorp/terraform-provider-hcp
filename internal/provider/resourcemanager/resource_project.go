@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	billingModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/models"
@@ -117,14 +116,15 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 
 	parentType := models.HashicorpCloudResourcemanagerResourceIDResourceTypeORGANIZATION
 	createParams := project_service.NewProjectServiceCreateParams()
-	createParams.Body = &models.HashicorpCloudResourcemanagerProjectCreateRequest{
+	createParams.SetBody(&models.HashicorpCloudResourcemanagerProjectCreateRequest{
 		Description: plan.Description.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Parent: &models.HashicorpCloudResourcemanagerResourceID{
 			ID:   r.client.Config.OrganizationID,
 			Type: &parentType,
 		},
-	}
+	})
+	createParams.SetContext(ctx)
 
 	res, err := clients.CreateProjectWithRetry(r.client, createParams)
 	if err != nil {
@@ -216,10 +216,11 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	// Check if the name was updated
 	if !plan.Name.Equal(state.Name) {
 		setNameReq := project_service.NewProjectServiceSetNameParams()
-		setNameReq.ID = plan.ResourceID.ValueString()
-		setNameReq.Body = project_service.ProjectServiceSetNameBody{
+		setNameReq.SetID(plan.ResourceID.ValueString())
+		setNameReq.SetBody(project_service.ProjectServiceSetNameBody{
 			Name: plan.Name.ValueString(),
-		}
+		})
+		setNameReq.SetContext(ctx)
 
 		_, err := clients.SetProjectNameWithRetry(r.client, setNameReq)
 		if err != nil {
@@ -231,16 +232,18 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	// Check if the description was updated
 	if !plan.Description.Equal(state.Description) {
 		setDescReq := project_service.NewProjectServiceSetDescriptionParams()
-		setDescReq.ID = plan.ResourceID.ValueString()
-		setDescReq.Body = project_service.ProjectServiceSetDescriptionBody{
+		setDescReq.SetID(plan.ResourceID.ValueString())
+		setDescReq.SetBody(project_service.ProjectServiceSetDescriptionBody{
 			Description: plan.Description.ValueString(),
-		}
+		})
+		setDescReq.SetContext(ctx)
 
 		_, err := clients.SetProjectDescriptionWithRetry(r.client, setDescReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating project description", err.Error())
 			return
 		}
+
 	}
 
 	// Store the updated values
@@ -254,12 +257,11 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	getParams := project_service.NewProjectServiceDeleteParams()
-	getParams.ID = state.ResourceID.ValueString()
-	// Increasing this timeout to account for long syncing times of projects to TFC
-	// This can be removed once client-side blocking is implemented
-	getParams.WithTimeout(45 * time.Second)
-	_, err := r.client.Project.ProjectServiceDelete(getParams, nil)
+	deleteParams := project_service.NewProjectServiceDeleteParams()
+	deleteParams.SetID(state.ResourceID.ValueString())
+	deleteParams.SetContext(ctx)
+
+	_, err := clients.DeleteProjectWithRetry(r.client, deleteParams)
 	if err != nil {
 		var deleteErr *project_service.ProjectServiceDeleteDefault
 		if errors.As(err, &deleteErr) && deleteErr.IsCode(http.StatusNotFound) {

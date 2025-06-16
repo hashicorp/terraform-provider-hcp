@@ -1,0 +1,3 @@
+```release-note:improvement
+Project operations (create, delete, update) now block client-side if an operationID is present in the response.
+```
