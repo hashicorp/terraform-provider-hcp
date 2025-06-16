@@ -90,7 +90,6 @@ func (u *radarResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context
 	var diags diag.Diagnostics
 	params := resource_service.NewResourceServiceGetIamPolicyParams()
 	params.ResourceName = &rr.HcpResourceName
-	//params.ResourceName = &u.resourceName
 
 	res, err := u.client.ResourceService.ResourceServiceGetIamPolicy(params, nil)
 	if err != nil {
@@ -122,7 +121,6 @@ func (u *radarResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context
 	params.Body = &models.HashicorpCloudResourcemanagerResourceSetIamPolicyRequest{
 		Policy:       policy,
 		ResourceName: rr.HcpResourceName,
-		//ResourceName: u.resourceName,
 	}
 
 	res, err := u.client.ResourceService.ResourceServiceSetIamPolicy(params, nil)

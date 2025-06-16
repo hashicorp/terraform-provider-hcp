@@ -59,7 +59,7 @@ func TestRadarResourceIAMPolicy(t *testing.T) {
 
 }
 
-func createRadarResourceIAMPolicyConfig(projectID, role, resource_uri string) string {
+func createRadarResourceIAMPolicyConfig(projectID, role, resourceURI string) string {
 	return fmt.Sprintf(`
 		# Create a dev group.
 		resource "hcp_group" "group" {
@@ -87,7 +87,7 @@ func createRadarResourceIAMPolicyConfig(projectID, role, resource_uri string) st
 		  resource_uri = %q
 		  policy_data = data.hcp_iam_policy.policy.policy_data
 		}
-		`, projectID, role, resource_uri)
+		`, projectID, role, resourceURI)
 }
 
 func TestRadarResourceIAMBinding(t *testing.T) {
@@ -131,7 +131,7 @@ func TestRadarResourceIAMBinding(t *testing.T) {
 
 }
 
-func createRadarResourceIAMBindingConfig(projectID, role, resource_uri string) string {
+func createRadarResourceIAMBindingConfig(projectID, role, resourceURI string) string {
 	return fmt.Sprintf(`
 		# Create a dev group.
 		resource "hcp_group" "group" {
@@ -153,5 +153,5 @@ func createRadarResourceIAMBindingConfig(projectID, role, resource_uri string) s
 			role         =  %q
 
 		}
-		`, projectID, resource_uri, role)
+		`, projectID, resourceURI, role)
 }
