@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
-
 	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
 	billingModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -24,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
+	"log"
+	"net/http"
 )
 
 const (
@@ -268,9 +268,18 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 			return
 		}
 
+		// If error is timeout, we will treat this as to be eventually consistent.
+		// This is a workaround for the fact that the delete operation can take a long time given the cadence workflow
+		// may not be completed yet.
+		if errors.Is(err, context.DeadlineExceeded) {
+			log.Printf("[WARN] Delete operation timed out but assuming resource will be eventually consistent.")
+			return
+		}
+
 		resp.Diagnostics.AddError("Error deleting project", err.Error())
 		return
 	}
+
 }
 
 func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
