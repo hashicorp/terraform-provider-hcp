@@ -1,0 +1,3 @@
+{{- define "note" -}}
+{{.Body}} [[GH-{{- .Issue -}}](https://github.com/hashicorp/hcp/issues/{{- .Issue -}})]
+{{- end -}}
