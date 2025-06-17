@@ -11,6 +11,9 @@ description: |-
 
 Sets the Vault Radar Resource IAM policy and replaces any existing policy.
 
+~> **Note:** `hcp_vault_radar_resource_iam_policy` can not be used in conjunction with
+`hcp_vault_radar_resource_iam_binding`.
+
 ## Example Usage
 
 ```terraform
