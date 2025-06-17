@@ -30,7 +30,7 @@ import (
 func radarResourceIAMSchema(binding bool) schema.Schema {
 	d := "Sets the Vault Radar Resource IAM policy and replaces any existing policy."
 	if binding {
-		d = "Updates the Vault Radar Resource IAM policy to bind a role to a new member. Existing bindings are preserved."
+		d = "Updates the Vault Radar Resource IAM policy to bind a role to a new principal. Existing bindings are preserved."
 	}
 
 	return schema.Schema{

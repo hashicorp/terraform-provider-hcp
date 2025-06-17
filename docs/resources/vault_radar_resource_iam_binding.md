@@ -2,14 +2,14 @@
 page_title: "hcp_vault_radar_resource_iam_binding Resource - terraform-provider-hcp"
 subcategory: "HCP Vault Radar"
 description: |-
-  Updates the Vault Radar Resource IAM policy to bind a role to a new member. Existing bindings are preserved.
+  Updates the Vault Radar Resource IAM policy to bind a role to a new principal. Existing bindings are preserved.
 ---
 
 # hcp_vault_radar_resource_iam_binding (Resource)
 
 -> **Note:** This feature is currently in private beta.
 
-Updates the Vault Radar Resource IAM policy to bind a role to a new member. Existing bindings are preserved.
+Updates the Vault Radar Resource IAM policy to bind a role to a new principal. Existing bindings are preserved.
 
 ## Example Usage
 
