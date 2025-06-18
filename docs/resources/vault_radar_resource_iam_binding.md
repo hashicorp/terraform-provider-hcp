@@ -11,6 +11,12 @@ description: |-
 
 Updates the Vault Radar Resource IAM policy to bind a role to a new principal. Existing bindings are preserved.
 
+~> **Note:** `hcp_vault_radar_resource_iam_policy` can not be used in conjunction with
+`hcp_vault_radar_resource_iam_binding`.
+
+~> **Note:** `roles/vault-radar.resource-viewer` and `roles/vault-radar.resource-contributor` are the only roles
+that can be applied to a policy and/or binding for Vault Radar resources.
+
 ## Example Usage
 
 ```terraform
@@ -22,6 +28,8 @@ data "hcp_group" "group" {
   resource_name = "iam/organization/${var.organization_id}/group/dev-group"
 }
 
+# Note: `roles/vault-radar.resource-viewer` and `roles/vault-radar.resource-contributor` are the only roles
+# that can be applied to a policy and/or binding for Vault Radar resources.
 resource "hcp_vault_radar_resource_iam_binding" "binding" {
   resource_uri = "git://github.com/foo/bar.git"
   principal_id = data.hcp_group.group.resource_id

@@ -6,7 +6,10 @@ package vaultradar
 import (
 	"context"
 	"errors"
+	"fmt"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/resource_service"
@@ -110,12 +113,29 @@ func (u *radarResourceIAMPolicyUpdater) GetResourceIamPolicy(ctx context.Context
 
 // SetResourceIamPolicy Replaces the existing IAM Policy attached to a resource.
 func (u *radarResourceIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *models.HashicorpCloudResourcemanagerPolicy) (*models.HashicorpCloudResourcemanagerPolicy, diag.Diagnostics) {
-	rr, lookupDiags := lookupRadarResourceByURI(ctx, u.client, u.resourceURI)
-	if lookupDiags.HasError() {
-		return nil, lookupDiags
+	var diags diag.Diagnostics
+
+	allowableRolesSet := map[string]struct{}{
+		"roles/vault-radar.resource-viewer":      {},
+		"roles/vault-radar.resource-contributor": {},
+	}
+	allowableRolesMsg := strings.Join(slices.Collect(maps.Keys(allowableRolesSet)), ", ")
+
+	for _, binding := range policy.Bindings {
+		if _, ok := allowableRolesSet[binding.RoleID]; !ok {
+			diags.AddError("invalid role in policy binding: "+binding.RoleID, fmt.Sprintf("allowable roles are: [%s]", allowableRolesMsg))
+		}
 	}
 
-	var diags diag.Diagnostics
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	rr, diags := lookupRadarResourceByURI(ctx, u.client, u.resourceURI)
+	if diags.HasError() {
+		return nil, diags
+	}
+
 	params := resource_service.NewResourceServiceSetIamPolicyParams()
 
 	params.Body = &models.HashicorpCloudResourcemanagerResourceSetIamPolicyRequest{

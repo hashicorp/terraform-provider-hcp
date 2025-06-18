@@ -14,6 +14,9 @@ description: |-
 ~> **Note:** `hcp_vault_radar_resource_iam_policy` can not be used in conjunction with
 `hcp_vault_radar_resource_iam_binding`.
 
+~> **Note:** `roles/vault-radar.resource-viewer` and `roles/vault-radar.resource-contributor` are the only roles
+that can be applied to a policy and/or binding for Vault Radar resources.
+
 ## Example Usage
 
 {{ tffile "examples/resources/hcp_vault_radar_resource_iam_policy/resource.tf" }}
