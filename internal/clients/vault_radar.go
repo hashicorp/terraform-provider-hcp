@@ -11,6 +11,7 @@ import (
 	dsrs "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
 	ics "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
 	iss "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
+	rrs "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/resource_service"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -274,4 +275,19 @@ func UpdateIntegrationSubscription(ctx context.Context, client *Client, projectI
 	}
 
 	return nil
+}
+
+func ListRadarResources(ctx context.Context, client *Client, projectID string, body rrs.ListResourcesBody) (*rrs.ListResourcesOK, error) {
+	params := rrs.NewListResourcesParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = body
+
+	res, err := client.RadarResourceService.ListResources(params, nil)
+	if err != nil {
+		tflog.Error(ctx, "Failed to list radar resources", map[string]interface{}{"error": err.Error()})
+		return nil, err
+	}
+
+	return res, nil
 }
