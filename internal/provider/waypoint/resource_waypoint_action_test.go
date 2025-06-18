@@ -19,7 +19,6 @@ import (
 )
 
 func TestAcc_Waypoint_Action_basic(t *testing.T) {
-	t.Parallel()
 
 	// Skip this test unless the appropriate environment variable is set
 	// This is to prevent running this test by default
@@ -30,7 +29,9 @@ func TestAcc_Waypoint_Action_basic(t *testing.T) {
 	}
 	var actionCfgModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
+	resourceNameAgent := "hcp_waypoint_action.test_agent"
 	actionName := generateRandomName()
+	actionAgentName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -43,6 +44,22 @@ func TestAcc_Waypoint_Action_basic(t *testing.T) {
 					testAccCheckWaypointActionExists(t, resourceName, &actionCfgModel),
 					testAccCheckWaypointActionName(t, &actionCfgModel, actionName),
 					resource.TestCheckResourceAttr(resourceName, "name", actionName),
+				),
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWaypointActionDestroy(t, &actionCfgModel),
+		Steps: []resource.TestStep{
+			{
+				Config: testAgentAction(actionAgentName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWaypointActionExists(t, resourceNameAgent, &actionCfgModel),
+					testAccCheckWaypointActionName(t, &actionCfgModel, actionAgentName),
+					resource.TestCheckResourceAttr(resourceNameAgent, "name", actionAgentName),
 				),
 			},
 		},
@@ -90,6 +107,8 @@ func testAccCheckWaypointActionExists(t *testing.T, resourceName string, actionC
 		if actionCfgModel != nil {
 			actionCfgModel.Name = types.StringValue(actionCfg.Name)
 			actionCfgModel.ID = types.StringValue(actionCfg.ID)
+		} else {
+			return fmt.Errorf("actionCfgModel is nil when it should not be")
 		}
 
 		return nil
@@ -145,4 +164,18 @@ resource "hcp_waypoint_action" "test" {
 	}
 }
 `, actionName)
+}
+
+func testAgentAction(actionName string) string {
+	return fmt.Sprintf(`
+resource "hcp_waypoint_action" "test_agent" {
+	name = "%s"
+	description = "Test action"
+	request = {
+		agent = {
+			operation_id = "test-operation-id"
+			group = "test-group"
+		}
+	}
+}`, actionName)
 }
