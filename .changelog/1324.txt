@@ -1,0 +1,3 @@
+```release-note:feature
+Add preview of hcp_vault_radar_resource_list.
+```

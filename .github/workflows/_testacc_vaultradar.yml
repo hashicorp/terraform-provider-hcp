@@ -79,6 +79,8 @@ jobs:
           # RADAR_GITHUB_ENTERPRISE_TOKEN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN }}
           # RADAR_GITHUB_ENTERPRISE_TOKEN_2: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN_2 }}
           # RADAR_HCP_RESOURCE_NAME ${{ secrets.RADAR_HCP_RESOURCE_NAME }}
+          # RADAR_RESOURCE_URI ${{ secrets.RADAR_RESOURCE_URI }}
+          # RADAR_RESOURCE_LIST_URI_LIKE_FILTER ${{ secrets.RADAR_RESOURCE_LIST_URI_LIKE_FILTER }}
         run: |
           go test \
             ./internal/provider/vaultradar \
