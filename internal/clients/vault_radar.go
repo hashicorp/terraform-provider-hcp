@@ -285,7 +285,6 @@ func ListRadarResources(ctx context.Context, client *Client, projectID string, b
 
 	res, err := client.RadarResourceService.ListResources(params, nil)
 	if err != nil {
-		tflog.Error(ctx, "Failed to list radar resources", map[string]interface{}{"error": err.Error()})
 		return nil, err
 	}
 

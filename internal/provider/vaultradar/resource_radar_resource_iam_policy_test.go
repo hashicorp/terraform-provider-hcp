@@ -40,7 +40,7 @@ func TestRadarResourceIAMPolicy(t *testing.T) {
 					resource.TestCheckResourceAttrSet("hcp_vault_radar_resource_iam_policy.test", "etag"),
 				),
 			},
-			// UPDATE token
+			// UPDATE role
 			{
 				Config: createRadarResourceIAMPolicyConfig(projectID, resourceViewer, hcpResourceName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -112,7 +112,7 @@ func TestRadarResourceIAMBinding(t *testing.T) {
 					resource.TestCheckResourceAttr("hcp_vault_radar_resource_iam_binding.test", "role", resourceContributor),
 				),
 			},
-			// UPDATE token
+			// UPDATE role
 			{
 				Config: createRadarResourceIAMBindingConfig(projectID, resourceViewer, hcpResourceName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
