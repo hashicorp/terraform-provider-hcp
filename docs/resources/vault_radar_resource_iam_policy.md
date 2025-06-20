@@ -38,8 +38,8 @@ data "hcp_iam_policy" "policy" {
 }
 
 resource "hcp_vault_radar_resource_iam_policy" "policy" {
-  resource_uri = "git://github.com/foo/bar.git"
-  policy_data  = data.hcp_iam_policy.policy.policy_data
+  resource_name = "vault-radar/project/<project_id>/scan-target/<scan_target_id>"
+  policy_data   = data.hcp_iam_policy.policy.policy_data
 }
 ```
 
@@ -50,7 +50,7 @@ resource "hcp_vault_radar_resource_iam_policy" "policy" {
 ### Required
 
 - `policy_data` (String) The policy to apply.
-- `resource_uri` (String) The project's Radar resource URI.
+- `resource_name` (String) The HCP resource name associated with the Radar resource. This is the name of the resource in the format `vault-radar/project/<project_id>/scan-target/<scan_target_id>`.
 
 ### Read-Only
 
