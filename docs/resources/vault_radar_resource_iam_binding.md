@@ -31,9 +31,9 @@ data "hcp_group" "group" {
 # Note: `roles/vault-radar.resource-viewer` and `roles/vault-radar.resource-contributor` are the only roles
 # that can be applied to a policy and/or binding for Vault Radar resources.
 resource "hcp_vault_radar_resource_iam_binding" "binding" {
-  resource_uri = "git://github.com/foo/bar.git"
-  principal_id = data.hcp_group.group.resource_id
-  role         = "roles/vault-radar.resource-viewer"
+  resource_name = "vault-radar/project/<project_id>/scan-target/<scan_target_id>"
+  principal_id  = data.hcp_group.group.resource_id
+  role          = "roles/vault-radar.resource-viewer"
 }
 ```
 
@@ -44,5 +44,5 @@ resource "hcp_vault_radar_resource_iam_binding" "binding" {
 ### Required
 
 - `principal_id` (String) The principal to bind to the given role.
-- `resource_uri` (String) The project's Radar resource URI.
+- `resource_name` (String) The HCP resource name associated with the Radar resource. This is the name of the resource in the format `vault-radar/project/<project_id>/scan-target/<scan_target_id>`.
 - `role` (String) The role name to bind to the given principal.
