@@ -16,6 +16,6 @@ data "hcp_iam_policy" "policy" {
 }
 
 resource "hcp_vault_radar_resource_iam_policy" "policy" {
-  resource_uri = "git://github.com/foo/bar.git"
-  policy_data  = data.hcp_iam_policy.policy.policy_data
+  resource_name = "vault-radar/project/<project_id>/scan-target/<scan_target_id>"
+  policy_data   = data.hcp_iam_policy.policy.policy_data
 }
