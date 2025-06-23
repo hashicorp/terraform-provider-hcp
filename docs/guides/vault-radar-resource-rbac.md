@@ -64,19 +64,21 @@ data "hcp_vault_radar_resource_list" "resource_list" {
   ]
 }
 
-# Map the list of Radar resources to a set of HCP resource names, and filter out any resources that are not registered.
+# Map the list of Radar resources to a map of uris to HCP resource names, and filter out any resources that are not registered.
 locals {
-  resources_names = toset(flatten([
-    for radar_resource in data.hcp_vault_radar_resource_list.resource_list.resources : radar_resource.hcp_resource_name
-    # This is done as a precaution to ensure that only registered resources are processed.
+  resources_uri_to_resource_name = {
+    for radar_resource in data.hcp_vault_radar_resource_list.resource_list.resources : radar_resource.uri =>
+    radar_resource.hcp_resource_name
+    # This is done as a precaution to ensure that only valid resources are processed.
     if radar_resource.hcp_resource_status == "registered"
-  ]))
+  }
+
 }
 
 # Create IAM policies for each Radar resource's HCP resource name that the group should have access to.
 # Note this will replace any existing policies for the resources. If that is not desired, consider using `hcp_vault_radar_resource_iam_binding` instead.
 resource "hcp_vault_radar_resource_iam_policy" "policy" {
-  for_each      = local.resources_names
+  for_each      = local.resources_uri_to_resource_name
   resource_name = each.value
   policy_data   = data.hcp_iam_policy.policy.policy_data
 }
