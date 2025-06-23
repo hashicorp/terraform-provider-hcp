@@ -17,18 +17,22 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-type DataSourceRadarResourceList struct {
+type DataSourceRadarResources struct {
 	client *clients.Client
 }
 
-type DataSourceRadarResourceListModel struct {
-	ProjectID                    types.String   `tfsdk:"project_id"`
-	URILikeFilter                []types.String `tfsdk:"uri_like_filter"`
-	URILikeFilterCaseInsensitive types.Bool     `tfsdk:"uri_like_filter_case_insensitive"`
-	Resources                    []Resource     `tfsdk:"resources"`
+type DataSourceRadarResourcesModel struct {
+	ProjectID     types.String          `tfsdk:"project_id"`
+	URILikeFilter ResourceURILikeFilter `tfsdk:"uri_like_filter"`
+	Resources     []Resource            `tfsdk:"resources"`
 }
 
-// Resource represents a radar resource in the list.
+type ResourceURILikeFilter struct {
+	Values          []types.String `tfsdk:"values"`
+	CaseInsensitive types.Bool     `tfsdk:"case_insensitive"`
+}
+
+// Resource represents a radar resource in the list of resources.
 type Resource struct {
 	ID                types.String `tfsdk:"id"`
 	Name              types.String `tfsdk:"name"`
@@ -46,15 +50,15 @@ type Resource struct {
 	HCPResourceStatus types.String `tfsdk:"hcp_resource_status"`
 }
 
-func NewRadarResourceListDataSource() datasource.DataSource {
-	return &DataSourceRadarResourceList{}
+func NewRadarResourcesDataSource() datasource.DataSource {
+	return &DataSourceRadarResources{}
 }
 
-func (d *DataSourceRadarResourceList) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_vault_radar_resource_list"
+func (d *DataSourceRadarResources) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vault_radar_resources"
 }
 
-func (d *DataSourceRadarResourceList) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceRadarResources) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -69,7 +73,7 @@ func (d *DataSourceRadarResourceList) Configure(ctx context.Context, req datasou
 	d.client = client
 }
 
-func (d *DataSourceRadarResourceList) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSourceRadarResources) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Retrieves a list of radar resource data.",
 		Attributes: map[string]schema.Attribute{
@@ -78,14 +82,20 @@ func (d *DataSourceRadarResourceList) Schema(ctx context.Context, req datasource
 				Optional:    true,
 				Computed:    true,
 			},
-			"uri_like_filter": schema.ListAttribute{
+			"uri_like_filter": schema.SingleNestedAttribute{
 				Required:    true,
-				Description: "List of uri like filters to apply radar resources. The % character is a wildcard that matches any sequence of characters. Each entry in the list will act like an or condition.",
-				ElementType: types.StringType,
-			},
-			"uri_like_filter_case_insensitive": schema.BoolAttribute{
-				Description: "If true, the uri like filter will be case insensitive. Defaults to false.",
-				Optional:    true,
+				Description: "Applies a filter to the radar resources based on their URIs. The filter uses the SQL LIKE operator, which allows for wildcard matching.",
+				Attributes: map[string]schema.Attribute{
+					"values": schema.ListAttribute{
+						Required:    true,
+						Description: "URI like filters to apply radar resources. Each entry in the list will act like an or condition.",
+						ElementType: types.StringType,
+					},
+					"case_insensitive": schema.BoolAttribute{
+						Description: "If true, the uri like filter will be case insensitive. Defaults to false.",
+						Optional:    true,
+					},
+				},
 			},
 			"resources": schema.ListNestedAttribute{
 				Description: "List of Radar resources.",
@@ -155,8 +165,8 @@ func (d *DataSourceRadarResourceList) Schema(ctx context.Context, req datasource
 	}
 }
 
-func (d *DataSourceRadarResourceList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DataSourceRadarResourceListModel
+func (d *DataSourceRadarResources) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data DataSourceRadarResourcesModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -169,19 +179,19 @@ func (d *DataSourceRadarResourceList) Read(ctx context.Context, req datasource.R
 	}
 	data.ProjectID = types.StringValue(projectID)
 
-	if data.URILikeFilterCaseInsensitive.IsUnknown() {
-		data.URILikeFilterCaseInsensitive = types.BoolValue(false)
+	if data.URILikeFilter.CaseInsensitive.IsUnknown() {
+		data.URILikeFilter.CaseInsensitive = types.BoolValue(false)
 	}
 
-	uriLikeFilter := make([]string, 0, len(data.URILikeFilter))
-	for _, uri := range data.URILikeFilter {
+	uriLikeFilter := make([]string, 0, len(data.URILikeFilter.Values))
+	for _, uri := range data.URILikeFilter.Values {
 		if !uri.IsNull() && !uri.IsUnknown() {
 			uriLikeFilter = append(uriLikeFilter, uri.ValueString())
 		}
 	}
 
 	// Do the search for radar resources
-	resource, diag := listRadarResources(ctx, d.client, projectID, uriLikeFilter, data.URILikeFilterCaseInsensitive.ValueBool())
+	resource, diag := listRadarResources(ctx, d.client, projectID, uriLikeFilter, data.URILikeFilter.CaseInsensitive.ValueBool())
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return

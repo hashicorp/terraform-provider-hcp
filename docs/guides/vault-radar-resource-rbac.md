@@ -55,20 +55,20 @@ data "hcp_iam_policy" "policy" {
 
 # Get the list of Radar resources intended to be accessed by the group.
 # This example uses a URI 'LIKE' filter to only include resources that start with "git://github.com/ibm/" or "git://github.com/hashicorp/".
-# The % character is a wildcard that matches any sequence of characters.
-# Each entry in the uri_like_filter will act like an or condition.
-data "hcp_vault_radar_resource_list" "resource_list" {
-  uri_like_filter = [
-    "git://github.com/ibm/%",
-    "git://github.com/hashicorp/%",
-  ]
+data "hcp_vault_radar_resources" "radar_resources" {
+  uri_like_filter = {
+    values = [
+      "git://github.com/ibm/%",
+      "git://github.com/hashicorp/%",
+    ]
+    case_insensitive = false
+  }
 }
 
-# Map the list of Radar resources to a map of uris to HCP resource names, and filter out any resources that are not registered.
+# Map the list of Radar resources to a map of Radar URIs to HCP resource names, and filter out any resources that are not registered.
 locals {
   resources_uri_to_resource_name = {
-    for radar_resource in data.hcp_vault_radar_resource_list.resource_list.resources : radar_resource.uri =>
-    radar_resource.hcp_resource_name
+    for radar_resource in data.hcp_vault_radar_resources.radar_resources.resources : radar_resource.uri => radar_resource.hcp_resource_name
     # This is done as a precaution to ensure that only valid resources are processed.
     if radar_resource.hcp_resource_status == "registered"
   }

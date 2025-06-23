@@ -1,11 +1,11 @@
 ---
-page_title: "Data Source hcp_vault_radar_resource_list - terraform-provider-hcp"
+page_title: "Data Source hcp_vault_radar_resources - terraform-provider-hcp"
 subcategory: "HCP Vault Radar"
 description: |-
   Retrieves a list of radar resource data.
 ---
 
-# hcp_vault_radar_resource_list (Data Source)
+# hcp_vault_radar_resources (Data Source)
 
 -> **Note:** This feature is currently in private beta.
 
@@ -16,11 +16,14 @@ Retrieves a list of radar resource data.
 ```terraform
 # Returns a list of Radar resources in the project with uri matching
 # that beginning with "git://github.com/hashicorp/" or "git://github.com/ibm/".
-data "hcp_vault_radar_resource_list" "example" {
-  uri_like_filter = [
-    "git://github.com/hashicorp/%",
-    "git://github.com/ibm/%"
-  ]
+data "hcp_vault_radar_resources" "example" {
+  uri_like_filter = {
+    values = [
+      "git://github.com/hashicorp/%",
+      "git://github.com/ibm/%"
+    ]
+    case_insensitive = false
+  }
 }
 ```
 
@@ -29,16 +32,27 @@ data "hcp_vault_radar_resource_list" "example" {
 
 ### Required
 
-- `uri_like_filter` (List of String) List of uri like filters to apply radar resources. The % character is a wildcard that matches any sequence of characters. Each entry in the list will act like an or condition.
+- `uri_like_filter` (Attributes) Applies a filter to the radar resources based on their URIs. The filter uses the SQL LIKE operator, which allows for wildcard matching. (see [below for nested schema](#nestedatt--uri_like_filter))
 
 ### Optional
 
 - `project_id` (String) The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.
-- `uri_like_filter_case_insensitive` (Boolean) If true, the uri like filter will be case insensitive. Defaults to false.
 
 ### Read-Only
 
 - `resources` (Attributes List) List of Radar resources. (see [below for nested schema](#nestedatt--resources))
+
+<a id="nestedatt--uri_like_filter"></a>
+### Nested Schema for `uri_like_filter`
+
+Required:
+
+- `values` (List of String) URI like filters to apply radar resources. Each entry in the list will act like an or condition.
+
+Optional:
+
+- `case_insensitive` (Boolean) If true, the uri like filter will be case insensitive. Defaults to false.
+
 
 <a id="nestedatt--resources"></a>
 ### Nested Schema for `resources`

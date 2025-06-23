@@ -220,7 +220,7 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		waypoint.NewAddOnDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
 		// Radar
-		vaultradar.NewRadarResourceListDataSource,
+		vaultradar.NewRadarResourcesDataSource,
 	}, packer.DataSourceSchemaBuilders...)
 }
 
