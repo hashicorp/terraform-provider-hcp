@@ -62,7 +62,6 @@ func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequ
 			},
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the HCP project where the Waypoint Action is located.",
-				Optional:    true,
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
@@ -102,19 +101,19 @@ func (d *DataSourceAction) Schema(ctx context.Context, req datasource.SchemaRequ
 						Attributes: map[string]schema.Attribute{
 							"operation_id": schema.StringAttribute{
 								Description: "The identifying name of the operation in the agent config file.",
-								Required:    true,
+								Computed:    true,
 							},
 							"body": schema.StringAttribute{
 								Description: "Arguments to the operation, specified as JSON.",
-								Optional:    true,
+								Computed:    true,
 							},
 							"action_run_id": schema.StringAttribute{
 								Description: "An optional action run id. If specified the agent will interact with the actions subsystem.",
-								Optional:    true,
+								Computed:    true,
 							},
 							"group": schema.StringAttribute{
 								Description: "The name of the group that the operation is in.",
-								Required:    true,
+								Computed:    true,
 							},
 						},
 					},

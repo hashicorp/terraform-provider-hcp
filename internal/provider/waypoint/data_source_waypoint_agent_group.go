@@ -53,16 +53,14 @@ func (d *DataSourceAgentGroup) Schema(ctx context.Context, req datasource.Schema
 			"project_id": schema.StringAttribute{
 				Description: "The ID of the Waypoint project to which the Agent Group belongs.",
 				Computed:    true,
-				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
 				Description: "The ID of the Waypoint organization to which the Agent Group belongs.",
 				Computed:    true,
-				Optional:    true,
 			},
 			"description": schema.StringAttribute{
 				Description: "A description of the Agent Group.",
-				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

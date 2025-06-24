@@ -19,6 +19,7 @@ import (
 )
 
 func TestAcc_Waypoint_Action_basic(t *testing.T) {
+	t.Parallel()
 
 	// Skip this test unless the appropriate environment variable is set
 	// This is to prevent running this test by default
@@ -29,9 +30,7 @@ func TestAcc_Waypoint_Action_basic(t *testing.T) {
 	}
 	var actionCfgModel waypoint.ActionResourceModel
 	resourceName := "hcp_waypoint_action.test"
-	resourceNameAgent := "hcp_waypoint_action.test_agent"
 	actionName := generateRandomName()
-	actionAgentName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -48,6 +47,21 @@ func TestAcc_Waypoint_Action_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Waypoint_Action_agent(t *testing.T) {
+	t.Parallel()
+
+	// Skip this test unless the appropriate environment variable is set
+	// This is to prevent running this test by default
+	if os.Getenv("HCP_WAYP_ACTION_TEST") == "" {
+		t.Skipf("Waypoint Action tests skipped unless env '%s' set",
+			"HCP_WAYP_ACTION_TEST")
+		return
+	}
+	var actionCfgModel waypoint.ActionResourceModel
+	resourceNameAgent := "hcp_waypoint_action.test_agent"
+	actionAgentName := generateRandomName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
