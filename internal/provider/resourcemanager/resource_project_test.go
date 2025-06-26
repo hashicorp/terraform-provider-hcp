@@ -5,6 +5,7 @@ package resourcemanager_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -127,4 +128,86 @@ func testAccCheckProjectValues(project *models.HashicorpCloudResourcemanagerProj
 		}
 		return nil
 	}
+}
+
+// projectInput is a struct to hold project input data for testing.
+type projectInput struct {
+	Name        string
+	Description string
+}
+
+// testMultipleProjectsInput is a struct to hold multiple project inputs for testing.
+type testMultipleProjectsInput struct {
+	Projects []projectInput
+}
+
+// setTestAccMultipleProjects generates a Terraform configuration string for multiple projects.
+func setTestAccMultipleProjects(in *testMultipleProjectsInput) (string, error) {
+	var b strings.Builder
+	for i, p := range in.Projects {
+		_, err := fmt.Fprintf(&b, `
+			resource "hcp_project" "p%d" {
+  				name        = "%s"
+  				description = "%s"
+			}
+		`, i, p.Name, p.Description)
+		if err != nil {
+			return "", fmt.Errorf("error formatting project %d: %w", i, err)
+		}
+	}
+	return b.String(), nil
+}
+
+// testConfig is a helper function to trim whitespace from the configuration string.
+func testConfig(cfg string) string {
+	return strings.TrimSpace(cfg)
+}
+
+// TestAccMultipleProjects_Create tests the creation of multiple projects.
+func TestAccMultipleProjects_Create(t *testing.T) {
+	t.Parallel()
+
+	// number of projects to create
+	n := 50
+
+	// Create n projects with random names and descriptions
+	input := &testMultipleProjectsInput{
+		Projects: make([]projectInput, n),
+	}
+	for i := 0; i < n; i++ {
+		input.Projects[i] = projectInput{
+			Name:        acctest.RandString(10),
+			Description: acctest.RandString(20),
+		}
+	}
+
+	// Set up the test configuration
+	s, err := setTestAccMultipleProjects(input)
+	if err != nil {
+		t.Fatalf("error setting up test config: %v", err)
+	}
+
+	// Run the test
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testConfig(s),
+				Check: func(s *terraform.State) error {
+					for i, proj := range input.Projects {
+						name := fmt.Sprintf("hcp_project.p%d", i)
+						var p models.HashicorpCloudResourcemanagerProject
+						if err := testAccProjectResourceExists(t, name, &p)(s); err != nil {
+							return fmt.Errorf("project %s failed to exist: %w", name, err)
+						}
+						if err := testAccCheckProjectValues(&p, proj.Name, proj.Description)(s); err != nil {
+							return fmt.Errorf("project %s has unexpected values: %w", name, err)
+						}
+					}
+					return nil
+				},
+			},
+		},
+	})
 }
