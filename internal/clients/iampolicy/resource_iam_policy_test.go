@@ -52,6 +52,7 @@ func createIamPolicySchema() schema.Schema {
 	}
 }
 
+// rmPolicyOption defines a function type for modifying HashicorpCloudResourcemanagerPolicy
 type rmPolicyOption func(*models.HashicorpCloudResourcemanagerPolicy)
 
 func withRmPolicyBinding(roleID string, members ...*models.HashicorpCloudResourcemanagerPolicyBindingMember) rmPolicyOption {
@@ -61,6 +62,12 @@ func withRmPolicyBinding(roleID string, members ...*models.HashicorpCloudResourc
 			Members: members,
 		}
 		d.Bindings = append(d.Bindings, binding)
+	}
+}
+
+func withRmPolicyEtag(etag string) rmPolicyOption {
+	return func(d *models.HashicorpCloudResourcemanagerPolicy) {
+		d.Etag = etag
 	}
 }
 
@@ -94,288 +101,205 @@ func createIamPolicyValue(rmPolicy *models.HashicorpCloudResourcemanagerPolicy, 
 	)
 }
 
+// testScenario contains configuration for a single test case
+type testScenario struct {
+	name          string
+	planPolicy    *models.HashicorpCloudResourcemanagerPolicy
+	planEtag      string
+	mockGetPolicy *models.HashicorpCloudResourcemanagerPolicy
+	mockGetError  diag.Diagnostics
+	mockSetPolicy *models.HashicorpCloudResourcemanagerPolicy
+	mockSetError  diag.Diagnostics
+	expectedError string
+}
+
+// testFixture holds and sets up common state across tests
+type testFixture struct {
+	schema         schema.Schema
+	resourcePolicy *resourcePolicy
+	mockUpdater    *mockResourceIamUpdater
+}
+
+func newTestFixture() *testFixture {
+	mockUpdater := &mockResourceIamUpdater{}
+	schema := createIamPolicySchema()
+	resourcePolicy := &resourcePolicy{
+		updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
+	}
+
+	return &testFixture{
+		schema:         schema,
+		resourcePolicy: resourcePolicy,
+		mockUpdater:    mockUpdater,
+	}
+}
+
+func (f *testFixture) SetupMocks(scenario *testScenario) {
+	if scenario.mockGetPolicy != nil || scenario.mockGetError.HasError() {
+		f.mockUpdater.On("GetResourceIamPolicy", mock.Anything).
+			Return(scenario.mockGetPolicy, scenario.mockGetError)
+	}
+
+	if scenario.mockSetPolicy != nil || scenario.mockSetError.HasError() {
+		f.mockUpdater.On("SetResourceIamPolicy", mock.Anything, mock.Anything).
+			Return(scenario.mockSetPolicy, scenario.mockSetError)
+	}
+}
+
+func (f *testFixture) CreatePlan(scenario *testScenario) tfsdk.Plan {
+	return tfsdk.Plan{
+		Raw:    createIamPolicyValue(scenario.planPolicy, scenario.planEtag),
+		Schema: f.schema,
+	}
+}
+
+func (f *testFixture) CreateInitialState() tfsdk.State {
+	return tfsdk.State{
+		Raw:    createIamPolicyValue(createRmPolicy(), ""),
+		Schema: f.schema,
+	}
+}
+
+func (f *testFixture) AssertResults(t *testing.T, scenario *testScenario, plan tfsdk.Plan, initialState tfsdk.State, respState tfsdk.State, diags diag.Diagnostics) {
+	t.Helper()
+	if scenario.expectedError != "" {
+		require.True(t, diags.HasError(), "expected error but got none")
+
+		found := false
+		for _, d := range diags {
+			if d.Summary() == scenario.expectedError {
+				found = true
+				break
+			}
+		}
+		require.True(t, found, "expected error '%s' not found in diagnostics: %v", scenario.expectedError, diags)
+		// State should remain unchanged on error
+		require.Equal(t, initialState.Raw, respState.Raw, "response state should remain unchanged on error, state: %v", respState.Raw)
+	} else {
+		require.False(t, diags.HasError(), "expected no errors but got: %v", diags.Errors())
+		require.True(t, respState.Raw.Equal(plan.Raw), "response state should match plan, state: %v", respState.Raw)
+	}
+	f.mockUpdater.AssertExpectations(t)
+}
+
 func TestResourceIamPolicy_Update(t *testing.T) {
-	t.Run("Successful update", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+	testCases := []testScenario{
+		{
+			name: "Successful update",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: "existing-etag"}, diag.Diagnostics{})
-		mockUpdater.On("SetResourceIamPolicy", mock.Anything, mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: iamPolicyExpectedEtag, Bindings: rmPolicy.Bindings}, diag.Diagnostics{})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.UpdateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.UpdateResponse{
-			State: initialState,
-		}
-
-		r.Update(context.Background(), req, resp)
-
-		require.False(t, resp.Diagnostics.HasError(), "expected no diagnostics errors, but got: %v", resp.Diagnostics.Errors())
-		require.True(t, resp.State.Raw.Equal(plan.Raw), "state not updated as expected, response state: %v", resp.State.Raw)
-		mockUpdater.AssertExpectations(t)
-	})
-	t.Run("SetResourceIamPolicy error preserves original state", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+			}), withRmPolicyEtag("")),
+			planEtag:      "new-etag",
+			mockGetPolicy: createRmPolicy(withRmPolicyEtag("existing-etag")),
+			mockSetPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: "existing-etag"}, diag.Diagnostics{})
-		// Mock SetResourceIamPolicy to return an error
-		mockUpdater.On("SetResourceIamPolicy", mock.Anything, mock.Anything).
-			Return((*models.HashicorpCloudResourcemanagerPolicy)(nil), diag.Diagnostics{
+			}), withRmPolicyEtag("new-etag")),
+		},
+		{
+			name: "SetResourceIamPolicy error preserves original state",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+				MemberID:   "user:test@example.com",
+				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
+			}), withRmPolicyEtag("")),
+			planEtag:      "new-etag",
+			mockGetPolicy: createRmPolicy(withRmPolicyEtag("existing-etag")),
+			mockSetError: diag.Diagnostics{
 				diag.NewErrorDiagnostic("set policy error", "failed to set IAM policy"),
-			})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.UpdateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.UpdateResponse{
-			State: initialState,
-		}
-
-		r.Update(context.Background(), req, resp)
-
-		require.True(t, resp.Diagnostics.HasError(), "expected diagnostics to have an error")
-		// Verify the error came from SetResourceIamPolicy
-		found := false
-		for _, diag := range resp.Diagnostics {
-			if diag.Summary() == "set policy error" {
-				found = true
-				break
-			}
-		}
-		require.True(t, found, "expected to have SetResourceIamPolicy error")
-		require.Equal(t, initialState.Raw, resp.State.Raw,
-			"expected state to remain unchanged when SetResourceIamPolicy fails, response state: %v", resp.State.Raw)
-		mockUpdater.AssertExpectations(t)
-	})
-
-	t.Run("GetResourceIamPolicy error preserves original state", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+			},
+			expectedError: "set policy error",
+		},
+		{
+			name: "GetResourceIamPolicy error preserves original state",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		// Mock GetResourceIamPolicy to return an error
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return((*models.HashicorpCloudResourcemanagerPolicy)(nil), diag.Diagnostics{
+			}), withRmPolicyEtag("")),
+			planEtag: "new-etag",
+			mockGetError: diag.Diagnostics{
 				diag.NewErrorDiagnostic("get policy error", "failed to get existing IAM policy"),
-			})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.UpdateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.UpdateResponse{
-			State: initialState,
-		}
+			},
+			expectedError: "get policy error",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			executeUpdateTest(t, tc)
+		})
+	}
+}
 
-		r.Update(context.Background(), req, resp)
+func executeUpdateTest(t *testing.T, scenario testScenario) {
+	fixture := newTestFixture()
+	fixture.SetupMocks(&scenario)
+	plan := fixture.CreatePlan(&scenario)
+	initialState := fixture.CreateInitialState()
+	req := resource.UpdateRequest{Plan: plan}
+	resp := &resource.UpdateResponse{State: initialState}
 
-		require.True(t, resp.Diagnostics.HasError(), "expected diagnostics to have an error")
-		// Verify the error came from GetResourceIamPolicy
-		found := false
-		for _, diag := range resp.Diagnostics {
-			if diag.Summary() == "get policy error" {
-				found = true
-				break
-			}
-		}
-		require.True(t, found, "expected to have GetResourceIamPolicy error")
-		require.Equal(t, initialState.Raw, resp.State.Raw,
-			"expected state to remain unchanged when GetResourceIamPolicy fails, resp state: %v", resp.State.Raw)
+	fixture.resourcePolicy.Update(context.Background(), req, resp)
 
-		mockUpdater.AssertExpectations(t)
-	})
+	fixture.AssertResults(t, &scenario, plan, initialState, resp.State, resp.Diagnostics)
 }
 
 func TestResourceIamPolicy_Create(t *testing.T) {
-	t.Run("Successful create", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+	testCases := []testScenario{
+		{
+			name: "Successful create",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: "existing-etag"}, diag.Diagnostics{})
-		mockUpdater.On("SetResourceIamPolicy", mock.Anything, mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: iamPolicyExpectedEtag, Bindings: rmPolicy.Bindings}, diag.Diagnostics{})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.CreateResponse{
-			State: initialState,
-		}
-
-		r.Create(context.Background(), req, resp)
-
-		require.False(t, resp.Diagnostics.HasError(), "expected no diagnostics errors, but got: %v", resp.Diagnostics.Errors())
-		require.True(t, resp.State.Raw.Equal(plan.Raw), "state not updated as expected, response state: %v", resp.State.Raw)
-		mockUpdater.AssertExpectations(t)
-	})
-
-	t.Run("SetResourceIamPolicy error preserves original state", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+			}), withRmPolicyEtag("")),
+			planEtag:      "new-etag",
+			mockGetPolicy: createRmPolicy(withRmPolicyEtag("existing-etag")),
+			mockSetPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return(&models.HashicorpCloudResourcemanagerPolicy{Etag: "existing-etag"}, diag.Diagnostics{})
-		// Mock SetResourceIamPolicy to return an error
-		mockUpdater.On("SetResourceIamPolicy", mock.Anything, mock.Anything).
-			Return((*models.HashicorpCloudResourcemanagerPolicy)(nil), diag.Diagnostics{
+			}), withRmPolicyEtag("new-etag")),
+		},
+		{
+			name: "SetResourceIamPolicy error preserves original state",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+				MemberID:   "user:test@example.com",
+				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
+			}), withRmPolicyEtag("")),
+			planEtag:      "new-etag",
+			mockGetPolicy: createRmPolicy(withRmPolicyEtag("existing-etag")),
+			mockSetError: diag.Diagnostics{
 				diag.NewErrorDiagnostic("set policy error", "failed to set IAM policy"),
-			})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.CreateResponse{
-			State: initialState,
-		}
-
-		r.Create(context.Background(), req, resp)
-
-		require.True(t, resp.Diagnostics.HasError(), "expected diagnostics to have an error")
-		// Verify the error came from SetResourceIamPolicy
-		found := false
-		for _, diag := range resp.Diagnostics {
-			if diag.Summary() == "set policy error" {
-				found = true
-				break
-			}
-		}
-		require.True(t, found, "expected to have SetResourceIamPolicy error")
-		require.Equal(t, initialState.Raw, resp.State.Raw,
-			"expected state to remain unchanged when SetResourceIamPolicy fails, response state: %v", resp.State.Raw)
-		mockUpdater.AssertExpectations(t)
-	})
-
-	t.Run("GetResourceIamPolicy error preserves original state", func(t *testing.T) {
-		mockUpdater := &mockResourceIamUpdater{}
-		iamPolicySchema := createIamPolicySchema()
-		rmPolicy := createRmPolicy(
-			withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
+			},
+			expectedError: "set policy error",
+		},
+		{
+			name: "GetResourceIamPolicy error preserves original state",
+			planPolicy: createRmPolicy(withRmPolicyBinding("roles/viewer", &models.HashicorpCloudResourcemanagerPolicyBindingMember{
 				MemberID:   "user:test@example.com",
 				MemberType: models.HashicorpCloudResourcemanagerPolicyBindingMemberTypeUSER.Pointer(),
-			}),
-		)
-		iamPolicyExpectedEtag := "new-etag"
-		plan := tfsdk.Plan{
-			Raw:    createIamPolicyValue(rmPolicy, iamPolicyExpectedEtag),
-			Schema: iamPolicySchema,
-		}
-		// Mock GetResourceIamPolicy to return an error
-		mockUpdater.On("GetResourceIamPolicy", mock.Anything).
-			Return((*models.HashicorpCloudResourcemanagerPolicy)(nil), diag.Diagnostics{
+			}), withRmPolicyEtag("")),
+			planEtag: "new-etag",
+			mockGetError: diag.Diagnostics{
 				diag.NewErrorDiagnostic("get policy error", "failed to get existing IAM policy"),
-			})
-		r := &resourcePolicy{
-			updaterFunc: fakeUpdaterFuncWithMock(mockUpdater),
-		}
-		req := resource.CreateRequest{
-			Plan: plan,
-		}
-		initialState := tfsdk.State{
-			Raw:    createIamPolicyValue(createRmPolicy(), ""),
-			Schema: iamPolicySchema,
-		}
-		resp := &resource.CreateResponse{
-			State: initialState,
-		}
+			},
+			expectedError: "get policy error",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			executeCreateTest(t, tc)
+		})
+	}
+}
 
-		r.Create(context.Background(), req, resp)
+func executeCreateTest(t *testing.T, scenario testScenario) {
+	fixture := newTestFixture()
+	fixture.SetupMocks(&scenario)
+	plan := fixture.CreatePlan(&scenario)
+	initialState := fixture.CreateInitialState()
+	req := resource.CreateRequest{Plan: plan}
+	resp := &resource.CreateResponse{State: initialState}
 
-		require.True(t, resp.Diagnostics.HasError(), "expected diagnostics to have an error")
-		// Verify the error came from GetResourceIamPolicy
-		found := false
-		for _, diag := range resp.Diagnostics {
-			if diag.Summary() == "get policy error" {
-				found = true
-				break
-			}
-		}
-		require.True(t, found, "expected to have GetResourceIamPolicy error")
-		require.Equal(t, initialState.Raw, resp.State.Raw,
-			"expected state to remain unchanged when GetResourceIamPolicy fails, response state: %v", resp.State.Raw)
-		mockUpdater.AssertExpectations(t)
-	})
+	fixture.resourcePolicy.Create(context.Background(), req, resp)
+
+	fixture.AssertResults(t, &scenario, plan, initialState, resp.State, resp.Diagnostics)
 }
