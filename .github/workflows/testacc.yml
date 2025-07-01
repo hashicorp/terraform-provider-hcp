@@ -3,9 +3,9 @@ name: TestAcc
 on:
   workflow_call:
   workflow_dispatch:
-  # Run Every Wednesday at 01:00 AM UTC
-  # schedule:
-  #   - cron: '0 2 * * 3'
+  # Run Every Tuesday at 09:00 AM UTC (1AM PST)
+  schedule:
+    - cron: '0 9 * * 2'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
