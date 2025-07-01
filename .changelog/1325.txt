@@ -1,0 +1,3 @@
+```release-note:improvement
+Update preview of hcp_vault_radar_resource_iam_policy and hcp_vault_radar_resource_iam_binding resources to use HCP `resource_name` instead of Radar `resource_uri`.
+```

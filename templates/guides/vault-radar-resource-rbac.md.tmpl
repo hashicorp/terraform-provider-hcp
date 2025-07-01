@@ -1,0 +1,26 @@
+---
+subcategory: ""
+page_title: "Managing Vault Radar Resource IAM Policies"
+description: |-
+    A guide to setting up and managing access to select Radar resources.
+---
+
+# Managing Vault Radar Resource IAM Policies
+
+-> **Note:** This feature is currently in private beta.
+
+Administrators can limit users' access to specific Vault Radar resources by using either `hcp_vault_radar_resource_iam_binding` or `hcp_vault_radar_resource_iam_policy`.
+
+Only users with no role at the organization or project level can be restricted to specific Radar resources.
+
+## Pre-requisites and Constraints
+* An IAM group should be created with the role `roles/vault-radar.developer` at the project level. This will allow the group's members to access Radar.
+* It's recommended to create a group for each team that will be require access to a select set of Radar resources.
+* Add users without any roles to the group created above.
+* Use the group created above to set the policy or binding for a select set of Radar resources.
+* Only the roles `roles/vault-radar.resource-viewer` or `roles/vault-radar.resource-contributor` can be applied to the policy or binding for Radar resources.
+
+## Sample Usage
+The following is an example of create a group with the role `roles/vault-radar.developer` at the project level and set the policy for a set of Radar resource that match a resource URI prefix with the role `roles/vault-radar.resource-viewer` for that group.
+
+{{ tffile "examples/guides/vault_radar_resource_rbac/main.tf" }}
