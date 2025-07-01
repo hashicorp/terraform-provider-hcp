@@ -7,26 +7,30 @@ description: |-
 
 # hcp_waypoint_template `Resource`
 
-
-
 Waypoint Template resource
 
 ## Example Usage
 
 ```terraform
-resource "hcp_waypoint_template" "template" {
-  name                            = "go-k8s-microservice"
-  summary                         = "A simple Go microservice running on Kubernetes."
-  description                     = <<EOF
-This template deploys a simple Go microservice to Kubernetes. The microservice
-is a simple HTTP server that listens on port 8080 and returns a JSON response.
-The template includes a Dockerfile, Kubernetes manifests, and boiler plate code
-for a gRPC service written in Go.
-EOF
-  terraform_project_id            = "prj-123456"
-  labels                          = ["go", "kubernetes"]
-  terraform_no_code_module_source = "private/fake-org/go-k8s-microservice/kubernetes"
-  terraform_no_code_module_id     = "nocode-123456"
+resource "tfe_project" "example" {
+  name         = "waypoint-build-destination"
+  organization = var.org_name
+}
+
+data "tfe_registry_module" "example" {
+  organization    = var.org_name
+  name            = "my-nocode-example-module"
+  module_provider = "aws"
+}
+
+resource "hcp_waypoint_template" "example" {
+  name                            = "example-aws-template"
+  summary                         = "AWS waypoint deployment."
+  description                     = "Deploys a nocode module."
+  terraform_project_id            = tfe_project.example.id
+  labels                          = ["pets"]
+  terraform_no_code_module_source = data.tfe_registry_module.example.no_code_module_source
+  terraform_no_code_module_id     = data.tfe_registry_module.example.no_code_module_id
   variable_options = [
     {
       name          = "resource_size"
