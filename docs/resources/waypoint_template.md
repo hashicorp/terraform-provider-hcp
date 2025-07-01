@@ -7,6 +7,8 @@ description: |-
 
 # hcp_waypoint_template `Resource`
 
+
+
 Waypoint Template resource
 
 ## Example Usage
