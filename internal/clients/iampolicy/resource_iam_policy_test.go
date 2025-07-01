@@ -54,13 +54,6 @@ func createIamPolicySchema() schema.Schema {
 
 type rmPolicyOption func(*models.HashicorpCloudResourcemanagerPolicy)
 
-func withRmPolicyEtag(etag string) rmPolicyOption {
-	return func(d *models.HashicorpCloudResourcemanagerPolicy) {
-		d.Etag = etag
-	}
-
-}
-
 func withRmPolicyBinding(roleID string, members ...*models.HashicorpCloudResourcemanagerPolicyBindingMember) rmPolicyOption {
 	return func(d *models.HashicorpCloudResourcemanagerPolicy) {
 		binding := &models.HashicorpCloudResourcemanagerPolicyBinding{
