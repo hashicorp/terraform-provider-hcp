@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
+	"github.com/hashicorp/terraform-provider-hcp/internal/statuspage"
 )
 
 // This is an implementation using the Provider framework
@@ -46,6 +47,7 @@ type ProviderFrameworkModel struct {
 	CredentialFile   types.String `tfsdk:"credential_file"`
 	ProjectID        types.String `tfsdk:"project_id"`
 	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
+	SkipStatusCheck  types.Bool   `tfsdk:"skip_status_check"`
 }
 
 type WorkloadIdentityFrameworkModel struct {
@@ -91,6 +93,10 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("workload_identity")),
 				},
+			},
+			"skip_status_check": schema.BoolAttribute{
+				Optional:    true,
+				Description: "When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -188,6 +194,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultradar.NewIntegrationJiraSubscriptionResource,
 		vaultradar.NewIntegrationSlackConnectionResource,
 		vaultradar.NewIntegrationSlackSubscriptionResource,
+		vaultradar.NewRadarResourceIAMPolicyResource,
+		vaultradar.NewRadarResourceIAMBindingResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
@@ -213,6 +221,8 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		waypoint.NewTemplateDataSource,
 		waypoint.NewAddOnDataSource,
 		waypoint.NewAddOnDefinitionDataSource,
+		// Radar
+		vaultradar.NewRadarResourcesDataSource,
 	}, packer.DataSourceSchemaBuilders...)
 }
 
@@ -228,6 +238,14 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	// Sets up HCP SDK client.
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	// Determine if status check should be skipped via provider configuration or environment variable.
+	// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
+	skipStatusCheck := data.SkipStatusCheck.ValueBool() || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+	if !skipStatusCheck {
+		// This helper verifies HCP's status and returns a warning for degraded performance.
+		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework()...)
+	}
 
 	clientConfig := clients.ClientConfig{
 		ClientID:       data.ClientID.ValueString(),
