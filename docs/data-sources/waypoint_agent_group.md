@@ -16,7 +16,7 @@ The Waypoint Agent Group resource manages the lifecycle of an Agent Group.
 
 - `name` (String) The name of the Agent Group.
 
-### Optional
+### Read-Only
 
 - `description` (String) A description of the Agent Group.
 - `organization_id` (String) The ID of the Waypoint organization to which the Agent Group belongs.

@@ -16,12 +16,12 @@ The Waypoint Action data source retrieves information on a given Action.
 
 - `id` (String) The ID of the Action.
 - `name` (String) The name of the Action.
-- `project_id` (String) The ID of the HCP project where the Waypoint Action is located.
 
 ### Read-Only
 
 - `description` (String) A description of the Action.
 - `organization_id` (String) The ID of the HCP organization where the Waypoint Action is located.
+- `project_id` (String) The ID of the HCP project where the Waypoint Action is located.
 - `request` (Attributes) The kind of HTTP request this should trigger. (see [below for nested schema](#nestedatt--request))
 
 <a id="nestedatt--request"></a>
@@ -38,15 +38,12 @@ Read-Only:
 <a id="nestedatt--request--agent"></a>
 ### Nested Schema for `request.agent`
 
-Required:
-
-- `group` (String) The name of the group that the operation is in.
-- `operation_id` (String) The identifying name of the operation in the agent config file.
-
-Optional:
+Read-Only:
 
 - `action_run_id` (String) An optional action run id. If specified the agent will interact with the actions subsystem.
 - `body` (String) Arguments to the operation, specified as JSON.
+- `group` (String) The name of the group that the operation is in.
+- `operation_id` (String) The identifying name of the operation in the agent config file.
 
 
 <a id="nestedatt--request--custom"></a>
