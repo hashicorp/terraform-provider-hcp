@@ -1,0 +1,3 @@
+```release-note:feature
+Add support for agent actions in HCP Waypoint
+```
