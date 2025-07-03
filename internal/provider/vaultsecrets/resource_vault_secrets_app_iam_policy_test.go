@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccVaultSecretsAppIamPolicyResource(t *testing.T) {
+	t.Skip("Skipping test for HCP Vault Secrets due to product end of sale.")
 	appName := generateRandomSlug()
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)
@@ -45,6 +46,7 @@ func TestAccVaultSecretsAppIamPolicyResource(t *testing.T) {
 }
 
 func TestAccVaultSecretsAppIamBindingResource(t *testing.T) {
+	t.Skip("Skipping test for HCP Vault Secrets due to product end of sale.")
 	appName := generateRandomSlug()
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)
