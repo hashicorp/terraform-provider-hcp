@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed ResourceIamPolicy issue where state is stored before the policy is set.
+```
