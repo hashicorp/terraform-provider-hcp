@@ -28,6 +28,21 @@ func GetAction(ctx context.Context, client *Client, loc *sharedmodels.HashicorpC
 	return getResp.GetPayload().ActionConfig, nil
 }
 
+// GetAgentGroup will retrieve an Agent Group by name
+func GetAgentGroup(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, groupName string) (*waypoint_models.HashicorpCloudWaypointV20241122AgentGroup, error) {
+	params := &waypoint_service.WaypointServiceGetAgentGroupParams{
+		Name:                            groupName,
+		NamespaceLocationOrganizationID: loc.OrganizationID,
+		NamespaceLocationProjectID:      loc.ProjectID,
+	}
+
+	getResp, err := client.Waypoint.WaypointServiceGetAgentGroup(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.GetPayload().Group, nil
+}
+
 // GetApplicationTemplateByName will retrieve a template by name
 func GetApplicationTemplateByName(ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, appName string) (*waypoint_models.HashicorpCloudWaypointV20241122ApplicationTemplate, error) {
 	params := &waypoint_service.WaypointServiceGetApplicationTemplate2Params{
