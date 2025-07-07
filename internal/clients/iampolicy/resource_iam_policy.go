@@ -129,10 +129,11 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// Copy the existing state and then override with the new policy. This
-	// allows the attributes set by the ResourceIamUpdater to carry forward.
+	resp.Diagnostics.Append(setIamPolicyData(ctx, &req.Plan, updater)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.State.Raw = req.Plan.Raw
-	resp.Diagnostics.Append(setIamPolicyData(ctx, &req.Plan, &resp.State, updater)...)
 }
 
 func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -162,10 +163,11 @@ func (r *resourcePolicy) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	// Copy the existing state and then override with the new policy. This
-	// allows the attributes set by the ResourceIamUpdater to carry forward.
+	resp.Diagnostics.Append(setIamPolicyData(ctx, &req.Plan, updater)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.State.Raw = req.Plan.Raw
-	resp.Diagnostics.Append(setIamPolicyData(ctx, &req.Plan, &resp.State, updater)...)
 }
 
 func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -201,7 +203,7 @@ func (r *resourcePolicy) ImportState(ctx context.Context, req resource.ImportSta
 	}
 }
 
-func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, updater ResourceIamUpdater) diag.Diagnostics {
+func setIamPolicyData(ctx context.Context, in TerraformResourceData, updater ResourceIamUpdater) diag.Diagnostics {
 
 	// Get the encoded policy
 	var diags diag.Diagnostics
@@ -234,7 +236,7 @@ func setIamPolicyData(ctx context.Context, in, out TerraformResourceData, update
 		return diags
 	}
 
-	diags.Append(storeIamPolicyData(ctx, out, updatedPolicy)...)
+	diags.Append(storeIamPolicyData(ctx, in, updatedPolicy)...)
 	return diags
 }
 

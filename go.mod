@@ -32,6 +32,7 @@ require (
 	github.com/hashicorp/cli v1.1.7 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/yuin/goldmark v1.7.7 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	go.abhg.dev/goldmark/frontmatter v0.2.0 // indirect
