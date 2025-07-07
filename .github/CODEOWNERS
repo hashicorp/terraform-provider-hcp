@@ -2,6 +2,9 @@
 # the repo. Unless a later match takes precedence
 * @hashicorp/cloud-core-platform-systems @hashicorp/cloud-core-platform-surfaces
 
+# all resourcemanager resources are owned by the cloud-access-control team
+*resourcemanager* @hashicorp/cloud-access-control
+
 # all iam resources and clients are owned by the cloud-identity team
 *iam* @hashicorp/cloud-identity
 
