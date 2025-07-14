@@ -1,0 +1,5 @@
+```release-note:improvement
+Updates hcp-sdk-go to v0.151.0, which includes support for the EU geography.
+HCP_GEOGRAPHY=eu|us to control geography for initial testing.
+Switching geographies currently requires removing the cached credential file, which will be addressed in an future update.
+```
