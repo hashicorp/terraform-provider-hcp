@@ -1,3 +1,14 @@
+## v0.108.0 (July 2, 2025)
+
+FEATURES:
+
+* Add preview of hcp_vault_radar_resource_iam_policy and hcp_vault_radar_resource_iam_binding resources. [[GH-1318](https://github.com/hashicorp/hcp/issues/1318)]
+* Add preview of hcp_vault_radar_resources. [[GH-1324](https://github.com/hashicorp/hcp/issues/1324)]
+
+IMPROVEMENTS:
+
+* Update preview of hcp_vault_radar_resource_iam_policy and hcp_vault_radar_resource_iam_binding resources to use HCP `resource_name` instead of Radar `resource_uri`. [[GH-1325](https://github.com/hashicorp/hcp/issues/1325)]
+
 ## v0.107.0 (June 17, 2025)
 
 IMPROVEMENTS:
