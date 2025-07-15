@@ -1,3 +1,19 @@
+## v0.109.0 (July 15, 2025)
+
+FEATURES:
+
+* Add support for agent actions in HCP Waypoint [[GH-1304](https://github.com/hashicorp/hcp/issues/1304)]
+
+IMPROVEMENTS:
+
+* Updates hcp-sdk-go to v0.151.0, which includes support for the EU geography.
+HCP_GEOGRAPHY=eu|us to control geography for initial testing.
+Switching geographies currently requires removing the cached credential file, which will be addressed in an future update. [[GH-1340](https://github.com/hashicorp/hcp/issues/1340)]
+
+BUG FIXES:
+
+* Fixed ResourceIamPolicy issue where state is stored before the policy is set. [[GH-1320](https://github.com/hashicorp/hcp/issues/1320)]
+
 ## v0.108.0 (July 2, 2025)
 
 FEATURES:
