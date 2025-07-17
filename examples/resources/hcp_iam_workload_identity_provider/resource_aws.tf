@@ -7,7 +7,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on AWS to act as my-app-runtime service principal"
 
-  aws {
+  aws = {
     # Only allow workloads from this AWS Account to exchange identity
     account_id = "123456789012"
   }
