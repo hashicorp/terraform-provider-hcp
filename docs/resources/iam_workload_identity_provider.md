@@ -21,7 +21,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on AWS to act as my-app-runtime service principal"
 
-  aws {
+  aws = {
     # Only allow workloads from this AWS Account to exchange identity
     account_id = "123456789012"
   }
@@ -43,7 +43,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on Azure to act as my-app-runtime service principal"
 
-  oidc {
+  oidc = {
     # The issuer uri should be as follows where the ID in the path is replaced
     # with your Azure Tenant ID
     issuer_uri = "https://sts.windows.net/60a0d497-45cd-413d-95ca-e154bbb9129b"
@@ -73,7 +73,7 @@ resource "hcp_iam_workload_identity_provider" "example" {
   service_principal = hcp_service_principal.workload_sp.resource_name
   description       = "Allow my-app on GCP to act as my-app-runtime service principal"
 
-  oidc {
+  oidc = {
     issuer_uri = "https://accounts.google.com"
   }
 
