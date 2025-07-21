@@ -4,6 +4,8 @@ go 1.23.0
 
 toolchain go1.23.8
 
+replace github.com/hashicorp/hcp-sdk-go => /Users/hui.kang/go/src/github.com/hashicorp/hcp-sdk-go
+
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.3.0
