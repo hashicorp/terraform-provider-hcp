@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/boundary"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer"
@@ -196,6 +197,8 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultradar.NewIntegrationSlackSubscriptionResource,
 		vaultradar.NewRadarResourceIAMPolicyResource,
 		vaultradar.NewRadarResourceIAMBindingResource,
+		// Boundary
+		boundary.NewBoundaryClusterResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
@@ -223,6 +226,9 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		waypoint.NewAddOnDefinitionDataSource,
 		// Radar
 		vaultradar.NewRadarResourcesDataSource,
+		// Boundary
+		boundary.NewBoundaryClusterDataSource,
+		// Packer
 	}, packer.DataSourceSchemaBuilders...)
 }
 
