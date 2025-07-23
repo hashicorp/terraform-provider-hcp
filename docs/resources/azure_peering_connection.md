@@ -55,26 +55,26 @@ data "azurerm_subscription" "sub" {
   subscription_id = "<subscription UUID>"
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "resource-group-test"
+resource "azurerm_resource_group" "default" {
+  name     = "rg-test"
   location = "West US"
 }
 
-resource "azurerm_virtual_network" "vnet" {
+resource "azurerm_virtual_network" "default" {
   name                = "vnet-test"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.default.location
+  resource_group_name = azurerm_resource_group.default.name
 
   address_space = [
     "10.0.0.0/16"
   ]
 }
 
-resource "azuread_service_principal" "principal" {
-  application_id = hcp_azure_peering_connection.peer.application_id
+resource "azuread_service_principal" "hcp" {
+  client_id = hcp_azure_peering_connection.peer.application_id
 }
 
-resource "azurerm_role_definition" "definition" {
+resource "azurerm_role_definition" "hcp_peering" {
   name  = "hcp-hvn-peering-access"
   scope = azurerm_virtual_network.vnet.id
 
@@ -91,10 +91,10 @@ resource "azurerm_role_definition" "definition" {
   }
 }
 
-resource "azurerm_role_assignment" "assignment" {
-  principal_id       = azuread_service_principal.principal.id
+resource "azurerm_role_assignment" "hcp_peering" {
+  principal_id       = azuread_service_principal.hcp.object_id
   scope              = azurerm_virtual_network.vnet.id
-  role_definition_id = azurerm_role_definition.definition.role_definition_resource_id
+  role_definition_id = azurerm_role_definition.hcp_peering.role_definition_resource_id
 }
 ```
 
