@@ -17,7 +17,7 @@ import (
 )
 
 func OnboardRadarSource(ctx context.Context, client *Client, projectID string, source dsrs.OnboardDataSourceBody) (*dsrs.OnboardDataSourceOK, error) {
-	onboardParams := dsrs.NewOnboardDataSourceParamsWithTimeout(60 * time.Second)
+	onboardParams := dsrs.NewOnboardDataSourceParamsWithTimeout(60 * time.Second) // gives datasources with "agent" detector type more time to complete
 	onboardParams.Context = ctx
 	onboardParams.LocationProjectID = projectID
 	onboardParams.Body = source
