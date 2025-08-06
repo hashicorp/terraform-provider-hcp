@@ -1,0 +1,4 @@
+```release-note:improvement
+Updates hcp-sdk-go to v0.153.0.
+Updates hcp_vault_radar_source_github_cloud and hcp_vault_radar_source_github_enterprise to accept `detector_type`.
+```
