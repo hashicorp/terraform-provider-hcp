@@ -24,6 +24,7 @@ resource "hcp_vault_radar_source_github_enterprise" "example" {
   github_organization = "my-github-org"
   token               = var.github_enterprise_token
   project_id          = "my-project-id"
+  detector_type       = "hcp"
 }
 ```
 
@@ -39,6 +40,7 @@ resource "hcp_vault_radar_source_github_enterprise" "example" {
 
 ### Optional
 
+- `detector_type` (String) The detector type which will monitor this resource. The default is HCP if not specified.
 - `project_id` (String) The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.
 
 ### Read-Only
