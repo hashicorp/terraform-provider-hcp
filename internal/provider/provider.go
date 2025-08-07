@@ -102,7 +102,7 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			},
 			"geography": schema.StringAttribute{
 				Optional:    true,
-				Description: "The geography in which HCP resources should be created. Default is `us`",
+				Description: "The geography in which HCP resources should be created. Default is `us`.",
 				Validators: []validator.String{
 					stringvalidator.OneOf(string(geography.US), string(geography.EU)),
 				},

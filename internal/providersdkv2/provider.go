@@ -118,7 +118,7 @@ func New() func() *schema.Provider {
 				"geography": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "The geography in which HCP resources should be created. Default is `us`",
+					Description: "The geography in which HCP resources should be created. Default is `us`.",
 				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
