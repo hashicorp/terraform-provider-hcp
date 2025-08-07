@@ -115,6 +115,11 @@ func New() func() *schema.Provider {
 					Default:     false,
 					Description: "When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.",
 				},
+				"geography": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The geography in which HCP resources should be created. Default is `us`",
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -147,6 +152,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			ClientSecret:   d.Get("client_secret").(string),
 			CredentialFile: d.Get("credential_file").(string),
 			ProjectID:      d.Get("project_id").(string),
+			Geography:      d.Get("geography").(string),
 			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
 		}
 

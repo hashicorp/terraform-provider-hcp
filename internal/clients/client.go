@@ -127,6 +127,9 @@ type ClientConfig struct {
 	// SourceChannel denotes the client (channel) that originated the HCP cluster request.
 	// this is synonymous to a user-agent.
 	SourceChannel string
+
+	// Geography denotes the geography the HCP client should operate in.
+	Geography string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
@@ -139,6 +142,10 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
 	} else if cf := loadCredentialFile(config); cf != nil {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
+	}
+
+	if config.Geography != "" {
+		opts = append(opts, hcpConfig.WithGeography(config.Geography))
 	}
 
 	// Create the HCP Config
