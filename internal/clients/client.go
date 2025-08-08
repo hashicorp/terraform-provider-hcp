@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/auth"
 	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/hcp-sdk-go/config/geography"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -144,7 +145,11 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
 	}
 
-	if config.Geography != "" {
+	if config.Geography == "" {
+		// If geography is not set, default to the one used by the SDK.
+		// Currently default is us.
+		config.Geography = string(geography.Default)
+	} else {
 		opts = append(opts, hcpConfig.WithGeography(config.Geography))
 	}
 
