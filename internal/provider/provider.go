@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/hashicorp/hcp-sdk-go/config/geography"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/iam"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/logstreaming"
@@ -48,6 +49,7 @@ type ProviderFrameworkModel struct {
 	ProjectID        types.String `tfsdk:"project_id"`
 	WorkloadIdentity types.List   `tfsdk:"workload_identity"`
 	SkipStatusCheck  types.Bool   `tfsdk:"skip_status_check"`
+	Geography        types.String `tfsdk:"geography"`
 }
 
 type WorkloadIdentityFrameworkModel struct {
@@ -97,6 +99,13 @@ func (p *ProviderFramework) Schema(ctx context.Context, req provider.SchemaReque
 			"skip_status_check": schema.BoolAttribute{
 				Optional:    true,
 				Description: "When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.",
+			},
+			"geography": schema.StringAttribute{
+				Optional:    true,
+				Description: "The geography in which HCP resources should be created. Default is `us`.",
+				Validators: []validator.String{
+					stringvalidator.OneOf(string(geography.US), string(geography.EU)),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -253,6 +262,7 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		CredentialFile: data.CredentialFile.ValueString(),
 		ProjectID:      data.ProjectID.ValueString(),
 		SourceChannel:  "terraform-provider-hcp",
+		Geography:      data.Geography.ValueString(),
 	}
 
 	// Read the workload_identity configuration.
