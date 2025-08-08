@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/auth"
 	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/hcp-sdk-go/config/geography"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -127,6 +128,9 @@ type ClientConfig struct {
 	// SourceChannel denotes the client (channel) that originated the HCP cluster request.
 	// this is synonymous to a user-agent.
 	SourceChannel string
+
+	// Geography denotes the geography the HCP client should operate in.
+	Geography string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
@@ -139,6 +143,14 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
 	} else if cf := loadCredentialFile(config); cf != nil {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
+	}
+
+	if config.Geography == "" {
+		// If geography is not set, default to the one used by the SDK.
+		// Currently default is us.
+		config.Geography = string(geography.Default)
+	} else {
+		opts = append(opts, hcpConfig.WithGeography(config.Geography))
 	}
 
 	// Create the HCP Config

@@ -125,6 +125,7 @@ resource "hcp_vault_cluster" "example" {
 - `client_id` (String) The OAuth2 Client ID for API operations.
 - `client_secret` (String) The OAuth2 Client Secret for API operations.
 - `credential_file` (String) The path to an HCP credential file to use to authenticate the provider to HCP. You can alternatively set the HCP_CRED_FILE environment variable to point at a credential file as well. Using a credential file allows you to authenticate the provider as a service principal via client credentials or dynamically based on Workload Identity Federation.
+- `geography` (String) The geography in which HCP resources should be created. Default is `us`.
 - `project_id` (String) The default project in which resources should be created.
 - `skip_status_check` (Boolean) When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.
 - `workload_identity` (Block List) Allows authenticating the provider by exchanging the OAuth 2.0 access token or OpenID Connect token specified in the `token_file` for a HCP service principal using Workload Identity Federation. (see [below for nested schema](#nestedblock--workload_identity))

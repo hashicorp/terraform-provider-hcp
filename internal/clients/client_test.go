@@ -19,6 +19,11 @@ func Test_loadCredentialFile(t *testing.T) {
 		"empty config": {
 			config: ClientConfig{},
 		},
+		"load with geography": {
+			config: ClientConfig{
+				Geography: "eu",
+			},
+		},
 		"ignores with only resource": {
 			config: ClientConfig{
 				WorkloadIdentityResourceName: "my_resource",
