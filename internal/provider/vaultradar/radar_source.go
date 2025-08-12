@@ -82,6 +82,10 @@ func (r *radarSourceResource) Schema(_ context.Context, _ resource.SchemaRequest
 	}
 
 	for k, v := range baseSourceSchema {
+		// check to see if schema key already exists; if so, skip
+		if _, exists := resp.Schema.Attributes[k]; exists {
+			continue
+		}
 		resp.Schema.Attributes[k] = v
 	}
 }
