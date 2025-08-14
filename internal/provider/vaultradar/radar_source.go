@@ -7,9 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,6 +28,37 @@ var (
 	_ resource.ResourceWithConfigure = &radarSourceResource{}
 )
 
+var (
+	baseSourceSchema = map[string]schema.Attribute{
+		"project_id": schema.StringAttribute{
+			Description: "The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.",
+			Optional:    true,
+			Computed:    true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"id": schema.StringAttribute{
+			Computed:    true,
+			Description: "The ID of this resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"detector_type": schema.StringAttribute{
+			Optional:    true,
+			Description: "The detector type which will monitor this resource. The default is HCP if not specified.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+			Validators: []validator.String{
+				stringvalidator.OneOf("hcp", "agent"),
+			},
+		},
+	}
+)
+
 // radarSourceResource is an implementation for configuring specific types Radar data sources.
 // Examples: hcp_vault_radar_source_github_cloud and hcp_vault_radar_source_github_enterprise make use of
 // this implementation to define resources with specific schemas, validation, and state details related to their types.
@@ -31,7 +66,7 @@ type radarSourceResource struct {
 	client             *clients.Client
 	TypeName           string
 	SourceType         string
-	ConnectionSchema   schema.Schema
+	ResourceSchema     schema.Schema
 	GetSourceFromPlan  func(ctx context.Context, plan tfsdk.Plan) (radarSource, diag.Diagnostics)
 	GetSourceFromState func(ctx context.Context, state tfsdk.State) (radarSource, diag.Diagnostics)
 }
@@ -41,7 +76,18 @@ func (r *radarSourceResource) Metadata(_ context.Context, req resource.MetadataR
 }
 
 func (r *radarSourceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = r.ConnectionSchema
+	resp.Schema = schema.Schema{
+		MarkdownDescription: r.ResourceSchema.MarkdownDescription,
+		Attributes:          r.ResourceSchema.Attributes,
+	}
+
+	for k, v := range baseSourceSchema {
+		// check to see if schema key already exists; if so, skip
+		if _, exists := resp.Schema.Attributes[k]; exists {
+			continue
+		}
+		resp.Schema.Attributes[k] = v
+	}
 }
 
 // radarSource is the minimal plan/state that a Radar source must have.
@@ -53,7 +99,25 @@ type radarSource interface {
 	GetName() types.String
 	GetConnectionURL() types.String
 	GetToken() types.String
+	GetDetectorType() types.String
 }
+
+// base abstraction of Radar datasource model, partially implements radarSource interface
+type abstractSourceModel struct {
+	ProjectID    types.String `tfsdk:"project_id"`
+	ID           types.String `tfsdk:"id"`
+	DetectorType types.String `tfsdk:"detector_type"`
+}
+
+func (b *abstractSourceModel) GetProjectID() types.String { return b.ProjectID }
+
+func (b *abstractSourceModel) SetProjectID(projectID types.String) { b.ProjectID = projectID }
+
+func (b *abstractSourceModel) GetID() types.String { return b.ID }
+
+func (b *abstractSourceModel) SetID(id types.String) { b.ID = id }
+
+func (b *abstractSourceModel) GetDetectorType() types.String { return b.DetectorType }
 
 func (r *radarSourceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
@@ -95,6 +159,10 @@ func (r *radarSourceResource) Create(ctx context.Context, req resource.CreateReq
 
 	if !src.GetConnectionURL().IsNull() {
 		body.ConnectionURL = src.GetConnectionURL().ValueString()
+	}
+
+	if !src.GetDetectorType().IsNull() {
+		body.DetectorType = src.GetDetectorType().ValueString()
 	}
 
 	res, err := clients.OnboardRadarSource(ctx, r.client, projectID, body)
