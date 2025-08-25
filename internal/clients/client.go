@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/auth"
 	"github.com/hashicorp/hcp-sdk-go/auth/workload"
+	"github.com/hashicorp/hcp-sdk-go/config/geography"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -64,6 +65,7 @@ import (
 	radar_src_registration_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"
 	radar_connection_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
 	radar_subscription_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
+	radar_resource_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/resource_service"
 
 	hcpConfig "github.com/hashicorp/hcp-sdk-go/config"
 	sdk "github.com/hashicorp/hcp-sdk-go/httpclient"
@@ -95,6 +97,7 @@ type Client struct {
 	RadarSourceRegistrationService radar_src_registration_service.ClientService
 	RadarConnectionService         radar_connection_service.ClientService
 	RadarSubscriptionService       radar_subscription_service.ClientService
+	RadarResourceService           radar_resource_service.ClientService
 }
 
 // ClientConfig specifies configuration for the client that interacts with HCP
@@ -125,6 +128,9 @@ type ClientConfig struct {
 	// SourceChannel denotes the client (channel) that originated the HCP cluster request.
 	// this is synonymous to a user-agent.
 	SourceChannel string
+
+	// Geography denotes the geography the HCP client should operate in.
+	Geography string
 }
 
 // NewClient creates a new Client that is capable of making HCP requests
@@ -137,6 +143,14 @@ func NewClient(config ClientConfig) (*Client, error) {
 		opts = append(opts, hcpConfig.WithCredentialFilePath(config.CredentialFile))
 	} else if cf := loadCredentialFile(config); cf != nil {
 		opts = append(opts, hcpConfig.WithCredentialFile(cf))
+	}
+
+	if config.Geography == "" {
+		// If geography is not set, default to the one used by the SDK.
+		// Currently default is us.
+		config.Geography = string(geography.Default)
+	} else {
+		opts = append(opts, hcpConfig.WithGeography(config.Geography))
 	}
 
 	// Create the HCP Config
@@ -187,6 +201,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		RadarSourceRegistrationService: cloud_vault_radar.New(httpClient, nil).DataSourceRegistrationService,
 		RadarConnectionService:         cloud_vault_radar.New(httpClient, nil).IntegrationConnectionService,
 		RadarSubscriptionService:       cloud_vault_radar.New(httpClient, nil).IntegrationSubscriptionService,
+		RadarResourceService:           cloud_vault_radar.New(httpClient, nil).ResourceService,
 	}
 
 	return client, nil

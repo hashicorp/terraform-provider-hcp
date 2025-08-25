@@ -1,3 +1,46 @@
+## v0.109.0 (July 15, 2025)
+
+FEATURES:
+
+* Add support for agent actions in HCP Waypoint [[GH-1304](https://github.com/hashicorp/hcp/issues/1304)]
+
+IMPROVEMENTS:
+
+* Updates hcp-sdk-go to v0.151.0, which includes support for the EU geography.
+HCP_GEOGRAPHY=eu|us to control geography for initial testing.
+Switching geographies currently requires removing the cached credential file, which will be addressed in an future update. [[GH-1340](https://github.com/hashicorp/hcp/issues/1340)]
+
+BUG FIXES:
+
+* Fixed ResourceIamPolicy issue where state is stored before the policy is set. [[GH-1320](https://github.com/hashicorp/hcp/issues/1320)]
+
+## v0.108.0 (July 2, 2025)
+
+FEATURES:
+
+* Add preview of hcp_vault_radar_resource_iam_policy and hcp_vault_radar_resource_iam_binding resources. [[GH-1318](https://github.com/hashicorp/hcp/issues/1318)]
+* Add preview of hcp_vault_radar_resources. [[GH-1324](https://github.com/hashicorp/hcp/issues/1324)]
+
+IMPROVEMENTS:
+
+* Update preview of hcp_vault_radar_resource_iam_policy and hcp_vault_radar_resource_iam_binding resources to use HCP `resource_name` instead of Radar `resource_uri`. [[GH-1325](https://github.com/hashicorp/hcp/issues/1325)]
+
+## v0.107.0 (June 17, 2025)
+
+IMPROVEMENTS:
+
+* Project operations (create, delete, update) now block client-side if an operationID is present in the response. [[GH-1306](https://github.com/hashicorp/hcp/issues/1306)]
+* diagnostics: Restore status page check and make it optional via provider config bool skip_status_check or env HCP_SKIP_STATUS_CHECK. [[GH-1297](https://github.com/hashicorp/hcp/issues/1297)]
+
+## v0.106.0 (May 06, 2025)
+
+IMPROVEMENTS:
+
+* update hcp-sdk-go [[GH-1270](https://github.com/hashicorp/terraform-provider-hcp/pull/1270)]
+
+BUG FIXES:
+
+* Fixed Platform Acceptance test failure by making `azurerm_role_definition.name` unique. [[GH-1269](https://github.com/hashicorp/terraform-provider-hcp/pull/1269)]
 ## v0.105.0 (April 29, 2025)
 
 FEATURES:
@@ -373,7 +416,7 @@ DEPRECATIONS:
 
 * `data.hcp_packer_image`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_artifact` [[GH-735](https://github.com/hashicorp/terraform-provider-hcp/pull/735)]
 * `data.hcp_packer_iteration`: This data source will be removed in a future release, and is superseded by `data.hcp_packer_version` [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
-* `hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute is now deprecated and will be removed in a future release. 
+* `hcp_packer_channel_assignment`: The `iteration_fingerprint` attribute is now deprecated and will be removed in a future release.
 Refer to the `version_fingerprint` attribute release notes for more information. [[GH-726](https://github.com/hashicorp/terraform-provider-hcp/pull/726)]
 ## v0.81.0 (January 24, 2024)
 
@@ -616,26 +659,26 @@ IMPROVEMENTS:
 
 DEPRECATIONS:
 
-* Setting the `hvn_2` attribute of `data.hcp_hvn_peering_connection` is now 
-deprecated. The value of the attribute is not needed to fetch data, and it was 
-never validated against the real value for `hvn_2`. The value will now be 
-populated automatically. Remove the `hvn_2` attribute from the configuration 
+* Setting the `hvn_2` attribute of `data.hcp_hvn_peering_connection` is now
+deprecated. The value of the attribute is not needed to fetch data, and it was
+never validated against the real value for `hvn_2`. The value will now be
+populated automatically. Remove the `hvn_2` attribute from the configuration
 for affected data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
-* Setting the `project_id` attribute on `hcp_hvn_peering_connection` and 
-`data.hcp_hvn_peering_connection` is now deprecated. The value of the field was 
-required to match the project ID for `hvn_1` and will now be determined 
-automatically. Remove the `project_id` field from the configuration for 
+* Setting the `project_id` attribute on `hcp_hvn_peering_connection` and
+`data.hcp_hvn_peering_connection` is now deprecated. The value of the field was
+required to match the project ID for `hvn_1` and will now be determined
+automatically. Remove the `project_id` field from the configuration for
 affected resources and data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
 * Setting the `project_id` attribute on `hcp_hvn_route` and `data.hcp_hvn_route`
-is now deprecated. The value of the field was required to match the project ID 
-in `hvn_link` and will now be determined automatically. Remove the `project_id` 
+is now deprecated. The value of the field was required to match the project ID
+in `hvn_link` and will now be determined automatically. Remove the `project_id`
 field from the configuration for affected resources and data sources. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]
 
 BUG FIXES:
 
-* Fixed several missing/incorrect implementations for the resource-level 
-`project_id` attribute that could lead to undefined or undesirable behavior on 
-some resources and data sources when the `project_id` attribute had been used 
+* Fixed several missing/incorrect implementations for the resource-level
+`project_id` attribute that could lead to undefined or undesirable behavior on
+some resources and data sources when the `project_id` attribute had been used
 and its most recent value was different from the provider-level `project_id`,
 whether or not the attribute was still present in the configuration file.
 NOTE: See associated PR for caveats on temporary regressions. [[GH-522](https://github.com/hashicorp/terraform-provider-hcp/pull/522)]

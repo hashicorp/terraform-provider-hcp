@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"github.com/hashicorp/terraform-provider-hcp/internal/statuspage"
 	"github.com/hashicorp/terraform-provider-hcp/version"
 )
 
@@ -108,6 +109,17 @@ func New() func() *schema.Provider {
 						},
 					},
 				},
+				"skip_status_check": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "When set to true, the provider will skip checking the HCP status page for service outages or returning warnings.",
+				},
+				"geography": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The geography in which HCP resources should be created. Default is `us`.",
+				},
 			},
 			ProviderMetaSchema: map[string]*schema.Schema{
 				"module_name": {
@@ -127,12 +139,20 @@ func New() func() *schema.Provider {
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		var diags diag.Diagnostics
+		// Determine if status check should be skipped via provider configuration or environment variable.
+		// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
+		skipStatusCheck := d.Get("skip_status_check").(bool) || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+		if !skipStatusCheck {
+			// This helper verifies HCP's status and returns a warning for degraded performance.
+			diags = statuspage.IsHCPOperationalSDKv2()
+		}
 
 		clientConfig := clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
 			ClientSecret:   d.Get("client_secret").(string),
 			CredentialFile: d.Get("credential_file").(string),
 			ProjectID:      d.Get("project_id").(string),
+			Geography:      d.Get("geography").(string),
 			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
 		}
 

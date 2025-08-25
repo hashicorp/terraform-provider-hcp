@@ -8,4 +8,5 @@ resource "hcp_vault_radar_source_github_enterprise" "example" {
   github_organization = "my-github-org"
   token               = var.github_enterprise_token
   project_id          = "my-project-id"
+  detector_type       = "hcp"
 }

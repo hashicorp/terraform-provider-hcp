@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
       - name: Set up Go
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           cache: true
           go-version-file: 'go.mod'
@@ -78,6 +78,8 @@ jobs:
           # RADAR_GITHUB_ENTERPRISE_DOMAIN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_DOMAIN }}
           # RADAR_GITHUB_ENTERPRISE_TOKEN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN }}
           # RADAR_GITHUB_ENTERPRISE_TOKEN_2: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN_2 }}
+          RADAR_HCP_RESOURCE_NAME: "vault-radar/project/4213bd26-e28e-4e89-b298-6a2abcaf26ca/scan-target/GJLCPNqkmmdbTCMCbdcz"
+          RADAR_RESOURCES_URI_LIKE_FILTER: "git://github.com/vaultradarcv/hcp-terraform-provider-test-resource.git"
         run: |
           go test \
             ./internal/provider/vaultradar \
@@ -92,7 +94,7 @@ jobs:
             -html=testacc-vaultradar.out \
             -o testacc-vaultradar.html
       - name: Upload TestAcc Coverage Artifact
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-vaultradar
           path: testacc-vaultradar.html
