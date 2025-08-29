@@ -29,7 +29,7 @@ func (c Client) GetDNSForwarding(ctx context.Context, hvnID, organizationID, pro
 }
 
 // CreateDNSForwarding creates a DNS forwarding.
-func (c Client) CreateDNSForwarding(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID, peeringID, connectionType string, hvnLink *sharedmodels.HashicorpCloudLocationLink, rule *networkmodels.HashicorpCloudNetwork20200907ForwardingRule) (*networkmodels.HashicorpCloudNetwork20200907DNSForwardingResponse, error) {
+func (c Client) CreateDNSForwarding(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID, peeringID, connectionType string, hvnLink *sharedmodels.HashicorpCloudLocationLink, rule *networkmodels.HashicorpCloudNetwork20200907ForwardingRule) (*networkmodels.HashicorpCloudNetwork20200907CreateDNSForwardingResponse, error) {
 	params := network_service.NewCreateDNSForwardingParams()
 	params.Context = ctx
 	params.DNSForwardingHvnID = hvnID
@@ -53,7 +53,7 @@ func (c Client) CreateDNSForwarding(ctx context.Context, hvnID, organizationID, 
 		return nil, err
 	}
 
-	return resp.Payload.DNSForwarding, nil
+	return resp.Payload, nil
 } // ListDNSForwardings lists DNS forwardings for a HVN.
 func (c Client) ListDNSForwardings(ctx context.Context, hvnID, organizationID, projectID string) ([]*networkmodels.HashicorpCloudNetwork20200907DNSForwardingResponse, error) {
 	params := network_service.NewListDNSForwardingsParams()

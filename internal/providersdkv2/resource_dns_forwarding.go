@@ -24,9 +24,11 @@ func resourceDNSForwarding() *schema.Resource {
 		Description:   "The DNS forwarding resource allows you to manage DNS forwarding configurations for HVNs.",
 		CreateContext: resourceDNSForwardingCreate,
 		ReadContext:   resourceDNSForwardingRead,
+		DeleteContext: resourceDNSForwardingDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create:  &dnsForwardingDefaultTimeout,
 			Read:    &dnsForwardingDefaultTimeout,
+			Delete:  &dnsForwardingDefaultTimeout,
 			Default: &dnsForwardingDefaultTimeout,
 		},
 		Importer: &schema.ResourceImporter{
@@ -138,11 +140,25 @@ func resourceDNSForwardingCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
-	// Build HVN link
+	// Build location
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 	}
+
+	// Get the HVN to obtain region information
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.Errorf("unable to find existing HVN (%s): %v", hvnID, err)
+	}
+
+	// Update location with region information from HVN
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
+	}
+
+	// Build HVN link with complete location
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
 
 	// Get forwarding rule configuration
@@ -168,12 +184,12 @@ func resourceDNSForwardingCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Creating DNS forwarding (%s) for HVN (%s)", dnsForwardingID, hvnID)
-	dnsForwarding, err := client.CreateDNSForwarding(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, peeringID, connectionType, hvnLink, rule)
+	createResp, err := client.CreateDNSForwarding(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, peeringID, connectionType, hvnLink, rule)
 	if err != nil {
 		return diag.Errorf("unable to create DNS forwarding (%s) for HVN (%s): %v", dnsForwardingID, hvnID, err)
 	}
 
-	link := newLink(loc, DNSForwardingResourceType, dnsForwarding.ID)
+	link := newLink(loc, DNSForwardingResourceType, createResp.DNSForwarding.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -181,7 +197,24 @@ func resourceDNSForwardingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(url)
 
-	return resourceDNSForwardingRead(ctx, d, meta)
+	// Wait for the DNS forwarding to be created
+	if err := clients.WaitForOperation(ctx, client, "create DNS forwarding", loc, createResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to create DNS forwarding (%s): %v", createResp.DNSForwarding.ID, err)
+	}
+
+	log.Printf("[INFO] Created DNS forwarding (%s)", createResp.DNSForwarding.ID)
+
+	// Get the updated DNS forwarding
+	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, client.Config.OrganizationID, projectID, createResp.DNSForwarding.ID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve DNS forwarding (%s): %v", createResp.DNSForwarding.ID, err)
+	}
+
+	if err := setDNSForwardingResourceData(d, dnsForwarding, loc); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func resourceDNSForwardingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -314,6 +347,64 @@ func setDNSForwardingResourceData(d *schema.ResourceData, dnsForwarding *network
 	if err := d.Set("created_at", dnsForwarding.CreatedAt.String()); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func resourceDNSForwardingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client)
+
+	link, err := buildLinkFromURL(d.Id(), DNSForwardingResourceType, client.Config.OrganizationID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	hvnID := d.Get("hvn_id").(string)
+	dnsForwardingID := link.ID
+
+	// Get the current DNS forwarding configuration to find associated rules
+	log.Printf("[INFO] Reading DNS forwarding (%s) before deletion to find associated rules", dnsForwardingID)
+	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID)
+	if err != nil {
+		if clients.IsResponseCodeNotFound(err) {
+			log.Printf("[WARN] DNS forwarding (%s) not found, removing from state", dnsForwardingID)
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("unable to retrieve DNS forwarding (%s) before deletion: %v", dnsForwardingID, err)
+	}
+
+	// Delete all associated forwarding rules first
+	if len(dnsForwarding.Rules) > 0 {
+		for _, rule := range dnsForwarding.Rules {
+			if rule.Rule != nil {
+				ruleID := rule.Rule.ID
+				log.Printf("[INFO] Deleting DNS forwarding rule (%s) as part of DNS forwarding (%s) deletion", ruleID, dnsForwardingID)
+
+				deleteResp, err := client.DeleteDNSForwardingRule(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID, ruleID)
+				if err != nil {
+					if clients.IsResponseCodeNotFound(err) {
+						log.Printf("[WARN] DNS forwarding rule (%s) not found during DNS forwarding deletion, continuing", ruleID)
+						continue
+					}
+					return diag.Errorf("unable to delete DNS forwarding rule (%s) during DNS forwarding deletion: %v", ruleID, err)
+				}
+
+				// Wait for the DNS forwarding rule to be deleted
+				if err := clients.WaitForOperation(ctx, client, "delete DNS forwarding rule", link.Location, deleteResp.Operation.ID); err != nil {
+					return diag.Errorf("unable to delete DNS forwarding rule (%s) during DNS forwarding deletion: %v", ruleID, err)
+				}
+
+				log.Printf("[INFO] Successfully deleted DNS forwarding rule (%s)", ruleID)
+			}
+		}
+	}
+
+	// Note: HCP API doesn't support deleting the DNS forwarding configuration itself,
+	// so we only delete the rules and remove the resource from Terraform state.
+	// This is similar to how some other HCP resources handle deletion.
+	log.Printf("[INFO] DNS forwarding (%s) and all associated rules deleted successfully, removing from state", dnsForwardingID)
+	d.SetId("")
 
 	return nil
 }

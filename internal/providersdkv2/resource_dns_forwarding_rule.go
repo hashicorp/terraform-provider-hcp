@@ -106,10 +106,43 @@ func resourceDNSForwardingRuleCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("unable to retrieve project ID: %v", err)
 	}
 
+	// Build location
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      projectID,
+	}
+
+	// Get the HVN to obtain region information
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.Errorf("unable to find existing HVN (%s): %v", hvnID, err)
+	}
+
+	// Update location with region information from HVN
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
+	}
+
 	inboundEndpointIPs := make([]string, 0)
 	for _, ip := range d.Get("inbound_endpoint_ips").([]interface{}) {
 		inboundEndpointIPs = append(inboundEndpointIPs, ip.(string))
 	}
+
+	// Get the HVN to obtain region information
+	hvn, hvnErr := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if hvnErr != nil {
+		return diag.Errorf("unable to find existing HVN (%s): %v", hvnID, hvnErr)
+	}
+
+	// Update location with region information from HVN
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
+	}
+
+	// Build HVN link with complete location
+	hvnLink := newLink(loc, HvnResourceType, hvnID)
 
 	rule := &networkmodels.HashicorpCloudNetwork20200907ForwardingRule{
 		DomainName:         domainName,
@@ -117,16 +150,12 @@ func resourceDNSForwardingRuleCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating DNS forwarding rule (%s) in DNS forwarding (%s)", domainName, dnsForwardingID)
-	dnsForwardingRule, err := client.CreateDNSForwardingRule(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, rule)
+	createResp, err := client.CreateDNSForwardingRule(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, rule, hvnLink)
 	if err != nil {
 		return diag.Errorf("unable to create DNS forwarding rule (%s): %v", domainName, err)
 	}
 
-	loc := &sharedmodels.HashicorpCloudLocationLocation{
-		OrganizationID: client.Config.OrganizationID,
-		ProjectID:      projectID,
-	}
-	link := newLink(loc, DNSForwardingRuleResourceType, dnsForwardingRule.Rule.ID)
+	link := newLink(loc, DNSForwardingRuleResourceType, createResp.DNSForwardingRule.Rule.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -134,7 +163,24 @@ func resourceDNSForwardingRuleCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(url)
 
-	return resourceDNSForwardingRuleRead(ctx, d, meta)
+	// Wait for the DNS forwarding rule to be created
+	if err := clients.WaitForOperation(ctx, client, "create DNS forwarding rule", loc, createResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to create DNS forwarding rule (%s): %v", createResp.DNSForwardingRule.Rule.ID, err)
+	}
+
+	log.Printf("[INFO] Created DNS forwarding rule (%s)", createResp.DNSForwardingRule.Rule.ID)
+
+	// Get the updated DNS forwarding rule
+	dnsRule, ruleErr := client.GetDNSForwardingRule(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, createResp.DNSForwardingRule.Rule.ID)
+	if ruleErr != nil {
+		return diag.Errorf("unable to retrieve DNS forwarding rule (%s): %v", createResp.DNSForwardingRule.Rule.ID, ruleErr)
+	}
+
+	if err := setDNSForwardingRuleResourceData(d, dnsRule, loc); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func resourceDNSForwardingRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -182,7 +228,7 @@ func resourceDNSForwardingRuleDelete(ctx context.Context, d *schema.ResourceData
 	ruleID := link.ID
 
 	log.Printf("[INFO] Deleting DNS forwarding rule (%s) in DNS forwarding (%s)", ruleID, dnsForwardingID)
-	err = client.DeleteDNSForwardingRule(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID, ruleID)
+	deleteResp, err := client.DeleteDNSForwardingRule(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID, ruleID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] DNS forwarding rule (%s) not found during delete, removing from state", ruleID)
@@ -192,6 +238,13 @@ func resourceDNSForwardingRuleDelete(ctx context.Context, d *schema.ResourceData
 
 		return diag.Errorf("unable to delete DNS forwarding rule (%s): %v", ruleID, err)
 	}
+
+	// Wait for the DNS forwarding rule to be deleted
+	if err := clients.WaitForOperation(ctx, client, "delete DNS forwarding rule", link.Location, deleteResp.Operation.ID); err != nil {
+		return diag.Errorf("unable to delete DNS forwarding rule (%s): %v", ruleID, err)
+	}
+
+	log.Printf("[INFO] DNS forwarding rule (%s) deleted successfully", ruleID)
 
 	return nil
 }

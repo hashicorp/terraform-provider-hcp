@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/client/network_service"
 	networkmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-network/stable/2020-09-07/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // GetDNSForwardingRule gets a DNS forwarding rule by its ID.
@@ -29,15 +30,17 @@ func (c Client) GetDNSForwardingRule(ctx context.Context, hvnID, organizationID,
 }
 
 // CreateDNSForwardingRule creates a DNS forwarding rule.
-func (c Client) CreateDNSForwardingRule(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID string, rule *networkmodels.HashicorpCloudNetwork20200907ForwardingRule) (*networkmodels.HashicorpCloudNetwork20200907DNSForwardingRule, error) {
+func (c Client) CreateDNSForwardingRule(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID string, rule *networkmodels.HashicorpCloudNetwork20200907ForwardingRule, hvnLink *sharedmodels.HashicorpCloudLocationLink) (*networkmodels.HashicorpCloudNetwork20200907CreateDNSForwardingRuleResponse, error) {
 	params := network_service.NewCreateDNSForwardingRuleParams()
 	params.Context = ctx
 	params.DNSForwardingRuleHvnID = hvnID
 	params.DNSForwardingRuleHvnLocationOrganizationID = organizationID
 	params.DNSForwardingRuleHvnLocationProjectID = projectID
 	params.DNSForwardingRuleDNSForwardingID = dnsForwardingID
+
 	params.Body = &networkmodels.HashicorpCloudNetwork20200907CreateDNSForwardingRuleRequest{
 		DNSForwardingRule: &networkmodels.HashicorpCloudNetwork20200907DNSForwardingRule{
+			Hvn:  hvnLink,
 			Rule: rule,
 		},
 	}
@@ -47,11 +50,11 @@ func (c Client) CreateDNSForwardingRule(ctx context.Context, hvnID, organization
 		return nil, err
 	}
 
-	return resp.Payload.DNSForwardingRule, nil
+	return resp.Payload, nil
 }
 
 // DeleteDNSForwardingRule deletes a DNS forwarding rule.
-func (c Client) DeleteDNSForwardingRule(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID, ruleID string) error {
+func (c Client) DeleteDNSForwardingRule(ctx context.Context, hvnID, organizationID, projectID, dnsForwardingID, ruleID string) (*networkmodels.HashicorpCloudNetwork20200907DeleteDNSForwardingRuleResponse, error) {
 	params := network_service.NewDeleteDNSForwardingRuleParams()
 	params.Context = ctx
 	params.HvnID = hvnID
@@ -60,8 +63,12 @@ func (c Client) DeleteDNSForwardingRule(ctx context.Context, hvnID, organization
 	params.DNSForwardingID = dnsForwardingID
 	params.ID = ruleID
 
-	_, err := c.Network.DeleteDNSForwardingRule(params, nil)
-	return err
+	resp, err := c.Network.DeleteDNSForwardingRule(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
 }
 
 // ListDNSForwardingRules lists DNS forwarding rules for a DNS forwarding.
