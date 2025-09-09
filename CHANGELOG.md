@@ -1,3 +1,9 @@
+## Unreleased
+
+FEATURES:
+
+* Add support for private link resources with `hcp_private_link` resource and `hcp_private_link_service` data source
+
 ## v0.109.0 (July 15, 2025)
 
 FEATURES:
