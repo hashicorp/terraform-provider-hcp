@@ -26,6 +26,7 @@ func resourcePrivateLink() *schema.Resource {
 			Default: &privateLinkDefaultTimeout,
 			Create:  &privateLinkCreateTimeout,
 			Delete:  &privateLinkDeleteTimeout,
+			Update:  &privateLinkUpdateTimeout,
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePrivateLinkImport,
@@ -134,8 +135,18 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 		ProjectID:      projectID,
 	}
 
-	// Create the HVN link
+	// Get the HVN to get its region information
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
+	}
+
+	// Create the HVN link with region information
 	hvnLink := newLink(loc, HvnResourceType, hvnID)
+	hvnLink.Location.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
+	}
 
 	// Extract consumer regions
 	var consumerRegions []string
@@ -198,6 +209,11 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	log.Printf("[INFO] Private link (%s) is now in AVAILABLE state", privateLinkID)
 
+	// On initial creation, make sure to preserve the hvn_id that was passed in
+	if err := d.Set("hvn_id", hvnID); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := setPrivateLinkResourceData(d, privateLinkService); err != nil {
 		return diag.FromErr(err)
 	}
@@ -252,6 +268,18 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
+	}
+
+	// Get the HVN to get its region information for the location
+	hvn, err := clients.GetHvnByID(ctx, client, loc, hvnID)
+	if err != nil {
+		return diag.Errorf("unable to retrieve HVN (%s): %v", hvnID, err)
+	}
+
+	// Make sure the location has the region information
+	loc.Region = &sharedmodels.HashicorpCloudLocationRegion{
+		Provider: hvn.Location.Region.Provider,
+		Region:   hvn.Location.Region.Region,
 	}
 
 	// Handle consumer regions update
@@ -353,11 +381,16 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Updated private link (%s)", privateLinkID)
 
 	// Wait for the private link to be available
-	privateLinkService, err := clients.WaitForPrivateLinkServiceToBeAvailable(ctx, client, privateLinkID, hvnID, loc, d.Timeout(schema.TimeoutCreate))
+	privateLinkService, err := clients.WaitForPrivateLinkServiceToBeAvailable(ctx, client, privateLinkID, hvnID, loc, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Private link (%s) is now in AVAILABLE state", privateLinkID)
+
+	// During update, make sure to preserve the hvn_id that was passed in
+	if err := d.Set("hvn_id", hvnID); err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := setPrivateLinkResourceData(d, privateLinkService); err != nil {
 		return diag.FromErr(err)
@@ -443,10 +476,6 @@ func resourcePrivateLinkImport(ctx context.Context, d *schema.ResourceData, meta
 
 func setPrivateLinkResourceData(d *schema.ResourceData, privateLinkService *networkmodels.HashicorpCloudNetwork20200907PrivateLinkService) error {
 	if err := d.Set("private_link_id", privateLinkService.ID); err != nil {
-		return err
-	}
-
-	if err := d.Set("hvn_id", privateLinkService.Hvn.ID); err != nil {
 		return err
 	}
 

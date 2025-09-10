@@ -109,6 +109,9 @@ func UpdatePrivateLinkService(
 		RemoveConsumerAccounts: removeConsumerAccounts,
 		AddConsumerIPRanges:    addConsumerIPRanges,
 		RemoveConsumerIPRanges: removeConsumerIPRanges,
+		Hvn: &sharedmodels.HashicorpCloudLocationLink{
+			Location: loc,
+		},
 	}
 
 	updatePrivateLinkResponse, err := client.Network.UpdatePrivateLinkService(updatePrivateLinkParams, nil)
