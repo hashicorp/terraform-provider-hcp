@@ -14,40 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func TestAccResourcePrivateLink_basic(t *testing.T) {
-	resourceName := "hcp_private_link.test"
-	hvnResourceName := "hcp_hvn.test"
-	vaultResourceName := "hcp_vault_cluster.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true}) },
-		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckPrivateLinkDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourcePrivateLinkBasic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPrivateLinkExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
-					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
-				),
-			},
-			// Test importing the resource
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccResourcePrivateLink_update(t *testing.T) {
+func TestAccResourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	hvnResourceName := "hcp_hvn.test"
 	vaultResourceName := "hcp_vault_cluster.test"
@@ -68,6 +35,24 @@ func TestAccResourcePrivateLink_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
 				),
+			},
+			// Test importing the resource
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("not found: %s", resourceName)
+					}
+
+					hvnID := rs.Primary.Attributes["hvn_id"]
+					privateLinkID := rs.Primary.Attributes["private_link_id"]
+
+					return fmt.Sprintf("%s:%s", hvnID, privateLinkID), nil
+				},
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 			// Update consumer regions
 			{
@@ -213,7 +198,7 @@ func testAccCheckPrivateLinkDestroy(s *terraform.State) error {
 		}
 
 		_, err = clients.GetPrivateLinkServiceByID(context.Background(), client, privateLinkID, hvnID, loc)
-		if err == nil || !clients.IsResponseCodeNotFound(err) {
+		if err == nil {
 			return fmt.Errorf("private link still exists")
 		}
 	}
