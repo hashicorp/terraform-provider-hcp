@@ -31,7 +31,7 @@ func testAccDNSForwardingDataSourceConfig() string {
 resource "hcp_hvn" "test" {
   hvn_id         = "test-hvn"
   cloud_provider = "aws"
-  region         = "us-west-2"
+  region         = "us-east-1"
   cidr_block     = "172.25.16.0/20"
 }
 
@@ -40,7 +40,7 @@ resource "hcp_aws_network_peering" "test" {
   peering_id      = "test-peering"
   peer_vpc_id     = "vpc-12345678"
   peer_account_id = "123456789012"
-  peer_vpc_region = "us-west-2"
+  peer_vpc_region = "us-east-1"
 }
 
 resource "hcp_dns_forwarding" "test" {

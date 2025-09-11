@@ -119,7 +119,7 @@ func dataSourceDNSForwardingRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	organizationID := client.Config.OrganizationID
 
-	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, organizationID, projectID, dnsForwardingID)
+	dnsForwarding, err := clients.GetDNSForwarding(ctx, client, hvnID, organizationID, projectID, dnsForwardingID)
 	if err != nil {
 		return diag.Errorf("unable to fetch DNS forwarding (%s): %v", dnsForwardingID, err)
 	}

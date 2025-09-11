@@ -91,19 +91,29 @@ func dataSourceDNSForwardingRuleRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Reading DNS forwarding rule (%s) in DNS forwarding (%s)", dnsForwardingRuleID, dnsForwardingID)
-	rule, err := client.GetDNSForwardingRule(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, dnsForwardingRuleID)
+	rule, err := clients.GetDNSForwardingRule(ctx, client, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, dnsForwardingRuleID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve DNS forwarding rule (%s): %v", dnsForwardingRuleID, err)
 	}
 
 	// Set computed fields
-	d.Set("project_id", projectID)
-	d.Set("domain_name", rule.Rule.DomainName)
-	d.Set("inbound_endpoint_ips", rule.Rule.InboundEndpointIps)
-	if rule.State != nil {
-		d.Set("state", string(*rule.State))
+	if err := d.Set("project_id", projectID); err != nil {
+		return diag.FromErr(err)
 	}
-	d.Set("created_at", rule.CreatedAt.String())
+	if err := d.Set("domain_name", rule.Rule.DomainName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("inbound_endpoint_ips", rule.Rule.InboundEndpointIps); err != nil {
+		return diag.FromErr(err)
+	}
+	if rule.State != nil {
+		if err := d.Set("state", string(*rule.State)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if err := d.Set("created_at", rule.CreatedAt.String()); err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Create self link
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -115,7 +125,9 @@ func dataSourceDNSForwardingRuleRead(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.Set("self_link", url)
+	if err := d.Set("self_link", url); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(url)
 
 	return nil

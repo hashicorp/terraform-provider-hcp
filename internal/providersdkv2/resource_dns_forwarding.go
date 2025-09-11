@@ -184,7 +184,7 @@ func resourceDNSForwardingCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Creating DNS forwarding (%s) for HVN (%s)", dnsForwardingID, hvnID)
-	createResp, err := client.CreateDNSForwarding(ctx, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, peeringID, connectionType, hvnLink, rule)
+	createResp, err := clients.CreateDNSForwarding(ctx, client, hvnID, client.Config.OrganizationID, projectID, dnsForwardingID, peeringID, connectionType, hvnLink, rule)
 	if err != nil {
 		return diag.Errorf("unable to create DNS forwarding (%s) for HVN (%s): %v", dnsForwardingID, hvnID, err)
 	}
@@ -205,7 +205,7 @@ func resourceDNSForwardingCreate(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[INFO] Created DNS forwarding (%s)", createResp.DNSForwarding.ID)
 
 	// Get the updated DNS forwarding
-	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, client.Config.OrganizationID, projectID, createResp.DNSForwarding.ID)
+	dnsForwarding, err := clients.GetDNSForwarding(ctx, client, hvnID, client.Config.OrganizationID, projectID, createResp.DNSForwarding.ID)
 	if err != nil {
 		return diag.Errorf("unable to retrieve DNS forwarding (%s): %v", createResp.DNSForwarding.ID, err)
 	}
@@ -229,7 +229,7 @@ func resourceDNSForwardingRead(ctx context.Context, d *schema.ResourceData, meta
 	dnsForwardingID := link.ID
 
 	log.Printf("[INFO] Reading DNS forwarding (%s)", dnsForwardingID)
-	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID)
+	dnsForwarding, err := clients.GetDNSForwarding(ctx, client, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] DNS forwarding (%s) not found, removing from state", dnsForwardingID)
@@ -280,8 +280,12 @@ func resourceDNSForwardingImport(ctx context.Context, d *schema.ResourceData, me
 		projectID = client.Config.ProjectID
 	}
 
-	d.Set("project_id", projectID)
-	d.Set("hvn_id", hvnID)
+	if err := d.Set("project_id", projectID); err != nil {
+		return nil, fmt.Errorf("error setting project_id: %w", err)
+	}
+	if err := d.Set("hvn_id", hvnID); err != nil {
+		return nil, fmt.Errorf("error setting hvn_id: %w", err)
+	}
 
 	// Build the resource ID using the DNS forwarding ID
 	loc := &sharedmodels.HashicorpCloudLocationLocation{
@@ -364,7 +368,7 @@ func resourceDNSForwardingDelete(ctx context.Context, d *schema.ResourceData, me
 
 	// Get the current DNS forwarding configuration to find associated rules
 	log.Printf("[INFO] Reading DNS forwarding (%s) before deletion to find associated rules", dnsForwardingID)
-	dnsForwarding, err := client.GetDNSForwarding(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID)
+	dnsForwarding, err := clients.GetDNSForwarding(ctx, client, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID)
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
 			log.Printf("[WARN] DNS forwarding (%s) not found, removing from state", dnsForwardingID)
@@ -381,7 +385,7 @@ func resourceDNSForwardingDelete(ctx context.Context, d *schema.ResourceData, me
 				ruleID := rule.Rule.ID
 				log.Printf("[INFO] Deleting DNS forwarding rule (%s) as part of DNS forwarding (%s) deletion", ruleID, dnsForwardingID)
 
-				deleteResp, err := client.DeleteDNSForwardingRule(ctx, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID, ruleID)
+				deleteResp, err := clients.DeleteDNSForwardingRule(ctx, client, hvnID, link.Location.OrganizationID, link.Location.ProjectID, dnsForwardingID, ruleID)
 				if err != nil {
 					if clients.IsResponseCodeNotFound(err) {
 						log.Printf("[WARN] DNS forwarding rule (%s) not found during DNS forwarding deletion, continuing", ruleID)
