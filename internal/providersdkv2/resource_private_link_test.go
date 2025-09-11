@@ -47,6 +47,43 @@ func TestAccResourcePrivateLink_basic(t *testing.T) {
 	})
 }
 
+func TestAccResourcePrivateLink_update(t *testing.T) {
+	resourceName := "hcp_private_link.test"
+	hvnResourceName := "hcp_hvn.test"
+	vaultResourceName := "hcp_vault_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateLinkDestroy,
+		Steps: []resource.TestStep{
+			// Initial creation
+			{
+				Config: testAccResourcePrivateLinkBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateLinkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
+					resource.TestCheckResourceAttr(resourceName, "consumer_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "consumer_regions.0", "us-west-2"),
+					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
+				),
+			},
+			// Update consumer regions
+			{
+				Config: testAccResourcePrivateLinkUpdatedConsumerRegions(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateLinkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
+					resource.TestCheckResourceAttr(resourceName, "consumer_regions.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccResourcePrivateLinkBasic() string {
 	return `
 resource "hcp_hvn" "test" {
@@ -58,8 +95,12 @@ resource "hcp_hvn" "test" {
 resource "hcp_vault_cluster" "test" {
   hvn_id     = hcp_hvn.test.hvn_id
   cluster_id = "test-vault-cluster"
-  tier       = "dev"
+  tier       = "standard_small"
   public_endpoint = false
+  
+  major_version_upgrade_config {
+    upgrade_type = "AUTOMATIC"
+  }
 }
 
 resource "hcp_private_link" "test" {
@@ -68,11 +109,47 @@ resource "hcp_private_link" "test" {
   vault_cluster_id = hcp_vault_cluster.test.cluster_id
 
   consumer_accounts = [
-    "123456789012"  # Test AWS account ID
+    "arn:aws:iam::311485635366:root"
   ]
   
   consumer_regions = [
     "us-west-2"
+  ]
+}
+`
+}
+
+func testAccResourcePrivateLinkUpdatedConsumerRegions() string {
+	return `
+resource "hcp_hvn" "test" {
+  hvn_id         = "test-hvn"
+  cloud_provider = "aws"
+  region         = "us-west-2"
+}
+
+resource "hcp_vault_cluster" "test" {
+  hvn_id     = hcp_hvn.test.hvn_id
+  cluster_id = "test-vault-cluster"
+  tier       = "standard_small"
+  public_endpoint = false
+  
+  major_version_upgrade_config {
+    upgrade_type = "AUTOMATIC"
+  }
+}
+
+resource "hcp_private_link" "test" {
+  hvn_id           = hcp_hvn.test.hvn_id
+  private_link_id  = "test-private-link"
+  vault_cluster_id = hcp_vault_cluster.test.cluster_id
+
+  consumer_accounts = [
+    "arn:aws:iam::311485635366:root"
+  ]
+  
+  consumer_regions = [
+    "us-west-2",
+    "us-east-1"
   ]
 }
 `
