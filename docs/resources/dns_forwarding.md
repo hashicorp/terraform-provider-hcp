@@ -3,26 +3,90 @@
 page_title: "hcp_dns_forwarding Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The DNS forwarding resource allows you to manage DNS forwarding configurations for HVNs.
+  The DNS forwarding resource allows you to manage DNS forwarding configurations for HVNs. Configure private DNS to forward DNS queries from your HVN to your private DNS servers.
 ---
 
 # hcp_dns_forwarding (Resource)
 
-The DNS forwarding resource allows you to manage DNS forwarding configurations for HVNs.
+The DNS forwarding resource allows you to manage DNS forwarding configurations for HVNs. Configure private DNS to forward DNS queries from your HVN to your private DNS servers.
+
+## Prerequisites
+
+Before using DNS forwarding, ensure you have:
+
+- **HVN**: AWS HVN with unique address space
+- **VPC Configuration**: Target VPC with DNS support and DNS hostnames enabled
+- **Network Connectivity**: Valid connection via VPC peering or Transit Gateway
+- **Security Groups**: Allow inbound traffic on port 53 (UDP/TCP) from HVN CIDR
+- **DNS Setup**: Route 53 resolver endpoint or self-managed DNS server
+
+Check the [HCP Private DNS documentation](https://developer.hashicorp.com/hcp/docs/vault/private-dns) for more details.
+
+## Resource Usage
+
+### When to Use This Resource
+
+Use `hcp_dns_forwarding` with embedded rule when:
+- Creating a single DNS forwarding configuration with one rule
+- Simple, straightforward setup
+- Rule is tightly coupled to the DNS forwarding configuration
+
+For multiple rules in the same DNS forwarding configuration, use the `hcp_dns_forwarding_rule` resource to add additional rules after the initial configuration is created.
 
 ## Example Usage
 
+### Basic DNS Forwarding with VPC Peering
+
 ```terraform
+resource "hcp_hvn" "example" {
+  hvn_id         = "main-hvn"
+  cloud_provider = "aws"
+  region         = "us-west-2"
+  cidr_block     = "172.25.16.0/20"
+}
+
+resource "hcp_aws_network_peering" "example" {
+  hvn_id          = hcp_hvn.example.hvn_id
+  peering_id      = "main-peering"
+  peer_vpc_id     = "vpc-12345678"
+  peer_account_id = "123456789012"
+  peer_vpc_region = "us-west-2"
+}
+
 resource "hcp_dns_forwarding" "example" {
   hvn_id            = hcp_hvn.example.hvn_id
   dns_forwarding_id = "dns-forwarding-1"
   peering_id        = hcp_aws_network_peering.example.peering_id
-  connection_type   = "PEERING"
+  connection_type   = "hvn-peering"
   
   forwarding_rule {
     rule_id              = "rule-1"
-    domain_name          = "example.com"
+    domain_name          = "internal.example.com"
     inbound_endpoint_ips = ["10.0.1.10", "10.0.1.11"]
+  }
+}
+```
+
+### DNS Forwarding with Transit Gateway
+
+```terraform
+resource "hcp_aws_transit_gateway_attachment" "example" {
+  hvn_id                        = hcp_hvn.example.hvn_id
+  transit_gateway_attachment_id = "main-tgw-attachment"
+  transit_gateway_id            = "tgw-12345678"
+  resource_share_arn            = "arn:aws:ram:us-west-2:123456789012:resource-share/example"
+}
+
+resource "hcp_dns_forwarding" "tgw_example" {
+  hvn_id            = hcp_hvn.example.hvn_id
+  dns_forwarding_id = "dns-forwarding-tgw"
+  peering_id        = hcp_aws_transit_gateway_attachment.example.id
+  connection_type   = "tgw-attachment"
+  
+  forwarding_rule {
+    rule_id              = "tgw-rule-1"
+    domain_name          = "internal.company.com"
+    inbound_endpoint_ips = ["10.0.2.10", "10.0.2.11"]
   }
 }
 ```
@@ -32,11 +96,11 @@ resource "hcp_dns_forwarding" "example" {
 
 ### Required
 
-- `connection_type` (String) The connection type for DNS forwarding.
-- `dns_forwarding_id` (String) The ID of the DNS forwarding configuration.
-- `forwarding_rule` (Block List, Min: 1, Max: 1) The forwarding rule configuration. (see [below for nested schema](#nestedblock--forwarding_rule))
+- `connection_type` (String) The connection type for DNS forwarding. Valid values: `hvn-peering` (for VPC peering connections) or `tgw-attachment` (for Transit Gateway attachments).
+- `dns_forwarding_id` (String) The ID of the DNS forwarding configuration. Must be unique across your HCP account and cannot exceed 32 characters.
+- `forwarding_rule` (Block List, Min: 1, Max: 1) The forwarding rule configuration. Only one rule per DNS forwarding resource is supported. For multiple rules, use separate `hcp_dns_forwarding_rule` resources. (see [below for nested schema](#nestedblock--forwarding_rule))
 - `hvn_id` (String) The ID of the HVN that this DNS forwarding belongs to.
-- `peering_id` (String) The ID of the peering connection for DNS forwarding.
+- `peering_id` (String) The ID of the peering connection (for `hvn-peering`) or transit gateway attachment ID (for `tgw-attachment`) for DNS forwarding.
 
 ### Optional
 
@@ -55,9 +119,9 @@ resource "hcp_dns_forwarding" "example" {
 
 Required:
 
-- `domain_name` (String) The domain name for DNS forwarding.
-- `inbound_endpoint_ips` (List of String) The list of inbound endpoint IP addresses.
-- `rule_id` (String) The ID of the forwarding rule.
+- `domain_name` (String) The domain name for DNS forwarding (e.g., `internal.example.com`).
+- `inbound_endpoint_ips` (List of String) The IP addresses of your DNS servers or AWS Route 53 VPC endpoint. Maximum 2 IPs per rule.
+- `rule_id` (String) The ID of the forwarding rule. Must be unique across your HCP account and cannot exceed 32 characters.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -74,5 +138,19 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
+# Using provider-default project ID
 terraform import hcp_dns_forwarding.example hvn-id:dns-forwarding-id
+
+# Using explicit project ID  
+terraform import hcp_dns_forwarding.example project-id:hvn-id:dns-forwarding-id
 ```
+
+## Limitations
+
+- **Beta Feature**: Private DNS forwarding is currently in beta for AWS only
+- **Resource Limits**: 1 DNS forwarding configuration per HVN, 5 rules per configuration, 2 IPs per rule
+- **Immutable**: DNS forwarding configurations cannot be updated after creation (changes require replacement)
+- **Connection Types**: Only `hvn-peering` and `tgw-attachment` are supported
+- **TLS Limitations**: TLS certificates from private certificate authorities are not supported during beta
+
+For higher limits, [create a support ticket](https://support.hashicorp.com/hc/en-us/requests/new).

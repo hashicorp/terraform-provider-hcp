@@ -20,9 +20,11 @@ func TestAccDNSForwardingResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("hcp_dns_forwarding.test", "state"),
 					resource.TestCheckResourceAttrSet("hcp_dns_forwarding.test", "self_link"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "dns_forwarding_id", "test-dns-forwarding"),
-					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "connection_type", "PEERING"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "connection_type", "hvn-peering"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.#", "1"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.0.rule_id", "test-rule"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.0.domain_name", "example.internal"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.0.inbound_endpoint_ips.#", "2"),
 				),
 			},
 			// ImportState testing
@@ -57,7 +59,7 @@ resource "hcp_dns_forwarding" "test" {
   hvn_id            = hcp_hvn.test.hvn_id
   dns_forwarding_id = "test-dns-forwarding"
   peering_id        = hcp_aws_network_peering.test.peering_id
-  connection_type   = "PEERING"
+  connection_type   = "hvn-peering"
   
   forwarding_rule {
     rule_id              = "test-rule"

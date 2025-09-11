@@ -25,7 +25,7 @@ resource "hcp_dns_forwarding" "example" {
   hvn_id            = data.hcp_hvn.example.hvn_id
   dns_forwarding_id = "dns-forwarding-1"
   peering_id        = hcp_aws_network_peering.example.peering_id
-  connection_type   = "PEERING"
+  connection_type   = "hvn-peering"
   
   forwarding_rule {
     rule_id              = "rule-1"

@@ -3,19 +3,47 @@
 page_title: "hcp_dns_forwarding Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The DNS forwarding data source provides information about a DNS forwarding configuration for a HashiCorp Virtual Network (HVN).
+  The DNS forwarding data source provides information about an existing DNS forwarding configuration for a HashiCorp Virtual Network (HVN). Use this to reference existing DNS forwarding configurations when adding additional rules.
 ---
 
 # hcp_dns_forwarding (Data Source)
 
-The DNS forwarding data source provides information about a DNS forwarding configuration for a HashiCorp Virtual Network (HVN).
+The DNS forwarding data source provides information about an existing DNS forwarding configuration for a HashiCorp Virtual Network (HVN). Use this to reference existing DNS forwarding configurations when adding additional rules.
 
 ## Example Usage
 
+### Basic Data Source Usage
+
 ```terraform
 data "hcp_dns_forwarding" "example" {
-  hvn_id            = "hvn-1"
-  dns_forwarding_id = "dns-forwarding-1"
+  hvn_id            = "main-hvn"
+  dns_forwarding_id = "existing-dns-forwarding"
+}
+
+# Use the data source to add additional rules
+resource "hcp_dns_forwarding_rule" "additional" {
+  hvn_id            = data.hcp_dns_forwarding.example.hvn_id
+  dns_forwarding_id = data.hcp_dns_forwarding.example.dns_forwarding_id
+  domain_name       = "api.internal.com"
+  inbound_endpoint_ips = ["10.0.1.12", "10.0.1.13"]
+}
+
+# Output information about the DNS forwarding
+output "dns_forwarding_info" {
+  value = {
+    state           = data.hcp_dns_forwarding.example.state
+    connection_type = data.hcp_dns_forwarding.example.connection_type
+    rules_count     = length(data.hcp_dns_forwarding.example.forwarding_rules)
+  }
+}
+```
+
+### With Explicit Project ID
+
+```terraform
+data "hcp_dns_forwarding" "example" {
+  hvn_id            = "main-hvn"
+  dns_forwarding_id = "existing-dns-forwarding"
   project_id        = "f709ec73-55d4-46d8-897d-816ebba28778"
 }
 ```

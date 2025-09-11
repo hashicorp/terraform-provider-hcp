@@ -3,20 +3,62 @@
 page_title: "hcp_dns_forwarding_rule Resource - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The DNS forwarding rule resource allows you to manage DNS forwarding rules for HVNs.
+  The DNS forwarding rule resource allows you to manage individual DNS forwarding rules for existing DNS forwarding configurations. Use this for adding multiple rules or managing rules independently.
 ---
 
 # hcp_dns_forwarding_rule (Resource)
 
-The DNS forwarding rule resource allows you to manage DNS forwarding rules for HVNs.
+The DNS forwarding rule resource allows you to manage individual DNS forwarding rules for existing DNS forwarding configurations. Use this for adding multiple rules or managing rules independently.
+
+-> **Note:** DNS forwarding rules can only be added to DNS forwarding configurations that are in the `ACTIVE` state.
+
+## When to Use This Resource
+
+Use `hcp_dns_forwarding_rule` when:
+- Adding multiple rules to the same DNS forwarding configuration
+- Managing rules independently with different lifecycles  
+- Need to add rules after the initial DNS forwarding is created
+- Using data sources to reference existing DNS forwarding configurations
+
+-> **Note:** DNS forwarding rules can only be created for existing DNS forwarding configurations. For additional rules in the same DNS forwarding configuration, use this `hcp_dns_forwarding_rule` resource.
+
+For more information about DNS forwarding setup and requirements, see the [HCP Private DNS documentation](https://developer.hashicorp.com/hcp/docs/vault/private-dns).
 
 ## Example Usage
 
+### Adding Multiple Rules to Existing DNS Forwarding
+
+```terraform
+# Reference existing DNS forwarding configuration
+data "hcp_dns_forwarding" "existing" {
+  hvn_id            = "main-hvn"
+  dns_forwarding_id = "existing-dns-forwarding"
+}
+
+# Add staging environment rule
+resource "hcp_dns_forwarding_rule" "staging" {
+  hvn_id            = data.hcp_dns_forwarding.existing.hvn_id
+  dns_forwarding_id = data.hcp_dns_forwarding.existing.dns_forwarding_id
+  domain_name       = "staging.internal.com"
+  inbound_endpoint_ips = ["10.0.1.101", "10.0.2.101"]
+}
+
+# Add production environment rule
+resource "hcp_dns_forwarding_rule" "production" {
+  hvn_id            = data.hcp_dns_forwarding.existing.hvn_id
+  dns_forwarding_id = data.hcp_dns_forwarding.existing.dns_forwarding_id
+  domain_name       = "prod.internal.com"
+  inbound_endpoint_ips = ["10.0.1.102", "10.0.2.102"]
+}
+```
+
+### Simple Rule Addition
+
 ```terraform
 resource "hcp_dns_forwarding_rule" "example" {
-  hvn_id               = hcp_hvn.example.hvn_id
-  dns_forwarding_id    = hcp_dns_forwarding.example.dns_forwarding_id
-  domain_name          = "example.com"
+  hvn_id               = "main-hvn"
+  dns_forwarding_id    = "existing-dns-forwarding"
+  domain_name          = "api.example.com"
   inbound_endpoint_ips = ["10.0.1.10", "10.0.1.11"]
 }
 ```
@@ -26,10 +68,10 @@ resource "hcp_dns_forwarding_rule" "example" {
 
 ### Required
 
-- `dns_forwarding_id` (String) The ID of the DNS forwarding configuration this rule belongs to.
-- `domain_name` (String) The domain name for which DNS forwarding rule needs to be created.
+- `dns_forwarding_id` (String) The ID of the DNS forwarding configuration this rule belongs to. The DNS forwarding must be in `ACTIVE` state.
+- `domain_name` (String) The domain name for which DNS forwarding rule needs to be created (e.g., `staging.internal.com`).
 - `hvn_id` (String) The ID of the HVN that this DNS forwarding rule belongs to.
-- `inbound_endpoint_ips` (List of String) The IP addresses of the target customer network inbound endpoints to which the DNS requests for the above domain will be forwarded.
+- `inbound_endpoint_ips` (List of String) The IP addresses of your DNS servers or AWS Route 53 VPC endpoint to which DNS requests will be forwarded. Maximum 2 IPs per rule.
 
 ### Optional
 
@@ -58,5 +100,18 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
+# Using provider-default project ID
 terraform import hcp_dns_forwarding_rule.example hvn-id:dns-forwarding-id:rule-id
+
+# Using explicit project ID
+terraform import hcp_dns_forwarding_rule.example project-id:hvn-id:dns-forwarding-id:rule-id
 ```
+
+## Limitations
+
+- **Dependency**: DNS forwarding configuration must be in `ACTIVE` state before adding rules
+- **Resource Limits**: Maximum 5 rules per DNS forwarding configuration, 2 IPs per rule
+- **Immutable**: Rules cannot be updated after creation (changes require replacement)
+- **Rule IDs**: Must be unique across your HCP account and cannot exceed 32 characters
+
+For higher limits, [create a support ticket](https://support.hashicorp.com/hc/en-us/requests/new).

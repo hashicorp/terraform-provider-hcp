@@ -3,20 +3,41 @@
 page_title: "hcp_dns_forwarding_rule Data Source - terraform-provider-hcp"
 subcategory: ""
 description: |-
-  The DNS forwarding rule data source provides information about an existing DNS forwarding rule.
+  The DNS forwarding rule data source provides information about an existing DNS forwarding rule within a DNS forwarding configuration.
 ---
 
 # hcp_dns_forwarding_rule (Data Source)
 
-The DNS forwarding rule data source provides information about an existing DNS forwarding rule.
+The DNS forwarding rule data source provides information about an existing DNS forwarding rule within a DNS forwarding configuration.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 data "hcp_dns_forwarding_rule" "example" {
-  hvn_id                  = "hvn-1"
-  dns_forwarding_id       = "dns-forwarding-1"
-  dns_forwarding_rule_id  = "rule-1"
+  hvn_id                  = "main-hvn"
+  dns_forwarding_id       = "existing-dns-forwarding"
+  dns_forwarding_rule_id  = "staging-rule"
+}
+
+# Use the rule information
+output "rule_info" {
+  value = {
+    domain      = data.hcp_dns_forwarding_rule.example.domain_name
+    target_ips  = data.hcp_dns_forwarding_rule.example.inbound_endpoint_ips
+    state       = data.hcp_dns_forwarding_rule.example.state
+  }
+}
+```
+
+### With Explicit Project ID
+
+```terraform
+data "hcp_dns_forwarding_rule" "example" {
+  hvn_id                  = "main-hvn"
+  dns_forwarding_id       = "existing-dns-forwarding"
+  dns_forwarding_rule_id  = "production-rule"
   project_id              = "f709ec73-55d4-46d8-897d-816ebba28778"
 }
 ```
