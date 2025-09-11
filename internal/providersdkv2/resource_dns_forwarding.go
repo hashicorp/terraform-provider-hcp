@@ -321,15 +321,37 @@ func setDNSForwardingResourceData(d *schema.ResourceData, dnsForwarding *network
 	}
 
 	// Set forwarding rule
-	if len(dnsForwarding.Rules) > 0 && dnsForwarding.Rules[0].Rule != nil {
-		rule := dnsForwarding.Rules[0]
-		forwardingRule := map[string]interface{}{
-			"rule_id":              rule.Rule.ID,
-			"domain_name":          rule.Rule.DomainName,
-			"inbound_endpoint_ips": rule.Rule.InboundEndpointIps,
+	if len(dnsForwarding.Rules) > 0 {
+		var selectedRule *networkmodels.HashicorpCloudNetwork20200907DNSForwardingRule
+
+		// Get the rule ID from our configuration to match against
+		forwardingRuleList := d.Get("forwarding_rule").([]interface{})
+		if len(forwardingRuleList) > 0 {
+			// We have configuration - find the matching rule by ID
+			configRule := forwardingRuleList[0].(map[string]interface{})
+			configRuleID := configRule["rule_id"].(string)
+
+			for _, rule := range dnsForwarding.Rules {
+				if rule.Rule != nil && rule.Rule.ID == configRuleID {
+					selectedRule = rule
+					break
+				}
+			}
+		} else if dnsForwarding.Rules[0].Rule != nil {
+			// No configuration (likely during import) - use the first rule
+			selectedRule = dnsForwarding.Rules[0]
 		}
-		if err := d.Set("forwarding_rule", []interface{}{forwardingRule}); err != nil {
-			return err
+
+		// Set the selected rule in state
+		if selectedRule != nil && selectedRule.Rule != nil {
+			forwardingRule := map[string]interface{}{
+				"rule_id":              selectedRule.Rule.ID,
+				"domain_name":          selectedRule.Rule.DomainName,
+				"inbound_endpoint_ips": selectedRule.Rule.InboundEndpointIps,
+			}
+			if err := d.Set("forwarding_rule", []interface{}{forwardingRule}); err != nil {
+				return err
+			}
 		}
 	}
 

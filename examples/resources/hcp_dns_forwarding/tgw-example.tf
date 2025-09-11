@@ -91,9 +91,9 @@ resource "hcp_dns_forwarding" "example_tgw" {
 
 # Additional standalone DNS forwarding rule for TGW
 resource "hcp_dns_forwarding_rule" "additional_tgw_rule" {
-  hvn_id            = hcp_hvn.main.hvn_id
-  dns_forwarding_id = hcp_dns_forwarding.example_tgw.dns_forwarding_id
-  domain_name       = "api.example-tgw.internal"
+  hvn_id               = hcp_hvn.main.hvn_id
+  dns_forwarding_id    = hcp_dns_forwarding.example_tgw.dns_forwarding_id
+  domain_name          = "api.example-tgw.internal"
   inbound_endpoint_ips = ["172.31.1.12"]
 }
 

@@ -46,6 +46,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				ValidateDiagFunc: validateSlugID,
 			},
 			// Computed outputs
+			"rule_id": {
+				Description: "The ID of the DNS forwarding rule.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"domain_name": {
 				Description: "The domain name for which DNS forwarding rule was created.",
 				Type:        schema.TypeString,
@@ -98,6 +103,9 @@ func dataSourceDNSForwardingRuleRead(ctx context.Context, d *schema.ResourceData
 
 	// Set computed fields
 	if err := d.Set("project_id", projectID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("rule_id", rule.Rule.ID); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("domain_name", rule.Rule.DomainName); err != nil {
