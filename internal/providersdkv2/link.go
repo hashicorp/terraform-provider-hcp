@@ -34,6 +34,9 @@ const (
 	// TgwAttachmentResourceType is the resource type of a TGW attachment
 	TgwAttachmentResourceType = "hashicorp.network.tgw-attachment"
 
+	// PrivateLinkResourceType is the resource type of a Private Link
+	PrivateLinkResourceType = "hashicorp.network.private-link"
+
 	// HVNRouteResourceType is the resource type of an HVN route
 	HVNRouteResourceType = "hashicorp.network.route"
 

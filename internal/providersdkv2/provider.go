@@ -38,7 +38,7 @@ func New() func() *schema.Provider {
 				"hcp_hvn_route":                      dataSourceHVNRoute(),
 				"hcp_packer_bucket_names":            dataSourcePackerBucketNames(),
 				"hcp_packer_run_task":                dataSourcePackerRunTask(),
-				"hcp_private_link_service":           dataSourcePrivateLinkService(),
+				"hcp_private_link":                   dataSourcePrivateLink(),
 				"hcp_vault_cluster":                  dataSourceVaultCluster(),
 				"hcp_vault_plugin":                   dataSourceVaultPlugin(),
 			},

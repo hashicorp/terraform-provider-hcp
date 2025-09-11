@@ -189,7 +189,7 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Set the globally unique id of this private link in the state now since it has been created
-	link := newLink(privateLinkService.Hvn.Location, PrivateLinkServiceResourceType, privateLinkService.ID)
+	link := newLink(privateLinkService.Hvn.Location, PrivateLinkResourceType, privateLinkService.ID)
 	url, err := linkURL(link)
 	if err != nil {
 		return diag.FromErr(err)
@@ -454,7 +454,7 @@ func resourcePrivateLinkImport(ctx context.Context, d *schema.ResourceData, meta
 		OrganizationID: client.Config.OrganizationID,
 	}
 
-	link := newLink(loc, PrivateLinkServiceResourceType, privateLinkID)
+	link := newLink(loc, PrivateLinkResourceType, privateLinkID)
 	url, err := linkURL(link)
 	if err != nil {
 		return nil, err
@@ -519,7 +519,7 @@ func setPrivateLinkResourceData(d *schema.ResourceData, privateLinkService *netw
 		return err
 	}
 
-	link := newLink(privateLinkService.Hvn.Location, PrivateLinkServiceResourceType, privateLinkService.ID)
+	link := newLink(privateLinkService.Hvn.Location, PrivateLinkResourceType, privateLinkService.ID)
 	selfLink, err := linkURL(link)
 	if err != nil {
 		return err
