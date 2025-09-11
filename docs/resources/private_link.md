@@ -45,13 +45,19 @@ resource "hcp_private_link" "example" {
 
   # AWS account IDs allowed to connect to this private link
   consumer_accounts = [
-    "arn:aws:iam:123456789012:root"
+    "arn:aws:iam::123456789012:root"
   ]
 
   # AWS regions from which you can connect to this private link
   consumer_regions = [
     "us-west-2",
     "us-east-1"
+  ]
+
+  # IP ranges allowed to connect to the Vault cluster
+  consumer_ip_ranges = [
+    "10.0.0.0/16",
+    "192.168.1.0/24"
   ]
 }
 ```
