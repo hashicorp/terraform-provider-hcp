@@ -53,6 +53,12 @@ const (
 
 	// BoundaryClusterResourceType is the resource type of a Boundary Cluster
 	BoundaryClusterResourceType = "hashicorp.boundary.cluster"
+
+	// DNSForwardingResourceType is the resource type of DNS forwarding
+	DNSForwardingResourceType = "hashicorp.network.dns-forwarding"
+
+	// DNSForwardingRuleResourceType is the resource type of a DNS forwarding rule
+	DNSForwardingRuleResourceType = "hashicorp.network.dns-forwarding-rule"
 )
 
 // newLink constructs a new Link from the passed arguments. ID should be the

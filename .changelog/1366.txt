@@ -1,0 +1,7 @@
+```release-note:feature
+Add hcp_dns_forwarding resource and data source to enable BYO-DNS (Bring Your Own DNS) support for HVN.
+```
+
+```release-note:feature
+Add hcp_dns_forwarding_rule resource and data source to manage individual DNS forwarding rules within DNS forwarding configurations.
+```
