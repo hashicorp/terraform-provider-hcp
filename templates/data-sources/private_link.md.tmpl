@@ -1,0 +1,18 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: "HCP Networking"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+-> **Note:** For more details and requirements, see the HCP Vault Private Link documentation: [HCP Vault Private Link](https://developer.hashicorp.com/hcp/docs/vault/private-link)
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_private_link/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
