@@ -9,7 +9,7 @@ description: |-
 
 The private link resource allows you to manage a private link within an HVN.
 
--> **Note:** For more details and requirements, see the HCP Vault Private Link documentation: [HCP Vault Private Link](https://developer.hashicorp.com/hcp/docs/vault/private-link)
+-> **Note:** For more details and requirements, see the HCP Vault Private Link documentation: [HCP Vault Private Link](https://developer.hashicorp.com/hcp/docs/vault/aws-privatelink)
 
 ## Example Usage
 
