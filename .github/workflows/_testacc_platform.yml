@@ -98,7 +98,7 @@ jobs:
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run="TestAcc_Platform" \
+            -run="^TestAcc_Platform.*" \
             -skip="Azure|azure" \
             -coverprofile=testacc-platform.out
 

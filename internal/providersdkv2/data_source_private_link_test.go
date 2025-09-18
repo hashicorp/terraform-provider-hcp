@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDataSourcePrivateLink(t *testing.T) {
+func TestAcc_Platform_DataSourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	dataSourceName := "data.hcp_private_link.test"
 

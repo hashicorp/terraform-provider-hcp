@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func TestAccResourcePrivateLink(t *testing.T) {
+func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	hvnResourceName := "hcp_hvn.test"
 	vaultResourceName := "hcp_vault_cluster.test"
