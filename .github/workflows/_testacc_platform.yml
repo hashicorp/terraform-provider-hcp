@@ -91,13 +91,15 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SecretAccessKey)
           export AWS_SESSION_TOKEN=$(echo $AWS_OUTPUT | jp --unquoted  Credentials.SessionToken)
 
+          # Skipping all Azure-related tests which are currently failing"
           go test ./internal/providersdkv2 \
             -v \
             -short \
             -test.v \
             -parallel=10 \
             -timeout=360m \
-            -run="TestAcc_Platform.*((?!Azure|azure).)*$$" \
+            -run="TestAcc_Platform" \
+            -skip="Azure|azure" \
             -coverprofile=testacc-platform.out
 
           go tool cover \
