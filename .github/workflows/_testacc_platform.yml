@@ -10,14 +10,11 @@ on:
       - 'internal/clients/hvn_route.go'
       - 'internal/clients/tgw.go'
       - 'internal/clients/peering.go'
-      - 'internal/clients/private_link.go'
       - 'internal/providersdkv2/peering*'
-      - 'internal/providersdkv2/resource_private_link*'
       - 'internal/providersdkv2/resource_aws_network_peering*'
       - 'internal/providersdkv2/resource_azure_peering*'
       - 'internal/providersdkv2/resource_aws_transit_gateway_attachment*'
       - 'internal/providersdkv2/resource_hvn*'
-      - 'internal/providersdkv2/data_source_private_link*'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
