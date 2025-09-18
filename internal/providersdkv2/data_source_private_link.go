@@ -70,6 +70,11 @@ func dataSourcePrivateLink() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"default_region": {
+				Description: "The default region for the private link, which is the HVN region. This is automatically added as a consumer region.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			"consumer_regions": {
 				Description: "The cloud provider regions from which consumers can connect to the private link.",
 				Type:        schema.TypeList,

@@ -108,6 +108,11 @@ func resourcePrivateLink() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"default_region": {
+				Description: "The default region for the private link, which is the HVN region. This is automatically added as a consumer region.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -295,14 +300,34 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 			newSet[v.(string)] = true
 		}
 
+		// Get the default region (HVN region) if available
+		defaultRegion := ""
+		if v, ok := d.GetOk("default_region"); ok {
+			defaultRegion = v.(string)
+		}
+
 		// Determine which regions to add and which to remove
 		for region := range newSet {
 			if !oldSet[region] {
+				// Check if this is the default region
+				if defaultRegion != "" && region == defaultRegion {
+					// reset to prev state
+					resourcePrivateLinkRead(ctx, d, meta)
+					// Return an explicit error when attempting to add the default region
+					return diag.Errorf("Cannot add default region %q to consumer_regions. The HVN region is automatically included and cannot be added again.", defaultRegion)
+				}
 				addConsumerRegions = append(addConsumerRegions, region)
 			}
 		}
 		for region := range oldSet {
 			if !newSet[region] {
+				// Check if this is the default region
+				if defaultRegion != "" && region == defaultRegion {
+					// reset to prev state
+					resourcePrivateLinkRead(ctx, d, meta)
+					// Return an explicit error when attempting to remove the default region
+					return diag.Errorf("Cannot remove default region %q from consumer_regions. The HVN region is automatically included and cannot be removed.", defaultRegion)
+				}
 				removeConsumerRegions = append(removeConsumerRegions, region)
 			}
 		}
@@ -507,6 +532,14 @@ func setPrivateLinkResourceData(d *schema.ResourceData, privateLinkService *netw
 		return err
 	}
 
+	// Set the default_region from the model if it exists
+	if privateLinkService.DefaultRegion != "" {
+		if err := d.Set("default_region", privateLinkService.DefaultRegion); err != nil {
+			return err
+		}
+	}
+
+	// Set consumer regions
 	if err := d.Set("consumer_regions", privateLinkService.ConsumerRegions); err != nil {
 		return err
 	}

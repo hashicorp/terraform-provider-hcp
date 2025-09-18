@@ -37,6 +37,7 @@ func TestAccDataSourcePrivateLink(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_regions.#", resourceName, "consumer_regions.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_accounts.#", resourceName, "consumer_accounts.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_link", resourceName, "self_link"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_region", resourceName, "default_region"),
 				),
 			},
 		},
