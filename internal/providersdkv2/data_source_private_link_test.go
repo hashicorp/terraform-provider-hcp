@@ -73,7 +73,7 @@ resource "hcp_private_link" "test" {
   ]
   
   consumer_regions = [
-    "us-west-2"
+    "us-west-1"
   ]
 }
 
