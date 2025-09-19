@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDataSourcePrivateLink(t *testing.T) {
+func TestAcc_Platform_DataSourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	dataSourceName := "data.hcp_private_link.test"
 
@@ -37,6 +37,7 @@ func TestAccDataSourcePrivateLink(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_regions.#", resourceName, "consumer_regions.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_accounts.#", resourceName, "consumer_accounts.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_link", resourceName, "self_link"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_region", resourceName, "default_region"),
 				),
 			},
 		},
@@ -72,7 +73,7 @@ resource "hcp_private_link" "test" {
   ]
   
   consumer_regions = [
-    "us-west-2"
+    "us-west-1"
   ]
 }
 
