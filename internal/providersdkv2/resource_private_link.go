@@ -108,6 +108,11 @@ func resourcePrivateLink() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"default_region": {
+				Description: "The default region for the private link, which is the HVN region. This is automatically added as a consumer region.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -152,7 +157,9 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 	var consumerRegions []string
 	if v, ok := d.GetOk("consumer_regions"); ok {
 		for _, region := range v.([]interface{}) {
-			consumerRegions = append(consumerRegions, region.(string))
+			if region != nil {
+				consumerRegions = append(consumerRegions, region.(string))
+			}
 		}
 	}
 
@@ -160,7 +167,9 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 	var consumerAccounts []string
 	if v, ok := d.GetOk("consumer_accounts"); ok {
 		for _, account := range v.([]interface{}) {
-			consumerAccounts = append(consumerAccounts, account.(string))
+			if account != nil {
+				consumerAccounts = append(consumerAccounts, account.(string))
+			}
 		}
 	}
 
@@ -168,7 +177,9 @@ func resourcePrivateLinkCreate(ctx context.Context, d *schema.ResourceData, meta
 	var consumerIPRanges []string
 	if v, ok := d.GetOk("consumer_ip_ranges"); ok {
 		for _, ipRange := range v.([]interface{}) {
-			consumerIPRanges = append(consumerIPRanges, ipRange.(string))
+			if ipRange != nil {
+				consumerIPRanges = append(consumerIPRanges, ipRange.(string))
+			}
 		}
 	}
 
@@ -288,21 +299,45 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		old, new := d.GetChange("consumer_regions")
 		oldSet := make(map[string]bool)
 		for _, v := range old.([]interface{}) {
-			oldSet[v.(string)] = true
+			if v != nil {
+				oldSet[v.(string)] = true
+			}
 		}
 		newSet := make(map[string]bool)
 		for _, v := range new.([]interface{}) {
-			newSet[v.(string)] = true
+			if v != nil {
+				newSet[v.(string)] = true
+			}
+		}
+
+		// Get the default region (HVN region) if available
+		defaultRegion := ""
+		if v, ok := d.GetOk("default_region"); ok {
+			defaultRegion = v.(string)
 		}
 
 		// Determine which regions to add and which to remove
 		for region := range newSet {
 			if !oldSet[region] {
+				// Check if this is the default region
+				if defaultRegion != "" && region == defaultRegion {
+					// reset to prev state
+					resourcePrivateLinkRead(ctx, d, meta)
+					// Return an explicit error when attempting to add the default region
+					return diag.Errorf("Cannot add default region %q to consumer_regions. The HVN region is automatically included and cannot be added again.", defaultRegion)
+				}
 				addConsumerRegions = append(addConsumerRegions, region)
 			}
 		}
 		for region := range oldSet {
 			if !newSet[region] {
+				// Check if this is the default region
+				if defaultRegion != "" && region == defaultRegion {
+					// reset to prev state
+					resourcePrivateLinkRead(ctx, d, meta)
+					// Return an explicit error when attempting to remove the default region
+					return diag.Errorf("Cannot remove default region %q from consumer_regions. The HVN region is automatically included and cannot be removed.", defaultRegion)
+				}
 				removeConsumerRegions = append(removeConsumerRegions, region)
 			}
 		}
@@ -314,11 +349,15 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		old, new := d.GetChange("consumer_accounts")
 		oldSet := make(map[string]bool)
 		for _, v := range old.([]interface{}) {
-			oldSet[v.(string)] = true
+			if v != nil {
+				oldSet[v.(string)] = true
+			}
 		}
 		newSet := make(map[string]bool)
 		for _, v := range new.([]interface{}) {
-			newSet[v.(string)] = true
+			if v != nil {
+				newSet[v.(string)] = true
+			}
 		}
 
 		// Determine which accounts to add and which to remove
@@ -340,11 +379,15 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		old, new := d.GetChange("consumer_ip_ranges")
 		oldSet := make(map[string]bool)
 		for _, v := range old.([]interface{}) {
-			oldSet[v.(string)] = true
+			if v != nil {
+				oldSet[v.(string)] = true
+			}
 		}
 		newSet := make(map[string]bool)
 		for _, v := range new.([]interface{}) {
-			newSet[v.(string)] = true
+			if v != nil {
+				newSet[v.(string)] = true
+			}
 		}
 
 		// Determine which IP ranges to add and which to remove
@@ -371,11 +414,15 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	updateResponse, err := clients.UpdatePrivateLinkService(ctx, client, privateLinkID, hvnID, loc,
 		addConsumerRegions, removeConsumerRegions, addConsumerAccounts, removeConsumerAccounts, addConsumerIPRanges, removeConsumerIPRanges)
 	if err != nil {
+		// reset to prev state
+		resourcePrivateLinkRead(ctx, d, meta)
 		return diag.Errorf("unable to update private link (%s): %v", privateLinkID, err)
 	}
 
 	// Wait for the update operation to complete
 	if err := clients.WaitForOperation(ctx, client, "update private link", loc, updateResponse.Operation.ID); err != nil {
+		// reset to prev state
+		resourcePrivateLinkRead(ctx, d, meta)
 		return diag.Errorf("unable to update private link (%s): %v", privateLinkID, err)
 	}
 	log.Printf("[INFO] Updated private link (%s)", privateLinkID)
@@ -383,6 +430,8 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// Wait for the private link to be available
 	privateLinkService, err := clients.WaitForPrivateLinkServiceToBeAvailable(ctx, client, privateLinkID, hvnID, loc, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
+		// reset to prev state
+		resourcePrivateLinkRead(ctx, d, meta)
 		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Private link (%s) is now in AVAILABLE state", privateLinkID)
@@ -393,6 +442,8 @@ func resourcePrivateLinkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err := setPrivateLinkResourceData(d, privateLinkService); err != nil {
+		// reset to prev state
+		resourcePrivateLinkRead(ctx, d, meta)
 		return diag.FromErr(err)
 	}
 
@@ -507,6 +558,14 @@ func setPrivateLinkResourceData(d *schema.ResourceData, privateLinkService *netw
 		return err
 	}
 
+	// Set the default_region from the model if it exists
+	if privateLinkService.DefaultRegion != "" {
+		if err := d.Set("default_region", privateLinkService.DefaultRegion); err != nil {
+			return err
+		}
+	}
+
+	// Set consumer regions
 	if err := d.Set("consumer_regions", privateLinkService.ConsumerRegions); err != nil {
 		return err
 	}
