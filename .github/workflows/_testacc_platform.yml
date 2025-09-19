@@ -15,6 +15,13 @@ on:
       - 'internal/providersdkv2/resource_azure_peering*'
       - 'internal/providersdkv2/resource_aws_transit_gateway_attachment*'
       - 'internal/providersdkv2/resource_hvn*'
+      # DNS Forwarding feature related
+      - 'internal/clients/dns_forwarding.go'
+      - 'internal/clients/dns_forwarding_rule.go'
+      - 'internal/providersdkv2/resource_dns_forwarding*'
+      - 'internal/providersdkv2/resource_dns_forwarding_rule*'
+      - 'internal/providersdkv2/data_source_dns_forwarding*'
+      - 'internal/providersdkv2/data_source_dns_forwarding_rule*'
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
