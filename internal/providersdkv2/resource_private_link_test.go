@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-func TestAccResourcePrivateLink(t *testing.T) {
+func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	hvnResourceName := "hcp_hvn.test"
 	vaultResourceName := "hcp_vault_cluster.test"
@@ -31,9 +31,10 @@ func TestAccResourcePrivateLink(t *testing.T) {
 					testAccCheckPrivateLinkExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
 					resource.TestCheckResourceAttr(resourceName, "consumer_regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "consumer_regions.0", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "consumer_regions.0", "us-west-1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
+					resource.TestCheckResourceAttr(resourceName, "default_region", "us-west-2"),
 				),
 			},
 			// Test importing the resource
@@ -98,7 +99,7 @@ resource "hcp_private_link" "test" {
   ]
   
   consumer_regions = [
-    "us-west-2"
+    "us-west-1"
   ]
 }
 `
@@ -133,7 +134,7 @@ resource "hcp_private_link" "test" {
   ]
   
   consumer_regions = [
-    "us-west-2",
+	"us-west-1",
     "us-east-1"
   ]
 }
