@@ -1,0 +1,3 @@
+```release-note:feature
+Add support for private link resources with new `hcp_private_link` resource and `hcp_private_link_service` data source
+```
