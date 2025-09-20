@@ -1,0 +1,18 @@
+---
+page_title: "hcp_dns_forwarding Data Source - terraform-provider-hcp"
+subcategory: "HCP Networking"
+description: |-
+  {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+-> **Note:** For more details and requirements, see the HCP Vault Private DNS documentation: [HCP Vault Private DNS](https://developer.hashicorp.com/hcp/docs/vault/private-dns)
+
+## Example Usage
+
+{{ tffile "examples/data-sources/hcp_dns_forwarding/data-source.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
