@@ -8,7 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccDNSForwardingResource(t *testing.T) {
+// TestAcc_Platform_DNSForwardingResource tests the DNS forwarding resource.
+func TestAcc_Platform_DNSForwardingResource(t *testing.T) {
 	uniqueName := testAccUniqueNameWithPrefix("dns-fwd-res")
 
 	resource.Test(t, resource.TestCase{
