@@ -1,3 +1,21 @@
+## v0.110.0 (Sept 22, 2025)
+
+FEATURES:
+
+* Add geography to provider configuration. [[GH-1354](https://github.com/hashicorp/hcp/issues/1354)]
+* Add hcp_dns_forwarding resource and data source to enable BYO-DNS (Bring Your Own DNS) support for HVN. [[GH-1366](https://github.com/hashicorp/hcp/issues/1366)]
+* Add hcp_dns_forwarding_rule resource and data source to manage individual DNS forwarding rules within DNS forwarding configurations. [[GH-1366](https://github.com/hashicorp/hcp/issues/1366)]
+* Add support for private link resources with new `hcp_private_link` resource and `hcp_private_link_service` data source [[GH-1363](https://github.com/hashicorp/hcp/issues/1363)]
+
+IMPROVEMENTS:
+
+* Updates hcp_vault_radar_source_github_cloud and hcp_vault_radar_source_github_enterprise to accept `detector_type`. [[GH-1353](https://github.com/hashicorp/hcp/issues/1353)]
+
+BUG FIXES:
+
+* Fix the example documentation for `hcp_service_principal_key`. [[GH-1361](https://github.com/hashicorp/hcp/issues/1361)]
+* Fix the example documentation for hcp_iam_workload_identity_provider. [[GH-1345](https://github.com/hashicorp/hcp/issues/1345)]
+
 ## v0.109.0 (July 15, 2025)
 
 FEATURES:
