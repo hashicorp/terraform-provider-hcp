@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
-// pl data source
 func dataSourcePrivateLink() *schema.Resource {
 	return &schema.Resource{
 		Description: "The private link data source provides information about an existing private link in an HVN.",
