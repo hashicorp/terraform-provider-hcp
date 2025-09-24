@@ -25,7 +25,7 @@ The `client_id` and `client_secret` must come from a service principal key. Serv
 Follow these steps to create service principal with the `contributor` role and a service principal key.
 
 ### 1. Create a service principal
--> **Note:** HCP has two types of Service Principals. Organization-Level Service Principals and Project-Level Service Principals. Either can be used with the HCP Terraform Provider. To read more about their differences please see our [documentation page](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals).
+-> **Note:** HCP has two types of Service Principals. Organization-Level Service Principals and Project-Level Service Principals. Either can be used with the HCP Terraform Provider. To read more about their differences please see our [documentation page](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principal).
 
 Once you have registered and logged into the HCP portal, navigate to the Access Control (IAM) page. Select the Service Principals tab and create a new service principal. Give it the role Contributor, since it will be writing resources.
 
@@ -47,7 +47,7 @@ provider "hcp" {
   client_secret = "service-principal-key-client-secret"
 }
 ```
--> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principals) is used, specify the default `project_id` in your provider configuration.
+-> **Note:** If a [Project-Level Service Principal](https://cloud.hashicorp.com/docs/hcp/admin/iam/service-principal) is used, specify the default `project_id` in your provider configuration.
 
 ```bash
 HCP_CLIENT_ID="..."
