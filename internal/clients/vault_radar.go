@@ -12,6 +12,7 @@ import (
 	ics "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_connection_service"
 	iss "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/integration_subscription_service"
 	rrs "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/resource_service"
+	rsms "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/secret_manager_service"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -30,6 +31,20 @@ func OnboardRadarSource(ctx context.Context, client *Client, projectID string, s
 	return onboardResp, nil
 }
 
+func OnboardRadarSecretManager(ctx context.Context, client *Client, projectID string, source rsms.OnboardSecretManagerBody) (*rsms.OnboardSecretManagerOK, error) {
+	onboardParams := rsms.NewOnboardSecretManagerParamsWithTimeout(2 * time.Minute) // gives secret manager more time to complete because an agent is involved.
+	onboardParams.Context = ctx
+	onboardParams.LocationProjectID = projectID
+	onboardParams.Body = source
+
+	onboardResp, err := client.RadarSecretManagerService.OnboardSecretManager(onboardParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return onboardResp, nil
+}
+
 func GetRadarSource(ctx context.Context, client *Client, projectID, sourceID string) (*dsrs.GetDataSourceByIDOK, error) {
 	getParams := dsrs.NewGetDataSourceByIDParams()
 	getParams.Context = ctx
@@ -37,6 +52,20 @@ func GetRadarSource(ctx context.Context, client *Client, projectID, sourceID str
 	getParams.LocationProjectID = projectID
 
 	getResp, err := client.RadarSourceRegistrationService.GetDataSourceByID(getParams, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return getResp, nil
+}
+
+func GetRadarSecretManager(ctx context.Context, client *Client, projectID, sourceID string) (*rsms.GetSecretManagerByIDOK, error) {
+	getParams := rsms.NewGetSecretManagerByIDParams()
+	getParams.Context = ctx
+	getParams.ID = sourceID
+	getParams.LocationProjectID = projectID
+
+	getResp, err := client.RadarSecretManagerService.GetSecretManagerByID(getParams, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +91,24 @@ func OffboardRadarSource(ctx context.Context, client *Client, projectID, sourceI
 	return WaitOnOffboardRadarSource(ctx, client, projectID, sourceID)
 }
 
+func OffboardRadarSecretManager(ctx context.Context, client *Client, projectID, sourceID string) error {
+	tflog.SetField(ctx, "radar_source_id", sourceID)
+
+	deleteParams := rsms.NewOffboardSecretManagerParams()
+	deleteParams.Context = ctx
+	deleteParams.LocationProjectID = projectID
+	deleteParams.Body = rsms.OffboardSecretManagerBody{
+		ID: sourceID,
+	}
+
+	tflog.Trace(ctx, "Initiate radar secret manager offboarding.")
+	if _, err := client.RadarSecretManagerService.OffboardSecretManager(deleteParams, nil); err != nil {
+		return err
+	}
+
+	return WaitOnOffboardRadarSecretManager(ctx, client, projectID, sourceID)
+}
+
 func WaitOnOffboardRadarSource(ctx context.Context, client *Client, projectID, sourceID string) error {
 	deletionConfirmation := func() (bool, error) {
 		tflog.Trace(ctx, "Confirming radar source deletion.")
@@ -73,6 +120,30 @@ func WaitOnOffboardRadarSource(ctx context.Context, client *Client, projectID, s
 			}
 
 			tflog.Error(ctx, "Failed to confirm radar source deletion.")
+			return false, err
+		}
+
+		// Resource still exists.
+		return false, nil
+	}
+
+	retry := 10 * time.Second
+	timeout := 10 * time.Minute
+	maxConsecutiveErrors := 5
+	return waitFor(ctx, retry, timeout, maxConsecutiveErrors, deletionConfirmation)
+}
+
+func WaitOnOffboardRadarSecretManager(ctx context.Context, client *Client, projectID, sourceID string) error {
+	deletionConfirmation := func() (bool, error) {
+		tflog.Trace(ctx, "Confirming radar secret manager deletion.")
+		if _, err := GetRadarSecretManager(ctx, client, projectID, sourceID); err != nil {
+			if IsResponseCodeNotFound(err) {
+				// success, resource not found.
+				tflog.Trace(ctx, "Success, radar secret manager deletion confirmed.")
+				return true, nil
+			}
+
+			tflog.Error(ctx, "Failed to confirm radar secret deletion.")
 			return false, err
 		}
 
@@ -125,12 +196,38 @@ func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveEr
 }
 
 func UpdateRadarDataSourceToken(ctx context.Context, client *Client, projectID string, tokenBody dsrs.UpdateDataSourceTokenBody) error {
-	params := dsrs.NewUpdateDataSourceTokenParams()
+	params := dsrs.NewUpdateDataSourceTokenParamsWithTimeout(2 * time.Minute)
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = tokenBody
 
 	if _, err := client.RadarSourceRegistrationService.UpdateDataSourceToken(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateRadarSecretManagerToken(ctx context.Context, client *Client, projectID string, tokenBody rsms.UpdateSecretManagerTokenBody) error {
+	params := rsms.NewUpdateSecretManagerTokenParamsWithTimeout(2 * time.Minute)
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = tokenBody
+
+	if _, err := client.RadarSecretManagerService.UpdateSecretManagerToken(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func PatchRadarSecretManagerFeatures(ctx context.Context, client *Client, projectID string, tokenBody rsms.PatchSecretManagerFeaturesBody) error {
+	params := rsms.NewPatchSecretManagerFeaturesParamsWithTimeout(2 * time.Minute)
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = tokenBody
+
+	if _, err := client.RadarSecretManagerService.PatchSecretManagerFeatures(params, nil); err != nil {
 		return err
 	}
 
