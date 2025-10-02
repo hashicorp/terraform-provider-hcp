@@ -88,7 +88,8 @@ type secretManager interface {
 	GetConnectionURL() types.String
 	GetToken() types.String
 	GetAuthMethod() types.String
-	//GetFeatures() types.String
+	SetFeatures(map[string]interface{})
+	GetFeatures() map[string]interface{}
 }
 
 // base abstraction of Radar secret manager, partially implements secretManager interface
@@ -165,8 +166,9 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 		Type:          r.SecretManagerType,
 		Name:          name,
 		ConnectionURL: connection,
-		Token:         token,
 		AuthMethod:    authMethod,
+		Token:         token,
+		Features:      src.GetFeatures(),
 	}
 
 	res, err := clients.OnboardRadarSecretManager(ctx, r.client, projectID, body)
@@ -211,9 +213,16 @@ func (r *secretManagerResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	// TODO is this still valid for secret managers?
-	// The only other state that could change related to this resource is the token, and for obvious reasons we don't
-	// return that in the read response. So we don't need to update the state here.
+	// Read the details for the secret manager features, incase it changed outside of Terraform.
+	features := res.GetPayload().Features
+	tflog.Warn(ctx, fmt.Sprintf("Read of radar secret manager features: %+v type:%T ", features, features))
+	if featuresMap, ok := features.(map[string]interface{}); ok {
+		src.SetFeatures(featuresMap)
+	} else {
+		src.SetFeatures(nil)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &src)...)
 }
 
 func (r *secretManagerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

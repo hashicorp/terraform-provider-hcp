@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -55,6 +56,12 @@ var vaultDedicatedSchema = schema.Schema{
 					"url must contain only letters, numbers, hyphens, underscores, or periods, followed optionally by a colon and port number",
 				),
 			},
+		},
+		"access_read_write": schema.BoolAttribute{
+			Description: `Indicates if the auth method access has read and write access to the secrets engine paths. Defaults to false.`,
+			Optional:    true,
+			Computed:    true,
+			Default:     booldefault.StaticBool(false),
 		},
 		"token": schema.SingleNestedAttribute{
 			Description: `Configuration block for token-based authentication. Only one authentication method may be configured.`,
@@ -166,6 +173,7 @@ var vaultDedicatedSchema = schema.Schema{
 type vaultDedicatedModel struct {
 	abstractSecretManagerModel
 	VaultURL          types.String       `tfsdk:"vault_url"`
+	AccessReadWrite   types.Bool         `tfsdk:"access_read_write"`
 	TokenConfig       *tokenConfig       `tfsdk:"token"`
 	KubernetesConfig  *kubernetesConfig  `tfsdk:"kubernetes"`
 	AppRolePushConfig *appRolePushConfig `tfsdk:"approle_push"`
@@ -187,6 +195,28 @@ type appRolePushConfig struct {
 }
 
 func (m *vaultDedicatedModel) GetConnectionURL() types.String { return m.VaultURL }
+
+func (m *vaultDedicatedModel) SetFeatures(feature map[string]interface{}) {
+	if feature == nil {
+		m.AccessReadWrite = types.BoolValue(false)
+		return
+	}
+
+	if val, ok := feature["copy_secrets"]; ok && val != nil {
+		m.AccessReadWrite = types.BoolValue(true)
+		return
+	}
+
+	m.AccessReadWrite = types.BoolValue(false)
+}
+
+func (m *vaultDedicatedModel) GetFeatures() map[string]interface{} {
+	if m.AccessReadWrite.IsNull() || m.AccessReadWrite.IsUnknown() || !m.AccessReadWrite.ValueBool() {
+		return map[string]interface{}{"copy_secrets": nil}
+	}
+
+	return map[string]interface{}{"copy_secrets": struct{}{}}
+}
 
 func (m *vaultDedicatedModel) GetAuthMethod() types.String {
 	if m.TokenConfig != nil {
