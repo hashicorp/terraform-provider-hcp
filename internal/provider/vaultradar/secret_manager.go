@@ -88,6 +88,7 @@ type secretManager interface {
 	GetConnectionURL() types.String
 	GetToken() types.String
 	GetAuthMethod() types.String
+	//GetFeatures() types.String
 }
 
 // base abstraction of Radar secret manager, partially implements secretManager interface
@@ -153,19 +154,19 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 	authMethod = src.GetAuthMethod().ValueString()
 
 	var token string
-	if src.GetToken().IsNull() && src.GetToken().IsUnknown() {
+	if src.GetToken().IsNull() || src.GetToken().IsUnknown() {
 		// This should be caught by schema validation, but just in case.
 		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth_method details must be specified")
 	}
 	token = src.GetToken().ValueString()
 
 	body := service.OnboardSecretManagerBody{
+		DetectorType:  "agent",
 		Type:          r.SecretManagerType,
 		Name:          name,
 		ConnectionURL: connection,
 		Token:         token,
 		AuthMethod:    authMethod,
-		DetectorType:  "agent",
 	}
 
 	res, err := clients.OnboardRadarSecretManager(ctx, r.client, projectID, body)

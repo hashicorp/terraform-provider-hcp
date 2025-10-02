@@ -6,13 +6,12 @@ package vaultradar
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func NewRadarSecretManagerVaultDedicatedResource() resource.Resource {
@@ -55,18 +56,15 @@ var vaultDedicatedSchema = schema.Schema{
 				),
 			},
 		},
-		"auth_method": schema.StringAttribute{
-			Required:    true,
-			Description: "The authentication method to use to connect to Vault. One of 'token', 'vault_kubernetes', or 'vault_approle_push'.",
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
-			},
-			Validators: []validator.String{
-				stringvalidator.OneOf("token", "kubernetes", "approle_push"),
-			},
-		},
 		"token": schema.SingleNestedAttribute{
-			Optional: true,
+			Description: `Configuration block for token-based authentication. Only one authentication method may be configured.`,
+			Optional:    true,
+			Validators: []validator.Object{
+				objectvalidator.ExactlyOneOf(
+					path.MatchRelative().AtParent().AtName("kubernetes"),
+					path.MatchRelative().AtParent().AtName("approle_push"),
+				),
+			},
 			Attributes: map[string]schema.Attribute{
 				"token_env_var": schema.StringAttribute{
 					Description: `Environment variable name containing the Vault token. Example: 'VAULT_TOKEN'`,
@@ -84,7 +82,14 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"kubernetes": schema.SingleNestedAttribute{
-			Optional: true,
+			Description: `Configuration block for Kubernetes-based authentication. Only one authentication method may be configured.`,
+			Optional:    true,
+			Validators: []validator.Object{
+				objectvalidator.ExactlyOneOf(
+					path.MatchRelative().AtParent().AtName("token"),
+					path.MatchRelative().AtParent().AtName("approle_push"),
+				),
+			},
 			Attributes: map[string]schema.Attribute{
 				"mount_path": schema.StringAttribute{
 					Description: `Mount path of the Kubernetes auth is enabled in Vault. Example 'kubernetes'.`,
@@ -92,7 +97,9 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
-					// TODO add validator not empty
+					Validators: []validator.String{
+						stringvalidator.LengthAtLeast(1),
+					},
 				},
 				"role_name": schema.StringAttribute{
 					Description: `Kubernetes authentication role configured in Vault.`,
@@ -100,12 +107,21 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
-					// TODO add validator not empty
+					Validators: []validator.String{
+						stringvalidator.LengthAtLeast(1),
+					},
 				},
 			},
 		},
 		"approle_push": schema.SingleNestedAttribute{
-			Optional: true,
+			Description: `Configuration block for AppRole Push-based authentication. Only one authentication method may be configured.`,
+			Optional:    true,
+			Validators: []validator.Object{
+				objectvalidator.ExactlyOneOf(
+					path.MatchRelative().AtParent().AtName("token"),
+					path.MatchRelative().AtParent().AtName("kubernetes"),
+				),
+			},
 			Attributes: map[string]schema.Attribute{
 				"mount_path": schema.StringAttribute{
 					Description: `Mount path of the AppRole auth method in Vault. Example 'approle'.`,
@@ -113,7 +129,9 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
-					// TODO add validator not empty
+					Validators: []validator.String{
+						stringvalidator.LengthAtLeast(1),
+					},
 				},
 				"role_id_env_var": schema.StringAttribute{
 					Description: `Environment variable containing the AppRole role ID.`,
@@ -148,7 +166,6 @@ var vaultDedicatedSchema = schema.Schema{
 type vaultDedicatedModel struct {
 	abstractSecretManagerModel
 	VaultURL          types.String       `tfsdk:"vault_url"`
-	AuthMethod        types.String       `tfsdk:"auth_method"`
 	TokenConfig       *tokenConfig       `tfsdk:"token"`
 	KubernetesConfig  *kubernetesConfig  `tfsdk:"kubernetes"`
 	AppRolePushConfig *appRolePushConfig `tfsdk:"approle_push"`
@@ -171,73 +188,75 @@ type appRolePushConfig struct {
 
 func (m *vaultDedicatedModel) GetConnectionURL() types.String { return m.VaultURL }
 
-func (m *vaultDedicatedModel) GetAuthMethod() types.String { return m.AuthMethod }
+func (m *vaultDedicatedModel) GetAuthMethod() types.String {
+	if m.TokenConfig != nil {
+		return types.StringValue("token")
+	}
+	if m.KubernetesConfig != nil {
+		return types.StringValue("kubernetes")
+	}
+	if m.AppRolePushConfig != nil {
+		return types.StringValue("approle_push")
+	}
+	return types.StringNull()
+}
 
 func (m *vaultDedicatedModel) GetToken() types.String {
-	switch m.AuthMethod.ValueString() {
-	case "token":
-		if m.TokenConfig != nil {
-			return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString())
-		}
-	case "kubernetes":
-		if m.KubernetesConfig != nil {
-			token_data, err := json.Marshal(map[string]interface{}{
-				"type": "vault_kubernetes",
-				"args": struct {
-					ClusterType        string `json:"cluster_type"`
-					ConnectionURL      string `json:"connection_url"`
-					MountPath          string `json:"mount_path"`
-					KubernetesAuthRole string `json:"kubernetes_auth_role"`
-				}{
-					ClusterType:        "hcp_vault_dedicated",
-					ConnectionURL:      m.VaultURL.ValueString(),
-					MountPath:          m.KubernetesConfig.MountPath.ValueString(),
-					KubernetesAuthRole: m.KubernetesConfig.RoleName.ValueString(),
-				},
-			})
-
-			if err != nil {
-				tflog.Error(context.Background(), "error with auth_method kubernetes")
-				return basetypes.NewStringNull()
-			}
-
-			return basetypes.NewStringValue(string(token_data))
-		}
-
-		// else no kubernetes config
-		tflog.Error(context.Background(), "error no data for auth_method kubernetes")
-	case "approle_push":
-		if m.AppRolePushConfig != nil {
-			token_data, err := json.Marshal(map[string]interface{}{
-				"type": "vault_approle_push",
-				"args": struct {
-					ClusterType      string `json:"cluster_type"`
-					ConnectionURL    string `json:"connection_url"`
-					MountPath        string `json:"mount_path"`
-					RoleIDLocation   string `json:"role_id_location"`
-					SecretIDLocation string `json:"secret_id_location"`
-				}{
-					ClusterType:      "hcp_vault_dedicated",
-					ConnectionURL:    m.VaultURL.ValueString(),
-					MountPath:        m.AppRolePushConfig.MountPath.ValueString(),
-					RoleIDLocation:   "env://" + m.AppRolePushConfig.RoleIDEnvVar.ValueString(),
-					SecretIDLocation: "env://" + m.AppRolePushConfig.SecretIDEnvVar.ValueString(),
-				},
-			})
-
-			if err != nil {
-				tflog.Error(context.Background(), "error with auth_method approle_push")
-				return basetypes.NewStringNull()
-			}
-
-			return basetypes.NewStringValue(string(token_data))
-		}
-
-		// else no approle_push config
-		tflog.Error(context.Background(), "error no data for auth_method approle_push")
+	if m.TokenConfig != nil {
+		return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString())
 	}
 
-	// else no auth_method match or no config
-	tflog.Error(context.Background(), "error no data for auth_method")
+	if m.KubernetesConfig != nil {
+		token_data, err := json.Marshal(map[string]interface{}{
+			"type": "vault_kubernetes",
+			"args": struct {
+				ClusterType        string `json:"cluster_type"`
+				ConnectionURL      string `json:"connection_url"`
+				MountPath          string `json:"mount_path"`
+				KubernetesAuthRole string `json:"kubernetes_auth_role"`
+			}{
+				ClusterType:        "hcp_vault_dedicated",
+				ConnectionURL:      m.VaultURL.ValueString(),
+				MountPath:          m.KubernetesConfig.MountPath.ValueString(),
+				KubernetesAuthRole: m.KubernetesConfig.RoleName.ValueString(),
+			},
+		})
+
+		if err != nil {
+			tflog.Error(context.Background(), "error with auth_method kubernetes")
+			return basetypes.NewStringNull()
+		}
+
+		return basetypes.NewStringValue(string(token_data))
+	}
+
+	if m.AppRolePushConfig != nil {
+		token_data, err := json.Marshal(map[string]interface{}{
+			"type": "vault_approle_push",
+			"args": struct {
+				ClusterType      string `json:"cluster_type"`
+				ConnectionURL    string `json:"connection_url"`
+				MountPath        string `json:"mount_path"`
+				RoleIDLocation   string `json:"role_id_location"`
+				SecretIDLocation string `json:"secret_id_location"`
+			}{
+				ClusterType:      "hcp_vault_dedicated",
+				ConnectionURL:    m.VaultURL.ValueString(),
+				MountPath:        m.AppRolePushConfig.MountPath.ValueString(),
+				RoleIDLocation:   "env://" + m.AppRolePushConfig.RoleIDEnvVar.ValueString(),
+				SecretIDLocation: "env://" + m.AppRolePushConfig.SecretIDEnvVar.ValueString(),
+			},
+		})
+
+		if err != nil {
+			tflog.Error(context.Background(), "error with auth_method approle_push")
+			return basetypes.NewStringNull()
+		}
+
+		return basetypes.NewStringValue(string(token_data))
+	}
+
+	// No auth configuration provided
+	tflog.Error(context.Background(), "no authentication configuration provided")
 	return basetypes.NewStringNull()
 }
