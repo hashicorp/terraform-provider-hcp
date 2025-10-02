@@ -6,7 +6,6 @@ package vaultradar
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"regexp"
 
@@ -93,6 +92,7 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
+					// TODO add validator not empty
 				},
 				"role_name": schema.StringAttribute{
 					Description: `Kubernetes authentication role configured in Vault.`,
@@ -100,6 +100,7 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
+					// TODO add validator not empty
 				},
 			},
 		},
@@ -112,6 +113,7 @@ var vaultDedicatedSchema = schema.Schema{
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
+					// TODO add validator not empty
 				},
 				"role_id_env_var": schema.StringAttribute{
 					Description: `Environment variable containing the AppRole role ID.`,
@@ -169,24 +171,13 @@ type appRolePushConfig struct {
 
 func (m *vaultDedicatedModel) GetConnectionURL() types.String { return m.VaultURL }
 
-func (m *vaultDedicatedModel) GetAuthMethod() types.String {
-	switch m.AuthMethod.ValueString() {
-	case "token":
-		return basetypes.NewStringValue("token")
-	case "kubernetes":
-		return basetypes.NewStringValue("vault_kubernetes")
-	case "approle_push":
-		return basetypes.NewStringValue("vault_approle_push")
-	}
-
-	return basetypes.NewStringNull()
-}
+func (m *vaultDedicatedModel) GetAuthMethod() types.String { return m.AuthMethod }
 
 func (m *vaultDedicatedModel) GetToken() types.String {
 	switch m.AuthMethod.ValueString() {
 	case "token":
 		if m.TokenConfig != nil {
-			return basetypes.NewStringValue(fmt.Sprintf("env://%s", m.TokenConfig.TokenEnvVar.ValueString()))
+			return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString())
 		}
 	case "kubernetes":
 		if m.KubernetesConfig != nil {
@@ -229,8 +220,8 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 					ClusterType:      "hcp_vault_dedicated",
 					ConnectionURL:    m.VaultURL.ValueString(),
 					MountPath:        m.AppRolePushConfig.MountPath.ValueString(),
-					RoleIDLocation:   m.AppRolePushConfig.RoleIDEnvVar.ValueString(),
-					SecretIDLocation: m.AppRolePushConfig.SecretIDEnvVar.ValueString(),
+					RoleIDLocation:   "env://" + m.AppRolePushConfig.RoleIDEnvVar.ValueString(),
+					SecretIDLocation: "env://" + m.AppRolePushConfig.SecretIDEnvVar.ValueString(),
 				},
 			})
 
