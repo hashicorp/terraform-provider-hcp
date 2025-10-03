@@ -6,6 +6,7 @@ package vaultradar
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -285,20 +286,20 @@ func (r *secretManagerResource) Update(ctx context.Context, req resource.UpdateR
 		projectID = plan.GetProjectID().ValueString()
 	}
 
-	// Check if the token was updated
-	if !plan.GetToken().Equal(state.GetToken()) {
-		body := service.UpdateSecretManagerTokenBody{
-			ID:    plan.GetID().ValueString(),
-			Token: plan.GetToken().ValueString(),
+	// Check if the features were updated
+	planFeatures := plan.GetFeatures()
+	stateFeatures := state.GetToken()
+	if !reflect.DeepEqual(planFeatures, stateFeatures) {
+		body := service.PatchSecretManagerFeaturesBody{
+			ID:       plan.GetID().ValueString(),
+			Features: planFeatures,
 		}
 
-		if err := clients.UpdateRadarSecretManagerToken(ctx, r.client, projectID, body); err != nil {
-			resp.Diagnostics.AddError("Error Updating Radar secret manager token", err.Error())
+		if err := clients.PatchRadarSecretManagerFeatures(ctx, r.client, projectID, body); err != nil {
+			resp.Diagnostics.AddError("Error Updating Radar secret manager features", err.Error())
 			return
 		}
 	}
-
-	// TODO update features of secret manager.
 
 	// Store the updated plan values
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

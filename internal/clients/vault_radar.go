@@ -221,6 +221,19 @@ func UpdateRadarSecretManagerToken(ctx context.Context, client *Client, projectI
 	return nil
 }
 
+func PatchRadarSecretManagerFeatures(ctx context.Context, client *Client, projectID string, tokenBody rsms.PatchSecretManagerFeaturesBody) error {
+	params := rsms.NewPatchSecretManagerFeaturesParams()
+	params.Context = ctx
+	params.LocationProjectID = projectID
+	params.Body = tokenBody
+
+	if _, err := client.RadarSecretManagerService.PatchSecretManagerFeatures(params, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateIntegrationConnection(ctx context.Context, client *Client, projectID string, connection ics.CreateIntegrationConnectionBody) (*ics.CreateIntegrationConnectionOK, error) {
 	params := ics.NewCreateIntegrationConnectionParams()
 	params.Context = ctx
