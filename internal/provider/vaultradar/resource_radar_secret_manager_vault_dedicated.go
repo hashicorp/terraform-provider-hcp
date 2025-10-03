@@ -58,13 +58,13 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"access_read_write": schema.BoolAttribute{
-			Description: `Indicates if the auth method access has read and write access to the secrets engine paths. Defaults to false.`,
+			Description: `Indicates if the auth method has access has read and write access to the secrets engine paths. Defaults to false.`,
 			Optional:    true,
 			Computed:    true,
 			Default:     booldefault.StaticBool(false),
 		},
 		"token": schema.SingleNestedAttribute{
-			Description: `Configuration block for token-based authentication. Only one authentication method may be configured.`,
+			Description: `Configuration for token-based authentication. Only one authentication method may be configured.`,
 			Optional:    true,
 			Validators: []validator.Object{
 				objectvalidator.ExactlyOneOf(
@@ -76,10 +76,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"token_env_var": schema.StringAttribute{
 					Description: `Environment variable name containing the Vault token. Example: 'VAULT_TOKEN'`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-						stringplanmodifier.UseStateForUnknown(),
-					},
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
 							"token_env_var must contain only letters, numbers, and underscores",
@@ -89,7 +85,7 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"kubernetes": schema.SingleNestedAttribute{
-			Description: `Configuration block for Kubernetes-based authentication. Only one authentication method may be configured.`,
+			Description: `Configuration for Kubernetes-based authentication. Only one authentication method may be configured.`,
 			Optional:    true,
 			Validators: []validator.Object{
 				objectvalidator.ExactlyOneOf(
@@ -101,9 +97,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"mount_path": schema.StringAttribute{
 					Description: `Mount path of the Kubernetes auth is enabled in Vault. Example 'kubernetes'.`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 					},
@@ -111,9 +104,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"role_name": schema.StringAttribute{
 					Description: `Kubernetes authentication role configured in Vault.`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 					},
@@ -121,7 +111,7 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"approle_push": schema.SingleNestedAttribute{
-			Description: `Configuration block for AppRole Push-based authentication. Only one authentication method may be configured.`,
+			Description: `Configuration for AppRole Push-based authentication. Only one authentication method may be configured.`,
 			Optional:    true,
 			Validators: []validator.Object{
 				objectvalidator.ExactlyOneOf(
@@ -133,9 +123,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"mount_path": schema.StringAttribute{
 					Description: `Mount path of the AppRole auth method in Vault. Example 'approle'.`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
 					},
@@ -143,9 +130,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"role_id_env_var": schema.StringAttribute{
 					Description: `Environment variable containing the AppRole role ID.`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
 							"role_id_env_var must contain only letters, numbers, and underscores",
@@ -155,9 +139,6 @@ var vaultDedicatedSchema = schema.Schema{
 				"secret_id_env_var": schema.StringAttribute{
 					Description: `Environment variable containing the AppRole secret ID.`,
 					Required:    true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
 							"secret_id_env_var must contain only letters, numbers, and underscores",
@@ -166,7 +147,6 @@ var vaultDedicatedSchema = schema.Schema{
 				},
 			},
 		},
-		// TODO features, should this be a boolean or expose the actual features json?
 	},
 }
 
@@ -210,8 +190,13 @@ func (m *vaultDedicatedModel) SetFeatures(feature map[string]interface{}) {
 	m.AccessReadWrite = types.BoolValue(false)
 }
 
-func (m *vaultDedicatedModel) GetFeatures() map[string]interface{} {
+func (m *vaultDedicatedModel) GetFeatures(omitEmptyValues bool) map[string]interface{} {
 	if m.AccessReadWrite.IsNull() || m.AccessReadWrite.IsUnknown() || !m.AccessReadWrite.ValueBool() {
+		if omitEmptyValues {
+			// on create which uses a POST, we want to omit the copy_secrets field.
+			return map[string]interface{}{}
+		}
+		// on update which uses a PATCH, we need to explicitly send copy_secrets field set to nil to clear it out.
 		return map[string]interface{}{"copy_secrets": nil}
 	}
 

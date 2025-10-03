@@ -50,8 +50,8 @@ var (
 )
 
 // secretManagerResource is an implementation for configuring specific types Radar secret managers.
-// Examples: hcp_resource_radar_secret_manager_vault_dedicated make use of
-// this implementation to define resources with specific schemas, validation, and state details related to their types.
+// Examples: hcp_resource_radar_secret_manager_vault_dedicated make use of this implementation to define resources with
+// specific schemas, validation, and state details related to its type.
 type secretManagerResource struct {
 	client                    *clients.Client
 	TypeName                  string
@@ -90,7 +90,7 @@ type secretManager interface {
 	GetToken() types.String
 	GetAuthMethod() types.String
 	SetFeatures(map[string]interface{})
-	GetFeatures() map[string]interface{}
+	GetFeatures(omitEmptyValues bool) map[string]interface{}
 }
 
 // base abstraction of Radar secret manager, partially implements secretManager interface
@@ -127,40 +127,44 @@ func (r *secretManagerResource) ModifyPlan(ctx context.Context, req resource.Mod
 }
 
 func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	src, diags := r.GetSecretManagerFromPlan(ctx, req.Plan)
+	sm, diags := r.GetSecretManagerFromPlan(ctx, req.Plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !src.GetProjectID().IsUnknown() {
-		projectID = src.GetProjectID().ValueString()
+	if !sm.GetProjectID().IsUnknown() {
+		projectID = sm.GetProjectID().ValueString()
 	}
 
-	connection := src.GetConnectionURL().ValueString()
+	connection := sm.GetConnectionURL().ValueString()
 
 	var name string
-	if i := strings.Index(src.GetConnectionURL().ValueString(), ":"); i >= 0 {
+	if i := strings.Index(sm.GetConnectionURL().ValueString(), ":"); i >= 0 {
 		name = connection[:i]
 	} else {
 		name = connection
 	}
 
 	var authMethod string
-	if src.GetAuthMethod().IsNull() || src.GetAuthMethod().IsUnknown() {
+	if sm.GetAuthMethod().IsNull() || sm.GetAuthMethod().IsUnknown() {
 		// This should be caught by schema validation, but just in case.
-		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth_method must be specified")
+		resp.Diagnostics.AddError("Error creating Radar secret manager", "missing auth details.")
 		return
 	}
-	authMethod = src.GetAuthMethod().ValueString()
+	authMethod = sm.GetAuthMethod().ValueString()
 
 	var token string
-	if src.GetToken().IsNull() || src.GetToken().IsUnknown() {
+	if sm.GetToken().IsNull() || sm.GetToken().IsUnknown() {
 		// This should be caught by schema validation, but just in case.
-		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth_method details must be specified")
+		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth details must be specified.")
 	}
-	token = src.GetToken().ValueString()
+	token = sm.GetToken().ValueString()
+
+	// When creating the secret manager, we omit any features that are empty.
+	// E.g. features for read-only would be just `{}` where for read-write it would be `{"copy_secrets": {}}`
+	const omitEmptyFeatures = true
 
 	body := service.OnboardSecretManagerBody{
 		DetectorType:  "agent",
@@ -169,7 +173,7 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 		ConnectionURL: connection,
 		AuthMethod:    authMethod,
 		Token:         token,
-		Features:      src.GetFeatures(),
+		Features:      sm.GetFeatures(omitEmptyFeatures),
 	}
 
 	res, err := clients.OnboardRadarSecretManager(ctx, r.client, projectID, body)
@@ -178,27 +182,26 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	src.SetID(types.StringValue(res.GetPayload().ID))
-	src.SetProjectID(types.StringValue(projectID))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &src)...)
+	sm.SetID(types.StringValue(res.GetPayload().ID))
+	sm.SetProjectID(types.StringValue(projectID))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &sm)...)
 }
 
 func (r *secretManagerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	src, diags := r.GetSecretManagerFromState(ctx, req.State)
+	sm, diags := r.GetSecretManagerFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !src.GetProjectID().IsUnknown() {
-		projectID = src.GetProjectID().ValueString()
+	if !sm.GetProjectID().IsUnknown() {
+		projectID = sm.GetProjectID().ValueString()
 	}
 
-	res, err := clients.GetRadarSecretManager(ctx, r.client, projectID, src.GetID().ValueString())
+	res, err := clients.GetRadarSecretManager(ctx, r.client, projectID, sm.GetID().ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			// Resource is no longer on the server.
 			tflog.Info(ctx, "Radar secret manager not found, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
@@ -218,31 +221,30 @@ func (r *secretManagerResource) Read(ctx context.Context, req resource.ReadReque
 	features := res.GetPayload().Features
 	tflog.Warn(ctx, fmt.Sprintf("Read of radar secret manager features: %+v type:%T ", features, features))
 	if featuresMap, ok := features.(map[string]interface{}); ok {
-		src.SetFeatures(featuresMap)
+		sm.SetFeatures(featuresMap)
 	} else {
-		src.SetFeatures(nil)
+		sm.SetFeatures(nil)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &src)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &sm)...)
 }
 
 func (r *secretManagerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	src, diags := r.GetSecretManagerFromState(ctx, req.State)
+	sm, diags := r.GetSecretManagerFromState(ctx, req.State)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	projectID := r.client.Config.ProjectID
-	if !src.GetProjectID().IsUnknown() {
-		projectID = src.GetProjectID().ValueString()
+	if !sm.GetProjectID().IsUnknown() {
+		projectID = sm.GetProjectID().ValueString()
 	}
 
-	// Assert resource still exists.
-	res, err := clients.GetRadarSecretManager(ctx, r.client, projectID, src.GetID().ValueString())
+	// Assert the secret manager still exists on the server.
+	res, err := clients.GetRadarSecretManager(ctx, r.client, projectID, sm.GetID().ValueString())
 	if err != nil {
 		if clients.IsResponseCodeNotFound(err) {
-			// Resource is no longer on the server.
 			tflog.Info(ctx, "Radar secret manager not found, removing from state.")
 			resp.State.RemoveResource(ctx)
 			return
@@ -251,20 +253,20 @@ func (r *secretManagerResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	// Resource is already marked as being deleted on the server. Wait for it to be fully deleted.
+	// Already marked as being deleted on the server. Wait for it to be fully deleted.
 	if res.GetPayload().Deleted {
 		tflog.Info(ctx, "Radar resource already marked for deletion, waiting for full deletion")
-		if err := clients.WaitOnOffboardRadarSecretManager(ctx, r.client, projectID, src.GetID().ValueString()); err != nil {
+		if err := clients.WaitOnOffboardRadarSecretManager(ctx, r.client, projectID, sm.GetID().ValueString()); err != nil {
 			resp.Diagnostics.AddError("Unable to delete Radar secret manager", err.Error())
 			return
 		}
 
-		tflog.Trace(ctx, "Deleted Radar resource")
+		tflog.Trace(ctx, "Deleted Radar secret manager")
 		return
 	}
 
 	// Offboard the Radar secret manager.
-	if err := clients.OffboardRadarSecretManager(ctx, r.client, projectID, src.GetID().ValueString()); err != nil {
+	if err := clients.OffboardRadarSecretManager(ctx, r.client, projectID, sm.GetID().ValueString()); err != nil {
 		resp.Diagnostics.AddError("Unable to delete Radar secret manager", err.Error())
 		return
 	}
@@ -286,9 +288,26 @@ func (r *secretManagerResource) Update(ctx context.Context, req resource.UpdateR
 		projectID = plan.GetProjectID().ValueString()
 	}
 
-	// Check if the features were updated
-	planFeatures := plan.GetFeatures()
-	stateFeatures := state.GetToken()
+	// Update token ...
+	if !plan.GetToken().Equal(state.GetToken()) {
+		body := service.UpdateSecretManagerTokenBody{
+			ID:         plan.GetID().ValueString(),
+			Token:      plan.GetToken().ValueString(),
+			AuthMethod: plan.GetAuthMethod().ValueString(),
+		}
+
+		if err := clients.UpdateRadarSecretManagerToken(ctx, r.client, projectID, body); err != nil {
+			resp.Diagnostics.AddError("Error Updating Radar secret manager auth settings", err.Error())
+			return
+		}
+	}
+
+	// Update features ...
+	// When updating the secret manager features, we want to need to include empty values so the service knows what to unset.
+	// E.g. features for read-only would be just `{"copy_secrets": null}` where for read-write it would be `{"copy_secrets": {}}`
+	const doNotOmitEmptyFeatures = false
+	planFeatures := plan.GetFeatures(doNotOmitEmptyFeatures)
+	stateFeatures := state.GetFeatures(doNotOmitEmptyFeatures)
 	if !reflect.DeepEqual(planFeatures, stateFeatures) {
 		body := service.PatchSecretManagerFeaturesBody{
 			ID:       plan.GetID().ValueString(),
