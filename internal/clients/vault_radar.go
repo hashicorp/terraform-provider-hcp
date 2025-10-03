@@ -196,7 +196,7 @@ func waitFor(ctx context.Context, retry, timeout time.Duration, maxConsecutiveEr
 }
 
 func UpdateRadarDataSourceToken(ctx context.Context, client *Client, projectID string, tokenBody dsrs.UpdateDataSourceTokenBody) error {
-	params := dsrs.NewUpdateDataSourceTokenParams()
+	params := dsrs.NewUpdateDataSourceTokenParamsWithTimeout(2 * time.Minute)
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = tokenBody
@@ -209,7 +209,7 @@ func UpdateRadarDataSourceToken(ctx context.Context, client *Client, projectID s
 }
 
 func UpdateRadarSecretManagerToken(ctx context.Context, client *Client, projectID string, tokenBody rsms.UpdateSecretManagerTokenBody) error {
-	params := rsms.NewUpdateSecretManagerTokenParams()
+	params := rsms.NewUpdateSecretManagerTokenParamsWithTimeout(2 * time.Minute)
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = tokenBody
@@ -222,7 +222,7 @@ func UpdateRadarSecretManagerToken(ctx context.Context, client *Client, projectI
 }
 
 func PatchRadarSecretManagerFeatures(ctx context.Context, client *Client, projectID string, tokenBody rsms.PatchSecretManagerFeaturesBody) error {
-	params := rsms.NewPatchSecretManagerFeaturesParams()
+	params := rsms.NewPatchSecretManagerFeaturesParamsWithTimeout(2 * time.Minute)
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = tokenBody
