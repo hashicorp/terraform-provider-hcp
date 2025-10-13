@@ -7,7 +7,7 @@ project "terraform-provider-hcp" {
   team = "hcp"
 
   slack {
-    notification_channel = "C05BBTQFCGZ"
+    notification_channel = "C09KX5FR18E"
   }
 
   github {
