@@ -11,7 +11,7 @@ description: |-
 
 This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar.
 
-~> **Note:** An Radar agent is required before adding a Radar secret manager resource.
+~> **Note:** A Radar agent is required before adding a Radar secret manager resource.
 
 ~> **Note:** One of the following authentication methods is required to create a Radar secret manager resource:
 - Kubernetes
@@ -59,7 +59,7 @@ resource "hcp_vault_radar_secret_manager_vault_dedicated" "secret_manager_exampl
 
 ### Optional
 
-- `access_read_write` (Boolean) Indicates if the auth method has access has read and write access to the secrets engine paths. Defaults to false.
+- `access_read_write` (Boolean) Indicates if the auth method has read and write access to the secrets engine paths. Defaults to false.
 - `approle_push` (Attributes) Configuration for AppRole Push-based authentication. Only one authentication method may be configured. (see [below for nested schema](#nestedatt--approle_push))
 - `kubernetes` (Attributes) Configuration for Kubernetes-based authentication. Only one authentication method may be configured. (see [below for nested schema](#nestedatt--kubernetes))
 - `project_id` (String) The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.
@@ -84,7 +84,7 @@ Required:
 
 Required:
 
-- `mount_path` (String) Mount path of the Kubernetes auth is enabled in Vault. Example 'kubernetes'.
+- `mount_path` (String) Mount path where the Kubernetes auth method is enabled in Vault. Example 'kubernetes'.
 - `role_name` (String) Kubernetes authentication role configured in Vault.  Example 'vault-radar-role'.
 
 

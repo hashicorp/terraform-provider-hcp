@@ -58,7 +58,7 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"access_read_write": schema.BoolAttribute{
-			Description: `Indicates if the auth method has access has read and write access to the secrets engine paths. Defaults to false.`,
+			Description: `Indicates if the auth method has read and write access to the secrets engine paths. Defaults to false.`,
 			Optional:    true,
 			Computed:    true,
 			Default:     booldefault.StaticBool(false),
@@ -95,7 +95,7 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 			Attributes: map[string]schema.Attribute{
 				"mount_path": schema.StringAttribute{
-					Description: `Mount path of the Kubernetes auth is enabled in Vault. Example 'kubernetes'.`,
+					Description: `Mount path where the Kubernetes auth method is enabled in Vault. Example 'kubernetes'.`,
 					Required:    true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtLeast(1),
@@ -222,7 +222,7 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 	}
 
 	if m.KubernetesConfig != nil {
-		token_data, err := json.Marshal(map[string]interface{}{
+		tokenData, err := json.Marshal(map[string]interface{}{
 			"type": "vault_kubernetes",
 			"args": struct {
 				ClusterType        string `json:"cluster_type"`
@@ -242,11 +242,11 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 			return basetypes.NewStringNull()
 		}
 
-		return basetypes.NewStringValue(string(token_data))
+		return basetypes.NewStringValue(string(tokenData))
 	}
 
 	if m.AppRolePushConfig != nil {
-		token_data, err := json.Marshal(map[string]interface{}{
+		tokenData, err := json.Marshal(map[string]interface{}{
 			"type": "vault_approle_push",
 			"args": struct {
 				ClusterType      string `json:"cluster_type"`
@@ -268,7 +268,7 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 			return basetypes.NewStringNull()
 		}
 
-		return basetypes.NewStringValue(string(token_data))
+		return basetypes.NewStringValue(string(tokenData))
 	}
 
 	// No auth configuration provided

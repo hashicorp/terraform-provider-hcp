@@ -219,7 +219,7 @@ func (r *secretManagerResource) Read(ctx context.Context, req resource.ReadReque
 
 	// Read the details for the secret manager features, incase it changed outside of Terraform.
 	features := res.GetPayload().Features
-	tflog.Warn(ctx, fmt.Sprintf("Read of radar secret manager features: %+v type:%T ", features, features))
+	tflog.Debug(ctx, fmt.Sprintf("Read of radar secret manager features: %+v type:%T ", features, features))
 	if featuresMap, ok := features.(map[string]interface{}); ok {
 		sm.SetFeatures(featuresMap)
 	} else {
