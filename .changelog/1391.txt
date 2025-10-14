@@ -1,0 +1,3 @@
+```release-note:improvement
+Updated status page component IDs to correctly report degradations.
+```
