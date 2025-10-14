@@ -159,6 +159,7 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 	if sm.GetToken().IsNull() || sm.GetToken().IsUnknown() {
 		// This should be caught by schema validation, but just in case.
 		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth details must be specified.")
+		return
 	}
 	token = sm.GetToken().ValueString()
 

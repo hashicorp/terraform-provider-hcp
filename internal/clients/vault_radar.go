@@ -143,7 +143,7 @@ func WaitOnOffboardRadarSecretManager(ctx context.Context, client *Client, proje
 				return true, nil
 			}
 
-			tflog.Error(ctx, "Failed to confirm radar secret deletion.")
+			tflog.Error(ctx, "Failed to confirm radar secret manager deletion.")
 			return false, err
 		}
 
