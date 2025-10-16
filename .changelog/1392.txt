@@ -1,4 +1,4 @@
 ```release-note:feature
 Add preview of hcp_vault_radar_secret_manager_vault_dedicated, a new Radar resource to manage integrations with
-Vault Dedicated as a secret manager.
+HCP Vault Dedicated as a secret manager.
 ```

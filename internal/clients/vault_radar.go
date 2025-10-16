@@ -222,7 +222,7 @@ func UpdateRadarSecretManagerToken(ctx context.Context, client *Client, projectI
 }
 
 func PatchRadarSecretManagerFeatures(ctx context.Context, client *Client, projectID string, tokenBody rsms.PatchSecretManagerFeaturesBody) error {
-	params := rsms.NewPatchSecretManagerFeaturesParamsWithTimeout(2 * time.Minute)
+	params := rsms.NewPatchSecretManagerFeaturesParams()
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = tokenBody

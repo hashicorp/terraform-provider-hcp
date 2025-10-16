@@ -87,7 +87,7 @@ type secretManager interface {
 	GetID() types.String
 	SetID(types.String)
 	GetConnectionURL() types.String
-	GetToken() types.String
+	GetToken() (types.String, error)
 	GetAuthMethod() types.String
 	SetFeatures(map[string]interface{})
 	GetFeatures(omitEmptyValues bool) map[string]interface{}
@@ -155,13 +155,17 @@ func (r *secretManagerResource) Create(ctx context.Context, req resource.CreateR
 	}
 	authMethod = sm.GetAuthMethod().ValueString()
 
-	var token string
-	if sm.GetToken().IsNull() || sm.GetToken().IsUnknown() {
+	tokenValue, err := sm.GetToken()
+	if err != nil {
+		// This should not happen, but just in case there was an issue constructing the token value.
+		resp.Diagnostics.AddError("Error creating Radar secret manager", fmt.Sprintf("unexpected issue with auth details : %s", err.Error()))
+		return
+	} else if tokenValue.IsNull() || tokenValue.IsUnknown() {
 		// This should be caught by schema validation, but just in case.
 		resp.Diagnostics.AddError("Error creating Radar secret manager", "auth details must be specified.")
 		return
 	}
-	token = sm.GetToken().ValueString()
+	var token = tokenValue.ValueString()
 
 	// When creating the secret manager, we omit any features that are empty.
 	// E.g. features for read-only would be just `{}` where for read-write it would be `{"copy_secrets": {}}`
@@ -290,10 +294,21 @@ func (r *secretManagerResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Update token ...
-	if !plan.GetToken().Equal(state.GetToken()) {
+	planToken, err := plan.GetToken()
+	if err != nil {
+		resp.Diagnostics.AddError("Error Updating Radar secret manager auth settings", fmt.Sprintf("unexpected issue with auth details : %s", err.Error()))
+		return
+	} else if planToken.IsNull() || planToken.IsUnknown() {
+		resp.Diagnostics.AddError("Error Updating Radar secret manager auth settings", "auth details must be specified.")
+		return
+	}
+
+	stateToken, _ := state.GetToken() // error should not happen as state was already read successfully. Besides, if there was an error, we want to update the token.
+
+	if !planToken.Equal(stateToken) {
 		body := service.UpdateSecretManagerTokenBody{
 			ID:         plan.GetID().ValueString(),
-			Token:      plan.GetToken().ValueString(),
+			Token:      planToken.ValueString(),
 			AuthMethod: plan.GetAuthMethod().ValueString(),
 		}
 

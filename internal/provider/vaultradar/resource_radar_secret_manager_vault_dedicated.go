@@ -6,6 +6,7 @@ package vaultradar
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func NewRadarSecretManagerVaultDedicatedResource() resource.Resource {
@@ -41,8 +41,10 @@ func NewRadarSecretManagerVaultDedicatedResource() resource.Resource {
 		}}
 }
 
+const envVarRegex = `^[a-zA-Z0-9_]+$`
+
 var vaultDedicatedSchema = schema.Schema{
-	MarkdownDescription: "This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar.",
+	MarkdownDescription: "This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar. See [Create a Vault policy](https://developer.hashicorp.com/hcp/docs/vault-radar/agent/correlate-vault#create-a-vault-policy) for details on creating the auth policy required.",
 	Attributes: map[string]schema.Attribute{
 		"vault_url": schema.StringAttribute{
 			Description: `Specify the URL of the Vault instance without protocol. Example: 'acme-public-vault-abc.def.z1.hashicorp.cloud:8200'.`,
@@ -58,7 +60,7 @@ var vaultDedicatedSchema = schema.Schema{
 			},
 		},
 		"access_read_write": schema.BoolAttribute{
-			Description: `Indicates if the auth method has read and write access to the secrets engine paths. Defaults to false.`,
+			Description: `Indicates if the auth method has read and write access to the secrets engine. Defaults to false. Set this to true if you want to copy secrets to this secret manager as part of remediation process. (see https://developer.hashicorp.com/hcp/docs/vault-radar/remediate-secrets/copy-secrets)`,
 			Optional:    true,
 			Computed:    true,
 			Default:     booldefault.StaticBool(false),
@@ -77,7 +79,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable name containing the Vault token. Example: 'VAULT_TOKEN'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
+						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
 							"token_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -131,7 +133,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable containing the AppRole role ID. Example: 'VAULT_APPROLE_ROLE_ID'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
+						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
 							"role_id_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -140,7 +142,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable containing the AppRole secret ID. Example: 'VAULT_APPROLE_SECRET_ID'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_]+$`),
+						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
 							"secret_id_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -177,11 +179,6 @@ type appRolePushConfig struct {
 func (m *vaultDedicatedModel) GetConnectionURL() types.String { return m.VaultURL }
 
 func (m *vaultDedicatedModel) SetFeatures(feature map[string]interface{}) {
-	if feature == nil {
-		m.AccessReadWrite = types.BoolValue(false)
-		return
-	}
-
 	if val, ok := feature["copy_secrets"]; ok && val != nil {
 		m.AccessReadWrite = types.BoolValue(true)
 		return
@@ -216,9 +213,9 @@ func (m *vaultDedicatedModel) GetAuthMethod() types.String {
 	return types.StringNull()
 }
 
-func (m *vaultDedicatedModel) GetToken() types.String {
+func (m *vaultDedicatedModel) GetToken() (types.String, error) {
 	if m.TokenConfig != nil {
-		return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString())
+		return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString()), nil
 	}
 
 	if m.KubernetesConfig != nil {
@@ -238,11 +235,10 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 		})
 
 		if err != nil {
-			tflog.Error(context.Background(), "error with auth_method kubernetes")
-			return basetypes.NewStringNull()
+			return basetypes.NewStringNull(), fmt.Errorf("failed to construct token data for auth method kubernetes: %w", err)
 		}
 
-		return basetypes.NewStringValue(string(tokenData))
+		return basetypes.NewStringValue(string(tokenData)), nil
 	}
 
 	if m.AppRolePushConfig != nil {
@@ -264,14 +260,12 @@ func (m *vaultDedicatedModel) GetToken() types.String {
 		})
 
 		if err != nil {
-			tflog.Error(context.Background(), "error with auth_method approle_push")
-			return basetypes.NewStringNull()
+			return basetypes.NewStringNull(), fmt.Errorf("failed to construct token data for auth method approle: %w", err)
 		}
 
-		return basetypes.NewStringValue(string(tokenData))
+		return basetypes.NewStringValue(string(tokenData)), nil
 	}
 
 	// No auth configuration provided
-	tflog.Error(context.Background(), "no authentication configuration provided")
-	return basetypes.NewStringNull()
+	return basetypes.NewStringNull(), fmt.Errorf("no authentication configuration provided")
 }

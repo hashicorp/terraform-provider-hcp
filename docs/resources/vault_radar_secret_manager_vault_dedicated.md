@@ -2,14 +2,14 @@
 page_title: "hcp_vault_radar_secret_manager_vault_dedicated Resource - terraform-provider-hcp"
 subcategory: "HCP Vault Radar"
 description: |-
-  This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar.
+  This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar. See Create a Vault policy https://developer.hashicorp.com/hcp/docs/vault-radar/agent/correlate-vault#create-a-vault-policy for details on creating the auth policy required.
 ---
 
 # hcp_vault_radar_secret_manager_vault_dedicated (Resource)
 
 -> **Note:** This feature is currently in private beta.
 
-This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar.
+This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar. See [Create a Vault policy](https://developer.hashicorp.com/hcp/docs/vault-radar/agent/correlate-vault#create-a-vault-policy) for details on creating the auth policy required.
 
 ~> **Note:** A Radar agent is required before adding a Radar secret manager resource.
 
@@ -17,6 +17,10 @@ This terraform resource manages a HCP Vault Dedicated secret manager in Vault Ra
 - Kubernetes
 - AppRole
 - Token
+
+~> **Note:** Auth methods need to be configured in the `admin` namespace of the HCP Vault Dedicated cluster.
+
+~> **Note:** Environment variables that correspond to the authentication method being used must be available to the agent.
 
 ## Example Usage
 
@@ -59,7 +63,7 @@ resource "hcp_vault_radar_secret_manager_vault_dedicated" "secret_manager_exampl
 
 ### Optional
 
-- `access_read_write` (Boolean) Indicates if the auth method has read and write access to the secrets engine paths. Defaults to false.
+- `access_read_write` (Boolean) Indicates if the auth method has read and write access to the secrets engine. Defaults to false. Set this to true if you want to copy secrets to this secret manager as part of remediation process. (see https://developer.hashicorp.com/hcp/docs/vault-radar/remediate-secrets/copy-secrets)
 - `approle_push` (Attributes) Configuration for AppRole Push-based authentication. Only one authentication method may be configured. (see [below for nested schema](#nestedatt--approle_push))
 - `kubernetes` (Attributes) Configuration for Kubernetes-based authentication. Only one authentication method may be configured. (see [below for nested schema](#nestedatt--kubernetes))
 - `project_id` (String) The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.
