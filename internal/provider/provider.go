@@ -205,6 +205,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		vaultradar.NewIntegrationSlackSubscriptionResource,
 		vaultradar.NewRadarResourceIAMPolicyResource,
 		vaultradar.NewRadarResourceIAMBindingResource,
+		vaultradar.NewRadarSecretManagerVaultDedicatedResource,
 	}, packer.ResourceSchemaBuilders...)
 }
 
