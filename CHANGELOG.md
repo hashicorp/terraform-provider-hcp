@@ -1,3 +1,14 @@
+## v0.111.0 (Nov 25, 2025)
+
+FEATURES:
+
+* Add preview of hcp_vault_radar_secret_manager_vault_dedicated, a new Radar resource to manage integrations with
+HCP Vault Dedicated as a secret manager. [[GH-1392](https://github.com/hashicorp/hcp/issues/1392)]
+
+IMPROVEMENTS:
+
+* Updated status page component IDs to correctly report degradations. [[GH-1391](https://github.com/hashicorp/hcp/issues/1391)]
+
 ## v0.110.0 (Sept 22, 2025)
 
 FEATURES:
