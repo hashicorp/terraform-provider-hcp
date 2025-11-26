@@ -21,6 +21,7 @@ resource "hcp_dns_forwarding" "example" {
   connection_type   = "hvn-peering"
 
   forwarding_rule {
+    rule_id              = "example"
     domain_name          = "example.com"
     inbound_endpoint_ips = ["10.0.0.1", "10.0.0.2"]
   }
