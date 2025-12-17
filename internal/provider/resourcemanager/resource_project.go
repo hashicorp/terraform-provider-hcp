@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"net/http"
 
-	billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
-	billingModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -24,11 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	clients "github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/hcpvalidator"
-)
-
-const (
-	// defaultBillingAccountID is the ID of the default/only billing account.
-	defaultBillingAccountID = "default-account"
 )
 
 func NewProjectResource() resource.Resource {
@@ -138,43 +131,6 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	plan.Description = types.StringValue(p.Description)
 	plan.Name = types.StringValue(p.Name)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	// Set up billing for the project
-	if err := r.addToBillingAccount(ctx, p.ID); err != nil {
-		resp.Diagnostics.AddError("Error setting up billing for created project", err.Error())
-		return
-	}
-}
-
-func (r *resourceProject) addToBillingAccount(ctx context.Context, projectID string) error {
-
-	req := billing.NewBillingAccountServiceGetParams()
-	req.OrganizationID = r.client.Config.OrganizationID
-	req.ID = defaultBillingAccountID
-	resp, err := r.client.Billing.BillingAccountServiceGet(req, nil)
-	if err != nil {
-		return fmt.Errorf("listing billing accounts failed: %v", err.Error())
-	}
-
-	// Update the BA to include the new project ID
-	ba := resp.Payload.BillingAccount
-	updateReq := billing.NewBillingAccountServiceUpdateParams()
-	updateReq.OrganizationID = ba.OrganizationID
-	updateReq.ID = ba.ID
-	updateReq.Body = &billingModels.BillingAccountServiceUpdateBody{
-		ProjectIds: ba.ProjectIds,
-		Name:       ba.Name,
-		Country:    ba.Country,
-	}
-
-	updateReq.Body.ProjectIds = append(updateReq.Body.ProjectIds, projectID)
-
-	_, err = clients.RetryBillingServiceUpdate(r.client, updateReq)
-	if err != nil {
-		return fmt.Errorf("updating billing account failed: %v", err.Error())
-	}
-
-	return nil
 }
 
 func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
