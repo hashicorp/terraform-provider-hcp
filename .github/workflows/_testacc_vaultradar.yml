@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'internal/clients/vault_radar.go'
-      - 'internal/provider/vaultradar/**'
+      - "internal/clients/vault_radar.go"
+      - "internal/provider/vaultradar/**"
 
 # This prevents more than one run of this workflow from executing at a time.
 # Up to 1 additional run will be queued, with anything futher being cancelled from the queue.
@@ -31,12 +31,12 @@ jobs:
         uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           cache: true
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
           cache-dependency-path: go.sum
         id: go
       - name: Install Dependencies
         env:
-          GOPRIVATE: 'github.com/hashicorp/*'
+          GOPRIVATE: "github.com/hashicorp/*"
         run: |
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
           go mod tidy
@@ -62,12 +62,12 @@ jobs:
           HCP_CLIENT_ID: ${{ secrets.VAULTRADAR_HCP_CLIENT_ID }}
           HCP_CLIENT_SECRET: ${{ secrets.VAULTRADAR_HCP_CLIENT_SECRET }}
 
-         RADAR_INTEGRATION_JIRA_BASE_URL: "https://hashicorp-sandbox-778.atlassian.net"
-         RADAR_INTEGRATION_JIRA_EMAIL: "svc-vault-radar-cv-tests@ibm.com"
-         RADAR_INTEGRATION_JIRA_TOKEN: ${{ secrets.RADAR_INTEGRATION_JIRA_TOKEN }}
-         RADAR_INTEGRATION_JIRA_PROJECT_KEY: "RADAR"
-         RADAR_INTEGRATION_JIRA_ISSUE_TYPE: "Task"
-         RADAR_INTEGRATION_JIRA_ASSIGNEE: "712020:72bcf84a-ec39-4599-871f-62a2a20cbe4a"
+          RADAR_INTEGRATION_JIRA_BASE_URL: "https://hashicorp-sandbox-778.atlassian.net"
+          RADAR_INTEGRATION_JIRA_EMAIL: "svc-vault-radar-cv-tests@ibm.com"
+          RADAR_INTEGRATION_JIRA_TOKEN: ${{ secrets.RADAR_INTEGRATION_JIRA_TOKEN }}
+          RADAR_INTEGRATION_JIRA_PROJECT_KEY: "RADAR"
+          RADAR_INTEGRATION_JIRA_ISSUE_TYPE: "Task"
+          RADAR_INTEGRATION_JIRA_ASSIGNEE: "712020:72bcf84a-ec39-4599-871f-62a2a20cbe4a"
           RADAR_INTEGRATION_SLACK_TOKEN: ${{ secrets.RADAR_INTEGRATION_SLACK_TOKEN }}
           RADAR_INTEGRATION_SLACK_TOKEN_2: ${{ secrets.RADAR_INTEGRATION_SLACK_TOKEN_2 }}
           RADAR_INTEGRATION_SLACK_CHANNEL: "the-test-zone"
