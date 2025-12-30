@@ -74,10 +74,10 @@ jobs:
           RADAR_GITHUB_CLOUD_ORGANIZATION: "hashicorp-automated-testing"
           RADAR_GITHUB_CLOUD_TOKEN: ${{ secrets.RADAR_GITHUB_CLOUD_TOKEN }}
           RADAR_GITHUB_CLOUD_TOKEN_2: ${{ secrets.RADAR_GITHUB_CLOUD_TOKEN_2 }}
-          # RADAR_GITHUB_ENTERPRISE_ORGANIZATION: ${{ secrets.RADAR_GITHUB_ENTERPRISE_ORGANIZATION }}
-          # RADAR_GITHUB_ENTERPRISE_DOMAIN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_DOMAIN }}
-          # RADAR_GITHUB_ENTERPRISE_TOKEN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN }}
-          # RADAR_GITHUB_ENTERPRISE_TOKEN_2: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN_2 }}
+          RADAR_GITHUB_ENTERPRISE_ORGANIZATION: "cv-and-acceptance-tests-org"
+          RADAR_GITHUB_ENTERPRISE_DOMAIN: "github.radar.hashicorptest.com"
+          RADAR_GITHUB_ENTERPRISE_TOKEN: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN }}
+          RADAR_GITHUB_ENTERPRISE_TOKEN_2: ${{ secrets.RADAR_GITHUB_ENTERPRISE_TOKEN_2 }}
           RADAR_HCP_RESOURCE_NAME: "vault-radar/project/4213bd26-e28e-4e89-b298-6a2abcaf26ca/scan-target/CnDtkwdQKBzLbjLrWTbf"
           RADAR_RESOURCES_URI_LIKE_FILTER: "git://github.com/vaultradarcv/hcp-terraform-provider-test-resource.git"
           # RADAR_SM_VAULT_DEDICATED_VAULT_URL: ${{ secrets.RADAR_SM_VAULT_DEDICATED_VAULT_URL }}
