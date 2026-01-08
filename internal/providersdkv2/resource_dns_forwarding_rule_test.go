@@ -156,7 +156,7 @@ resource "hcp_dns_forwarding_rule" "test" {
 
 // TestAcc_Platform_DNSForwardingRuleResourceAzure tests the DNS forwarding rule resource with Azure VNet peering.
 func TestAcc_Platform_DNSForwardingRuleResourceAzure(t *testing.T) {
-	uniqueName := testAccUniqueNameWithPrefix("dns-rr-az")
+	uniqueName := testAccUniqueNameWithPrefix("dns-rr-1")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },

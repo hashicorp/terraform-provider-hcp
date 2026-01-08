@@ -82,7 +82,7 @@ func TestAcc_Platform_DNSForwardingResourceAzure(t *testing.T) {
 					resource.TestCheckResourceAttrSet("hcp_dns_forwarding.test", "state"),
 					resource.TestCheckResourceAttrSet("hcp_dns_forwarding.test", "self_link"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "dns_forwarding_id", uniqueName),
-					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "connection_type", "vnet-peering"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "connection_type", "hvn-peering"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.#", "1"),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.0.rule_id", fmt.Sprintf("%s-initial", uniqueName)),
 					resource.TestCheckResourceAttr("hcp_dns_forwarding.test", "forwarding_rule.0.domain_name", "example.internal"),
@@ -275,7 +275,7 @@ resource "hcp_dns_forwarding" "test" {
   hvn_id            = hcp_hvn.test.hvn_id
   dns_forwarding_id = "%[1]s"
   peering_id        = "%[1]s"
-  connection_type   = "vnet-peering"
+  connection_type   = "hvn-peering"
   
   # Ensure peering connection is active before creating DNS forwarding
   depends_on = [data.hcp_azure_peering_connection.test]
