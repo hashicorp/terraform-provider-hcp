@@ -61,7 +61,7 @@ func TestAcc_Platform_DNSForwardingResource(t *testing.T) {
 	})
 }
 
-// TestAcc_Platform_DNSForwardingResourceAzure tests the DNS forwarding resource with Azure VNet peering.
+// TestAcc_Platform_DNSForwardingResourceAzure tests the DNS forwarding resource with Azure VNet hvn-peering.
 func TestAcc_Platform_DNSForwardingResourceAzure(t *testing.T) {
 	uniqueName := testAccUniqueNameWithPrefix("dns-fwd-az")
 
@@ -104,7 +104,6 @@ func TestAcc_Platform_DNSForwardingResourceAzure(t *testing.T) {
 					return fmt.Sprintf("%s:%s", hvnID, dnsForwardingID), nil
 				},
 			},
-			// Delete testing automatically occurs in TestCase
 		},
 	})
 }
@@ -262,7 +261,6 @@ resource "azurerm_role_assignment" "test" {
   role_definition_id = azurerm_role_definition.test.role_definition_resource_id
 }
 
-// This data source is the same as the resource above, but waits for the connection to be Active before returning.
 data "hcp_azure_peering_connection" "test" {
   hvn_link              = hcp_hvn.test.self_link
   peering_id            = hcp_azure_peering_connection.test.peering_id
@@ -277,7 +275,7 @@ resource "hcp_dns_forwarding" "test" {
   peering_id        = "%[1]s"
   connection_type   = "hvn-peering"
   
-  # Ensure peering connection is active before creating DNS forwarding
+  # Ensure peering connection is in active state before creating DNS forwarding
   depends_on = [data.hcp_azure_peering_connection.test]
   
   forwarding_rule {

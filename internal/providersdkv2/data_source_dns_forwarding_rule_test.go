@@ -135,7 +135,7 @@ data "hcp_dns_forwarding_rule" "test" {
 `, uniqueName)
 }
 
-// TestAcc_Platform_DNSForwardingRuleDataSource_Azure tests the DNS forwarding rule data source with Azure peering.
+// TestAcc_Platform_DNSForwardingRuleDataSource_Azure tests the DNS forwarding rule data source with Azure hvn-peering.
 func TestAcc_Platform_DNSForwardingRuleDataSource_Azure(t *testing.T) {
 	uniqueName := testAccUniqueNameWithPrefix("dns-r-azure")
 
@@ -198,7 +198,6 @@ resource "azurerm_virtual_network" "test" {
   address_space       = ["10.0.0.0/16"]
 }
 
-# Create Azure peering connection
 resource "hcp_azure_peering_connection" "test" {
   hvn_link                 = hcp_hvn.test.self_link
   peering_id               = "%[1]s"
@@ -209,12 +208,10 @@ resource "hcp_azure_peering_connection" "test" {
   peer_vnet_region         = "eastus"
 }
 
-# Create service principal for peering
 resource "azuread_service_principal" "test" {
   application_id = hcp_azure_peering_connection.test.application_id
 }
 
-# Create custom role definition
 resource "azurerm_role_definition" "test" {
   name  = "%[1]s"
   scope = azurerm_virtual_network.test.id
@@ -232,14 +229,12 @@ resource "azurerm_role_definition" "test" {
   }
 }
 
-# Assign role to service principal
 resource "azurerm_role_assignment" "test" {
   principal_id       = azuread_service_principal.test.id
   scope              = azurerm_virtual_network.test.id
   role_definition_id = azurerm_role_definition.test.role_definition_resource_id
 }
 
-# Wait for peering to be active
 data "hcp_azure_peering_connection" "test" {
   hvn_link              = hcp_hvn.test.self_link
   peering_id            = hcp_azure_peering_connection.test.peering_id
@@ -248,14 +243,13 @@ data "hcp_azure_peering_connection" "test" {
   depends_on = [azurerm_role_assignment.test]
 }
 
-# Create DNS forwarding
 resource "hcp_dns_forwarding" "test" {
   hvn_id            = hcp_hvn.test.hvn_id
   dns_forwarding_id = "%[1]s"
   peering_id        = "%[1]s"
   connection_type   = "hvn-peering"
 
-  # Ensure peering is active before creating DNS forwarding
+  # Ensure peering is in active state before creating DNS forwarding
   depends_on = [data.hcp_azure_peering_connection.test]
 
   forwarding_rule {

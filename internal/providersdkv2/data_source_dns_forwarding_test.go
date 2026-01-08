@@ -202,7 +202,6 @@ resource "hcp_azure_peering_connection" "test" {
   peer_vnet_region         = "eastus"
 }
 
-# Create service principal for peering
 resource "azuread_service_principal" "test" {
   application_id = hcp_azure_peering_connection.test.application_id
 }
@@ -224,14 +223,12 @@ resource "azurerm_role_definition" "test" {
   }
 }
 
-# Assign role to service principal
 resource "azurerm_role_assignment" "test" {
   principal_id       = azuread_service_principal.test.id
   scope              = azurerm_virtual_network.test.id
   role_definition_id = azurerm_role_definition.test.role_definition_resource_id
 }
 
-# Wait for peering to be active
 data "hcp_azure_peering_connection" "test" {
   hvn_link              = hcp_hvn.test.self_link
   peering_id            = hcp_azure_peering_connection.test.peering_id
@@ -247,7 +244,7 @@ resource "hcp_dns_forwarding" "test" {
   peering_id        = "%[1]s"
   connection_type   = "hvn-peering"
 
-  # Ensure peering is active before creating DNS forwarding
+  # Ensure peering is in active state before creating DNS forwarding
   depends_on = [data.hcp_azure_peering_connection.test]
 
   forwarding_rule {
