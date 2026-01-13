@@ -55,6 +55,53 @@ func TestAcc_Platform_DNSForwardingRuleResource(t *testing.T) {
 	})
 }
 
+// TestAcc_Platform_DNSForwardingRuleResourceAzure tests the DNS forwarding rule resource with Azure VNet hvn-peering.
+func TestAcc_Platform_DNSForwardingRuleResourceAzure(t *testing.T) {
+	uniqueName := testAccUniqueNameWithPrefix("dns-rr-1")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": true}) },
+		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {VersionConstraint: "~> 3.63"},
+			"azuread": {VersionConstraint: "~> 2.39"},
+		},
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: testAccDNSForwardingRuleResourceConfigAzure(uniqueName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("hcp_dns_forwarding_rule.test", "domain_name", "completely-different.example.com"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding_rule.test", "inbound_endpoint_ips.#", "2"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding_rule.test", "inbound_endpoint_ips.0", "10.0.1.20"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding_rule.test", "inbound_endpoint_ips.1", "10.0.1.21"),
+					resource.TestCheckResourceAttr("hcp_dns_forwarding_rule.test", "rule_id", fmt.Sprintf("%s-additional", uniqueName)),
+					resource.TestCheckResourceAttrSet("hcp_dns_forwarding_rule.test", "id"),
+					resource.TestCheckResourceAttrSet("hcp_dns_forwarding_rule.test", "created_at"),
+					resource.TestCheckResourceAttrSet("hcp_dns_forwarding_rule.test", "state"),
+					resource.TestCheckResourceAttrSet("hcp_dns_forwarding_rule.test", "self_link"),
+				),
+			},
+			// ImportState testing
+			{
+				ResourceName:      "hcp_dns_forwarding_rule.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources["hcp_dns_forwarding_rule.test"]
+					if !ok {
+						return "", fmt.Errorf("resource not found: hcp_dns_forwarding_rule.test")
+					}
+					hvnID := rs.Primary.Attributes["hvn_id"]
+					dnsForwardingID := rs.Primary.Attributes["dns_forwarding_id"]
+					ruleID := rs.Primary.Attributes["rule_id"]
+					return fmt.Sprintf("%s:%s:%s", hvnID, dnsForwardingID, ruleID), nil
+				},
+			},
+		},
+	})
+}
+
 func testAccDNSForwardingRuleResourceConfig(uniqueName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
@@ -152,4 +199,102 @@ resource "hcp_dns_forwarding_rule" "test" {
   inbound_endpoint_ips = ["10.220.1.20", "10.220.1.21"]
 }
 `, uniqueName)
+}
+
+func testAccDNSForwardingRuleResourceConfigAzure(uniqueName string) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "hcp_hvn" "test" {
+  hvn_id         = "%[1]s"
+  cloud_provider = "azure"
+  region         = "eastus"
+  cidr_block     = "172.25.16.0/20"
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "%[1]s"
+  location = "East US"
+}
+
+resource "azurerm_virtual_network" "test" {
+  name                = "%[1]s"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  address_space       = ["10.0.0.0/16"]
+}
+
+// This resource initially returns in a Pending state, because its application_id is required to complete acceptance of the connection.
+resource "hcp_azure_peering_connection" "test" {
+  hvn_link                 = hcp_hvn.test.self_link
+  peering_id               = "%[1]s"
+  peer_subscription_id     = "%[2]s"
+  peer_tenant_id           = "%[3]s"
+  peer_vnet_name           = azurerm_virtual_network.test.name
+  peer_resource_group_name = azurerm_resource_group.test.name
+  peer_vnet_region         = "eastus"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = hcp_azure_peering_connection.test.application_id
+}
+
+resource "azurerm_role_definition" "test" {
+  name  = "%[1]s"
+  scope = azurerm_virtual_network.test.id
+
+  assignable_scopes = [
+    azurerm_virtual_network.test.id
+  ]
+
+  permissions {
+    actions = [
+      "Microsoft.Network/virtualNetworks/peer/action",
+      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
+      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write"
+    ]
+  }
+}
+
+resource "azurerm_role_assignment" "test" {
+  principal_id       = azuread_service_principal.test.id
+  scope              = azurerm_virtual_network.test.id
+  role_definition_id = azurerm_role_definition.test.role_definition_resource_id
+}
+
+data "hcp_azure_peering_connection" "test" {
+  hvn_link              = hcp_hvn.test.self_link
+  peering_id            = hcp_azure_peering_connection.test.peering_id
+  wait_for_active_state = true
+  
+  depends_on = [azurerm_role_assignment.test]
+}
+
+resource "hcp_dns_forwarding" "test" {
+  hvn_id            = hcp_hvn.test.hvn_id
+  dns_forwarding_id = "%[1]s"
+  peering_id        = "%[1]s"
+  connection_type   = "hvn-peering"
+  
+  # Ensure peering connection is in active state before creating DNS forwarding
+  depends_on = [data.hcp_azure_peering_connection.test]
+  
+  # Required stable forwarding rule that should not conflict with the standalone rule
+  forwarding_rule {
+    rule_id              = "%[1]s-stable"
+    domain_name          = "stable.internal.com"
+    inbound_endpoint_ips = ["10.0.1.50", "10.0.1.51"]
+  }
+}
+
+resource "hcp_dns_forwarding_rule" "test" {
+  hvn_id               = hcp_hvn.test.hvn_id
+  dns_forwarding_id    = hcp_dns_forwarding.test.dns_forwarding_id
+  rule_id              = "%[1]s-additional"
+  domain_name          = "completely-different.example.com"  # Different domain to avoid conflicts
+  inbound_endpoint_ips = ["10.0.1.20", "10.0.1.21"]
+}
+`, uniqueName, azureSubscriptionID, azureTenantID)
 }
