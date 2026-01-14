@@ -158,7 +158,7 @@ func checkHCPStatus(geography *string) statusCheckResult {
 		region = regions["us"]
 	}
 
-	fmt.Printf("Region name is %s", region)
+	fmt.Printf("Region name is %v", region)
 	statuspageURL := region.statusPageURL
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
