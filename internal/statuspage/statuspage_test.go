@@ -16,8 +16,9 @@ import (
 )
 
 // Helper functions to create test data
-func testComponent(name string, status string) affectedComponent {
-	id := hcpComponentNames[name]
+func testComponent(name string, status string, region *regionalConfig) affectedComponent {
+	id := region.componentNames[name]
+
 	return affectedComponent{
 		ID:            id,
 		Name:          name,
@@ -25,7 +26,7 @@ func testComponent(name string, status string) affectedComponent {
 	}
 }
 
-func testGroupedComponent(groupName, status string) affectedComponent {
+func testGroupedComponent(groupName, status string, region *regionalConfig) affectedComponent {
 	return affectedComponent{
 		ID:            "region-id",
 		Name:          "region-name",
@@ -43,22 +44,22 @@ func inc(name, status string, components ...affectedComponent) incident {
 }
 
 // createTestServer creates and manages a test HTTP server
-func createTestServer(t *testing.T, handler http.HandlerFunc) {
+func createTestServer(t *testing.T, handler http.HandlerFunc, region *regionalConfig) {
 	t.Helper()
 	server := httptest.NewServer(handler)
-	prevURL := statuspageURL
-	statuspageURL = server.URL
+	prevURL := region.statusPageURL
+	region.statusPageURL = server.URL
 
 	t.Cleanup(func() {
 		server.Close()
-		statuspageURL = prevURL
+		region.statusPageURL = prevURL
 	})
 }
 
 // stubStatusPage configures a test server to return a simulated status page response
-func stubStatusPage(t *testing.T, incidents []incident) {
+func stubStatusPage(t *testing.T, incidents []incident, region *regionalConfig) {
 	t.Helper()
-	createTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+	createTestServer(t, func(w http.ResponseWriter, r *http.Request, region *regionalConfig) {
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(statuspage{OngoingIncidents: incidents}); err != nil {
 			t.Fatalf("Failed to encode status page response: %v", err)
@@ -77,13 +78,13 @@ func simulateError(t *testing.T, errorType string) {
 		})
 		clientTimeout = 1 * time.Millisecond
 
-		createTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		createTestServer(t, func(w http.ResponseWriter, r *http.Request, region *regionalConfig) {
 			time.Sleep(5 * time.Millisecond)
 			w.WriteHeader(http.StatusOK)
 		})
 
 	case "serviceDown":
-		createTestServer(t, func(w http.ResponseWriter, r *http.Request) {
+		createTestServer(t, func(w http.ResponseWriter, r *http.Request, region *regionalConfig) {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		})
 	}
@@ -97,34 +98,34 @@ func TestIsHCPComponentAffected(t *testing.T) {
 	}{
 		{
 			name:       "operational HCP component",
-			component:  testComponent("HCP API", "operational"),
+			component:  testComponent("HCP API", "operational", &usConfig),
 			isAffected: false,
 		},
 		{
 			name:       "non-operational HCP component",
-			component:  testComponent("HCP Portal", "degraded_performance"),
+			component:  testComponent("HCP Portal", "degraded_performance", &usConfig),
 			isAffected: true,
 		},
 		{
 			name:       "operational HCP group component",
-			component:  testGroupedComponent("HCP Vault Dedicated", "operational"),
+			component:  testGroupedComponent("HCP Vault Dedicated", "operational", &usConfig),
 			isAffected: false,
 		},
 		{
 			name:       "non-operational HCP group component",
-			component:  testGroupedComponent("HCP Consul Dedicated", "partial_outage"),
+			component:  testGroupedComponent("HCP Consul Dedicated", "partial_outage", &usConfig),
 			isAffected: true,
 		},
 		{
 			name:       "non-HCP component",
-			component:  testComponent("Other", "major_outage"),
+			component:  testComponent("Other", "major_outage", &usConfig),
 			isAffected: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := isHCPComponentAffected(tc.component)
+			result := isHCPComponentAffected(tc.component, region&regionalConfig)
 			assert.Equal(t, tc.isAffected, result)
 		})
 	}
