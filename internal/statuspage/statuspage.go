@@ -18,7 +18,7 @@ import (
 
 const (
 	warnSummary   = "You may experience issues using HCP."
-	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check %s for more details."
+	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check https://status.hashicorp.com for more details."
 )
 
 type regionalConfig struct {
@@ -52,18 +52,36 @@ var euConfig = regionalConfig{
 	},
 	statusPageURL: "https://status.eu.hashicorp.com/api/v1/summary",
 	clientTimeout: 1,
-	name:          "EU",
+}
+
+var sandboxConfig = regionalConfig{
+	componentNames: map[string]string{
+		"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
+		"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
+		"HCP Packer":        "01JK8R0BRYR9EYAGMNJ5EKC6CS",
+		"HCP Portal":        "01JK8R0BRYKPJS5K35R2ZCSHV0",
+		"HCP Vault Radar":   "01JK8R0BRYDYZFQH1V8ZSJKDFF",
+		"HCP Vault Secrets": "01JK8R0BRYY1ZM4NCA18A5T43A",
+		"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
+	},
+	groupNames: []string{
+		"HCP Consul Dedicated",
+		"HCP Vault Dedicated",
+		"API",
+	},
+	statusPageURL: "https://statuspage.incident.io/status-page-sandbox-8162182495/api/v1/summary",
+	clientTimeout: 1,
 }
 
 var usConfig = regionalConfig{
 	componentNames: map[string]string{
-		"HCP API":           "01K7FBWXHZPTSPVNWDS8P05MKD",
-		"HCP Boundary":      "01K7FBWXHZ17YES9ACAQVCTYS7",
-		"HCP Packer":        "01K7FBWXHZYTFGMTZYZ8V2GGET",
-		"HCP Portal":        "01K7FBWXHZ0FP76T1PVWGS0HJP",
-		"HCP Vault Radar":   "01K7FBWXHZ26MMSQ3AWN9JR7J4",
-		"HCP Vault Secrets": "01K7FBWXHZHSAJ1GCGZ4ZP3ZYT",
-		"HCP Waypoint":      "01K7FBWXHZ9GE7SV8YKZR0R52V",
+		"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
+		"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
+		"HCP Packer":        "01JK8R0BRYR9EYAGMNJ5EKC6CS",
+		"HCP Portal":        "01JK8R0BRYKPJS5K35R2ZCSHV0",
+		"HCP Vault Radar":   "01JK8R0BRYDYZFQH1V8ZSJKDFF",
+		"HCP Vault Secrets": "01JK8R0BRYY1ZM4NCA18A5T43A",
+		"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
 	},
 	groupNames: []string{
 		"HCP Consul Dedicated",
@@ -72,12 +90,12 @@ var usConfig = regionalConfig{
 	},
 	statusPageURL: "https://status.hashicorp.com/api/v1/summary",
 	clientTimeout: 1,
-	name:          "US",
 }
 
-var regions = map[string]*regionalConfig{
-	"eu": &euConfig,
-	"us": &usConfig,
+var regions = map[string]regionalConfig{
+	"eu":      euConfig,
+	"sandbox": sandboxConfig,
+	"us":      usConfig,
 }
 
 type statuspage struct {
@@ -101,7 +119,6 @@ type affectedComponent struct {
 type statusCheckResult struct {
 	errorMessage  string // For HTTP errors, JSON parsing errors
 	statusMessage string // For actual HCP service outages
-	statusPageURL string // Region-specific status page URL for warning message
 }
 
 func (s statusCheckResult) hasDiagnostics() bool {
@@ -113,7 +130,7 @@ func (s statusCheckResult) diagnosticMessage() string {
 		return s.errorMessage
 	}
 	if s.statusMessage != "" {
-		return fmt.Sprintf(warnDetailFmt, s.statusMessage, s.statusPageURL)
+		return fmt.Sprintf(warnDetailFmt, s.statusMessage)
 	}
 	return ""
 }
@@ -134,13 +151,14 @@ func isHCPComponentAffected(comp affectedComponent, region *regionalConfig) bool
 func checkHCPStatus(geography *string) statusCheckResult {
 	var result statusCheckResult
 	var statusBuilder strings.Builder
+	var reported []string
 
-	region, ok := regions[*geography]
-	if !ok {
+	region, oK := regions[*geography]
+	if !oK {
 		region = regions["us"]
 	}
 
-	result.statusPageURL = region.statusPageURL
+	fmt.Printf("Region name is %s", region)
 	statuspageURL := region.statusPageURL
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
@@ -173,9 +191,8 @@ func checkHCPStatus(geography *string) statusCheckResult {
 	}
 
 	for _, inc := range sp.OngoingIncidents {
-		reported := make([]string, 0, len(inc.AffectedComponents))
 		for _, comp := range inc.AffectedComponents {
-			if isHCPComponentAffected(comp, region) {
+			if isHCPComponentAffected(comp, &region) {
 				prefix := comp.Name
 				if comp.GroupName != "" {
 					prefix = fmt.Sprintf("%s (%s)", comp.GroupName, comp.Name)
