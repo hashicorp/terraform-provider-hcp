@@ -41,8 +41,6 @@ func NewRadarSecretManagerVaultDedicatedResource() resource.Resource {
 		}}
 }
 
-const envVarRegex = `^[a-zA-Z0-9_]+$`
-
 var vaultDedicatedSchema = schema.Schema{
 	MarkdownDescription: "This terraform resource manages a HCP Vault Dedicated secret manager in Vault Radar. See [Create a Vault policy](https://developer.hashicorp.com/hcp/docs/vault-radar/agent/correlate-vault#create-a-vault-policy) for details on creating the auth policy required.",
 	Attributes: map[string]schema.Attribute{
@@ -79,7 +77,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable name containing the Vault token. Example: 'VAULT_TOKEN'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
+						stringvalidator.RegexMatches(regexp.MustCompile(EnvVarRegex),
 							"token_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -133,7 +131,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable containing the AppRole role ID. Example: 'VAULT_APPROLE_ROLE_ID'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
+						stringvalidator.RegexMatches(regexp.MustCompile(EnvVarRegex),
 							"role_id_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -142,7 +140,7 @@ var vaultDedicatedSchema = schema.Schema{
 					Description: `Environment variable containing the AppRole secret ID. Example: 'VAULT_APPROLE_SECRET_ID'.`,
 					Required:    true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexp.MustCompile(envVarRegex),
+						stringvalidator.RegexMatches(regexp.MustCompile(EnvVarRegex),
 							"secret_id_env_var must contain only letters, numbers, and underscores",
 						),
 					},
@@ -213,7 +211,7 @@ func (m *vaultDedicatedModel) GetAuthMethod() types.String {
 	return types.StringNull()
 }
 
-func (m *vaultDedicatedModel) GetToken() (types.String, error) {
+func (m *vaultDedicatedModel) GetTokenLocation() (types.String, error) {
 	if m.TokenConfig != nil {
 		return basetypes.NewStringValue("env://" + m.TokenConfig.TokenEnvVar.ValueString()), nil
 	}

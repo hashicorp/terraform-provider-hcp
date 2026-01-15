@@ -100,6 +100,7 @@ type radarSource interface {
 	GetConnectionURL() types.String
 	GetToken() types.String
 	GetDetectorType() types.String
+	GetTokenEnvVar() types.String
 }
 
 // base abstraction of Radar datasource model, partially implements radarSource interface
@@ -153,8 +154,14 @@ func (r *radarSourceResource) Create(ctx context.Context, req resource.CreateReq
 	body := service.OnboardDataSourceBody{
 		Type: r.SourceType,
 		Name: src.GetName().ValueString(),
+	}
 
-		Token: src.GetToken().ValueString(),
+	if !src.GetToken().IsNull() {
+		body.Token = src.GetToken().ValueString()
+	}
+
+	if !src.GetTokenEnvVar().IsNull() {
+		body.TokenLocation = "env://" + src.GetTokenEnvVar().ValueString()
 	}
 
 	if !src.GetConnectionURL().IsNull() {
@@ -271,17 +278,24 @@ func (r *radarSourceResource) Update(ctx context.Context, req resource.UpdateReq
 		projectID = plan.GetProjectID().ValueString()
 	}
 
-	// Check if the token was updated
-	if !plan.GetToken().Equal(state.GetToken()) {
-		body := service.UpdateDataSourceTokenBody{
-			ID:    plan.GetID().ValueString(),
-			Token: plan.GetToken().ValueString(),
-		}
+	body := service.UpdateDataSourceTokenBody{
+		ID: plan.GetID().ValueString(),
+	}
 
-		if err := clients.UpdateRadarDataSourceToken(ctx, r.client, projectID, body); err != nil {
-			resp.Diagnostics.AddError("Error Updating Radar source token", err.Error())
-			return
-		}
+	// Check if the token or token_env_var was updated, we must always send both if either changed.
+	if !plan.GetToken().Equal(state.GetToken()) || !plan.GetTokenEnvVar().Equal(state.GetTokenEnvVar()) {
+		if !plan.GetToken().IsNull() {
+			body.Token = plan.GetToken().ValueString()
+		} // else leave as empty to clear value.
+
+		if !plan.GetTokenEnvVar().IsNull() {
+			body.TokenLocation = "env://" + plan.GetTokenEnvVar().ValueString()
+		} // else leave as empty to clear value.
+	}
+
+	if err := clients.UpdateRadarDataSourceToken(ctx, r.client, projectID, body); err != nil {
+		resp.Diagnostics.AddError("Error Updating Radar source", err.Error())
+		return
 	}
 
 	// Store the updated plan values
