@@ -22,35 +22,41 @@ func TestEnvVarRegex(t *testing.T) {
 
 	regex := regexp.MustCompile(EnvVarRegex)
 
-	validCases := []string{
-		"GITHUB_TOKEN",
-		"MY_VAR",
-		"TOKEN123",
-		"_PRIVATE",
-		"ABC",
-		"abc123_XYZ",
+	validCases := []struct {
+		name  string
+		value string
+	}{
+		{name: "uppercase with underscore", value: "GITHUB_TOKEN"},
+		{name: "simple uppercase", value: "MY_VAR"},
+		{name: "with numbers", value: "TOKEN123"},
+		{name: "starts with underscore", value: "_PRIVATE"},
+		{name: "short uppercase", value: "ABC"},
+		{name: "mixed case with numbers", value: "abc123_XYZ"},
 	}
 
-	invalidCases := []string{
-		"MY-TOKEN",
-		"MY.TOKEN",
-		"MY TOKEN",
-		"MY@TOKEN",
-		"",
+	invalidCases := []struct {
+		name  string
+		value string
+	}{
+		{name: "contains hyphen", value: "MY-TOKEN"},
+		{name: "contains dot", value: "MY.TOKEN"},
+		{name: "contains space", value: "MY TOKEN"},
+		{name: "contains at symbol", value: "MY@TOKEN"},
+		{name: "empty string", value: ""},
 	}
 
 	for _, tc := range validCases {
-		t.Run("valid_"+tc, func(t *testing.T) {
-			if !regex.MatchString(tc) {
-				t.Errorf("expected %q to be valid but it was invalid", tc)
+		t.Run("valid_"+tc.name, func(t *testing.T) {
+			if !regex.MatchString(tc.value) {
+				t.Errorf("expected %q to be valid but it was invalid", tc.value)
 			}
 		})
 	}
 
 	for _, tc := range invalidCases {
-		t.Run("invalid_"+tc, func(t *testing.T) {
-			if regex.MatchString(tc) {
-				t.Errorf("expected %q to be invalid but it was valid", tc)
+		t.Run("invalid_"+tc.name, func(t *testing.T) {
+			if regex.MatchString(tc.value) {
+				t.Errorf("expected %q to be invalid but it was valid", tc.value)
 			}
 		})
 	}
