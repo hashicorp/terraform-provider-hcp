@@ -48,7 +48,7 @@ var (
 		},
 		"detector_type": schema.StringAttribute{
 			Optional:    true,
-			Description: "The detector type which will monitor this resource. The default is HCP if not specified.",
+			Description: "The detector type to use for monitoring this source. Valid values are 'hcp' (managed by HCP) or 'agent' (self-hosted agent). Defaults to 'hcp'.",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
