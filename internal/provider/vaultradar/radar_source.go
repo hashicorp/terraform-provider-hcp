@@ -278,12 +278,12 @@ func (r *radarSourceResource) Update(ctx context.Context, req resource.UpdateReq
 		projectID = plan.GetProjectID().ValueString()
 	}
 
-	body := service.UpdateDataSourceTokenBody{
-		ID: plan.GetID().ValueString(),
-	}
-
 	// Check if the token or token_env_var was updated, we must always send both if either changed.
 	if !plan.GetToken().Equal(state.GetToken()) || !plan.GetTokenEnvVar().Equal(state.GetTokenEnvVar()) {
+		body := service.UpdateDataSourceTokenBody{
+			ID: plan.GetID().ValueString(),
+		}
+
 		if !plan.GetToken().IsNull() {
 			body.Token = plan.GetToken().ValueString()
 		} // else leave as empty to clear value.
@@ -291,11 +291,11 @@ func (r *radarSourceResource) Update(ctx context.Context, req resource.UpdateReq
 		if !plan.GetTokenEnvVar().IsNull() {
 			body.TokenLocation = "env://" + plan.GetTokenEnvVar().ValueString()
 		} // else leave as empty to clear value.
-	}
 
-	if err := clients.UpdateRadarDataSourceToken(ctx, r.client, projectID, body); err != nil {
-		resp.Diagnostics.AddError("Error Updating Radar source", err.Error())
-		return
+		if err := clients.UpdateRadarDataSourceToken(ctx, r.client, projectID, body); err != nil {
+			resp.Diagnostics.AddError("Error Updating Radar source", err.Error())
+			return
+		}
 	}
 
 	// Store the updated plan values

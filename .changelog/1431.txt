@@ -1,4 +1,4 @@
 ```release-note:feature
-Update review of resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise:
+Updated resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise:
   Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent.
 ```
