@@ -62,7 +62,7 @@ var githubCloudSourceSchema = schema.Schema{
 			},
 		},
 		"token_env_var": schema.StringAttribute{
-			Description: "Environment variable name containing the GitHub personal access token. Optional when detector_type is 'hcp' or not specified (defaults to 'hcp') - use this to enable secret copying via Vault Radar Agent. Required when detector_type is 'agent'.",
+			Description: "Environment variable name containing the GitHub personal access token. When detector_type is 'agent', this is required. When detector_type is 'hcp' or not specified (defaults to 'hcp'), this is optional and can be set to enable optional secret copying via the Vault Radar Agent.",
 			Optional:    true,
 			Validators: []validator.String{
 				TokenEnvVarRequiredWhen("agent"),
