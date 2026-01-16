@@ -12,7 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// EnvVarRegex is the regex pattern for validating environment variable names
+// EnvVarRegex is the regular expression used to validate environment variable names.
+// It allows one or more characters from the set [A–Z, a–z, 0–9, _] and rejects all
+// other characters (such as '-', '.', or whitespace). This simplified pattern is
+// intentionally more permissive than the strict POSIX convention to support common
+// cross-platform usage where names while still excluding characters that are not widely
+// supported in environment variable identifiers.
 const EnvVarRegex = `^[a-zA-Z0-9_]+$`
 
 var _ validator.String = tokenRequiredWhenValidator{}
