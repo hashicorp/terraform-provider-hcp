@@ -66,9 +66,23 @@ var githubEnterpriseSourceSchema = schema.Schema{
 			},
 		},
 		"token": schema.StringAttribute{
-			Description: "GitHub personal access token.",
-			Required:    true,
+			Description: "GitHub personal access token. Required when detector_type is 'hcp' or not specified (defaults to 'hcp'). Cannot be used when detector_type is 'agent'.",
+			Optional:    true,
 			Sensitive:   true,
+			Validators: []validator.String{
+				TokenRequiredWhen("hcp"),
+				TokenForbiddenWhen("agent"),
+			},
+		},
+		"token_env_var": schema.StringAttribute{
+			Description: "Environment variable name containing the GitHub personal access token. When detector_type is 'agent', this is required. When detector_type is 'hcp' or not specified (defaults to 'hcp'), this is optional and can be set to enable optional secret copying via the Vault Radar Agent.",
+			Optional:    true,
+			Validators: []validator.String{
+				TokenEnvVarRequiredWhen("agent"),
+				stringvalidator.RegexMatches(regexp.MustCompile(EnvVarRegex),
+					"token_env_var must contain only letters, numbers, and underscores",
+				),
+			},
 		},
 	},
 }
@@ -78,6 +92,7 @@ type githubEnterpriseSourceModel struct {
 	DomainName         types.String `tfsdk:"domain_name"`
 	GitHubOrganization types.String `tfsdk:"github_organization"`
 	Token              types.String `tfsdk:"token"`
+	TokenEnvVar        types.String `tfsdk:"token_env_var"`
 }
 
 func (d *githubEnterpriseSourceModel) GetName() types.String { return d.GitHubOrganization }
@@ -85,3 +100,5 @@ func (d *githubEnterpriseSourceModel) GetName() types.String { return d.GitHubOr
 func (d *githubEnterpriseSourceModel) GetConnectionURL() types.String { return d.DomainName }
 
 func (d *githubEnterpriseSourceModel) GetToken() types.String { return d.Token }
+
+func (d *githubEnterpriseSourceModel) GetTokenEnvVar() types.String { return d.TokenEnvVar }

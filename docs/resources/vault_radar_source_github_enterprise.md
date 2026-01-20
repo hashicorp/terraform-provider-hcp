@@ -19,12 +19,31 @@ variable "github_enterprise_token" {
   sensitive = true
 }
 
-resource "hcp_vault_radar_source_github_enterprise" "example" {
+# Example 1: Basic GitHub Enterprise source (HCP detector mode - default)
+# Minimal configuration - detector_type defaults to 'hcp' when not specified
+resource "hcp_vault_radar_source_github_enterprise" "example_basic" {
   domain_name         = "myserver.acme.com"
   github_organization = "my-github-org"
   token               = var.github_enterprise_token
-  project_id          = "my-project-id"
+}
+
+# Example 2: GitHub Enterprise source with HCP detector and secret copying enabled
+# Specifies token_env_var to enable secret copying via Vault Radar Agent
+resource "hcp_vault_radar_source_github_enterprise" "example_hcp_with_secret_copying" {
+  domain_name         = "myserver.acme.com"
+  github_organization = "my-github-org"
+  token               = var.github_enterprise_token
+  token_env_var       = "GITHUB_ENTERPRISE_TOKEN" # Enables secret copying via Vault Radar Agent
   detector_type       = "hcp"
+}
+
+# Example 3: GitHub Enterprise source with agent detector
+# Agent mode requires token_env_var and forbids token
+resource "hcp_vault_radar_source_github_enterprise" "example_agent" {
+  domain_name         = "myserver.acme.com"
+  github_organization = "my-github-org"
+  token_env_var       = "GITHUB_ENTERPRISE_TOKEN"
+  detector_type       = "agent"
 }
 ```
 
@@ -36,12 +55,13 @@ resource "hcp_vault_radar_source_github_enterprise" "example" {
 
 - `domain_name` (String) Fully qualified domain name of the server. (Example: myserver.acme.com)
 - `github_organization` (String) GitHub organization Vault Radar will monitor. Example: "octocat" for the org https://yourcodeserver.com/octocat
-- `token` (String, Sensitive) GitHub personal access token.
 
 ### Optional
 
-- `detector_type` (String) The detector type which will monitor this resource. The default is HCP if not specified.
+- `detector_type` (String) The detector type to use for monitoring this source. Valid values are 'hcp' (managed by HCP) or 'agent' (self-hosted agent). Defaults to 'hcp'.
 - `project_id` (String) The ID of the HCP project where Vault Radar is located. If not specified, the project specified in the HCP Provider config block will be used, if configured.
+- `token` (String, Sensitive) GitHub personal access token. Required when detector_type is 'hcp' or not specified (defaults to 'hcp'). Cannot be used when detector_type is 'agent'.
+- `token_env_var` (String) Environment variable name containing the GitHub personal access token. When detector_type is 'agent', this is required. When detector_type is 'hcp' or not specified (defaults to 'hcp'), this is optional and can be set to enable optional secret copying via the Vault Radar Agent.
 
 ### Read-Only
 
