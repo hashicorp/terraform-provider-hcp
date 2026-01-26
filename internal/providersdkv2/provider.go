@@ -145,13 +145,6 @@ func New() func() *schema.Provider {
 func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		var diags diag.Diagnostics
-		// Determine if status check should be skipped via provider configuration or environment variable.
-		// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
-		skipStatusCheck := d.Get("skip_status_check").(bool) || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
-		if !skipStatusCheck {
-			// This helper verifies HCP's status and returns a warning for degraded performance.
-			diags = statuspage.IsHCPOperationalSDKv2()
-		}
 
 		clientConfig := clients.ClientConfig{
 			ClientID:       d.Get("client_id").(string),
@@ -160,6 +153,13 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 			ProjectID:      d.Get("project_id").(string),
 			Geography:      d.Get("geography").(string),
 			SourceChannel:  p.UserAgent("terraform-provider-hcp", version.ProviderVersion),
+		}
+		// Determine if status check should be skipped via provider configuration or environment variable.
+		// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
+		skipStatusCheck := d.Get("skip_status_check").(bool) || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+		if !skipStatusCheck {
+			// This helper verifies HCP's status and returns a warning for degraded performance.
+			diags = statuspage.IsHCPOperationalSDKv2(clientConfig.Geography)
 		}
 
 		// Read the workload_identity configuration
