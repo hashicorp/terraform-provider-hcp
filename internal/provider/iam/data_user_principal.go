@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/iam_service"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -116,22 +115,44 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	} else if !data.Email.IsNull() {
 		// Search for the user principal by email.
-		getParams := iam_service.NewIamServiceSearchPrincipalsParamsWithContext(ctx)
+		getParams := iam_service.NewIamServiceListUserPrincipalsForOrganizationByEmailParamsWithContext(ctx)
 		getParams.SetOrganizationID(d.client.Config.OrganizationID)
-		getParams.SetBody(iam_service.IamServiceSearchPrincipalsBody{
-			Filter: &models.HashicorpCloudIamSearchPrincipalsFilter{
-				SearchText: data.Email.ValueString(),
-			},
+		getParams.SetBody(iam_service.IamServiceListUserPrincipalsForOrganizationByEmailBody{
+			Email: data.Email.ValueString(),
 		})
 
-		res, err := d.client.IAM.IamServiceSearchPrincipals(getParams, nil)
+		res, err := d.client.IAM.IamServiceListUserPrincipalsForOrganizationByEmail(getParams, nil)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				resp.Diagnostics.AddError("Request canceled", "HCP request was canceled.")
+				return
+			}
+			if errors.Is(err, context.DeadlineExceeded) {
+				resp.Diagnostics.AddError("Request timed out", "HCP request timed out.")
+				return
+			}
+
+			var listErr *iam_service.IamServiceListUserPrincipalsForOrganizationByEmailDefault
+			if errors.As(err, &listErr) {
+				switch {
+				case listErr.IsCode(http.StatusBadRequest):
+					resp.Diagnostics.AddError(
+						"Invalid input",
+						fmt.Sprintf("email %q or organization ID is malformed: %s", data.Email.ValueString(), listErr.Error()),
+					)
+					return
+				case listErr.IsCode(http.StatusInternalServerError):
+					resp.Diagnostics.AddError("Error retrieving user principal", listErr.Error())
+					return
+				}
+			}
+
 			resp.Diagnostics.AddError("Error retrieving user principal", err.Error())
 			return
 		}
 
 		// No user principal found.
-		if len(res.Payload.Principals) == 0 {
+		if len(res.Payload.UserPrincipals) == 0 {
 			resp.Diagnostics.AddError(
 				"User principal does not exist",
 				fmt.Sprintf("unknown user principal with email %q", data.Email.ValueString()),
@@ -140,7 +161,7 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		// More than 1 user principal found.
-		if len(res.Payload.Principals) > 1 {
+		if len(res.Payload.UserPrincipals) > 1 {
 			resp.Diagnostics.AddError(
 				"Multiple User Principals Found",
 				fmt.Sprintf("More than 1 user was found with the specified email address (%q). Please visit the HCP Portal to retrieve the desired user ID.", data.Email.ValueString()),
@@ -149,8 +170,8 @@ func (d *DataSourceUserPrincipal) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		// Default to returning the first user principal found.
-		data.UserID = types.StringValue(res.Payload.Principals[0].ID)
-		data.Email = types.StringValue(res.Payload.Principals[0].Email)
+		data.UserID = types.StringValue(res.Payload.UserPrincipals[0].ID)
+		data.Email = types.StringValue(res.Payload.UserPrincipals[0].Email)
 		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	}
 }
