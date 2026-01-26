@@ -374,13 +374,13 @@ func UpdateIntegrationSubscription(ctx context.Context, client *Client, projectI
 	return nil
 }
 
-func ListRadarResources(ctx context.Context, client *Client, projectID string, body rrs.ListResourcesBody) (*rrs.ListResourcesOK, error) {
-	params := rrs.NewListResourcesParams()
+func SearchRadarResources(ctx context.Context, client *Client, projectID string, body rrs.SearchResourcesBody) (*rrs.SearchResourcesOK, error) {
+	params := rrs.NewSearchResourcesParams()
 	params.Context = ctx
 	params.LocationProjectID = projectID
 	params.Body = body
 
-	res, err := client.RadarResourceService.ListResources(params, nil)
+	res, err := client.RadarResourceService.SearchResources(params, nil)
 	if err != nil {
 		return nil, err
 	}
