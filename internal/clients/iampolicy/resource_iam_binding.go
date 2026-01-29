@@ -169,6 +169,9 @@ func (r *resourceBinding) Create(ctx context.Context, req resource.CreateRequest
 		ModifyPolicy(ctx, r.client, binding, nil).
 		Get()
 
+	tflog.Info(ctx, "Diagnostics slice pointer", map[string]interface{}{
+		"diags_ptr": fmt.Sprintf("%p", diags),
+	})
 	if diags.HasError() {
 		for _, d := range diags {
 			tflog.Info(ctx, "Diagnostics after iam bindings", map[string]interface{}{
