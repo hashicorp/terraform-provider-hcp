@@ -193,7 +193,7 @@ func TestCheckHCPStatus(t *testing.T) {
 					inc("HCP Vault Radar", "identified", testComponent("HCP Vault Radar", "partial_outage", regions["us"])),
 					inc("HCP Vault Secrets", "investigating", testComponent("HCP Vault Secrets", "major_outage", regions["us"])),
 					inc("HCP Vault Dedicated", "investigating", testGroupedComponent("HCP Vault Dedicated", "partial_outage", regions["us"])),
-					//inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
+					inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
 			expectOutage:      true,
