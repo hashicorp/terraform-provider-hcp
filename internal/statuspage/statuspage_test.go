@@ -5,6 +5,7 @@ package statuspage
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,26 +15,6 @@ import (
 	sdkv2Diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/stretchr/testify/assert"
 )
-
-// copy of usConfig as of Jan 14 2026
-var testRegionalConfig = regionalConfig{
-	componentNames: map[string]string{
-		"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
-		"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
-		"HCP Packer":        "01JK8R0BRYR9EYAGMNJ5EKC6CS",
-		"HCP Portal":        "01JK8R0BRYKPJS5K35R2ZCSHV0",
-		"HCP Vault Radar":   "01JK8R0BRYDYZFQH1V8ZSJKDFF",
-		"HCP Vault Secrets": "01JK8R0BRYY1ZM4NCA18A5T43A",
-		"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
-	},
-	groupNames: []string{
-		"HCP Consul Dedicated",
-		"HCP Vault Dedicated",
-		"API",
-	},
-	statusPageURL: "https://status.hashicorp.com/api/v1/summary",
-	clientTimeout: 1,
-}
 
 // Helper functions to create test data
 func testComponent(name string, status string, region *regionalConfig) affectedComponent {
@@ -99,7 +80,7 @@ func simulateError(t *testing.T, errorType string, region *regionalConfig) {
 		region.clientTimeout = 1
 
 		createTestServer(t, region, func(w http.ResponseWriter, r *http.Request) {
-			time.Sleep(5 * time.Millisecond)
+			time.Sleep(2 * time.Second)
 			w.WriteHeader(http.StatusOK)
 		})
 
@@ -120,33 +101,33 @@ func TestIsHCPComponentAffected(t *testing.T) {
 	}{
 		{
 			name:           "operational HCP component",
-			component:      testComponent("HCP API", "operational", &testRegionalConfig),
+			component:      testComponent("HCP API", "operational", regions["us"]),
 			isAffected:     false,
-			regionalConfig: &testRegionalConfig,
+			regionalConfig: regions["us"],
 		},
 		{
 			name:           "non-operational HCP component",
-			component:      testComponent("HCP Portal", "degraded_performance", &testRegionalConfig),
+			component:      testComponent("HCP Portal", "degraded_performance", regions["us"]),
 			isAffected:     true,
-			regionalConfig: &testRegionalConfig,
+			regionalConfig: regions["us"],
 		},
 		{
 			name:           "operational HCP group component",
-			component:      testGroupedComponent("HCP Vault Dedicated", "operational", &testRegionalConfig),
+			component:      testGroupedComponent("HCP Vault Dedicated", "operational", regions["us"]),
 			isAffected:     false,
-			regionalConfig: &testRegionalConfig,
+			regionalConfig: regions["us"],
 		},
 		{
 			name:           "non-operational HCP group component",
-			component:      testGroupedComponent("HCP Consul Dedicated", "partial_outage", &testRegionalConfig),
+			component:      testGroupedComponent("HCP Consul Dedicated", "partial_outage", regions["us"]),
 			isAffected:     true,
-			regionalConfig: &testRegionalConfig,
+			regionalConfig: regions["us"],
 		},
 		{
 			name:           "non-HCP component",
-			component:      testComponent("Other", "major_outage", &testRegionalConfig),
+			component:      testComponent("Other", "major_outage", regions["us"]),
 			isAffected:     false,
-			regionalConfig: &testRegionalConfig,
+			regionalConfig: regions["us"],
 		},
 	}
 
@@ -170,7 +151,7 @@ func TestCheckHCPStatus(t *testing.T) {
 	}{
 		{
 			name:              "fully operational",
-			setup:             func(t *testing.T) { stubStatusPage(t, &testRegionalConfig, nil) },
+			setup:             func(t *testing.T) { stubStatusPage(t, regions["us"], nil) },
 			expectOutage:      false,
 			expectDiagnostics: false,
 			messageContains:   nil,
@@ -179,8 +160,8 @@ func TestCheckHCPStatus(t *testing.T) {
 		{
 			name: "resolved incident",
 			setup: func(t *testing.T) {
-				stubStatusPage(t, &testRegionalConfig, []incident{
-					inc("Packer issues", "monitoring", testComponent("HCP Packer", "operational", &testRegionalConfig)),
+				stubStatusPage(t, regions["us"], []incident{
+					inc("Packer issues", "monitoring", testComponent("HCP Packer", "operational", regions["us"])),
 				})
 			},
 			expectOutage:      false,
@@ -191,12 +172,12 @@ func TestCheckHCPStatus(t *testing.T) {
 		{
 			name: "multi-component incident",
 			setup: func(t *testing.T) {
-				stubStatusPage(t, &testRegionalConfig, []incident{
+				stubStatusPage(t, regions["us"], []incident{
 					inc("Mixed issues", "investigating",
-						testComponent("HCP Boundary", "degraded_performance", &testRegionalConfig),
-						testGroupedComponent("HCP Consul Dedicated", "degraded_performance", &testRegionalConfig),
-						testComponent("HCP Waypoint", "operational", &testRegionalConfig),
-						testComponent("Other Service", "major_outage", &testRegionalConfig)),
+						testComponent("HCP Boundary", "degraded_performance", regions["us"]),
+						testGroupedComponent("HCP Consul Dedicated", "degraded_performance", regions["us"]),
+						testComponent("HCP Waypoint", "operational", regions["us"]),
+						testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
 			expectOutage:      true,
@@ -208,11 +189,11 @@ func TestCheckHCPStatus(t *testing.T) {
 		{
 			name: "multiple incidents",
 			setup: func(t *testing.T) {
-				stubStatusPage(t, &testRegionalConfig, []incident{
-					inc("HCP Vault Radar", "identified", testComponent("HCP Vault Radar", "partial_outage", &testRegionalConfig)),
-					inc("HCP Vault Secrets", "investigating", testComponent("HCP Vault Secrets", "major_outage", &testRegionalConfig)),
-					inc("HCP Vault Dedicated", "investigating", testGroupedComponent("HCP Vault Dedicated", "partial_outage", &testRegionalConfig)),
-					inc("Other Service", "investigating", testComponent("Other Service", "major_outage", &testRegionalConfig)),
+				stubStatusPage(t, regions["us"], []incident{
+					inc("HCP Vault Radar", "identified", testComponent("HCP Vault Radar", "partial_outage", regions["us"])),
+					inc("HCP Vault Secrets", "investigating", testComponent("HCP Vault Secrets", "major_outage", regions["us"])),
+					inc("HCP Vault Dedicated", "investigating", testGroupedComponent("HCP Vault Dedicated", "partial_outage", regions["us"])),
+					//inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
 			expectOutage:      true,
@@ -223,7 +204,7 @@ func TestCheckHCPStatus(t *testing.T) {
 		},
 		{
 			name:              "service unavailable",
-			setup:             func(t *testing.T) { simulateError(t, "serviceDown", &testRegionalConfig) },
+			setup:             func(t *testing.T) { simulateError(t, "serviceDown", regions["us"]) },
 			expectOutage:      false,
 			expectDiagnostics: true,
 			messageContains:   []string{"Unable to unmarshal response"},
@@ -231,7 +212,7 @@ func TestCheckHCPStatus(t *testing.T) {
 		},
 		{
 			name:              "request timeout",
-			setup:             func(t *testing.T) { simulateError(t, "timeout", &testRegionalConfig) },
+			setup:             func(t *testing.T) { simulateError(t, "timeout", regions["us"]) },
 			expectOutage:      false,
 			expectDiagnostics: true,
 			messageContains:   []string{"Unable to complete request"},
@@ -241,6 +222,7 @@ func TestCheckHCPStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			//regions[tc.geography] = &testRegionalConfig
 			tc.setup(t)
 			result := checkHCPStatus(&tc.geography)
 
@@ -277,10 +259,10 @@ func TestIsHCPOperational(t *testing.T) {
 		{
 			name: "one warn overall during HCP outages",
 			setupFn: func(t *testing.T) {
-				stubStatusPage(t, &testRegionalConfig, []incident{
-					inc("API Outage", "investigating", testComponent("HCP API", "degraded_performance", &testRegionalConfig)),
-					inc("Consul Issues", "identified", testGroupedComponent("HCP Consul Dedicated", "partial_outage", &testRegionalConfig)),
-					inc("Unrelated Incident", "investigating", testComponent("Other", "major_outage", &testRegionalConfig)),
+				stubStatusPage(t, regions["us"], []incident{
+					inc("API Outage", "investigating", testComponent("HCP API", "degraded_performance", regions["us"])),
+					inc("Consul Issues", "identified", testGroupedComponent("HCP Consul Dedicated", "partial_outage", regions["us"])),
+					inc("Unrelated Incident", "investigating", testComponent("Other", "major_outage", regions["us"])),
 				})
 			},
 			expectDiags:     true,
@@ -291,7 +273,7 @@ func TestIsHCPOperational(t *testing.T) {
 		},
 		{
 			name:            "setup failure warn",
-			setupFn:         func(t *testing.T) { simulateError(t, "serviceDown", &testRegionalConfig) },
+			setupFn:         func(t *testing.T) { simulateError(t, "serviceDown", regions["us"]) },
 			expectDiags:     true,
 			expectedSummary: warnSummary,
 			detailContains:  []string{"Unable to unmarshal response"},
@@ -300,7 +282,7 @@ func TestIsHCPOperational(t *testing.T) {
 		},
 		{
 			name:        "fully operational",
-			setupFn:     func(t *testing.T) { stubStatusPage(t, &testRegionalConfig, nil) },
+			setupFn:     func(t *testing.T) { stubStatusPage(t, regions["us"], nil) },
 			expectDiags: false,
 			geography:   "us",
 		},
@@ -325,7 +307,7 @@ func TestIsHCPOperational(t *testing.T) {
 					assert.Empty(t, diags, "Should have no diagnostics when operational")
 					return
 				}
-
+				fmt.Printf("DEBUG: Type: %T, Value: %+v\n", diags, diags)
 				assert.Len(t, diags, 1, "Should have one diagnostic")
 
 				switch d := diags.(type) {

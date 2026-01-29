@@ -52,6 +52,7 @@ var euConfig = regionalConfig{
 	},
 	statusPageURL: "https://status.eu.hashicorp.com/api/v1/summary",
 	clientTimeout: 1,
+	name:          "EU",
 }
 
 var sandboxConfig = regionalConfig{
@@ -71,6 +72,7 @@ var sandboxConfig = regionalConfig{
 	},
 	statusPageURL: "https://statuspage.incident.io/status-page-sandbox-8162182495/api/v1/summary",
 	clientTimeout: 1,
+	name:          "SandBox",
 }
 
 var usConfig = regionalConfig{
@@ -90,12 +92,13 @@ var usConfig = regionalConfig{
 	},
 	statusPageURL: "https://status.hashicorp.com/api/v1/summary",
 	clientTimeout: 1,
+	name:          "US",
 }
 
-var regions = map[string]regionalConfig{
-	"eu":      euConfig,
-	"sandbox": sandboxConfig,
-	"us":      usConfig,
+var regions = map[string]*regionalConfig{
+	"eu":      &euConfig,
+	"sandbox": &sandboxConfig,
+	"us":      &usConfig,
 }
 
 type statuspage struct {
@@ -158,7 +161,7 @@ func checkHCPStatus(geography *string) statusCheckResult {
 		region = regions["us"]
 	}
 
-	fmt.Printf("Region name is %v", region)
+	fmt.Printf("Region name is %v\n", region.name)
 	statuspageURL := region.statusPageURL
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
@@ -192,7 +195,7 @@ func checkHCPStatus(geography *string) statusCheckResult {
 
 	for _, inc := range sp.OngoingIncidents {
 		for _, comp := range inc.AffectedComponents {
-			if isHCPComponentAffected(comp, &region) {
+			if isHCPComponentAffected(comp, region) {
 				prefix := comp.Name
 				if comp.GroupName != "" {
 					prefix = fmt.Sprintf("%s (%s)", comp.GroupName, comp.Name)
@@ -214,6 +217,7 @@ func checkHCPStatus(geography *string) statusCheckResult {
 func IsHCPOperationalFramework(geography string) (diags frameworkDiag.Diagnostics) {
 	status := checkHCPStatus(&geography)
 
+	fmt.Println(status)
 	if status.hasDiagnostics() {
 		diags.AddWarning(warnSummary, status.diagnosticMessage())
 	}
@@ -223,6 +227,7 @@ func IsHCPOperationalFramework(geography string) (diags frameworkDiag.Diagnostic
 
 func IsHCPOperationalSDKv2(geography string) (diags sdkv2Diag.Diagnostics) {
 	status := checkHCPStatus(&geography)
+	fmt.Println(status)
 
 	if status.hasDiagnostics() {
 		diags = append(diags, sdkv2Diag.Diagnostic{
