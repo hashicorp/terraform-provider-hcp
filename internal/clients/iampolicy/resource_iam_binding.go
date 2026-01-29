@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 )
 
@@ -133,6 +134,7 @@ func getBinding(ctx context.Context, d TerraformResourceData) (*models.Hashicorp
 }
 
 func (r *resourceBinding) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Info(ctx, "Calling Create on IAM Binding Resource")
 	updater, diags := r.updaterFunc(ctx, &req.Plan, r.client)
 	if diags.HasError() {
 		resp.Diagnostics.AddError(
@@ -142,6 +144,20 @@ func (r *resourceBinding) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	binding, diags := getBinding(ctx, &req.Plan)
+	for _, m := range binding.Members {
+		tflog.Info(ctx, "Creating IAM binding", map[string]interface{}{
+			"role":        binding.RoleID,
+			"principal":   m.MemberID,
+			"member_type": m.MemberType,
+		})
+	}
+	for _, d := range diags {
+		tflog.Info(ctx, "Diagnostic while creating IAM binding", map[string]interface{}{
+			"severity": d.Severity(),
+			"summary":  d.Summary(),
+			"detail":   d.Detail(),
+		})
+	}
 	if diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -154,6 +170,13 @@ func (r *resourceBinding) Create(ctx context.Context, req resource.CreateRequest
 		Get()
 
 	if diags.HasError() {
+		for _, d := range diags {
+			tflog.Info(ctx, "Diagnostics after iam bindings", map[string]interface{}{
+				"severity": d.Severity(),
+				"summary":  d.Summary(),
+				"detail":   d.Detail(),
+			})
+		}
 		resp.Diagnostics.Append(diags...)
 		return
 	}

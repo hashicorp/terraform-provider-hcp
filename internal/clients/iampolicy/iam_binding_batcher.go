@@ -12,6 +12,7 @@ import (
 	iamModels "github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/customdiags"
 	"golang.org/x/exp/maps"
@@ -121,6 +122,7 @@ func (b *iamBindingBatcher) ModifyPolicy(ctx context.Context, client *clients.Cl
 		case <-b.setFuture.doneCh:
 		default:
 			// It is not done so attach this request to the existing future
+			tflog.Info(ctx, "Future is not done so attaching binding to existing future")
 			b.setFuture.addBindingModfiers(setBinding, removeBinding)
 			return b.setFuture
 		}
@@ -128,6 +130,7 @@ func (b *iamBindingBatcher) ModifyPolicy(ctx context.Context, client *clients.Cl
 
 	// This is either the first request or the existing future has already
 	// completed.
+	tflog.Info(ctx, "Creating new future for binding modification")
 	b.setFuture = newPolicyFuture()
 	b.setFuture.addBindingModfiers(setBinding, removeBinding)
 	time.AfterFunc(policyBatchDuration, func() {
@@ -199,6 +202,9 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 
 		// Determine the principal's we need to lookup their type.
 		principalSet, diags := f.getPrincipals(ctx, client)
+		tflog.Info(ctx, "Principal set retrieved", map[string]interface{}{
+			"principals": principalSet,
+		})
 		if diags.HasError() {
 			f.set(nil, diags)
 			return
@@ -216,7 +222,12 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 		}
 
 		// Go through the setters and apply them
-		for _, s := range f.setters {
+		for i, s := range f.setters {
+			tflog.Info(ctx, "setter number", map[string]interface{}{
+				"index":    i,
+				"role":     s.RoleID,
+				"memberID": s.Members[0].MemberID,
+			})
 			members, ok := bindings[s.RoleID]
 			if !ok {
 				members = make(map[string]*models.HashicorpCloudResourcemanagerPolicyBindingMemberType, 4)
@@ -227,8 +238,12 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 		}
 
 		// Apply the policy
+		tflog.Info(ctx, "Bindings being sent to rm", map[string]interface{}{
+			"bindings": FromMap(ep.Etag, bindings),
+		})
 		ep, diags = u.SetResourceIamPolicy(ctx, FromMap(ep.Etag, bindings))
 		if diags.HasError() {
+			tflog.Info(ctx, "Errors setting resource policy")
 			if customdiags.HasConflictError(diags) {
 				// Policy object has changed since it was last gotten and the etag is now different.
 				// Continuously retry getting and setting the policy with an increasing backoff period until the maximum backoff period is reached.
@@ -245,6 +260,14 @@ func (f *policyFuture) executeModifers(ctx context.Context, u ResourceIamUpdater
 				continue
 			}
 			f.set(nil, diags)
+			for i, d := range diags {
+				tflog.Info(ctx, "Diagnostics benig set in executeModifiers", map[string]interface{}{
+					"index":    i,
+					"severity": d.Severity(),
+					"summary":  d.Summary(),
+					"detail":   d.Detail(),
+				})
+			}
 			return
 		}
 
