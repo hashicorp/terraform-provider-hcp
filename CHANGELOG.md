@@ -1,3 +1,18 @@
+## v0.112.0 (Jan 27, 2026)
+
+FEATURES:
+
+* Updated resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise: Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent. [[GH-1431](https://github.com/hashicorp/hcp/issues/1431)]
+
+IMPROVEMENTS:
+
+* Add BYO-DNS Azure tests [[GH-1429](https://github.com/hashicorp/hcp/issues/1429)]
+* Billing account is no longer update within project creation. This call has been moved to the Resource Manager's project create API [[GH-1415](https://github.com/hashicorp/hcp/issues/1415)]
+
+BUG FIXES:
+
+* Fixed DataSourceUserPrincipal issue where email was being searched as a substring. [[GH-1433](https://github.com/hashicorp/hcp/issues/1433)]
+
 ## v0.111.0 (Nov 25, 2025)
 
 FEATURES:
