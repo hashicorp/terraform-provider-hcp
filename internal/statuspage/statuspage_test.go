@@ -5,7 +5,6 @@ package statuspage
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -308,7 +307,6 @@ func TestIsHCPOperational(t *testing.T) {
 					assert.Empty(t, diags, "Should have no diagnostics when operational")
 					return
 				}
-				fmt.Printf("DEBUG: Type: %T, Value: %+v\n", diags, diags)
 				assert.Len(t, diags, 1, "Should have one diagnostic")
 
 				switch d := diags.(type) {
