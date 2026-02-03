@@ -196,6 +196,7 @@ func TestCheckHCPStatus(t *testing.T) {
 					inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
+			// Copy and put all
 			expectOutage:      true,
 			expectDiagnostics: true,
 			messageContains:   []string{"HCP Vault Radar", "HCP Vault Secrets", "HCP Vault Dedicated (region-name)"},
