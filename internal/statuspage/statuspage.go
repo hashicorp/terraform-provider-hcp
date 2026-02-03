@@ -77,13 +77,13 @@ var sandboxConfig = regionalConfig{
 
 var usConfig = regionalConfig{
 	componentNames: map[string]string{
-		"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
-		"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
-		"HCP Packer":        "01JK8R0BRYR9EYAGMNJ5EKC6CS",
-		"HCP Portal":        "01JK8R0BRYKPJS5K35R2ZCSHV0",
-		"HCP Vault Radar":   "01JK8R0BRYDYZFQH1V8ZSJKDFF",
-		"HCP Vault Secrets": "01JK8R0BRYY1ZM4NCA18A5T43A",
-		"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
+		"HCP API":           "01K7FBWXHZPTSPVNWDS8P05MKD",
+		"HCP Boundary":      "01K7FBWXHZ17YES9ACAQVCTYS7",
+		"HCP Packer":        "01K7FBWXHZYTFGMTZYZ8V2GGET",
+		"HCP Portal":        "01K7FBWXHZ0FP76T1PVWGS0HJP",
+		"HCP Vault Radar":   "01K7FBWXHZ26MMSQ3AWN9JR7J4",
+		"HCP Vault Secrets": "01K7FBWXHZHSAJ1GCGZ4ZP3ZYT",
+		"HCP Waypoint":      "01K7FBWXHZ9GE7SV8YKZR0R52V",
 	},
 	groupNames: []string{
 		"HCP Consul Dedicated",
