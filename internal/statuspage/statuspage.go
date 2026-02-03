@@ -219,7 +219,6 @@ func checkHCPStatus(geography *string) statusCheckResult {
 func IsHCPOperationalFramework(geography string) (diags frameworkDiag.Diagnostics) {
 	status := checkHCPStatus(&geography)
 
-	fmt.Println(status)
 	if status.hasDiagnostics() {
 		diags.AddWarning(warnSummary, status.diagnosticMessage())
 	}
@@ -229,7 +228,6 @@ func IsHCPOperationalFramework(geography string) (diags frameworkDiag.Diagnostic
 
 func IsHCPOperationalSDKv2(geography string) (diags sdkv2Diag.Diagnostics) {
 	status := checkHCPStatus(&geography)
-	fmt.Println(status)
 
 	if status.hasDiagnostics() {
 		diags = append(diags, sdkv2Diag.Diagnostic{
