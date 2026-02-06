@@ -60,12 +60,10 @@ Optional:
 Read-Only:
 
 - `connection_url` (String) Radar resource connection url
-- `data_source_info` (String) Radar resource data source info
 - `data_source_name` (String) Radar resource data source name
 - `data_source_type` (String) Radar resource data source type
 - `description` (String) Radar resource description
 - `detector_type` (String) Radar resource detector type
-- `hcp_resource_id` (String) Radar resource HCP resource ID
 - `hcp_resource_name` (String) Radar resource HCP resource name
 - `hcp_resource_status` (String) Radar resource HCP resource status
 - `id` (String) Radar resource id
