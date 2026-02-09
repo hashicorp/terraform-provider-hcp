@@ -43,7 +43,7 @@ var euConfig = regionalConfig{
 		"HCP Portal":    "01K7FC148SHCEJVZZXH0DPNMC2",
 		"HCP Terraform": "01K7FC148SPG6CET2XAH6GFCC7",
 		"HCP Waypoint":  "01K7FC148SGM8V154MQ73CWVF6",
-		"Portal":        "01JADGGSJTM1102ZE8F65Q3F56", // Verify this is correct from DOM, can possibly be used to test the correct region is selected. Test 2: Try to trigger/detect an error when EU is tested for services it doesn't provide.
+		"Portal":        "01JADGGSJTM1102ZE8F65Q3F56",
 	},
 	groupNames: []string{
 		"HCP Consul Dedicated",

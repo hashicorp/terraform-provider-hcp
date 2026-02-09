@@ -218,6 +218,22 @@ func TestCheckHCPStatus(t *testing.T) {
 			messageContains:   []string{"Unable to complete request"},
 			geography:         "us",
 		},
+		{
+			name: "multi-component that is to be ignored in EU",
+			setup: func(t *testing.T) {
+				stubStatusPage(t, regions["us"], []incident{
+					inc("Mixed issues", "investigating",
+						testComponent("HCP Boundary", "degraded_performance", regions["eu"]),
+						testComponent("HCP Waypoint", "degraded_performance", regions["eu"]),
+						testGroupedComponent("HCP Packer", "degraded_performance", regions["eu"])),
+				})
+			},
+			expectOutage:      false,
+			expectDiagnostics: false,
+			messageContains:   []string{"HCP Waypoint"},
+			messageExcludes:   []string{"HCP Boundary", "HCP Packer"},
+			geography:         "eu",
+		},
 	}
 
 	for _, tc := range testCases {
