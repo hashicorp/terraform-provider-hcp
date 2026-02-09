@@ -334,6 +334,7 @@ func TestIsHCPOperational(t *testing.T) {
 					assert.Empty(t, diags, "Should have no diagnostics when operational")
 					return
 				}
+				
 				assert.Len(t, diags, 1, "Should have one diagnostic")
 
 				switch d := diags.(type) {
