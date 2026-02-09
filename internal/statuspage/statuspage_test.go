@@ -195,7 +195,6 @@ func TestCheckHCPStatus(t *testing.T) {
 					inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
-			// Copy and put all
 			expectOutage:      true,
 			expectDiagnostics: true,
 			messageContains:   []string{"HCP Vault Radar", "HCP Vault Secrets", "HCP Vault Dedicated (region-name)"},
@@ -233,6 +232,18 @@ func TestCheckHCPStatus(t *testing.T) {
 			messageContains:   []string{"HCP Waypoint"},
 			messageExcludes:   []string{"HCP Boundary", "HCP Packer"},
 			geography:         "eu",
+		},
+		{
+			name: "us is default selection",
+			setup: func(t *testing.T) {
+				stubStatusPage(t, regions["us"], []incident{
+					inc("HCP Boundary", "monitoring", testComponent("HCP Boundary", "major_outage", regions["us"])),
+				})
+			},
+			expectOutage:      true,
+			expectDiagnostics: true,
+			messageContains:   []string{"HCP Boundary"},
+			geography:         "aa",
 		},
 	}
 
