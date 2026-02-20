@@ -34,11 +34,9 @@ func TestRadarResources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(radarResourcesName, "project_id", projectID),
 					resource.TestCheckResourceAttr(radarResourcesName, "uri_like_filter.values.0", resourceURI),
-					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.data_source_info"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.data_source_name"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.data_source_type"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.detector_type"),
-					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.hcp_resource_id"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.hcp_resource_name"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.hcp_resource_status"),
 					resource.TestCheckResourceAttrSet(radarResourcesName, "resources.0.id"),

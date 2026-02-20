@@ -1,0 +1,3 @@
+```release-note:bug
+Fixed DataSourceUserPrincipal issue where email was being searched as a substring.
+```
