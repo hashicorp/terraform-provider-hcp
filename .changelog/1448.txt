@@ -1,0 +1,3 @@
+```release-note:improvement
+Improved `min_vault_version` attribute description for `hcp_vault_cluster` resource and data source with a sample version value and a link to the HCP changelog for discovering available versions.
+```
