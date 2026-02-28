@@ -41,7 +41,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
 - `metrics_config` (Block List) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
-- `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
+- `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP. For example, `1.18.1`. Refer to the [HCP Vault changelog](https://developer.hashicorp.com/hcp/docs/changelog) for available versions.
 - `namespace` (String) The name of the customer namespace this HCP Vault cluster is located in.
 - `organization_id` (String) The ID of the organization this HCP Vault cluster is located in.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform#review-hcpvault-tf). Applies to performance replication secondaries only and operates in "deny" mode only.
