@@ -124,7 +124,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				MaxItems: 50,
 			},
 			"min_vault_version": {
-				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.",
+				Description:      "The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP. For example, `v1.21.2`. Refer to the [HCP Vault changelog](https://developer.hashicorp.com/hcp/docs/changelog) for available versions.",
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateSemVer,

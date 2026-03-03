@@ -53,7 +53,7 @@ resource "hcp_vault_cluster" "example" {
 - `ip_allowlist` (Block List, Max: 50) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `major_version_upgrade_config` (Block List, Max: 1) The Major Version Upgrade configuration. (see [below for nested schema](#nestedblock--major_version_upgrade_config))
 - `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
-- `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP.
+- `min_vault_version` (String) The minimum Vault version to use when creating the cluster. If not specified, it is defaulted to the version that is currently recommended by HCP. For example, `v1.21.2`. Refer to the [HCP Vault changelog](https://developer.hashicorp.com/hcp/docs/changelog) for available versions.
 - `paths_filter` (List of String) The performance replication [paths filter](https://developer.hashicorp.com/vault/tutorials/cloud-ops/vault-replication-terraform). Applies to performance replication secondaries only and operates in "deny" mode only.
 - `primary_link` (String) The `self_link` of the HCP Vault Plus tier cluster which is the primary in the performance replication setup with this HCP Vault Plus tier cluster. If not specified, it is a standalone Plus tier HCP Vault cluster.
 - `project_id` (String) The ID of the HCP project where the Vault cluster is located.
