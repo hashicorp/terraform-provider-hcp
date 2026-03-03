@@ -1,3 +1,0 @@
-```release-note:improvement
-Added EU support to HCP status check functionality.
-```
