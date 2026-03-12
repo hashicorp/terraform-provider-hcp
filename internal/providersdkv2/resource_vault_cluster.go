@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -57,9 +58,16 @@ func resourceVaultCluster() *schema.Resource {
 				ValidateDiagFunc: validateSlugID,
 			},
 			"hvn_id": {
-				Description:      "The ID of the HVN this HCP Vault cluster is associated to.",
+				Description:      "The ID of the primary HVN this HCP Vault cluster is associated to.",
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validateSlugID,
+			},
+			"disaster_recovery_hvn_id": {
+				Description:      "The ID of the HVN where the HCP Vault disaster recovery cluster will be provisioned. This is an additional DR network and does not replace `hvn_id`. Disaster recovery is supported only for STANDARD or PLUS tiers. The DR HVN must use the same cloud provider as `hvn_id`, be in a different region, and have a non-overlapping CIDR block.",
+				Type:             schema.TypeString,
+				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validateSlugID,
 			},
@@ -646,6 +654,70 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("Invalid ip_allowlist for Vault cluster (%s): %v", clusterID, err)
 	}
 
+	var drNetworkConfig *vaultmodels.HashicorpCloudVault20201125DisasterRecoveryNetworkConfig
+	if drHvnID, ok := d.GetOk("disaster_recovery_hvn_id"); ok {
+		tierRaw, ok := d.GetOk("tier")
+		if !ok {
+			return diag.Errorf("invalid disaster_recovery_hvn_id (%s): tier must be set to a STANDARD or PLUS tier when disaster recovery is enabled", drHvnID.(string))
+		}
+
+		tier := strings.ToUpper(tierRaw.(string))
+		if !inStandardOrPlusTier(tier) {
+			return diag.Errorf("invalid disaster_recovery_hvn_id (%s): disaster recovery is supported only for STANDARD or PLUS tiers", drHvnID.(string))
+		}
+
+		drHvn, err := clients.GetHvnByID(ctx, client, loc, drHvnID.(string))
+		if err != nil {
+			return diag.Errorf("unable to find existing disaster recovery HVN (%s): %v", drHvnID.(string), err)
+		}
+
+		if hvn.Location != nil && hvn.Location.Region != nil && drHvn.Location != nil && drHvn.Location.Region != nil {
+			if !providersMatch(hvn.Location.Region.Provider, drHvn.Location.Region.Provider) {
+				return diag.Errorf(
+					"invalid disaster_recovery_hvn_id (%s): disaster recovery HVN provider (%s) must match primary HVN provider (%s)",
+					drHvnID.(string),
+					drHvn.Location.Region.Provider,
+					hvn.Location.Region.Provider,
+				)
+			}
+
+			if sameRegion(hvn.Location.Region.Provider, hvn.Location.Region.Region, drHvn.Location.Region.Provider, drHvn.Location.Region.Region) {
+				return diag.Errorf(
+					"invalid disaster_recovery_hvn_id (%s): disaster recovery HVN must be in a different region than primary HVN (%s); both are in %s/%s",
+					drHvnID.(string),
+					hvn.ID,
+					hvn.Location.Region.Provider,
+					hvn.Location.Region.Region,
+				)
+			}
+		}
+
+		overlap, err := cidrBlocksOverlap(hvn.CidrBlock, drHvn.CidrBlock)
+		if err != nil {
+			return diag.Errorf("unable to validate HVN CIDR overlap between primary HVN (%s) and disaster recovery HVN (%s): %v", hvn.ID, drHvn.ID, err)
+		}
+		if overlap {
+			return diag.Errorf(
+				"invalid disaster_recovery_hvn_id (%s): primary HVN CIDR (%s) overlaps with disaster recovery HVN CIDR (%s)",
+				drHvnID.(string),
+				hvn.CidrBlock,
+				drHvn.CidrBlock,
+			)
+		}
+
+		drNetworkConfig = &vaultmodels.HashicorpCloudVault20201125DisasterRecoveryNetworkConfig{
+			NetworkID: drHvn.ID,
+			Location: &vaultmodels.HashicorpCloudInternalLocationLocation{
+				OrganizationID: drHvn.Location.OrganizationID,
+				ProjectID:      drHvn.Location.ProjectID,
+				Region: &vaultmodels.HashicorpCloudInternalLocationRegion{
+					Provider: drHvn.Location.Region.Provider,
+					Region:   drHvn.Location.Region.Region,
+				},
+			},
+		}
+	}
+
 	// If the cluster has a primary_link, make sure the link is valid
 	diagErr, primaryClusterModel := validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx, client, d)
 	if diagErr != nil {
@@ -680,7 +752,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 					// Secondary clusters inherit InitialVersion from their primary's current version
 					InitialVersion: primaryClusterModel.CurrentVersion,
 				},
-				Tier: primaryClusterModel.Config.Tier,
+				DisasterRecoveryNetworkConfig: drNetworkConfig,
+				Tier:                          primaryClusterModel.Config.Tier,
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
@@ -722,7 +795,8 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 				VaultConfig: &vaultmodels.HashicorpCloudVault20201125VaultConfig{
 					InitialVersion: vaultVersion,
 				},
-				Tier: tier,
+				DisasterRecoveryNetworkConfig: drNetworkConfig,
+				Tier:                          tier,
 				NetworkConfig: &vaultmodels.HashicorpCloudVault20201125InputNetworkConfig{
 					NetworkID:        hvn.ID,
 					PublicIpsEnabled: publicEndpoint,
@@ -1206,6 +1280,16 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 			ipAllowlist[i] = cidr
 		}
 		if err := d.Set("ip_allowlist", ipAllowlist); err != nil {
+			return err
+		}
+	}
+
+	if cluster.Config.DisasterRecoveryNetworkConfig != nil {
+		if err := d.Set("disaster_recovery_hvn_id", cluster.Config.DisasterRecoveryNetworkConfig.NetworkID); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("disaster_recovery_hvn_id", ""); err != nil {
 			return err
 		}
 	}
@@ -1769,6 +1853,21 @@ func inPlusTier(tier string) bool {
 		tier == string(vaultmodels.HashicorpCloudVault20201125TierPLUSLARGE)
 }
 
+func inStandardOrPlusTier(tier string) bool {
+	return tier == string(vaultmodels.HashicorpCloudVault20201125TierSTANDARDSMALL) ||
+		tier == string(vaultmodels.HashicorpCloudVault20201125TierSTANDARDMEDIUM) ||
+		tier == string(vaultmodels.HashicorpCloudVault20201125TierSTANDARDLARGE) ||
+		inPlusTier(tier)
+}
+
+func providersMatch(primaryProvider, drProvider string) bool {
+	return primaryProvider == drProvider
+}
+
+func sameRegion(primaryProvider, primaryRegion, drProvider, drRegion string) bool {
+	return providersMatch(primaryProvider, drProvider) && primaryRegion == drRegion
+}
+
 func validatePerformanceReplicationChecksAndReturnPrimaryIfAny(ctx context.Context, client *clients.Client, d *schema.ResourceData) (diag.Diagnostics, *vaultmodels.HashicorpCloudVault20201125Cluster) {
 	primaryClusterLinkStr := getPrimaryLinkIfAny(d)
 	// If no primary_link has been supplied, treat this as as single cluster creation.
@@ -1858,4 +1957,22 @@ func buildIPAllowlistVaultCluster(cidrs []interface{}) ([]*vaultmodels.Hashicorp
 	}
 
 	return ipAllowList, nil
+}
+
+func cidrBlocksOverlap(cidrA, cidrB string) (bool, error) {
+	if cidrA == "" || cidrB == "" {
+		return false, fmt.Errorf("CIDR block cannot be empty")
+	}
+
+	_, netA, err := net.ParseCIDR(cidrA)
+	if err != nil {
+		return false, fmt.Errorf("invalid primary CIDR block %q: %w", cidrA, err)
+	}
+
+	_, netB, err := net.ParseCIDR(cidrB)
+	if err != nil {
+		return false, fmt.Errorf("invalid disaster recovery CIDR block %q: %w", cidrB, err)
+	}
+
+	return netA.Contains(netB.IP) || netB.Contains(netA.IP), nil
 }

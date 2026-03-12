@@ -42,7 +42,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 			},
 			// computed outputs
 			"hvn_id": {
-				Description: "The ID of the HVN this HCP Vault cluster is associated to.",
+				Description: "The ID of the primary HVN this HCP Vault cluster is associated to.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"disaster_recovery_hvn_id": {
+				Description: "The ID of the HVN where the HCP Vault disaster recovery cluster is provisioned. This is an additional DR network and does not replace `hvn_id`. The DR HVN uses the same cloud provider as `hvn_id`, is in a different region, and has a non-overlapping CIDR block.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},

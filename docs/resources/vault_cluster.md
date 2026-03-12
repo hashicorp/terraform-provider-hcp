@@ -45,11 +45,12 @@ resource "hcp_vault_cluster" "example" {
 ### Required
 
 - `cluster_id` (String) The ID of the HCP Vault cluster.
-- `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
+- `hvn_id` (String) The ID of the primary HVN this HCP Vault cluster is associated to.
 
 ### Optional
 
 - `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `disaster_recovery_hvn_id` (String) The ID of the HVN where the HCP Vault disaster recovery cluster will be provisioned. This is an additional DR network and does not replace `hvn_id`. Disaster recovery is supported only for STANDARD or PLUS tiers. The DR HVN must use the same cloud provider as `hvn_id`, be in a different region, and have a non-overlapping CIDR block.
 - `ip_allowlist` (Block List, Max: 50) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `major_version_upgrade_config` (Block List, Max: 1) The Major Version Upgrade configuration. (see [below for nested schema](#nestedblock--major_version_upgrade_config))
 - `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))

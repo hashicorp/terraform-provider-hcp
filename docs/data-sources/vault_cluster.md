@@ -36,7 +36,8 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 - `audit_log_config` (Block List) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
 - `cloud_provider` (String) The provider where the HCP Vault cluster is located.
 - `created_at` (String) The time that the Vault cluster was created.
-- `hvn_id` (String) The ID of the HVN this HCP Vault cluster is associated to.
+- `disaster_recovery_hvn_id` (String) The ID of the HVN where the HCP Vault disaster recovery cluster is provisioned. This is an additional DR network and does not replace `hvn_id`. The DR HVN uses the same cloud provider as `hvn_id`, is in a different region, and has a non-overlapping CIDR block.
+- `hvn_id` (String) The ID of the primary HVN this HCP Vault cluster is associated to.
 - `id` (String) The ID of this resource.
 - `ip_allowlist` (List of Object) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedatt--ip_allowlist))
 - `major_version_upgrade_config` (List of Object) (see [below for nested schema](#nestedatt--major_version_upgrade_config))
