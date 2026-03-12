@@ -88,7 +88,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 	sameRegionInput := &inputT{
 		HvnName:          addTimestampSuffix("test-dr-hvn-1-"),
 		HvnCidr:          "172.31.16.0/20",
-		VaultClusterName: addTimestampSuffix("test-dr-cluster-same-region-"),
+		VaultClusterName: addTimestampSuffix("test-dr-same-region-"),
 		CloudProvider:    cloudProviderAWS,
 		Region:           awsRegion,
 		Tier:             "PLUS_SMALL",
@@ -104,7 +104,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 	overlapCIDRInput := &inputT{
 		HvnName:          addTimestampSuffix("test-dr-hvn-3-"),
 		HvnCidr:          "172.29.16.0/20",
-		VaultClusterName: addTimestampSuffix("test-dr-cluster-overlap-cidr-"),
+		VaultClusterName: addTimestampSuffix("test-dr-overlap-cidr-"),
 		CloudProvider:    cloudProviderAWS,
 		Region:           awsRegion,
 		Tier:             "PLUS_SMALL",
@@ -120,7 +120,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 	crossProviderInput := &inputT{
 		HvnName:          addTimestampSuffix("test-dr-hvn-5-"),
 		HvnCidr:          "172.28.16.0/20",
-		VaultClusterName: addTimestampSuffix("test-dr-cluster-cross-provider-"),
+		VaultClusterName: addTimestampSuffix("test-dr-cross-prov-"),
 		CloudProvider:    cloudProviderAWS,
 		Region:           awsRegion,
 		Tier:             "PLUS_SMALL",
@@ -136,7 +136,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 	invalidTierInput := &inputT{
 		HvnName:          addTimestampSuffix("test-dr-hvn-7-"),
 		HvnCidr:          "172.23.16.0/20",
-		VaultClusterName: addTimestampSuffix("test-dr-cluster-invalid-tier-"),
+		VaultClusterName: addTimestampSuffix("test-dr-invalid-tier-"),
 		CloudProvider:    cloudProviderAWS,
 		Region:           awsRegion,
 		Tier:             "DEV",
