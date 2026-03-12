@@ -1,0 +1,3 @@
+```release-note:improvement
+Added `disaster_recovery_hvn_id` to `hcp_vault_cluster` to configure disaster recovery networking for Vault clusters, including validation that the DR HVN uses the same cloud provider, a different region, a non-overlapping CIDR block, and a STANDARD or PLUS tier.
+```
