@@ -4,13 +4,45 @@
 package providersdkv2
 
 import (
+	"bytes"
+	"fmt"
 	"regexp"
 	"testing"
+	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/stretchr/testify/require"
 )
 
-func TestAcc_Vault_DisasterRecovery_PrimaryClusterAws(t *testing.T) {
+func setTestAccDRE2E(t *testing.T, tfCode string, in *inputT) string {
+	templates := fmt.Sprintf(`
+	resource "hcp_hvn" "hvn1" {
+		hvn_id            = "{{ .HvnName }}"
+		cidr_block        = "{{ .GetHvnCidr }}"
+		cloud_provider    = "{{ .CloudProvider }}"
+		region            = "{{ .Region }}"
+	}
+
+	resource "hcp_hvn" "hvn2" {
+		hvn_id            = "{{ .Secondary.HvnName }}"
+		cidr_block        = "{{ .Secondary.GetHvnCidr }}"
+		cloud_provider    = "{{ .Secondary.CloudProvider }}"
+		region            = "{{ .Secondary.Region }}"
+	}
+
+	%s
+	`, tfCode)
+
+	tmpl, err := template.New("tf_resources_dr_cluster").Parse(templates)
+	require.NoError(t, err)
+
+	tfResources := &bytes.Buffer{}
+	err = tmpl.Execute(tfResources, in)
+	require.NoError(t, err)
+	return tfResources.String()
+}
+
+func TestAcc_Vault_DR_PrimaryClusterAws(t *testing.T) {
 	t.Parallel()
 
 	input := &inputT{
@@ -24,7 +56,7 @@ func TestAcc_Vault_DisasterRecovery_PrimaryClusterAws(t *testing.T) {
 			HvnName:       addTimestampSuffix("test-drp-hvn2-"),
 			HvnCidr:       "172.20.16.0/20",
 			CloudProvider: cloudProviderAWS,
-			Region:        "us-east-1",
+			Region:        awsDRRegion,
 		},
 	}
 
@@ -34,18 +66,7 @@ func TestAcc_Vault_DisasterRecovery_PrimaryClusterAws(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
-				resource "hcp_vault_cluster" "c1" {
-					cluster_id               = "{{ .VaultClusterName }}"
-					hvn_id                   = hcp_hvn.hvn1.hvn_id
-					tier                     = "{{ .Tier }}"
-					disaster_recovery_hvn_id = hcp_hvn.hvn2.hvn_id
-				}
-
-				data "hcp_vault_cluster" "dr" {
-					cluster_id = hcp_vault_cluster.c1.cluster_id
-				}
-				`, input)),
+				Config: testConfig(setTestAccDRE2E(t, vaultDRCluster, input)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(primaryVaultResourceName),
 					resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", input.VaultClusterName),
@@ -60,7 +81,7 @@ func TestAcc_Vault_DisasterRecovery_PrimaryClusterAws(t *testing.T) {
 	})
 }
 
-func TestAcc_Vault_DisasterRecovery_PrimaryClusterAzure(t *testing.T) {
+func TestAcc_Vault_DR_PrimaryClusterAzure(t *testing.T) {
 	t.Parallel()
 
 	input := &inputT{
@@ -74,7 +95,7 @@ func TestAcc_Vault_DisasterRecovery_PrimaryClusterAzure(t *testing.T) {
 			HvnName:       addTimestampSuffix("test-drp-az-hvn2-"),
 			HvnCidr:       "172.18.16.0/20",
 			CloudProvider: cloudProviderAzure,
-			Region:        "eastus2",
+			Region:        azureDRRegion,
 		},
 	}
 
@@ -84,18 +105,7 @@ func TestAcc_Vault_DisasterRecovery_PrimaryClusterAzure(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
-				resource "hcp_vault_cluster" "c1" {
-					cluster_id               = "{{ .VaultClusterName }}"
-					hvn_id                   = hcp_hvn.hvn1.hvn_id
-					tier                     = "{{ .Tier }}"
-					disaster_recovery_hvn_id = hcp_hvn.hvn2.hvn_id
-				}
-
-				data "hcp_vault_cluster" "dr" {
-					cluster_id = hcp_vault_cluster.c1.cluster_id
-				}
-				`, input)),
+				Config: testConfig(setTestAccDRE2E(t, vaultDRCluster, input)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultClusterExists(primaryVaultResourceName),
 					resource.TestCheckResourceAttr(primaryVaultResourceName, "cluster_id", input.VaultClusterName),
@@ -226,7 +236,7 @@ func TestSameRegion(t *testing.T) {
 			primaryProvider: "aws",
 			primaryRegion:   "us-west-2",
 			drProvider:      "aws",
-			drRegion:        "us-east-1",
+			drRegion:        awsDRRegion,
 			wantSameRegion:  false,
 		},
 		{
@@ -274,7 +284,7 @@ func TestInStandardOrPlusTier(t *testing.T) {
 	}
 }
 
-func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
+func TestAcc_Vault_DR_PrecheckValidationsAws(t *testing.T) {
 	t.Parallel()
 
 	// Same-region primary and DR HVNs should be rejected by provider pre-checks.
@@ -305,7 +315,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 			HvnName:       addTimestampSuffix("test-dr-hvn-4-"),
 			HvnCidr:       "172.29.16.0/20",
 			CloudProvider: cloudProviderAWS,
-			Region:        "us-east-1",
+			Region:        awsDRRegion,
 		},
 	}
 
@@ -337,7 +347,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 			HvnName:       addTimestampSuffix("test-dr-hvn-8-"),
 			HvnCidr:       "172.22.16.0/20",
 			CloudProvider: cloudProviderAWS,
-			Region:        "us-east-1",
+			Region:        awsDRRegion,
 		},
 	}
 
@@ -347,7 +357,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+				Config: testConfig(setTestAccDRE2E(t, `
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id               = "{{ .VaultClusterName }}"
 					hvn_id                   = hcp_hvn.hvn1.hvn_id
@@ -358,7 +368,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 				ExpectError: regexp.MustCompile(`disaster recovery HVN must be in a different region`),
 			},
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+				Config: testConfig(setTestAccDRE2E(t, `
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id               = "{{ .VaultClusterName }}"
 					hvn_id                   = hcp_hvn.hvn1.hvn_id
@@ -369,7 +379,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 				ExpectError: regexp.MustCompile(`overlaps with disaster recovery HVN CIDR`),
 			},
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+				Config: testConfig(setTestAccDRE2E(t, `
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id               = "{{ .VaultClusterName }}"
 					hvn_id                   = hcp_hvn.hvn1.hvn_id
@@ -380,7 +390,7 @@ func TestAcc_Vault_DisasterRecovery_PrecheckValidationsAws(t *testing.T) {
 				ExpectError: regexp.MustCompile(`provider .* must match primary HVN provider`),
 			},
 			{
-				Config: testConfig(setTestAccPerformanceReplicationE2E(t, `
+				Config: testConfig(setTestAccDRE2E(t, `
 				resource "hcp_vault_cluster" "c1" {
 					cluster_id               = "{{ .VaultClusterName }}"
 					hvn_id                   = hcp_hvn.hvn1.hvn_id

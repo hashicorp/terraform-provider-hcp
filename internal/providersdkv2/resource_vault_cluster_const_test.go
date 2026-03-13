@@ -17,7 +17,9 @@ const (
 	cloudProviderAWS           = "aws"
 	cloudProviderAzure         = "azure"
 	azureRegion                = "westus2"
+	azureDRRegion              = "eastus"
 	awsRegion                  = "us-west-2"
+	awsDRRegion                = "us-east-1"
 	vaultClusterResourceName   = "hcp_vault_cluster.test"
 	vaultClusterDataSourceName = "data.hcp_vault_cluster.test"
 	adminTokenResourceName     = "hcp_vault_cluster_admin_token.test"
@@ -28,6 +30,19 @@ resource "hcp_vault_cluster" "test" {
 	cluster_id         = "{{ .ClusterID }}"
 	hvn_id             = hcp_hvn.test.hvn_id
 	tier               = "{{ .Tier }}"
+}
+`
+
+const vaultDRCluster = `
+resource "hcp_vault_cluster" "c1" {
+	cluster_id               = "{{ .VaultClusterName }}"
+	hvn_id                   = hcp_hvn.hvn1.hvn_id
+	tier                     = "{{ .Tier }}"
+	disaster_recovery_hvn_id = hcp_hvn.hvn2.hvn_id
+}
+
+data "hcp_vault_cluster" "dr" {
+	cluster_id = hcp_vault_cluster.c1.cluster_id
 }
 `
 
