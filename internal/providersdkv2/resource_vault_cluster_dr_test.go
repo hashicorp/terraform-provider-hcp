@@ -43,8 +43,6 @@ func setTestAccDRE2E(t *testing.T, tfCode string, in *inputT) string {
 }
 
 func TestAcc_Vault_DR_PrimaryClusterAws(t *testing.T) {
-	t.Parallel()
-
 	input := &inputT{
 		HvnName:          addTimestampSuffix("test-drp-hvn1-"),
 		HvnCidr:          "172.21.16.0/20",
@@ -82,8 +80,6 @@ func TestAcc_Vault_DR_PrimaryClusterAws(t *testing.T) {
 }
 
 func TestAcc_Vault_DR_PrimaryClusterAzure(t *testing.T) {
-	t.Parallel()
-
 	input := &inputT{
 		HvnName:          addTimestampSuffix("test-drp-az-hvn1-"),
 		HvnCidr:          "172.19.16.0/20",
@@ -285,8 +281,6 @@ func TestInStandardOrPlusTier(t *testing.T) {
 }
 
 func TestAcc_Vault_DR_PrecheckValidationsAws(t *testing.T) {
-	t.Parallel()
-
 	// Same-region primary and DR HVNs should be rejected by provider pre-checks.
 	sameRegionInput := &inputT{
 		HvnName:          addTimestampSuffix("test-dr-hvn-1-"),
