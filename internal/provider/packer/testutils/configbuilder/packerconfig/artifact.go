@@ -3,7 +3,12 @@
 
 package packerconfig
 
-import "github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/testutils/configbuilder"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/testutils/configbuilder"
+)
 
 type ArtifactDataSourceBuilder interface {
 	configbuilder.DataSourceBuilder
@@ -20,6 +25,8 @@ type ArtifactDataSourceBuilder interface {
 	GetRegion() string
 	SetComponentType(componentType string)
 	GetComponentType() string
+	SetLabels(labels map[string]string)
+	GetLabels() string
 }
 
 func NewArtifactDataSourceBuilder(uniqueName string) ArtifactDataSourceBuilder {
@@ -86,4 +93,28 @@ func (b *artifactDataSourceBuilder) SetComponentType(componentType string) {
 
 func (b *artifactDataSourceBuilder) GetComponentType() string {
 	return b.GetAttribute("component_type")
+}
+
+// SetLabels sets the labels attribute for build-label filtering. The map is formatted as HCL.
+// When set with channel_name, the data source uses the GetImageByBuildLabels (by labels) path.
+func (b *artifactDataSourceBuilder) SetLabels(labels map[string]string) {
+	b.SetAttribute("labels", labelsToHCL(labels))
+}
+
+func (b *artifactDataSourceBuilder) GetLabels() string {
+	return b.GetAttribute("labels")
+}
+
+// labelsToHCL formats a map as Terraform HCL map literal.
+func labelsToHCL(labels map[string]string) string {
+	if len(labels) == 0 {
+		return "{}"
+	}
+	var sb strings.Builder
+	sb.WriteString("{\n")
+	for k, v := range labels {
+		sb.WriteString(fmt.Sprintf("  %q = %q\n", k, v))
+	}
+	sb.WriteString("}")
+	return sb.String()
 }

@@ -41,6 +41,8 @@ import (
 	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client"
 	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 
+	packer_build_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2022-12-02/client/build_service"
+
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -85,6 +87,7 @@ type Client struct {
 	Organization                   organization_service.ClientService
 	Packer                         packer_service.ClientService
 	PackerV2                       packer_service_v2.ClientService
+	PackerBuildService             packer_build_service.ClientService
 	Project                        project_service.ClientService
 	ServicePrincipals              service_principals_service.ClientService
 	Groups                         groups_service.ClientService
@@ -190,6 +193,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization:                   cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Packer:                         cloud_packer.New(httpClient, nil).PackerService,
 		PackerV2:                       cloud_packer_v2.New(httpClient, nil).PackerService,
+		PackerBuildService:             packer_build_service.New(httpClient, nil),
 		Project:                        cloud_resource_manager.New(httpClient, nil).ProjectService,
 		ServicePrincipals:              cloud_iam.New(httpClient, nil).ServicePrincipalsService,
 		Groups:                         cloud_iam.New(httpClient, nil).GroupsService,
