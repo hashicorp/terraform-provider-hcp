@@ -44,9 +44,9 @@ func GetImageByBuildLabels(
 	params.SetLocationOrganizationID(loc.GetOrganizationID())
 	params.SetLocationProjectID(loc.GetProjectID())
 	params.SetBody(&models20221202.GetImageByBuildLabelsRequestBody{
-		Labels:         labels,
-		CloudProvider:  cloudProvider,
-		Region:         region,
+		Labels:        labels,
+		CloudProvider: cloudProvider,
+		Region:        region,
 	})
 	resp, err := client.PackerBuildService.GetImageByBuildLabels(params, nil)
 	if err != nil {
