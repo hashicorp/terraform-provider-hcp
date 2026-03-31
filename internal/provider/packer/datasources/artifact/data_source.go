@@ -74,8 +74,12 @@ Exactly one of ` + "`channel_name` or `version_fingerprint`" + ` must be provide
 				"labels": schema.MapAttribute{
 					ElementType: basetypes.StringType{},
 					Description: "Labels associated with the build. When set with `channel_name`, the artifact is resolved by matching these build labels (e.g. `{ \"nomad_version\" = \"1.8.10\" }`). When unset, computed from the resolved build.",
-					Optional:    true,
-					Computed:    true,
+					MarkdownDescription: "When set (non-empty) with `channel_name`, the data source uses **GetImageByBuildLabels**: the channel's current version is scanned for builds whose labels contain every key/value you supply.\n\n" +
+						"If more than one build matches, the HCP Packer API returns the **first** candidate in **`updated_at` descending** order that also matches the **`platform`** and **`region`** you configure (sent as cloud provider and region). Always set `platform` and `region` so the result is predictable when multiple builds or clouds exist.\n\n" +
+						"If several builds still match the same platform and region (for example different Packer sources), use **`component_type`** to disambiguate, consistent with the non-label lookup path.\n\n" +
+						"When `labels` is unset or empty, this attribute is computed from the resolved build.",
+					Optional: true,
+					Computed: true,
 				},
 				// Computed Outputs
 				"id": schema.StringAttribute{

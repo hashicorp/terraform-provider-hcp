@@ -60,7 +60,51 @@ func GetImageByBuildLabels(
 	if err != nil {
 		return nil, err
 	}
+	// Nested artifacts in the GetImageByBuildLabels payload omit created_at; fill from GetVersion
+	// so the data source matches channel/fingerprint lookups.
+	enrichArtifactFromFullVersion(client, loc, result, region)
 	return result, nil
+}
+
+// enrichArtifactFromFullVersion replaces result.Artifact with the same artifact from GetVersionByFingerprint
+// when that response includes CreatedAt (and other fields) missing from the build-labels API shape.
+func enrichArtifactFromFullVersion(client *clients.Client, loc location.BucketLocation, result *GetImageByBuildLabelsResult, wantRegion string) {
+	if client == nil || result == nil || result.Version == nil || result.Build == nil || result.Artifact == nil {
+		return
+	}
+	fp := result.Version.Fingerprint
+	if fp == "" {
+		return
+	}
+	fullVer, err := GetVersionByFingerprint(client, loc, fp)
+	if err != nil || fullVer == nil {
+		return
+	}
+	buildID := result.Build.ID
+	artifactID := result.Artifact.ID
+	for _, b := range fullVer.Builds {
+		if b == nil || b.ID != buildID {
+			continue
+		}
+		for _, a := range b.Artifacts {
+			if a == nil {
+				continue
+			}
+			if a.ID == artifactID && (wantRegion == "" || a.Region == wantRegion) {
+				if !a.CreatedAt.IsZero() {
+					result.Artifact = a
+				}
+				return
+			}
+		}
+		for _, a := range b.Artifacts {
+			if a != nil && wantRegion != "" && a.Region == wantRegion && !a.CreatedAt.IsZero() {
+				result.Artifact = a
+				return
+			}
+		}
+		return
+	}
 }
 
 func mapExternalArtifactToResult(ext *models20221202.ExternalArtifact, bucketName, wantRegion string) (*GetImageByBuildLabelsResult, error) {

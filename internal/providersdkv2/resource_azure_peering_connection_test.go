@@ -20,21 +20,21 @@ var (
 )
 
 // peeringHubSpokeNVAConfig is the hcp_azure_peering_connection config params
-// to enable a Hub and Spoke archtecture in the NVA model.
+// to enable a Hub and Spoke architecture in the NVA model.
 var peeringHubSpokeNVAConfig = `
 	  allow_forwarded_traffic = true
 	  use_remote_gateways     = false
 `
 
 // peeringHubSpokeGatewayConfig is the hcp_azure_peering_connection config params
-// to enable a Hub and Spoke archtecture using Gateway transit.
+// to enable a Hub and Spoke architecture using Gateway transit.
 var peeringHubSpokeGatewayConfig = `
 	  allow_forwarded_traffic = false
 	  use_remote_gateways     = true
 `
 
 // peeringHubSpokeNVAandGatewayConfig is the hcp_azure_peering_connection config
-// params to enable a Hub and Spoke archtecture supporting both NVA and Gateway.
+// params to enable a Hub and Spoke architecture supporting both NVA and Gateway.
 var peeringHubSpokeNVAandGatewayConfig = `
 	  allow_forwarded_traffic = true
 	  use_remote_gateways     = true
