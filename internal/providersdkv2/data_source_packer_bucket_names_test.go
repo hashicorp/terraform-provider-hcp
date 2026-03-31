@@ -34,7 +34,10 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackerBucketNamesCountCapture(dataAddr, &baselineCount),
+					func(*terraform.State) error {
+						baselineCount = testAccPackerListBucketCount(t)
+						return nil
+					},
 				),
 			},
 			{
@@ -73,17 +76,6 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckPackerBucketNamesCountCapture(addr string, dest *int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		n, err := testAccPackerBucketNamesCount(s, addr)
-		if err != nil {
-			return err
-		}
-		*dest = n
-		return nil
-	}
 }
 
 func testAccCheckPackerBucketNamesCountEquals(addr string, want int) resource.TestCheckFunc {

@@ -4,6 +4,7 @@
 package providersdkv2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -21,6 +22,25 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"
 	"google.golang.org/grpc/codes"
 )
+
+// testAccPackerListBucketCount returns the number of Packer buckets in the test project via the
+// same ListBuckets API the data source uses. Prefer this over reading names.# from Terraform
+// state for baselines: the first data source read can briefly disagree with the API after
+// registry upsert.
+func testAccPackerListBucketCount(t *testing.T) int {
+	t.Helper()
+
+	client := testAccProvider.Meta().(*clients.Client)
+	loc := &sharedmodels.HashicorpCloudLocationLocation{
+		OrganizationID: client.Config.OrganizationID,
+		ProjectID:      client.Config.ProjectID,
+	}
+	buckets, err := packerv2.ListBuckets(context.Background(), client, loc)
+	if err != nil {
+		t.Fatalf("ListBuckets: %v", err)
+	}
+	return len(buckets)
+}
 
 func upsertRegistry(t *testing.T) {
 	t.Helper()
