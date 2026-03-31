@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer/utils/location"
@@ -118,10 +117,8 @@ func mapExternalArtifactToResult(ext *models20221202.ExternalArtifact, bucketNam
 	if ext.Version != nil {
 		version.Fingerprint = ext.Version.Fingerprint
 		version.ID = ext.Version.ID
-		if ext.Version.RevokeAt != "" {
-			if t, err := strfmt.ParseDateTime(ext.Version.RevokeAt); err == nil {
-				version.RevokeAt = t
-			}
+		if !ext.Version.RevokeAt.IsZero() {
+			version.RevokeAt = ext.Version.RevokeAt
 		}
 	}
 	if ext.Bucket != nil && version.BucketName == "" {
