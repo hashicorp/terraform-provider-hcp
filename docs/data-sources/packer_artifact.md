@@ -84,7 +84,13 @@ If multiple builds still share the same platform, region, and labels (for exampl
 The Version currently assigned to the Channel will be fetched. 
 Exactly one of `channel_name` or `version_fingerprint` must be provided.
 - `component_type` (String) Name of the Packer builder that built this Artifact. Ex: `amazon-ebs.example`.
-- `labels` (Map of String) Labels associated with the build. When set with `channel_name`, the artifact is resolved by matching these build labels (e.g. `{ "nomad_version" = "1.8.10" }`). When unset, computed from the resolved build.
+- `labels` (Map of String) When set (non-empty) with `channel_name`, the data source uses **GetImageByBuildLabels**: the channel's current version is scanned for builds whose labels contain every key/value you supply.
+
+If more than one build matches, the HCP Packer API returns the **first** candidate in **`updated_at` descending** order that also matches the **`platform`** and **`region`** you configure (sent as cloud provider and region). Always set `platform` and `region` so the result is predictable when multiple builds or clouds exist.
+
+If several builds still match the same platform and region (for example different Packer sources), use **`component_type`** to disambiguate, consistent with the non-label lookup path.
+
+When `labels` is unset or empty, this attribute is computed from the resolved build.
 - `project_id` (String) The ID of the HCP Organization where the Artifact is located
 - `version_fingerprint` (String) The fingerprint of the HCP Packer Version where the Artifact is located. 
 If provided in the config, it is used to fetch the Version.
