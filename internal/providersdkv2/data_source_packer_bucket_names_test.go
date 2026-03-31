@@ -5,7 +5,7 @@ package providersdkv2
 
 import (
 	"fmt"
-	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,8 +21,8 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 	config := testConfig(testAccConfigBuildersToString(bucketNames))
 	dataAddr := bucketNames.BlockName()
 
-	// Must not be Parallel: steps share API state and compare list length deltas.
-	var baselineCount int
+	// Assertions use only our slug names, not names.#, so this test stays valid when
+	// other TestAcc_Packer_* run in parallel (-parallel=N) against the same HCP project.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
@@ -34,10 +34,10 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					func(*terraform.State) error {
-						baselineCount = testAccPackerListBucketCount(t)
-						return nil
-					},
+					resource.TestCheckResourceAttrSet(dataAddr, "id"),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
 				),
 			},
 			{
@@ -46,8 +46,9 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackerBucketNamesCountEquals(dataAddr, baselineCount+1),
 					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
 				),
 			},
 			{
@@ -57,7 +58,6 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackerBucketNamesCountEquals(dataAddr, baselineCount+3),
 					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket0),
 					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket1),
 					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket2),
@@ -71,43 +71,34 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackerBucketNamesCountEquals(dataAddr, baselineCount),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPackerBucketNamesCountEquals(addr string, want int) resource.TestCheckFunc {
+func testAccCheckPackerBucketNamesNotContains(addr, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		got, err := testAccPackerBucketNamesCount(s, addr)
-		if err != nil {
-			return err
+		rs, ok := s.RootModule().Resources[addr]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", addr)
 		}
-		if got != want {
-			return fmt.Errorf("%s: names.# expected %d, got %d", addr, want, got)
+		if rs.Primary == nil {
+			return fmt.Errorf("no primary instance: %s", addr)
+		}
+		for k, v := range rs.Primary.Attributes {
+			if !strings.HasPrefix(k, "names.") || k == "names.#" {
+				continue
+			}
+			if v == bucketName {
+				return fmt.Errorf("%s: expected names set not to include %q, but it does (attribute %q)", addr, bucketName, k)
+			}
 		}
 		return nil
 	}
-}
-
-func testAccPackerBucketNamesCount(s *terraform.State, addr string) (int, error) {
-	rs, ok := s.RootModule().Resources[addr]
-	if !ok {
-		return 0, fmt.Errorf("resource not found: %s", addr)
-	}
-	if rs.Primary == nil {
-		return 0, fmt.Errorf("no primary instance: %s", addr)
-	}
-	raw, ok := rs.Primary.Attributes["names.#"]
-	if !ok {
-		return 0, fmt.Errorf("%s: names.# not in state", addr)
-	}
-	n, err := strconv.Atoi(raw)
-	if err != nil {
-		return 0, fmt.Errorf("parse names.#: %w", err)
-	}
-	return n, nil
 }
 
 func testAccPackerDataBucketNamesBuilder(uniqueName string) testAccConfigBuilderInterface {
