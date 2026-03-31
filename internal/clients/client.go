@@ -87,6 +87,8 @@ type Client struct {
 	Organization                   organization_service.ClientService
 	Packer                         packer_service.ClientService
 	PackerV2                       packer_service_v2.ClientService
+	// PackerBuildService is the cloud-packer Build API (stable/2022-12-02). GetImageByBuildLabels
+	// is defined there; it is not on PackerService (stable/2023-01-01), despite the "v2" naming.
 	PackerBuildService             packer_build_service.ClientService
 	Project                        project_service.ClientService
 	ServicePrincipals              service_principals_service.ClientService
