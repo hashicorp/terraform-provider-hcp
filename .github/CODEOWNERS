@@ -1,51 +1,51 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-* @hashicorp/cloud-core-platform-systems @hashicorp/cloud-core-platform-surfaces
+* @hashicorp/cloud-core-platform-systems
 
 # all resourcemanager resources are owned by the cloud-access-control team
-*resourcemanager* @hashicorp/cloud-access-control
+*resourcemanager* @hashicorp/cloud-access-control @hashicorp/cloud-core-platform-systems
 
 # all iam resources and clients are owned by the cloud-identity team
-*iam* @hashicorp/cloud-identity
+*iam* @hashicorp/cloud-identity @hashicorp/cloud-core-platform-systems
 
 # all Consul resources and clients are owned by the cloud-consul team
-*consul* @hashicorp/cloud-consul
-/internal/consul/ @hashicorp/cloud-consul
+*consul* @hashicorp/cloud-consul @hashicorp/cloud-core-platform-systems
+/internal/consul/ @hashicorp/cloud-consul @hashicorp/cloud-core-platform-systems
 
 # all Networking resources and clients are owned by the cloud-platform-systems team
-*hvn* @hashicorp/hcp-managed-services-ind
-*aws* @hashicorp/hcp-managed-services-ind
-*azure* @hashicorp/hcp-managed-services-ind
-*peering* @hashicorp/hcp-managed-services-ind
+*hvn* @hashicorp/hcp-managed-services-ind @hashicorp/cloud-core-platform-systems
+*aws* @hashicorp/hcp-managed-services-ind @hashicorp/cloud-core-platform-systems
+*azure* @hashicorp/hcp-managed-services-ind @hashicorp/cloud-core-platform-systems
+*peering* @hashicorp/hcp-managed-services-ind @hashicorp/cloud-core-platform-systems
 
 # all Packer resources and clients are owned by the cloud-packer team
-*packer* @hashicorp/cloud-packer
+*packer* @hashicorp/cloud-packer @hashicorp/cloud-core-platform-systems
 
 # all Vault resources and clients are owned by the vault-cloud team.
-**/vault*  @hashicorp/vault-cloud
+**/vault* @hashicorp/vault-cloud @hashicorp/cloud-core-platform-systems
 
 # all Vault Secrets resources and clients are owned by cloud-vault-secrets team
 # Don't move these vault secret patterns above the vault patterns. Because, the vault patterns matches
 # vault secrets ones and that only selects vault-cloud team as the code owner.
-*vaultsecrets*  @hashicorp/cloud-vault-secrets
-*vault_secrets* @hashicorp/cloud-vault-secrets
-*vault-secrets* @hashicorp/cloud-vault-secrets
+*vaultsecrets* @hashicorp/cloud-vault-secrets @hashicorp/cloud-core-platform-systems
+*vault_secrets* @hashicorp/cloud-vault-secrets @hashicorp/cloud-core-platform-systems
+*vault-secrets* @hashicorp/cloud-vault-secrets @hashicorp/cloud-core-platform-systems
 
 # all Boundary resources and clients are owned by the boundary-cloud team
-*boundary* @hashicorp/boundary-cloud
+*boundary* @hashicorp/boundary-cloud @hashicorp/cloud-core-platform-systems
 
 # all Waypoint resources and clients are owned by the waypoint team
-**/waypoint @hashicorp/cloud-waypoint
+**/waypoint @hashicorp/cloud-waypoint @hashicorp/cloud-core-platform-systems
 
 # Status page configuration is owned by the FIRE team
-/internal/statuspage/ @hashicorp/team-fire
+/internal/statuspage/ @hashicorp/team-fire @hashicorp/cloud-core-platform-systems
 
 # all Vault Radar resources and clients are owned by the vault-scanning team
-*vaultradar*  @hashicorp/vault-scanning
-*vault_radar* @hashicorp/vault-scanning
-*vault-radar*  @hashicorp/vault-scanning
-**/vaultradar/* @hashicorp/vault-scanning
-**/vaultradar* @hashicorp/vault-scanning
-**/hcp_vault_radar* @hashicorp/vault-scanning
+*vaultradar* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
+*vault_radar* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
+*vault-radar* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
+**/vaultradar/* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
+**/vaultradar* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
+**/hcp_vault_radar* @hashicorp/vault-scanning @hashicorp/cloud-core-platform-systems
 
-.github/workflows/ @hashicorp/cloud-core-platform-systems @hashicorp/cloud-core-platform-surfaces
+.github/workflows/ @hashicorp/cloud-core-platform-systems
