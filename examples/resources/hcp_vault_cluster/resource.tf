@@ -17,6 +17,9 @@ resource "hcp_vault_cluster" "example" {
     datadog_api_key = "test_datadog"
     datadog_region  = "us1"
   }
+  inventory_reporting_config {
+    enabled = true
+  }
   lifecycle {
     prevent_destroy = true
   }

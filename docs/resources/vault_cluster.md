@@ -33,6 +33,9 @@ resource "hcp_vault_cluster" "example" {
     datadog_api_key = "test_datadog"
     datadog_region  = "us1"
   }
+  inventory_reporting_config {
+    enabled = true
+  }
   lifecycle {
     prevent_destroy = true
   }
@@ -50,6 +53,7 @@ resource "hcp_vault_cluster" "example" {
 ### Optional
 
 - `audit_log_config` (Block List, Max: 1) The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--audit_log_config))
+- `inventory_reporting_config` (Block List, Max: 1) The inventory reporting configuration for secrets and certificates visibility. Feature is currently in beta. Disabling reporting results in permanent data loss from HCP. See [inventory reporting documentation](https://developer.hashicorp.com/hcp/docs/vault/reporting). (see [below for nested schema](#nestedblock--inventory_reporting_config))
 - `ip_allowlist` (Block List, Max: 50) Allowed IPV4 address ranges (CIDRs) for inbound traffic. Each entry must be a unique CIDR. Maximum 50 CIDRS supported at this time. (see [below for nested schema](#nestedblock--ip_allowlist))
 - `major_version_upgrade_config` (Block List, Max: 1) The Major Version Upgrade configuration. (see [below for nested schema](#nestedblock--major_version_upgrade_config))
 - `metrics_config` (Block List, Max: 1) The metrics configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration) (see [below for nested schema](#nestedblock--metrics_config))
@@ -116,6 +120,14 @@ Read-Only:
 - `cloudwatch_group_name` (String) CloudWatch group name of the target log stream for audit logs
 - `cloudwatch_stream_name` (String) CloudWatch stream name for the target log stream for audit logs
 - `elasticsearch_dataset` (String) ElasticSearch dataset for streaming audit logs
+
+
+<a id="nestedblock--inventory_reporting_config"></a>
+### Nested Schema for `inventory_reporting_config`
+
+Optional:
+
+- `enabled` (Boolean) Enable inventory reporting. When enabled, Vault will report secret and certificate inventory data to HCP. Note: Disabling reporting results in permanent data loss from HCP.
 
 
 <a id="nestedblock--ip_allowlist"></a>
