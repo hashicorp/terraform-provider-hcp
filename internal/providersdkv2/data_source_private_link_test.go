@@ -4,6 +4,7 @@
 package providersdkv2
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,6 +14,11 @@ func TestAcc_Platform_DataSourcePrivateLink(t *testing.T) {
 	resourceName := "hcp_private_link.test"
 	dataSourceName := "data.hcp_private_link.test"
 
+	hvnID := testAccUniqueNameWithPrefix("p-pl-ds-hvn")
+	clusterID := testAccUniqueNameWithPrefix("p-pl-ds-vault")
+	privateLinkID := testAccUniqueNameWithPrefix("p-pl-ds")
+	config := testAccDataSourcePrivateLinkConfig(hvnID, clusterID, privateLinkID)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -20,14 +26,14 @@ func TestAcc_Platform_DataSourcePrivateLink(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create the resources (HVN, Vault cluster, private link)
 			{
-				Config: testAccDataSourcePrivateLinkConfig(),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateLinkExists(resourceName),
 				),
 			},
 			// Verify data source
 			{
-				Config: testAccDataSourcePrivateLinkConfig(),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_link_id", resourceName, "private_link_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "hvn_id", resourceName, "hvn_id"),
@@ -44,17 +50,17 @@ func TestAcc_Platform_DataSourcePrivateLink(t *testing.T) {
 	})
 }
 
-func testAccDataSourcePrivateLinkConfig() string {
-	return `
+func testAccDataSourcePrivateLinkConfig(hvnID, clusterID, privateLinkID string) string {
+	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-  hvn_id         = "test-hvn"
+  hvn_id         = "%[1]s"
   cloud_provider = "aws"
   region         = "us-west-2"
 }
 
 resource "hcp_vault_cluster" "test" {
   hvn_id     = hcp_hvn.test.hvn_id
-  cluster_id = "test-vault-cluster"
+  cluster_id = "%[2]s"
   tier       = "standard_small"
   public_endpoint = false
   
@@ -65,7 +71,7 @@ resource "hcp_vault_cluster" "test" {
 
 resource "hcp_private_link" "test" {
   hvn_id           = hcp_hvn.test.hvn_id
-  private_link_id  = "test-private-link"
+  private_link_id  = "%[3]s"
   vault_cluster_id = hcp_vault_cluster.test.cluster_id
 
   consumer_accounts = [
@@ -81,5 +87,5 @@ data "hcp_private_link" "test" {
   hvn_id           = hcp_hvn.test.hvn_id
   private_link_id  = hcp_private_link.test.private_link_id
 }
-`
+`, hvnID, clusterID, privateLinkID)
 }
