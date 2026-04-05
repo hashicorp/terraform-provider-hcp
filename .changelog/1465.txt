@@ -1,0 +1,3 @@
+```release-note:improvement
+Use unique HVN, Vault cluster, and private link IDs in `hcp_private_link` acceptance tests to avoid "already exists" failures when reusing an HCP project.
+```
