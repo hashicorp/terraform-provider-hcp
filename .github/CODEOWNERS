@@ -1,6 +1,6 @@
 # These owners will be the default owners for everything in
 # the repo. Unless a later match takes precedence
-* @hashicorp/cloud-core-platform-systems @hashicorp/cloud-core-platform-surfaces
+* @hashicorp/cloud-core-platform-systems
 
 # all resourcemanager resources are owned by the cloud-access-control team
 *resourcemanager* @hashicorp/cloud-access-control
