@@ -41,6 +41,8 @@ import (
 	cloud_packer_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client"
 	packer_service_v2 "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2023-01-01/client/packer_service"
 
+	packer_build_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-packer-service/stable/2022-12-02/client/build_service"
+
 	cloud_resource_manager "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/project_service"
@@ -76,15 +78,18 @@ import (
 type Client struct {
 	Config ClientConfig
 
-	Billing                        billing_account_service.ClientService
-	Boundary                       boundary_service.ClientService
-	Consul                         consul_service.ClientService
-	IAM                            iam_service.ClientService
-	Network                        network_service.ClientService
-	Operation                      operation_service.ClientService
-	Organization                   organization_service.ClientService
-	Packer                         packer_service.ClientService
-	PackerV2                       packer_service_v2.ClientService
+	Billing      billing_account_service.ClientService
+	Boundary     boundary_service.ClientService
+	Consul       consul_service.ClientService
+	IAM          iam_service.ClientService
+	Network      network_service.ClientService
+	Operation    operation_service.ClientService
+	Organization organization_service.ClientService
+	Packer       packer_service.ClientService
+	PackerV2     packer_service_v2.ClientService
+	// PackerBuildService is the cloud-packer Build API (stable/2022-12-02). GetImageByBuildLabels
+	// is defined there; it is not on PackerService (stable/2023-01-01), despite the "v2" naming.
+	PackerBuildService             packer_build_service.ClientService
 	Project                        project_service.ClientService
 	ServicePrincipals              service_principals_service.ClientService
 	Groups                         groups_service.ClientService
@@ -190,6 +195,7 @@ func NewClient(config ClientConfig) (*Client, error) {
 		Organization:                   cloud_resource_manager.New(httpClient, nil).OrganizationService,
 		Packer:                         cloud_packer.New(httpClient, nil).PackerService,
 		PackerV2:                       cloud_packer_v2.New(httpClient, nil).PackerService,
+		PackerBuildService:             packer_build_service.New(httpClient, nil),
 		Project:                        cloud_resource_manager.New(httpClient, nil).ProjectService,
 		ServicePrincipals:              cloud_iam.New(httpClient, nil).ServicePrincipalsService,
 		Groups:                         cloud_iam.New(httpClient, nil).GroupsService,

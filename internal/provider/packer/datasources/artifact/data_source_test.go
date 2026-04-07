@@ -98,6 +98,15 @@ func TestAcc_Packer_Data_Artifact(t *testing.T) {
 	artifactConfigWithFingerprint.SetRegion(fmt.Sprintf("%q", region))
 	artifactConfigWithFingerprint.SetComponentType(fmt.Sprintf("%q", buildOptions.ComponentType))
 
+	// Same as artifactConfig but with labels set so the GetImageByBuildLabels (by labels) path is used.
+	artifactConfigWithLabels := packerconfig.NewArtifactDataSourceBuilder("by_labels")
+	artifactConfigWithLabels.SetBucketName(fmt.Sprintf("%q", bucketName))
+	artifactConfigWithLabels.SetChannelName(fmt.Sprintf("%q", channelName))
+	artifactConfigWithLabels.SetLabels(buildOptions.Labels)
+	artifactConfigWithLabels.SetPlatform(fmt.Sprintf("%q", buildOptions.Platform))
+	artifactConfigWithLabels.SetRegion(fmt.Sprintf("%q", region))
+	artifactConfigWithLabels.SetComponentType(fmt.Sprintf("%q", buildOptions.ComponentType))
+
 	scheduledRevokeFingerprint := acctest.RandString(32)
 	revokeAt := strfmt.DateTime(time.Now().UTC().Add(24 * time.Hour))
 
@@ -132,6 +141,10 @@ func TestAcc_Packer_Data_Artifact(t *testing.T) {
 			{
 				Config: configbuilder.BuildersToString(artifactConfigWithFingerprint),
 				Check:  checkDataSource(t, artifactConfig, bucketLoc, &version, &build, region),
+			},
+			{ // Resolve by channel + labels (GetImageByBuildLabels path)
+				Config: configbuilder.BuildersToString(artifactConfigWithLabels),
+				Check:  checkDataSource(t, artifactConfigWithLabels, bucketLoc, &version, &build, region),
 			},
 			{
 				Config: configbuilder.BuildersToString(artifactConfigLatestChannel),
@@ -177,6 +190,14 @@ func TestAcc_Packer_Data_Artifact_InvalidInputs(t *testing.T) {
 	missingChannelAndFingerprintConfig.SetPlatform(fmt.Sprintf("%q", artifactPlatform))
 	missingChannelAndFingerprintConfig.SetRegion(fmt.Sprintf("%q", region))
 
+	// Labels set without channel_name: label filtering requires channel (validator error)
+	labelsWithoutChannelConfig := packerconfig.NewArtifactDataSourceBuilder("labels_no_channel")
+	labelsWithoutChannelConfig.SetBucketName(fmt.Sprintf("%q", bucketName))
+	labelsWithoutChannelConfig.SetVersionFingerprint(fmt.Sprintf("%q", fingerprint))
+	labelsWithoutChannelConfig.SetLabels(map[string]string{"env": "prod"})
+	labelsWithoutChannelConfig.SetPlatform(fmt.Sprintf("%q", artifactPlatform))
+	labelsWithoutChannelConfig.SetRegion(fmt.Sprintf("%q", region))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -194,6 +215,10 @@ func TestAcc_Packer_Data_Artifact_InvalidInputs(t *testing.T) {
 					missingChannelAndFingerprintConfig,
 				),
 				ExpectError: regexp.MustCompile(".*Exactly one of these attributes must be configured.*"),
+			},
+			{
+				Config:      configbuilder.BuildersToString(labelsWithoutChannelConfig),
+				ExpectError: regexp.MustCompile(".*When `labels` is set, `channel_name` must also be set.*"),
 			},
 		},
 	})

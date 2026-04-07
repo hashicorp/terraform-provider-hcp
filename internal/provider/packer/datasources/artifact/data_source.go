@@ -70,6 +70,17 @@ Exactly one of ` + "`channel_name` or `version_fingerprint`" + ` must be provide
 					Optional: true,
 					Computed: true,
 				},
+				// Optional: when set with channel_name, resolves the artifact by build labels (GetImageByBuildLabels API)
+				"labels": schema.MapAttribute{
+					ElementType: basetypes.StringType{},
+					Description: "Labels associated with the build. When set with `channel_name`, the artifact is resolved by matching these build labels (e.g. `{ \"nomad_version\" = \"1.8.10\" }`). When unset, computed from the resolved build.",
+					MarkdownDescription: "When set (non-empty) with `channel_name`, the data source uses **GetImageByBuildLabels**: the channel's current version is scanned for builds whose labels contain every key/value you supply.\n\n" +
+						"If more than one build matches, the HCP Packer API returns the **first** candidate in **`updated_at` descending** order that also matches the **`platform`** and **`region`** you configure (sent as cloud provider and region). Always set `platform` and `region` so the result is predictable when multiple builds or clouds exist.\n\n" +
+						"If several builds still match the same platform and region (for example different Packer sources), use **`component_type`** to disambiguate, consistent with the non-label lookup path.\n\n" +
+						"When `labels` is unset or empty, this attribute is computed from the resolved build.",
+					Optional: true,
+					Computed: true,
+				},
 				// Computed Outputs
 				"id": schema.StringAttribute{
 					CustomType:  customtypes.ULIDType{},
@@ -88,11 +99,6 @@ Exactly one of ` + "`channel_name` or `version_fingerprint`" + ` must be provide
 				},
 				"external_identifier": schema.StringAttribute{
 					Description: "An external identifier for the HCP Packer Artifact.",
-					Computed:    true,
-				},
-				"labels": schema.MapAttribute{
-					ElementType: basetypes.StringType{},
-					Description: "Labels associated with the build containing this image.",
 					Computed:    true,
 				},
 				"created_at": schema.StringAttribute{
@@ -115,8 +121,55 @@ Exactly one of ` + "`channel_name` or `version_fingerprint`" + ` must be provide
 				path.MatchRelative().AtName("channel_name"),
 				path.MatchRelative().AtName("version_fingerprint"),
 			),
+			labelsRequireChannelValidator{},
 		),
 	}
+}
+
+// labelsRequireChannelValidator requires channel_name when labels is set (label filtering only works with channel).
+type labelsRequireChannelValidator struct{}
+
+func (labelsRequireChannelValidator) Description(ctx context.Context) string {
+	return "When labels is set, channel_name must also be set."
+}
+
+func (labelsRequireChannelValidator) MarkdownDescription(ctx context.Context) string {
+	return "When `labels` is set, `channel_name` must also be set. Build label filtering is only supported when resolving by channel."
+}
+
+func (labelsRequireChannelValidator) ValidateDataSource(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	var model dataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &model)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if model.Labels.IsNull() || model.Labels.IsUnknown() {
+		return
+	}
+	labelsMap := labelsMapFromValue(model.Labels)
+	if len(labelsMap) == 0 {
+		return
+	}
+	if model.ChannelName.IsNull() || model.ChannelName.IsUnknown() || model.ChannelName.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Invalid combination of arguments",
+			"When `labels` is set, `channel_name` must also be set. Build label filtering is only supported when resolving by channel.",
+		)
+	}
+}
+
+// labelsMapFromValue extracts map[string]string from a MapValue (element type string).
+func labelsMapFromValue(m basetypes.MapValue) map[string]string {
+	if m.IsNull() || m.IsUnknown() {
+		return nil
+	}
+	out := make(map[string]string)
+	for k, v := range m.Elements() {
+		if s, ok := v.(basetypes.StringValue); ok && !s.IsNull() && !s.IsUnknown() {
+			out[k] = s.ValueString()
+		}
+	}
+	return out
 }
 
 type dataSource struct {
@@ -254,6 +307,40 @@ func (d *dataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 
 	model.populateFromLocationIfEmpty(client)
+
+	// When labels is set with channel_name, use GetImageByBuildLabels API instead of GetChannel + filter.
+	useLabelsFilter := !model.Labels.IsNull() && !model.Labels.IsUnknown() && len(labelsMapFromValue(model.Labels)) > 0
+	if useLabelsFilter && !model.ChannelName.IsNull() && !model.ChannelName.IsUnknown() {
+		result, getDiags := packerv2.GetImageByBuildLabelsDiags(
+			ctx,
+			d.Client(),
+			model,
+			model.BucketName.ValueString(),
+			model.ChannelName.ValueString(),
+			labelsMapFromValue(model.Labels),
+			model.Platform.ValueString(),
+			model.Region.ValueString(),
+		)
+		resp.Diagnostics.Append(getDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if result == nil || result.Version == nil || result.Build == nil || result.Artifact == nil {
+			resp.Diagnostics.AddError(
+				"HCP Packer Artifact not found",
+				"No artifact matched the given labels and filters (channel_name, platform, region).",
+			)
+			return
+		}
+		model.populateFromVersion(result.Version)
+		resp.Diagnostics.Append(model.populateFromBuild(result.Build)...)
+		resp.Diagnostics.Append(model.populateFromArtifact(result.Artifact)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
+		return
+	}
 
 	var getVersionDiags diag.Diagnostics
 	var version *packerv2.Version
