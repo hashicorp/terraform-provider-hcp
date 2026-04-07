@@ -1,0 +1,3 @@
+```release-note:improvement
+Add support for `bgp_propagation_enabled` on Azure HVNs in `hcp_hvn`, expose it in `hcp_hvn` data source state, and document the new attribute.
+```
