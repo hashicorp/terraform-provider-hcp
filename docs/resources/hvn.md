@@ -43,6 +43,7 @@ resource "hcp_hvn" "example" {
 
 ### Optional
 
+- `bgp_propagation_enabled` (Boolean) Whether to accept BGP-propagated routes from the attached Azure gateway. Applies only when `cloud_provider` is `azure`.
 - `cidr_block` (String) The CIDR range of the HVN. If this is not provided, the service will provide a default value.
 - `project_id` (String) The ID of the HCP project where the HVN is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.

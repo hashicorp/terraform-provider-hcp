@@ -93,6 +93,12 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				ValidateFunc: validation.IsUUID,
 				Computed:     true,
 			},
+			"bgp_propagation_enabled": {
+				Description: "Whether to accept BGP-propagated routes from the attached Azure gateway. Applies only when cloud_provider is 'azure'.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+			},
 			// Computed outputs
 			"organization_id": {
 				Description: "The ID of the HCP organization where the HVN is located.",
@@ -128,6 +134,12 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	hvnID := d.Get("hvn_id").(string)
 	cidrBlock := d.Get("cidr_block").(string)
+	cloudProvider := d.Get("cloud_provider").(string)
+
+	bgpPropagationEnabled, bgpPropagationEnabledSet := d.GetOkExists("bgp_propagation_enabled")
+	if bgpPropagationEnabledSet && cloudProvider != "azure" {
+		return diag.Errorf("bgp_propagation_enabled can only be set when cloud_provider is 'azure'")
+	}
 
 	projectID, err := GetProjectID(d.Get("project_id").(string), client.Config.ProjectID)
 	if err != nil {
@@ -138,7 +150,7 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		OrganizationID: client.Config.OrganizationID,
 		ProjectID:      projectID,
 		Region: &sharedmodels.HashicorpCloudLocationRegion{
-			Provider: d.Get("cloud_provider").(string),
+			Provider: cloudProvider,
 			Region:   d.Get("region").(string),
 		},
 	}
@@ -157,13 +169,19 @@ func resourceHvnCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	createNetworkParams := network_service.NewCreateParams()
 	createNetworkParams.Context = ctx
-	createNetworkParams.Body = &networkmodels.HashicorpCloudNetwork20200907CreateRequest{
+	createRequest := &networkmodels.HashicorpCloudNetwork20200907CreateRequest{
 		Network: &networkmodels.HashicorpCloudNetwork20200907Network{
 			ID:        hvnID,
 			CidrBlock: cidrBlock,
 			Location:  loc,
 		},
 	}
+	if cloudProvider == "azure" && bgpPropagationEnabledSet {
+		createRequest.AzureConfig = &networkmodels.HashicorpCloudNetwork20200907AzureCreateConfig{
+			BgpPropagationEnabled: bgpPropagationEnabled.(bool),
+		}
+	}
+	createNetworkParams.Body = createRequest
 	createNetworkParams.NetworkLocationOrganizationID = loc.OrganizationID
 	createNetworkParams.NetworkLocationProjectID = loc.ProjectID
 	log.Printf("[INFO] Creating HVN (%s)", hvnID)
@@ -298,6 +316,14 @@ func setHvnResourceData(d *schema.ResourceData, hvn *networkmodels.HashicorpClou
 	}
 	if err := d.Set("state", hvn.State); err != nil {
 		return err
+	}
+
+	if hvn.Location.Region.Provider == "azure" &&
+		hvn.ProviderNetworkData != nil &&
+		hvn.ProviderNetworkData.AzureNetworkData != nil {
+		if err := d.Set("bgp_propagation_enabled", hvn.ProviderNetworkData.AzureNetworkData.BgpPropagationEnabled); err != nil {
+			return err
+		}
 	}
 
 	var providerAccountID string
