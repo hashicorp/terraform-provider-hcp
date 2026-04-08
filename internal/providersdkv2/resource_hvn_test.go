@@ -37,6 +37,7 @@ resource "hcp_hvn" "test" {
 	hvn_id         = "%[1]s"
 	cloud_provider = "azure"
 	region         = "eastus"
+	bgp_propagation_enabled = false
 }
 
 data "hcp_hvn" "test" {
@@ -148,6 +149,7 @@ func TestAcc_Platform_AzureHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_propagation_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					testLink(resourceName, "self_link", hvnUniqueIDAzure, HvnResourceType, resourceName),
 				),
@@ -178,6 +180,7 @@ func TestAcc_Platform_AzureHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "project_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_propagation_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					testLink(resourceName, "self_link", hvnUniqueIDAzure, HvnResourceType, resourceName),
 				),
@@ -192,6 +195,7 @@ func TestAcc_Platform_AzureHvnOnly(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", dataSourceName, "cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "organization_id", dataSourceName, "organization_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_id", dataSourceName, "project_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bgp_propagation_enabled", dataSourceName, "bgp_propagation_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "self_link", dataSourceName, "self_link"),
 					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceName, "state"),

@@ -33,6 +33,7 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 
 ### Read-Only
 
+- `bgp_propagation_enabled` (Boolean) Whether the HVN subnet route table accepts BGP-propagated routes from the attached Azure gateway.
 - `cidr_block` (String) The CIDR range of the HVN.
 - `cloud_provider` (String) The provider where the HVN is located.
 - `created_at` (String) The time that the HVN was created.

@@ -66,6 +66,11 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"bgp_propagation_enabled": {
+				Description: "Whether the HVN subnet route table accepts BGP-propagated routes from the attached Azure gateway.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 			"created_at": {
 				Description: "The time that the HVN was created.",
 				Type:        schema.TypeString,
