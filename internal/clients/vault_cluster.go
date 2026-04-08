@@ -171,6 +171,7 @@ func UpdateVaultClusterConfig(
 	ctx context.Context, client *Client, loc *sharedmodels.HashicorpCloudLocationLocation, clusterID string,
 	tier *string, publicIpsEnabled *bool, httpProxyOption *vaultmodels.HashicorpCloudVault20201125HTTPProxyOption,
 	metrics *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig, auditLog *vaultmodels.HashicorpCloudVault20201125ObservabilityConfig,
+	reportingConfig *vaultmodels.HashicorpCloudVault20201125InputReportingConfig,
 	ipAllowlist []*vaultmodels.HashicorpCloudVault20201125CidrRange) (*vaultmodels.HashicorpCloudVault20201125UpdateResponse, error) {
 
 	config := &vaultmodels.HashicorpCloudVault20201125InputClusterConfig{}
@@ -206,6 +207,10 @@ func UpdateVaultClusterConfig(
 	if auditLog != nil {
 		config.AuditLogExportConfig = auditLog
 		updateMaskPaths = append(updateMaskPaths, "config.audit_log_export_config")
+	}
+	if reportingConfig != nil {
+		config.ReportingConfig = reportingConfig
+		updateMaskPaths = append(updateMaskPaths, "config.reporting_config")
 	}
 	locInternal := &vaultmodels.HashicorpCloudInternalLocationLocation{
 		OrganizationID: loc.OrganizationID,

@@ -324,6 +324,22 @@ If a project is not configured in the HCP Provider config block, the oldest proj
 					},
 				},
 			},
+			"inventory_reporting_config": {
+				Description: "The inventory reporting configuration for secrets and certificates visibility. Feature is currently in beta. Disabling reporting results in permanent data loss from HCP. See [inventory reporting documentation](https://developer.hashicorp.com/hcp/docs/vault/reporting).",
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Description: "Enable inventory reporting. When enabled, Vault will report secret and certificate inventory data to HCP. Note: Disabling reporting results in permanent data loss from HCP.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+						},
+					},
+				},
+			},
 			"audit_log_config": {
 				Description: "The audit logs configuration for export. (https://developer.hashicorp.com/vault/tutorials/cloud-monitoring/vault-metrics-guide#metrics-streaming-configuration)",
 				Type:        schema.TypeList,
@@ -589,6 +605,7 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if diagErr != nil {
 		return diagErr
 	}
+	reportingConfig := getInventoryReportingConfig(d)
 	mvuConfig, diagErr := getMajorVersionUpgradeConfig(d)
 	if diagErr != nil {
 		return diagErr
@@ -741,6 +758,9 @@ func resourceVaultClusterCreate(ctx context.Context, d *schema.ResourceData, met
 	if auditConfig != nil {
 		vaultCluster.Config.AuditLogExportConfig = auditConfig
 	}
+	if reportingConfig != nil {
+		vaultCluster.Config.ReportingConfig = reportingConfig
+	}
 
 	payload, err := clients.CreateVaultCluster(ctx, client, loc, vaultCluster)
 	if err != nil {
@@ -874,7 +894,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Confirm at least one modifiable field has changed
-	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "ip_allowlist", "paths_filter", "metrics_config", "audit_log_config", "major_version_upgrade_config") {
+	if !d.HasChanges("tier", "public_endpoint", "proxy_endpoint", "ip_allowlist", "paths_filter", "metrics_config", "audit_log_config", "inventory_reporting_config", "major_version_upgrade_config") {
 		return nil
 	}
 
@@ -884,7 +904,7 @@ func resourceVaultClusterUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diagErr
 	}
 
-	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("ip_allowlist") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
+	if d.HasChange("tier") || d.HasChange("public_endpoint") || d.HasChange("proxy_endpoint") || d.HasChange("ip_allowlist") || d.HasChange("metrics_config") || d.HasChange("audit_log_config") || d.HasChange("inventory_reporting_config") {
 		diagErr := updateVaultClusterConfig(ctx, client, d, cluster, clusterID)
 		if diagErr != nil {
 			return diagErr
@@ -988,6 +1008,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 	if diagErr != nil {
 		return diagErr
 	}
+	reportingConfig := getInventoryReportingConfig(d)
 	isSecondary := false
 	destTier := getClusterTier(d)
 	publicIpsEnabled := getPublicIpsEnabled(d)
@@ -1018,7 +1039,7 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 
 			// Because of (a), check that the scaling operation is necessary.
 			// If the cluster has the same tier but the metrics/audit_log changed, we want to update the cluster anyway to change the info.
-			if *cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") {
+			if *cluster.Config.Tier == vaultmodels.HashicorpCloudVault20201125Tier(*destTier) && !d.HasChange("metrics_config") && !d.HasChange("audit_log_config") && !d.HasChange("inventory_reporting_config") {
 				return nil
 			} else {
 				printPlusScalingWarningMsg()
@@ -1026,8 +1047,8 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 				if primaryLink != "" {
 					// Because of (b), if the cluster is a secondary, issue the actual API request to the primary.
 					isSecondary = true
-					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") {
-						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
+					if d.HasChange("metrics_config") || d.HasChange("audit_log_config") || d.HasChange("inventory_reporting_config") {
+						updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, reportingConfig, ipAllowlist)
 						if err != nil {
 							return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 						}
@@ -1047,13 +1068,14 @@ func updateVaultClusterConfig(ctx context.Context, client *clients.Client, d *sc
 		}
 	}
 
-	// If is secondary since we're scaling via the primary we don't update the primary metrics/auditLog.
+	// If is secondary since we're scaling via the primary we don't update the primary metrics/auditLog/reporting.
 	if isSecondary {
 		metricsConfig = nil
 		auditConfig = nil
+		reportingConfig = nil
 	}
 	// Invoke update endpoint.
-	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, ipAllowlist)
+	updateResp, err := clients.UpdateVaultClusterConfig(ctx, client, clusterSharedLoc, cluster.ID, destTier, publicIpsEnabled, httpProxyOption, metricsConfig, auditConfig, reportingConfig, ipAllowlist)
 	if err != nil {
 		return diag.Errorf("error updating Vault cluster (%s): %v", clusterID, err)
 	}
@@ -1162,6 +1184,10 @@ func setVaultClusterResourceData(d *schema.ResourceData, cluster *vaultmodels.Ha
 	}
 
 	if err := d.Set("audit_log_config", flattenObservabilityConfig(cluster.Config.AuditLogExportConfig, d, "audit_log_config")); err != nil {
+		return err
+	}
+
+	if err := d.Set("inventory_reporting_config", flattenInventoryReportingConfig(cluster.Config.ReportingConfig)); err != nil {
 		return err
 	}
 
@@ -1858,4 +1884,40 @@ func buildIPAllowlistVaultCluster(cidrs []interface{}) ([]*vaultmodels.Hashicorp
 	}
 
 	return ipAllowList, nil
+}
+
+// getInventoryReportingConfig extracts the inventory reporting configuration from the Terraform schema.
+func getInventoryReportingConfig(d *schema.ResourceData) *vaultmodels.HashicorpCloudVault20201125InputReportingConfig {
+	configParam, ok := d.GetOk("inventory_reporting_config")
+	if !ok {
+		return nil
+	}
+
+	configIfaceArr, ok := configParam.([]interface{})
+	if !ok || len(configIfaceArr) == 0 {
+		return nil
+	}
+
+	config, ok := configIfaceArr[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	enabled, _ := config["enabled"].(bool)
+	return &vaultmodels.HashicorpCloudVault20201125InputReportingConfig{
+		Enroll: enabled,
+	}
+}
+
+// flattenInventoryReportingConfig converts the API reporting config to Terraform schema format.
+func flattenInventoryReportingConfig(reportingConfig *vaultmodels.HashicorpCloudVault20201125ReportingConfig) []interface{} {
+	if reportingConfig == nil {
+		return nil
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"enabled": reportingConfig.Enrolled,
+		},
+	}
 }
