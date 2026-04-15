@@ -184,12 +184,12 @@ func (d *jiraSubscriptionResourceData) SetDetails(details string) diag.Diagnosti
 	d.IssueType = types.StringValue(detailsData.IssueType)
 
 	// Only update the assignee state if the value is not empty.
-	if !(d.Assignee.IsNull() && detailsData.Assignee == "") {
+	if !d.Assignee.IsNull() || detailsData.Assignee != "" {
 		d.Assignee = types.StringValue(detailsData.Assignee)
 	}
 
 	// Only update the message state if the value is not empty.
-	if !(d.Message.IsNull() && detailsData.Instructions == "") {
+	if !d.Message.IsNull() || detailsData.Instructions != "" {
 		d.Message = types.StringValue(detailsData.Instructions)
 	}
 

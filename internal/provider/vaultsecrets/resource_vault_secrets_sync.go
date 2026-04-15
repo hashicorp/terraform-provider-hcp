@@ -268,7 +268,8 @@ func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnos
 		scope := secretmodels.SyncConfigGitlabScope(scopeStr)
 
 		var groupIDVal, projectIDVal string
-		if scope == secretmodels.SyncConfigGitlabScopeGROUP {
+		switch scope {
+		case secretmodels.SyncConfigGitlabScopeGROUP:
 			if config.GroupID.IsNull() {
 				return diag.Diagnostics{
 					diag.NewErrorDiagnostic(
@@ -279,7 +280,7 @@ func (s *Sync) initModel(ctx context.Context, orgID, projID string) diag.Diagnos
 			}
 			groupIDVal = config.GroupID.ValueString()
 			projectIDVal = ""
-		} else if scope == secretmodels.SyncConfigGitlabScopePROJECT {
+		case secretmodels.SyncConfigGitlabScopePROJECT:
 			if config.ProjectID.IsNull() {
 				return diag.Diagnostics{
 					diag.NewErrorDiagnostic(

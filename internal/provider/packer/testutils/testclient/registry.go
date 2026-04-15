@@ -67,7 +67,7 @@ func UpsertRegistry(t *testing.T, loc location.ProjectLocation, featureTier *pac
 
 	needsReactivation := !getResp.Payload.Registry.Config.Activated
 
-	if !(needsFeatureTierUpdate || needsReactivation) {
+	if !needsFeatureTierUpdate && !needsReactivation {
 		return getResp.GetPayload().Registry
 	}
 

@@ -23,4 +23,12 @@ description: |-
 
 ~> **Note:** This data source only returns the first found artifact's metadata filtered by the given arguments, from the returned list of artifacts associated with the specified version. Therefore, if multiple artifacts exist in the same region, it will only pick one of them. In this case, you can filter artifacts by a source build name (Ex: `amazon-ebs.example`) using the `component_type` optional argument.
 
+### Build label lookup (`labels` + `channel_name`)
+
+When you set a non-empty `labels` map together with `channel_name`, the provider calls HCP Packer **GetImageByBuildLabels**. The API selects **one build** on the channel's current version whose build labels contain all of your keys and values, then returns metadata for the artifact in your configured `region`.
+
+If several builds match those labels, the API uses builds ordered by **`updated_at` descending** and takes the **first** that also matches your **`platform`** and **`region`**. You should always set `platform` and `region` so the choice is deterministic when multiple builds or clouds could match.
+
+If multiple builds still share the same platform, region, and labels (for example different Packer `source` blocks), use **`component_type`** to narrow the build, same as when resolving without `labels`.
+
 {{ .SchemaMarkdown | trimspace }}

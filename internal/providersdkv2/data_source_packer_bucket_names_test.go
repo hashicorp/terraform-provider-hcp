@@ -4,9 +4,12 @@
 package providersdkv2
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
@@ -16,8 +19,11 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 
 	bucketNames := testAccPackerDataBucketNamesBuilder("all")
 	config := testConfig(testAccConfigBuildersToString(bucketNames))
+	dataAddr := bucketNames.BlockName()
 
-	// Must not be Parallel, requires that no buckets exist at start of test
+	// Assertions use only our slug names, not names.#, so this test stays valid when
+	// other TestAcc_Packer_* run in parallel (-parallel=N) against the same HCP project.
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": false, "azure": false}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -27,10 +33,12 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 					upsertRegistry(t)
 				},
 				Config: config,
-				// If this check fails, there are probably pre-existing buckets
-				// in the environment that need to be deleted before testing.
-				// This may also be caused by other tests failing to clean up properly.
-				Check: resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.#", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataAddr, "id"),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
+				),
 			},
 			{
 				PreConfig: func() {
@@ -38,7 +46,9 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.0", bucket0),
+					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
 				),
 			},
 			{
@@ -48,11 +58,9 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.0", bucket0),
-						resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.1", bucket1),
-						resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.2", bucket2),
-					),
+					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket0),
+					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket1),
+					resource.TestCheckTypeSetElemAttr(dataAddr, "names.*", bucket2),
 				),
 			},
 			{
@@ -62,10 +70,35 @@ func TestAcc_Packer_dataSourcePackerBucketNames(t *testing.T) {
 					deleteBucket(t, bucket2, true)
 				},
 				Config: config,
-				Check:  resource.TestCheckResourceAttr(bucketNames.BlockName(), "names.#", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket0),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket1),
+					testAccCheckPackerBucketNamesNotContains(dataAddr, bucket2),
+				),
 			},
 		},
 	})
+}
+
+func testAccCheckPackerBucketNamesNotContains(addr, bucketName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[addr]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", addr)
+		}
+		if rs.Primary == nil {
+			return fmt.Errorf("no primary instance: %s", addr)
+		}
+		for k, v := range rs.Primary.Attributes {
+			if !strings.HasPrefix(k, "names.") || k == "names.#" {
+				continue
+			}
+			if v == bucketName {
+				return fmt.Errorf("%s: expected names set not to include %q, but it does (attribute %q)", addr, bucketName, k)
+			}
+		}
+		return nil
+	}
 }
 
 func testAccPackerDataBucketNamesBuilder(uniqueName string) testAccConfigBuilderInterface {

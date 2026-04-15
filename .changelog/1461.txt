@@ -1,0 +1,3 @@
+```release-note:feature
+**New `labels` argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time).
+```

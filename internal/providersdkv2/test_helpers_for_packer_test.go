@@ -311,7 +311,7 @@ func upsertCompleteBuild(
 
 	if createResp, err := client.PackerV2.PackerServiceCreateBuild(createBuildParams, nil); err != nil {
 		createErr, ok := err.(*packerservice.PackerServiceCreateBuildDefault)
-		if !ok || !(createErr.Code() == int(codes.Aborted) || createErr.Code() == http.StatusConflict) {
+		if !ok || (createErr.Code() != int(codes.Aborted) && createErr.Code() != http.StatusConflict) {
 			t.Fatalf("unexpected CreateBuild error, expected nil. Got %v", createErr)
 		}
 
