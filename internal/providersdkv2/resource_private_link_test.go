@@ -19,6 +19,10 @@ func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 	hvnResourceName := "hcp_hvn.test"
 	vaultResourceName := "hcp_vault_cluster.test"
 
+	hvnID := testAccUniqueNameWithPrefix("p-pl-hvn")
+	clusterID := testAccUniqueNameWithPrefix("p-pl-vault")
+	privateLinkID := testAccUniqueNameWithPrefix("p-pl")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t, map[string]bool{"aws": true}) },
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
@@ -26,10 +30,10 @@ func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Initial creation
 			{
-				Config: testAccResourcePrivateLinkBasic(),
+				Config: testAccResourcePrivateLinkBasic(hvnID, clusterID, privateLinkID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateLinkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
+					resource.TestCheckResourceAttr(resourceName, "private_link_id", privateLinkID),
 					resource.TestCheckResourceAttr(resourceName, "consumer_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "consumer_regions.0", "us-west-1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
@@ -57,10 +61,10 @@ func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 			},
 			// Update consumer regions
 			{
-				Config: testAccResourcePrivateLinkUpdatedConsumerRegions(),
+				Config: testAccResourcePrivateLinkUpdatedConsumerRegions(hvnID, clusterID, privateLinkID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateLinkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "private_link_id", "test-private-link"),
+					resource.TestCheckResourceAttr(resourceName, "private_link_id", privateLinkID),
 					resource.TestCheckResourceAttr(resourceName, "consumer_regions.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "hvn_id", hvnResourceName, "hvn_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_cluster_id", vaultResourceName, "cluster_id"),
@@ -70,17 +74,17 @@ func TestAcc_Platform_ResourcePrivateLink(t *testing.T) {
 	})
 }
 
-func testAccResourcePrivateLinkBasic() string {
-	return `
+func testAccResourcePrivateLinkBasic(hvnID, clusterID, privateLinkID string) string {
+	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-  hvn_id         = "test-hvn"
+  hvn_id         = "%[1]s"
   cloud_provider = "aws"
   region         = "us-west-2"
 }
 
 resource "hcp_vault_cluster" "test" {
   hvn_id     = hcp_hvn.test.hvn_id
-  cluster_id = "test-vault-cluster"
+  cluster_id = "%[2]s"
   tier       = "standard_small"
   public_endpoint = false
   
@@ -91,7 +95,7 @@ resource "hcp_vault_cluster" "test" {
 
 resource "hcp_private_link" "test" {
   hvn_id           = hcp_hvn.test.hvn_id
-  private_link_id  = "test-private-link"
+  private_link_id  = "%[3]s"
   vault_cluster_id = hcp_vault_cluster.test.cluster_id
 
   consumer_accounts = [
@@ -102,20 +106,20 @@ resource "hcp_private_link" "test" {
     "us-west-1"
   ]
 }
-`
+`, hvnID, clusterID, privateLinkID)
 }
 
-func testAccResourcePrivateLinkUpdatedConsumerRegions() string {
-	return `
+func testAccResourcePrivateLinkUpdatedConsumerRegions(hvnID, clusterID, privateLinkID string) string {
+	return fmt.Sprintf(`
 resource "hcp_hvn" "test" {
-  hvn_id         = "test-hvn"
+  hvn_id         = "%[1]s"
   cloud_provider = "aws"
   region         = "us-west-2"
 }
 
 resource "hcp_vault_cluster" "test" {
   hvn_id     = hcp_hvn.test.hvn_id
-  cluster_id = "test-vault-cluster"
+  cluster_id = "%[2]s"
   tier       = "standard_small"
   public_endpoint = false
   
@@ -126,7 +130,7 @@ resource "hcp_vault_cluster" "test" {
 
 resource "hcp_private_link" "test" {
   hvn_id           = hcp_hvn.test.hvn_id
-  private_link_id  = "test-private-link"
+  private_link_id  = "%[3]s"
   vault_cluster_id = hcp_vault_cluster.test.cluster_id
 
   consumer_accounts = [
@@ -138,7 +142,7 @@ resource "hcp_private_link" "test" {
     "us-east-1"
   ]
 }
-`
+`, hvnID, clusterID, privateLinkID)
 }
 
 func testAccCheckPrivateLinkExists(resourceName string) resource.TestCheckFunc {
