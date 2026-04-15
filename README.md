@@ -43,7 +43,7 @@ resource "hcp_hvn" "example" {
   cidr_block     = "172.25.16.0/20"
 }
 
-// Create an HCP Consul cluster within the HVN
+// Create an HCP Consul cluster within the HVN.
 resource "hcp_consul_cluster" "example" {
   hvn_id         = hcp_hvn.example.hvn_id
   cluster_id     = "consul-cluster"
