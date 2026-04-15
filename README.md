@@ -26,7 +26,7 @@ See the [`design`](design/) for documents capturing certain key design decisions
 
 ## Example
 
-Below is a complex example that creates a HashiCorp Virtual Network (HVN), an HCP Consul cluster within that HVN, and peers the HVN to an AWS VPC.
+Below is a complex example that creates a HashiCorp Virtual Network (HVN), an HCP Consul cluster within that HVN, and peers the HVN to an AWS VPC
 ```hcl
 // Configure the provider
 provider "hcp" {}
