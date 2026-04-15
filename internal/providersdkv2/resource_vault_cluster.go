@@ -1284,7 +1284,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 		} else {
 			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 				config := configParam.([]interface{})[0].(map[string]interface{})
-				configMap["grafana_password"] = config["grafana_password"].(string)
+				if password, exists := config["grafana_password"]; exists && password != nil {
+					configMap["grafana_password"] = password.(string)
+				}
 			}
 		}
 	}
@@ -1297,7 +1299,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 		} else {
 			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 				config := configParam.([]interface{})[0].(map[string]interface{})
-				configMap["splunk_token"] = config["splunk_token"].(string)
+				if token, exists := config["splunk_token"]; exists && token != nil {
+					configMap["splunk_token"] = token.(string)
+				}
 			}
 		}
 	}
@@ -1310,7 +1314,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 		} else {
 			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 				config := configParam.([]interface{})[0].(map[string]interface{})
-				configMap["datadog_api_key"] = config["datadog_api_key"].(string)
+				if apiKey, exists := config["datadog_api_key"]; exists && apiKey != nil {
+					configMap["datadog_api_key"] = apiKey.(string)
+				}
 			}
 		}
 	}
@@ -1333,7 +1339,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 		} else {
 			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 				config := configParam.([]interface{})[0].(map[string]interface{})
-				configMap["cloudwatch_secret_access_key"] = config["cloudwatch_secret_access_key"].(string)
+				if secretKey, exists := config["cloudwatch_secret_access_key"]; exists && secretKey != nil {
+					configMap["cloudwatch_secret_access_key"] = secretKey.(string)
+				}
 			}
 		}
 	}
@@ -1349,7 +1357,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 		} else {
 			if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 				config := configParam.([]interface{})[0].(map[string]interface{})
-				configMap["elasticsearch_password"] = config["elasticsearch_password"].(string)
+				if password, exists := config["elasticsearch_password"]; exists && password != nil {
+					configMap["elasticsearch_password"] = password.(string)
+				}
 			}
 		}
 	}
@@ -1372,7 +1382,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 			} else {
 				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 					config := configParam.([]interface{})[0].(map[string]interface{})
-					configMap["http_basic_password"] = config["http_basic_password"].(string)
+					if password, exists := config["http_basic_password"]; exists && password != nil {
+						configMap["http_basic_password"] = password.(string)
+					}
 				}
 			}
 		}
@@ -1384,7 +1396,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 			} else {
 				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 					config := configParam.([]interface{})[0].(map[string]interface{})
-					configMap["http_bearer_token"] = config["http_bearer_token"].(string)
+					if token, exists := config["http_bearer_token"]; exists && token != nil {
+						configMap["http_bearer_token"] = token.(string)
+					}
 				}
 			}
 		}
@@ -1399,7 +1413,9 @@ func flattenObservabilityConfig(config *vaultmodels.HashicorpCloudVault20201125O
 			} else {
 				if configParam, ok := d.GetOk(propertyName); ok && len(configParam.([]interface{})) > 0 {
 					config := configParam.([]interface{})[0].(map[string]interface{})
-					configMap["newrelic_license_key"] = config["newrelic_license_key"].(string)
+					if licenseKey, exists := config["newrelic_license_key"]; exists && licenseKey != nil {
+						configMap["newrelic_license_key"] = licenseKey.(string)
+					}
 				}
 			}
 		}

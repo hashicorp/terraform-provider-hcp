@@ -1,0 +1,3 @@
+```release-note:bug
+Fix potential drift detection issues for sensitive fields in `audit_log_config` and `metrics_config` by adding safe type assertion checks when API returns redacted values.
+```
