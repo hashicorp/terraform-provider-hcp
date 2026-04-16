@@ -1,3 +1,22 @@
+## v0.112.0 (Apr 16, 2026)
+
+FEATURES:
+
+* **New `labels` argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time). [[GH-1461](https://github.com/hashicorp/hcp/issues/1461)]
+* Updated resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise:
+  Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent. [[GH-1431](https://github.com/hashicorp/hcp/issues/1431)]
+
+IMPROVEMENTS:
+
+* Add BYO-DNS Azure tests [[GH-1429](https://github.com/hashicorp/hcp/issues/1429)]
+* Billing account is no longer update within project creation. This call has been moved to the Resource Manager's project create API [[GH-1415](https://github.com/hashicorp/hcp/issues/1415)]
+* Improved `min_vault_version` attribute description for `hcp_vault_cluster` resource and data source with a sample version value and a link to the HCP changelog for discovering available versions. [[GH-1448](https://github.com/hashicorp/hcp/issues/1448)]
+* Use unique HVN, Vault cluster, and private link IDs in `hcp_private_link` acceptance tests to avoid "already exists" failures when reusing an HCP project. [[GH-1465](https://github.com/hashicorp/hcp/issues/1465)]
+
+BUG FIXES:
+
+* Fixed DataSourceUserPrincipal issue where email was being searched as a substring. [[GH-1433](https://github.com/hashicorp/hcp/issues/1433)]
+
 ## v0.111.0 (Nov 25, 2025)
 
 FEATURES:
