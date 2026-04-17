@@ -1,0 +1,3 @@
+```release-note:improvement
+Bump dependencies to address golang.org/x/net vulnerability.
+```
