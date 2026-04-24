@@ -60,8 +60,18 @@ func dataSourceConsulVersions() *schema.Resource {
 // supported Consul versions on HCP.
 func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, meta.(*clients.Client))
-	if err != nil || len(availableConsulVersions) == 0 {
-		return diag.Errorf("error fetching available HCP Consul versions: %v", err)
+	
+
+	if err != nil {
+		// Makes this actionable and resilient to gateway/runtime decode mismatches.
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to fetch HCP Consul versions",
+			Detail:   fmt.Sprintf("The Consul versions API returned an unexpected response format or runtime error: %v", err),
+		}}
+	}
+	if len(availableConsulVersions) == 0 {
+		return diag.Errorf("unable to fetch HCP Consul versions: API returned no versions")
 	}
 
 	var recommendedVersion string
