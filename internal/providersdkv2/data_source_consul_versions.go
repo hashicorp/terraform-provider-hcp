@@ -60,7 +60,6 @@ func dataSourceConsulVersions() *schema.Resource {
 // supported Consul versions on HCP.
 func dataSourceConsulVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	availableConsulVersions, err := clients.GetAvailableHCPConsulVersions(ctx, meta.(*clients.Client))
-	
 
 	if err != nil {
 		// Makes this actionable and resilient to gateway/runtime decode mismatches.
