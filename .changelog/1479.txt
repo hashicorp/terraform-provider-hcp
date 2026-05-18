@@ -1,0 +1,5 @@
+```release-note:improvement
+Bump dependencies to address golang.org/x/net vulnerability.
+Handle unexpected Consul versions API runtime/decode errors with clearer
+diagnostics
+```
