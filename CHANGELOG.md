@@ -1,32 +1,35 @@
-## v0.112.0 (Apr 16, 2026)
+## v0.112.0 (Jun 11, 2026)
 
 FEATURES:
 
-* **New `labels` argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time). [[GH-1461](https://github.com/hashicorp/hcp/issues/1461)]
+* **New `labels` argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time). [[GH-1461](https://github.com/hashicorp/terraform-provider-hcp/pull/1461)]
 * Updated resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise:
-  Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent. [[GH-1431](https://github.com/hashicorp/hcp/issues/1431)]
+  Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent. [[GH-1431](https://github.com/hashicorp/terraform-provider-hcp/pull/1431)]
 
 IMPROVEMENTS:
 
-* Add BYO-DNS Azure tests [[GH-1429](https://github.com/hashicorp/hcp/issues/1429)]
-* Billing account is no longer update within project creation. This call has been moved to the Resource Manager's project create API [[GH-1415](https://github.com/hashicorp/hcp/issues/1415)]
-* Improved `min_vault_version` attribute description for `hcp_vault_cluster` resource and data source with a sample version value and a link to the HCP changelog for discovering available versions. [[GH-1448](https://github.com/hashicorp/hcp/issues/1448)]
-* Use unique HVN, Vault cluster, and private link IDs in `hcp_private_link` acceptance tests to avoid "already exists" failures when reusing an HCP project. [[GH-1465](https://github.com/hashicorp/hcp/issues/1465)]
+* Add BYO-DNS Azure tests [[GH-1429](https://github.com/hashicorp/terraform-provider-hcp/pull/1429)]
+* Billing account is no longer update within project creation. This call has been moved to the Resource Manager's project create API [[GH-1415](https://github.com/hashicorp/terraform-provider-hcp/pull/1415)]
+* Improved `min_vault_version` attribute description for `hcp_vault_cluster` resource and data source with a sample version value and a link to the HCP changelog for discovering available versions. [[GH-1448](https://github.com/hashicorp/terraform-provider-hcp/pull/1448)]
+* Updates changelog and version for new release. [[GH-1478](https://github.com/hashicorp/terraform-provider-hcp/pull/1478)]
+* Use unique HVN, Vault cluster, and private link IDs in `hcp_private_link` acceptance tests to avoid "already exists" failures when reusing an HCP project. [[GH-1465](https://github.com/hashicorp/terraform-provider-hcp/pull/1465)]
 
 BUG FIXES:
 
-* Fixed DataSourceUserPrincipal issue where email was being searched as a substring. [[GH-1433](https://github.com/hashicorp/hcp/issues/1433)]
+* Fixed DataSourceUserPrincipal issue where email was being searched as a substring. [[GH-1433](https://github.com/hashicorp/terraform-provider-hcp/pull/1433)]
+* security: updates to go modules to patch security vulnerabilities [[GH-1479](https://github.com/hashicorp/terraform-provider-hcp/pull/1479)]
+* security: updates to go modules to patch security vulnerabilities [[GH-1489](https://github.com/hashicorp/terraform-provider-hcp/pulls/1489)]
 
 ## v0.111.0 (Nov 25, 2025)
 
 FEATURES:
 
 * Add preview of hcp_vault_radar_secret_manager_vault_dedicated, a new Radar resource to manage integrations with
-HCP Vault Dedicated as a secret manager. [[GH-1392](https://github.com/hashicorp/hcp/issues/1392)]
+HCP Vault Dedicated as a secret manager. [[GH-1392](https://github.com/hashicorp/terraform-provider-hcp/pull/1392)]
 
 IMPROVEMENTS:
 
-* Updated status page component IDs to correctly report degradations. [[GH-1391](https://github.com/hashicorp/hcp/issues/1391)]
+* Updated status page component IDs to correctly report degradations. [[GH-1391](https://github.com/hashicorp/terraform-provider-hcp/pull/1391)]
 
 ## v0.110.0 (Sept 22, 2025)
 
