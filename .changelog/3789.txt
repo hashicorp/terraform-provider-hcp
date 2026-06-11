@@ -1,3 +1,3 @@
-```release-note:bug
-security: updates to go modules to patch security vulnerabilities
+```release-note:note
+prepare for release
 ```
