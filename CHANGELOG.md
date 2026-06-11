@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* **New `labels` argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time). [[GH-1461](https://github.com/hashicorp/hcp/issues/1461)]
+* **New `labels`  argument for `hcp_packer_artifact` data source:** When `labels` is set together with `channel_name`, the data source resolves the artifact using HCP Packer **GetImageByBuildLabels** (build label matching on the channel's current version). Omitting `labels` preserves the previous channel-only behavior. If `labels` is set, `channel_name` is required (validated at plan time). [[GH-1461](https://github.com/hashicorp/hcp/issues/1461)]
 * Updated resource/hcp_vault_radar_source_github_cloud and resource/hcp_vault_radar_source_github_enterprise:
   Added `token_env_var` attribute to supply GitHub tokens via environment variables when using Vault Radar Agent. [[GH-1431](https://github.com/hashicorp/hcp/issues/1431)]
 
