@@ -13,7 +13,7 @@ This resource allows you to manage an HCP Boundary cluster
 
 ```terraform
 resource "hcp_boundary_cluster" "example" {
-  cluster_id = "boundary-cluster"
+  cluster_id = "boundary-cluster" # Note: This is the Boundary cluster name, not its UUID. 
   username   = "test-user"
   password   = "Password123!"
   maintenance_window_config {
@@ -32,7 +32,7 @@ resource "hcp_boundary_cluster" "example" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Boundary cluster
+- `cluster_id` (String) The name of the Boundary cluster (not its UUID).  The cluster name is listed at the top of the HCP Boundary Cluster overview page. The variable `cluster_id` is used here because that's what the HCP API presently uses.
 - `password` (String, Sensitive) The password of the initial admin user. This must be at least 8 characters in length. Note that this may show up in logs, and it will be stored in the state file.
 - `tier` (String) The tier that the HCP Boundary cluster will be provisioned as, 'Standard' or 'Plus'.
 - `username` (String) The username of the initial admin user. This must be at least 3 characters in length, alphanumeric, hyphen, or period.
@@ -42,7 +42,7 @@ resource "hcp_boundary_cluster" "example" {
 - `auth_token_time_to_live` (String) The time to live for the auth token in golang's time.Duration string format.
 - `auth_token_time_to_stale` (String) The time to stale for the auth token in golang's time.Duration string format.
 - `maintenance_window_config` (Block List, Max: 1) The maintenance window configuration for when cluster upgrades can take place. (see [below for nested schema](#nestedblock--maintenance_window_config))
-- `project_id` (String) The ID of the HCP project where the Boundary cluster is located.
+- `project_id` (String) The ID (UUID) of the HCP project where the Boundary cluster is located.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
