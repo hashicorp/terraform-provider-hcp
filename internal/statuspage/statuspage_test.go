@@ -220,15 +220,15 @@ func TestCheckHCPStatus(t *testing.T) {
 		{
 			name: "multi-component that is to be ignored in EU",
 			setup: func(t *testing.T) {
-				stubStatusPage(t, regions["us"], []incident{
+				stubStatusPage(t, regions["eu"], []incident{
 					inc("Mixed issues", "investigating",
 						testComponent("HCP Boundary", "degraded_performance", regions["eu"]),
 						testComponent("HCP Waypoint", "degraded_performance", regions["eu"]),
 						testGroupedComponent("HCP Packer", "degraded_performance", regions["eu"])),
 				})
 			},
-			expectOutage:      false,
-			expectDiagnostics: false,
+			expectOutage:      true,
+			expectDiagnostics: true,
 			messageContains:   []string{"HCP Waypoint"},
 			messageExcludes:   []string{"HCP Boundary", "HCP Packer"},
 			geography:         "eu",

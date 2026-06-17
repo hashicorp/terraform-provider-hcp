@@ -18,7 +18,7 @@ import (
 
 const (
 	warnSummary   = "You may experience issues using HCP."
-	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check https://status.hashicorp.com for more details."
+	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check %s for more details."
 )
 
 type regionalConfig struct {
@@ -55,25 +55,6 @@ var euConfig = regionalConfig{
 	name:          "EU",
 }
 
-var sandboxConfig = regionalConfig{
-	componentNames: map[string]string{
-		"HCP API":           "01JK8R0BRY4185T4NHJFAXP35D",
-		"HCP Boundary":      "01JK8R0BRYHN4JYQ1H3WC42RWV",
-		"HCP Packer":        "01JK8R0BRYR9EYAGMNJ5EKC6CS",
-		"HCP Portal":        "01JK8R0BRYKPJS5K35R2ZCSHV0",
-		"HCP Vault Radar":   "01JK8R0BRYDYZFQH1V8ZSJKDFF",
-		"HCP Vault Secrets": "01JK8R0BRYY1ZM4NCA18A5T43A",
-		"HCP Waypoint":      "01JK8R0BRY0Q21819AYRKH5GZZ",
-	},
-	groupNames: []string{
-		"HCP Consul Dedicated",
-		"HCP Vault Dedicated",
-		"API",
-	},
-	statusPageURL: "https://statuspage.incident.io/status-page-sandbox-8162182495/api/v1/summary",
-	clientTimeout: 1,
-	name:          "SandBox",
-}
 
 var usConfig = regionalConfig{
 	componentNames: map[string]string{
@@ -96,12 +77,9 @@ var usConfig = regionalConfig{
 }
 
 var regions = map[string]*regionalConfig{
-	"eu":      &euConfig,
-	"sandbox": &sandboxConfig,
-	"us":      &usConfig,
+	"eu": &euConfig,
+	"us": &usConfig,
 }
-
-// Verify we are picking the correct config
 
 type statuspage struct {
 	OngoingIncidents []incident `json:"ongoing_incidents"`
@@ -124,6 +102,7 @@ type affectedComponent struct {
 type statusCheckResult struct {
 	errorMessage  string // For HTTP errors, JSON parsing errors
 	statusMessage string // For actual HCP service outages
+	statusPageURL string // Region-specific status page URL for warning message
 }
 
 func (s statusCheckResult) hasDiagnostics() bool {
@@ -135,7 +114,7 @@ func (s statusCheckResult) diagnosticMessage() string {
 		return s.errorMessage
 	}
 	if s.statusMessage != "" {
-		return fmt.Sprintf(warnDetailFmt, s.statusMessage)
+		return fmt.Sprintf(warnDetailFmt, s.statusMessage, s.statusPageURL)
 	}
 	return ""
 }
@@ -157,12 +136,12 @@ func checkHCPStatus(geography *string) statusCheckResult {
 	var result statusCheckResult
 	var statusBuilder strings.Builder
 
-	region, ok := regions[*geography] // sends the region that doesn't exist, verify it tests US
+	region, ok := regions[*geography]
 	if !ok {
 		region = regions["us"]
 	}
 
-	fmt.Printf("Region name is %v\n", region.name)
+	result.statusPageURL = region.statusPageURL
 	statuspageURL := region.statusPageURL
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
