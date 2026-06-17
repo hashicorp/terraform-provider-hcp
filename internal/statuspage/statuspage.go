@@ -55,7 +55,6 @@ var euConfig = regionalConfig{
 	name:          "EU",
 }
 
-
 var usConfig = regionalConfig{
 	componentNames: map[string]string{
 		"HCP API":           "01K7FBWXHZPTSPVNWDS8P05MKD",
