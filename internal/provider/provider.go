@@ -249,14 +249,6 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	// Determine if status check should be skipped via provider configuration or environment variable.
-	// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
-	skipStatusCheck := data.SkipStatusCheck.ValueBool() || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
-	if !skipStatusCheck {
-		// This helper verifies HCP's status and returns a warning for degraded performance.
-		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework()...)
-	}
-
 	clientConfig := clients.ClientConfig{
 		ClientID:       data.ClientID.ValueString(),
 		ClientSecret:   data.ClientSecret.ValueString(),
@@ -264,6 +256,14 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		ProjectID:      data.ProjectID.ValueString(),
 		SourceChannel:  "terraform-provider-hcp",
 		Geography:      data.Geography.ValueString(),
+	}
+
+	// Determine if status check should be skipped via provider configuration or environment variable.
+	// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
+	skipStatusCheck := data.SkipStatusCheck.ValueBool() || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+	if !skipStatusCheck {
+		// This helper verifies HCP's status and returns a warning for degraded performance.
+		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework(clientConfig.Geography)...)
 	}
 
 	// Read the workload_identity configuration.

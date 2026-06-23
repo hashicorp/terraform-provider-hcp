@@ -16,33 +16,68 @@ import (
 	sdkv2Diag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-var (
-	statuspageURL = "https://status.hashicorp.com/api/v1/summary"
-	clientTimeout = 1 * time.Second
-)
-
 const (
 	warnSummary   = "You may experience issues using HCP."
-	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check https://status.hashicorp.com for more details."
+	warnDetailFmt = "HCP is reporting the following:\n\n%s\n\nPlease check %s for more details."
 )
+
+type regionalConfig struct {
+	// Creating components on the incident.io status page generates a unique ID that can be found in the DOM and API response
+	// Component names are not unique, so we include both here to ensure we report on the correct components
+	componentNames map[string]string
+
+	// Components can be grouped into named folders, in this case containing many cloud regions
+	// Groups have a top-level ID that are not returned in the API response so we rely on the group names
+	groupNames []string
+
+	statusPageURL string
+	name          string
+	clientTimeout int
+}
 
 // Creating components on the incident.io status page generates a unique ID that can be found in the DOM and API response
 // Component names are not unique, so we include both here to ensure we report on the correct components
-var hcpComponentNames = map[string]string{
-	"HCP API":           "01K7FBWXHZPTSPVNWDS8P05MKD",
-	"HCP Boundary":      "01K7FBWXHZ17YES9ACAQVCTYS7",
-	"HCP Packer":        "01K7FBWXHZYTFGMTZYZ8V2GGET",
-	"HCP Portal":        "01K7FBWXHZ0FP76T1PVWGS0HJP",
-	"HCP Vault Radar":   "01K7FBWXHZ26MMSQ3AWN9JR7J4",
-	"HCP Vault Secrets": "01K7FBWXHZHSAJ1GCGZ4ZP3ZYT",
-	"HCP Waypoint":      "01K7FBWXHZ9GE7SV8YKZR0R52V",
+var euConfig = regionalConfig{
+	componentNames: map[string]string{
+		"HCP API":       "01K7FC148SJVJT1TNY9VG83DTE",
+		"HCP Portal":    "01K7FC148SHCEJVZZXH0DPNMC2",
+		"HCP Terraform": "01K7FC148SPG6CET2XAH6GFCC7",
+		"HCP Waypoint":  "01K7FC148SGM8V154MQ73CWVF6",
+		"Portal":        "01JADGGSJTM1102ZE8F65Q3F56",
+	},
+	groupNames: []string{
+		"HCP Consul Dedicated",
+		"HCP Vault Dedicated",
+		"API",
+	},
+	statusPageURL: "https://status.eu.hashicorp.com/api/v1/summary",
+	clientTimeout: 1,
+	name:          "EU",
 }
 
-// Components can be grouped into named folders, in this case containing many cloud regions
-// Groups have a top-level ID that are not returned in the API response so we rely on the group names
-var hcpGroupNames = []string{
-	"HCP Consul Dedicated",
-	"HCP Vault Dedicated",
+var usConfig = regionalConfig{
+	componentNames: map[string]string{
+		"HCP API":           "01K7FBWXHZPTSPVNWDS8P05MKD",
+		"HCP Boundary":      "01K7FBWXHZ17YES9ACAQVCTYS7",
+		"HCP Packer":        "01K7FBWXHZYTFGMTZYZ8V2GGET",
+		"HCP Portal":        "01K7FBWXHZ0FP76T1PVWGS0HJP",
+		"HCP Vault Radar":   "01K7FBWXHZ26MMSQ3AWN9JR7J4",
+		"HCP Vault Secrets": "01K7FBWXHZHSAJ1GCGZ4ZP3ZYT",
+		"HCP Waypoint":      "01K7FBWXHZ9GE7SV8YKZR0R52V",
+	},
+	groupNames: []string{
+		"HCP Consul Dedicated",
+		"HCP Vault Dedicated",
+		"API",
+	},
+	statusPageURL: "https://status.hashicorp.com/api/v1/summary",
+	clientTimeout: 1,
+	name:          "US",
+}
+
+var regions = map[string]*regionalConfig{
+	"eu": &euConfig,
+	"us": &usConfig,
 }
 
 type statuspage struct {
@@ -66,6 +101,7 @@ type affectedComponent struct {
 type statusCheckResult struct {
 	errorMessage  string // For HTTP errors, JSON parsing errors
 	statusMessage string // For actual HCP service outages
+	statusPageURL string // Region-specific status page URL for warning message
 }
 
 func (s statusCheckResult) hasDiagnostics() bool {
@@ -77,26 +113,35 @@ func (s statusCheckResult) diagnosticMessage() string {
 		return s.errorMessage
 	}
 	if s.statusMessage != "" {
-		return fmt.Sprintf(warnDetailFmt, s.statusMessage)
+		return fmt.Sprintf(warnDetailFmt, s.statusMessage, s.statusPageURL)
 	}
 	return ""
 }
 
 // Determine whether the components returned in the API are relevant
-func isHCPComponentAffected(comp affectedComponent) bool {
+func isHCPComponentAffected(comp affectedComponent, region *regionalConfig) bool {
 	if comp.CurrentStatus == "operational" {
 		return false
 	}
-	expectedID, ok := hcpComponentNames[comp.Name]
+	expectedID, ok := region.componentNames[comp.Name]
 	if ok && expectedID == comp.ID {
 		return true
 	}
-	return slices.Contains(hcpGroupNames, comp.GroupName)
+	return slices.Contains(region.groupNames, comp.GroupName)
 }
 
 // Fetch and parse the API response
-func checkHCPStatus() statusCheckResult {
+func checkHCPStatus(geography *string) statusCheckResult {
 	var result statusCheckResult
+	var statusBuilder strings.Builder
+
+	region, ok := regions[*geography]
+	if !ok {
+		region = regions["us"]
+	}
+
+	result.statusPageURL = region.statusPageURL
+	statuspageURL := region.statusPageURL
 
 	req, err := http.NewRequest("GET", statuspageURL, nil)
 	if err != nil {
@@ -104,8 +149,8 @@ func checkHCPStatus() statusCheckResult {
 		return result
 	}
 
-	var cl = http.Client{
-		Timeout: clientTimeout,
+	cl := &http.Client{
+		Timeout: time.Duration(region.clientTimeout) * time.Second,
 	}
 	resp, err := cl.Do(req)
 	if err != nil {
@@ -127,12 +172,10 @@ func checkHCPStatus() statusCheckResult {
 		return result
 	}
 
-	var statusBuilder strings.Builder
-
 	for _, inc := range sp.OngoingIncidents {
 		reported := make([]string, 0, len(inc.AffectedComponents))
 		for _, comp := range inc.AffectedComponents {
-			if isHCPComponentAffected(comp) {
+			if isHCPComponentAffected(comp, region) {
 				prefix := comp.Name
 				if comp.GroupName != "" {
 					prefix = fmt.Sprintf("%s (%s)", comp.GroupName, comp.Name)
@@ -151,8 +194,8 @@ func checkHCPStatus() statusCheckResult {
 	return result
 }
 
-func IsHCPOperationalFramework() (diags frameworkDiag.Diagnostics) {
-	status := checkHCPStatus()
+func IsHCPOperationalFramework(geography string) (diags frameworkDiag.Diagnostics) {
+	status := checkHCPStatus(&geography)
 
 	if status.hasDiagnostics() {
 		diags.AddWarning(warnSummary, status.diagnosticMessage())
@@ -161,8 +204,8 @@ func IsHCPOperationalFramework() (diags frameworkDiag.Diagnostics) {
 	return diags
 }
 
-func IsHCPOperationalSDKv2() (diags sdkv2Diag.Diagnostics) {
-	status := checkHCPStatus()
+func IsHCPOperationalSDKv2(geography string) (diags sdkv2Diag.Diagnostics) {
+	status := checkHCPStatus(&geography)
 
 	if status.hasDiagnostics() {
 		diags = append(diags, sdkv2Diag.Diagnostic{
