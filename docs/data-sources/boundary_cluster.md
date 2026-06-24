@@ -13,7 +13,7 @@ The Boundary cluster data source provides information about an existing HCP Boun
 
 ```terraform
 data "hcp_boundary_cluster" "example" {
-  cluster_id = var.cluster_id
+  cluster_id = var.cluster_id   # Note: This is the Boundary cluster name, not its UUID. 
 }
 ```
 
@@ -22,11 +22,11 @@ data "hcp_boundary_cluster" "example" {
 
 ### Required
 
-- `cluster_id` (String) The ID of the Boundary cluster
+- `cluster_id` (String) The name of the Boundary cluster (not its UUID).  The cluster name is listed at the top of the HCP Boundary Cluster overview page. The variable `cluster_id` is used here because that's what the HCP API presently uses.
 
 ### Optional
 
-- `project_id` (String) The ID of the HCP project where the Boundary cluster is located. If not specified, the project configured in the HCP provider config block will be used.
+- `project_id` (String) The ID (UUID) of the HCP project where the Boundary cluster is located. If not specified, the project configured in the HCP provider config block will be used.
 If not specified, the project specified in the HCP Provider config block will be used, if configured.
 If a project is not configured in the HCP Provider config block, the oldest project in the organization will be used.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
