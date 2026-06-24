@@ -1,3 +1,9 @@
+## v0.113.0 (Jun 24, 2026)
+
+IMPROVEMENTS:
+
+* Added EU support to HCP status check functionality. [[GH-1447](https://github.com/hashicorp/hcp/issues/1447)]
+
 ## v0.112.0 (Jun 11, 2026)
 
 FEATURES:
