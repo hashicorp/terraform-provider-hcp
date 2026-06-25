@@ -23,6 +23,8 @@ require (
 	google.golang.org/grpc v1.81.1
 )
 
+replace github.com/hashicorp/hcp-sdk-go => ../hcp-sdk-go-internal
+
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Kunde21/markdownfmt/v3 v3.1.0 // indirect
