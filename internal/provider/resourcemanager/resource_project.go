@@ -173,7 +173,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	if !plan.Name.Equal(state.Name) {
 		setNameReq := project_service.NewProjectServiceSetNameParams()
 		setNameReq.SetID(plan.ResourceID.ValueString())
-		setNameReq.SetBody(project_service.ProjectServiceSetNameBody{
+		setNameReq.SetBody(&models.HashicorpCloudResourcemanagerProjectServiceSetNameBody{
 			Name: plan.Name.ValueString(),
 		})
 		setNameReq.SetContext(ctx)
@@ -189,7 +189,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	if !plan.Description.Equal(state.Description) {
 		setDescReq := project_service.NewProjectServiceSetDescriptionParams()
 		setDescReq.SetID(plan.ResourceID.ValueString())
-		setDescReq.SetBody(project_service.ProjectServiceSetDescriptionBody{
+		setDescReq.SetBody(&models.HashicorpCloudResourcemanagerProjectServiceSetDescriptionBody{
 			Description: plan.Description.ValueString(),
 		})
 		setDescReq.SetContext(ctx)
