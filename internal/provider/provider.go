@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/hashicorp/hcp-sdk-go/config/geography"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
@@ -60,6 +61,11 @@ type WorkloadIdentityFrameworkModel struct {
 
 func (p *ProviderFramework) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "hcp"
+	if p.version != "" {
+		resp.Version = p.version
+		return
+	}
+
 	resp.Version = "dev"
 }
 
@@ -156,6 +162,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Resource Manager
 		resourcemanager.NewOrganizationIAMPolicyResource,
 		resourcemanager.NewOrganizationIAMBindingResource,
+		resourcemanager.NewOrganizationResourceControlPolicyResource,
 
 		resourcemanager.NewProjectResource,
 		resourcemanager.NewProjectIAMPolicyResource,
@@ -248,6 +255,18 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	// Sets up HCP SDK client.
 	var data ProviderFrameworkModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	providerVersion := p.version
+	if providerVersion == "" {
+		providerVersion = "dev"
+	}
+
+	tflog.Info(ctx, "Configuring HCP provider", map[string]any{
+		"provider_version": providerVersion,
+	})
 
 	clientConfig := clients.ClientConfig{
 		ClientID:       data.ClientID.ValueString(),
@@ -261,6 +280,15 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 	// Determine if status check should be skipped via provider configuration or environment variable.
 	// Previously, skipping depended on the value of HCP_API_HOST but is now controlled explicitly by users.
 	skipStatusCheck := data.SkipStatusCheck.ValueBool() || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
+	tflog.Debug(ctx, "HCP provider auth configuration", map[string]any{
+		"has_client_id":         clientConfig.ClientID != "",
+		"has_client_secret":     clientConfig.ClientSecret != "",
+		"has_credential_file":   clientConfig.CredentialFile != "",
+		"has_workload_identity": len(data.WorkloadIdentity.Elements()) == 1,
+		"skip_status_check":     skipStatusCheck,
+		"geography":             clientConfig.Geography,
+	})
+
 	if !skipStatusCheck {
 		// This helper verifies HCP's status and returns a warning for degraded performance.
 		resp.Diagnostics.Append(statuspage.IsHCPOperationalFramework(clientConfig.Geography)...)
@@ -287,6 +315,10 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 		resp.Diagnostics.AddError(fmt.Sprintf("unable to create HCP api client: %v", err), "")
 		return
 	}
+
+	tflog.Info(ctx, "HCP provider client initialized", map[string]any{
+		"provider_version": providerVersion,
+	})
 
 	// Attempt to source from the environment if unset.
 	if clientConfig.ProjectID == "" {
@@ -327,6 +359,12 @@ func (p *ProviderFramework) Configure(ctx context.Context, req provider.Configur
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
+
+	tflog.Info(ctx, "HCP provider configured", map[string]any{
+		"provider_version": providerVersion,
+		"organization_id":  client.Config.OrganizationID,
+		"project_id":       client.Config.ProjectID,
+	})
 }
 
 func readWorkloadIdentity(model WorkloadIdentityFrameworkModel, clientConfig clients.ClientConfig) (clients.ClientConfig, diag.Diagnostics) {

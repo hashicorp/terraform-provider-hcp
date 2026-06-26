@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/preview/2020-11-05/client/billing_account_service"
+	cloud_billing "github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/stable/2020-11-05/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-billing/stable/2020-11-05/client/billing_account_service"
 
 	cloud_boundary "github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-boundary-service/stable/2021-12-21/client/boundary_service"
@@ -60,8 +60,8 @@ import (
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/log_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-log-service/preview/2021-03-30/client/streaming_service"
 
-	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client"
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/stable/2023-05-31/client/webhook_service"
+	cloud_webhook "github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-webhook/preview/2023-05-31/client/webhook_service"
 
 	cloud_vault_radar "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client"
 	radar_src_registration_service "github.com/hashicorp/hcp-sdk-go/clients/cloud-vault-radar/preview/2023-05-01/client/data_source_registration_service"

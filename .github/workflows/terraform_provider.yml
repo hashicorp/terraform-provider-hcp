@@ -17,6 +17,8 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
     - name: Set up Go
       uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
@@ -25,8 +27,17 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
+    - name: Configure Git for private modules
+      env:
+        TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      run: |
+        git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
 
     - name: Run 'go mod tidy' and check for differences
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         make depscheck
 
@@ -39,6 +50,8 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
     - name: Set up Go
       uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
@@ -47,11 +60,23 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
+    - name: Configure Git for private modules
+      env:
+        TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      run: |
+        git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
     - name: Get dependencies
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         go mod download
 
     - name: Build
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         go build -v .
 
@@ -64,6 +89,8 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
     - name: Set up Go
       uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
@@ -72,13 +99,25 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
+    - name: Configure Git for private modules
+      env:
+        TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      run: |
+        git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
 
     - name: Get dependencies
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
         go mod download
 
     - name: Run unit tests and linter
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         make test-ci
 
@@ -98,6 +137,8 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
 
     - name: Set up Go
       uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
@@ -106,6 +147,15 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
+    - name: Configure Git for private modules
+      env:
+        TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      run: |
+        git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
     - name: Generate docs and check for differences
+      env:
+        GOPRIVATE: 'github.com/hashicorp/*'
+        GONOSUMDB: 'github.com/hashicorp/*'
       run: |
         make gencheck
