@@ -121,9 +121,18 @@ jobs:
     name: Go ${{ needs.get-go-version.outputs.go-version }} ${{ matrix.goos }} ${{ matrix.goarch }} build
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+      - name: Configure Git for private modules
+        env:
+          TOKEN: ${{ secrets.HCP_SDK_PIPELINE_TOKEN }}
+        run: |
+          git config --global url."https://${TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
       - uses: hashicorp/actions-go-build@v1
         env:
           CGO_ENABLED: 0
+          GOPRIVATE: 'github.com/hashicorp/*'
+          GONOSUMDB: 'github.com/hashicorp/*'
           BASE_VERSION: ${{ needs.set-product-version.outputs.product-base-version }}
           PRERELEASE_VERSION: ${{ needs.set-product-version.outputs.product-prerelease-version}}
           METADATA_VERSION: ${{ env.METADATA }}
