@@ -1,0 +1,3 @@
+```release-note:improvement
+Adds EU status page support
+```
