@@ -82,7 +82,7 @@ func (u *orgIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, policy *
 	var diags diag.Diagnostics
 	params := organization_service.NewOrganizationServiceSetIamPolicyParams()
 	params.ID = u.client.Config.OrganizationID
-	params.Body = organization_service.OrganizationServiceSetIamPolicyBody{
+	params.Body = &models.HashicorpCloudResourcemanagerOrganizationServiceSetIamPolicyBody{
 		Policy: policy,
 	}
 
