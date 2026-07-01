@@ -156,6 +156,7 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		// Resource Manager
 		resourcemanager.NewOrganizationIAMPolicyResource,
 		resourcemanager.NewOrganizationIAMBindingResource,
+		resourcemanager.NewOrganizationResourceControlPolicyResource,
 
 		resourcemanager.NewProjectResource,
 		resourcemanager.NewProjectIAMPolicyResource,
