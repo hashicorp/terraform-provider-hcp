@@ -159,7 +159,7 @@ func configure(p *schema.Provider) func(context.Context, *schema.ResourceData) (
 		skipStatusCheck := d.Get("skip_status_check").(bool) || os.Getenv("HCP_SKIP_STATUS_CHECK") == "true"
 		if !skipStatusCheck {
 			// This helper verifies HCP's status and returns a warning for degraded performance.
-			diags = statuspage.IsHCPOperationalSDKv2()
+			diags = statuspage.IsHCPOperationalSDKv2(clientConfig.Geography)
 		}
 
 		// Read the workload_identity configuration
