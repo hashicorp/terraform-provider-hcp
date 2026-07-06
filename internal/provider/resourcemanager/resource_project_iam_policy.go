@@ -104,7 +104,7 @@ func (u *projectIAMPolicyUpdater) SetResourceIamPolicy(ctx context.Context, poli
 	var diags diag.Diagnostics
 	params := project_service.NewProjectServiceSetIamPolicyParams()
 	params.ID = u.projectID
-	params.Body = project_service.ProjectServiceSetIamPolicyBody{
+	params.Body = &models.HashicorpCloudResourcemanagerProjectServiceSetIamPolicyBody{
 		Policy: policy,
 	}
 
