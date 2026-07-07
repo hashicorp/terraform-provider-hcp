@@ -237,11 +237,40 @@ func TestStringListFromTF_EmptyList_ReturnsEmpty(t *testing.T) {
 	assert.Empty(t, got)
 }
 
+// ---- import helpers ----
+
+func TestUnrecognizedImportedConstraints_AllKnown(t *testing.T) {
+	imported := []string{"constraints/a", "constraints/b"}
+	available := map[string]bool{
+		"constraints/a": true,
+		"constraints/b": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Empty(t, got)
+}
+
+func TestUnrecognizedImportedConstraints_ReturnsSortedUnknowns(t *testing.T) {
+	imported := []string{"constraints/z", "constraints/a", "constraints/m"}
+	available := map[string]bool{
+		"constraints/m": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
+}
+
+func TestUnrecognizedImportedConstraints_EmptyInputs(t *testing.T) {
+	assert.Empty(t, unrecognizedImportedConstraints(nil, map[string]bool{"constraints/a": true}))
+	assert.Empty(t, unrecognizedImportedConstraints([]string{"constraints/a"}, map[string]bool{}))
+}
+
 // ---- resource struct satisfies interface ----
 
 func TestResourceOrganizationResourceControlPolicy_ImplementsResource(t *testing.T) {
 	var _ resource.Resource = &resourceOrganizationResourceControlPolicy{}
 	var _ resource.ResourceWithConfigure = &resourceOrganizationResourceControlPolicy{}
+	var _ resource.ResourceWithImportState = &resourceOrganizationResourceControlPolicy{}
 }
 
 func TestNewOrganizationResourceControlPolicyResource_NotNil(t *testing.T) {
