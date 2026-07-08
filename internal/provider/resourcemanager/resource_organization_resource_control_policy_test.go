@@ -153,16 +153,6 @@ func TestPolicyToModel_IDMatchesOrgID(t *testing.T) {
 	assert.Equal(t, "org-456", model.OrganizationID.ValueString())
 }
 
-func TestPolicyToModel_EtagPreserved(t *testing.T) {
-	policy := &models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse{
-		EnabledConstraints: []string{},
-		OrganizationID:     "org-1",
-		Etag:               "etag-12345",
-	}
-	model := policyToModel(policy)
-	assert.Equal(t, "etag-12345", model.Etag.ValueString())
-}
-
 func TestPolicyToModel_EmptyConstraints_ProducesEmptyList(t *testing.T) {
 	policy := &models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse{
 		EnabledConstraints: []string{},
@@ -290,7 +280,6 @@ func TestResourceSchema_HasExpectedAttributes(t *testing.T) {
 	assert.Contains(t, attrs, "id")
 	assert.Contains(t, attrs, "organization_id")
 	assert.Contains(t, attrs, "enabled_constraints")
-	assert.Contains(t, attrs, "etag")
 }
 
 func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
@@ -303,19 +292,6 @@ func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
 	require.True(t, ok)
 	assert.True(t, orgIDAttr.Required)
 	assert.NotEmpty(t, orgIDAttr.PlanModifiers)
-}
-
-func TestResourceSchema_EtagIsComputed(t *testing.T) {
-	r := &resourceOrganizationResourceControlPolicy{}
-	resp := &resource.SchemaResponse{}
-	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
-	require.False(t, resp.Diagnostics.HasError())
-
-	etagAttr, ok := resp.Schema.Attributes["etag"].(schema.StringAttribute)
-	require.True(t, ok)
-	assert.True(t, etagAttr.Computed)
-	assert.False(t, etagAttr.Required)
-	assert.False(t, etagAttr.Optional)
 }
 
 func TestResourceSchema_EnabledConstraintsIsRequired(t *testing.T) {
