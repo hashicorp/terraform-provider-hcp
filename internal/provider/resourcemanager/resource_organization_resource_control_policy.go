@@ -6,6 +6,7 @@ package resourcemanager
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
@@ -17,13 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
+	"google.golang.org/grpc/codes"
 )
 
 // resourceControlPolicyModel is the Terraform state/plan model for hcp_resource_control_policy.
 type resourceControlPolicyModel struct {
 	ID                 types.String `tfsdk:"id"`
 	OrganizationID     types.String `tfsdk:"organization_id"`
-	EnabledConstraints types.List   `tfsdk:"enabled_constraints"`
+	EnabledConstraints types.Set    `tfsdk:"enabled_constraints"`
 	Etag               types.String `tfsdk:"etag"`
 }
 
@@ -62,7 +64,7 @@ func (r *resourceOrganizationResourceControlPolicy) Schema(_ context.Context, _ 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"enabled_constraints": schema.ListAttribute{
+			"enabled_constraints": schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
 				Description: "The list of constraint IDs to enable for the organization. " +
@@ -71,9 +73,6 @@ func (r *resourceOrganizationResourceControlPolicy) Schema(_ context.Context, _ 
 			"etag": schema.StringAttribute{
 				Computed:    true,
 				Description: "The etag of the current resource control policy. Used internally for concurrency control.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
@@ -105,7 +104,7 @@ func (r *resourceOrganizationResourceControlPolicy) Create(ctx context.Context, 
 	orgID := plan.OrganizationID.ValueString()
 
 	// Extract desired constraint IDs from plan.
-	desiredConstraints, diags := stringListFromTF(ctx, plan.EnabledConstraints)
+	desiredConstraints, diags := stringSetFromTF(ctx, plan.EnabledConstraints)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,8 +122,19 @@ func (r *resourceOrganizationResourceControlPolicy) Create(ctx context.Context, 
 		return
 	}
 
-	// Step 2: Call SetResourceControlPolicy.
-	setDiags := r.setPolicy(ctx, orgID, desiredConstraints, "")
+	// Step 2: Use the current policy etag when one already exists.
+	currentPolicy, diags := r.getPolicy(ctx, orgID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	etag := ""
+	if currentPolicy != nil {
+		etag = currentPolicy.Etag
+	}
+
+	setDiags := r.setPolicy(ctx, orgID, desiredConstraints, etag)
 	resp.Diagnostics.Append(setDiags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,10 +179,59 @@ func (r *resourceOrganizationResourceControlPolicy) Read(ctx context.Context, re
 }
 
 func (r *resourceOrganizationResourceControlPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"Update not supported in PR1",
-		"This initial resource implementation supports create and read only. Please recreate the resource for changes until update support is added in a follow-up.",
-	)
+	var plan resourceControlPolicyModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var state resourceControlPolicyModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	orgID := plan.OrganizationID.ValueString()
+
+	desiredConstraints, diags := stringSetFromTF(ctx, plan.EnabledConstraints)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	availableConstraints, diags := r.listAllConstraints(ctx, orgID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateConstraints(desiredConstraints, availableConstraints)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	setDiags := r.setPolicy(ctx, orgID, desiredConstraints, etagFromState(state))
+	resp.Diagnostics.Append(setDiags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	updatedPolicy, diags := r.getPolicy(ctx, orgID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if updatedPolicy == nil {
+		resp.Diagnostics.AddError(
+			"Failed to read organization resource control policy after update",
+			"The policy update succeeded, but the provider could not read the updated policy afterwards. Rerun terraform apply to reconcile state.",
+		)
+		return
+	}
+
+	newState := policyToModel(updatedPolicy)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *resourceOrganizationResourceControlPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -249,15 +308,78 @@ func (r *resourceOrganizationResourceControlPolicy) setPolicy(ctx context.Contex
 	if err != nil {
 		serviceErr, ok := err.(*organization_service.OrganizationServiceSetResourceControlPolicyDefault)
 		if !ok {
-			diags.AddError("Failed to set organization resource control policy", err.Error())
+			diags.AddError(
+				"Failed to set organization resource control policy",
+				fmt.Sprintf("The provider could not update the organization resource control policy. Review the error and rerun terraform apply. Error: %s", err.Error()),
+			)
 			return diags
 		}
-		diags.AddError(
-			"Failed to set organization resource control policy",
-			fmt.Sprintf("API error %d: %s", serviceErr.Code(), err.Error()),
-		)
+
+		diags.Append(setPolicyDiagnostic(serviceErr))
 	}
 	return diags
+}
+
+func etagFromState(state resourceControlPolicyModel) string {
+	if state.Etag.IsNull() || state.Etag.IsUnknown() {
+		return ""
+	}
+	return state.Etag.ValueString()
+}
+
+func setPolicyDiagnostic(serviceErr *organization_service.OrganizationServiceSetResourceControlPolicyDefault) diag.Diagnostic {
+	if isConflictSetPolicyError(serviceErr) {
+		return diag.NewErrorDiagnostic(
+			"Conflict setting organization resource control policy",
+			fmt.Sprintf("The organization resource control policy changed since Terraform last read it. Rerun terraform apply to refresh the policy etag and retry the change. API error %d (%s): %s", serviceErr.Code(), setPolicyRPCCode(serviceErr), setPolicyErrorMessage(serviceErr)),
+		)
+	}
+
+	return diag.NewErrorDiagnostic(
+		"Failed to set organization resource control policy",
+		fmt.Sprintf("The HCP API rejected the organization resource control policy change. Review the API error, fix the underlying issue, and rerun terraform apply. API error %d (%s): %s", serviceErr.Code(), setPolicyRPCCode(serviceErr), setPolicyErrorMessage(serviceErr)),
+	)
+}
+
+func isConflictSetPolicyError(serviceErr *organization_service.OrganizationServiceSetResourceControlPolicyDefault) bool {
+	if serviceErr == nil {
+		return false
+	}
+
+	payload := serviceErr.GetPayload()
+	if payload != nil {
+		switch codes.Code(payload.Code) {
+		case codes.Aborted, codes.FailedPrecondition:
+			return true
+		}
+	}
+
+	switch serviceErr.Code() {
+	case http.StatusConflict, http.StatusPreconditionFailed:
+		return true
+	default:
+		return false
+	}
+}
+
+func setPolicyRPCCode(serviceErr *organization_service.OrganizationServiceSetResourceControlPolicyDefault) string {
+	if serviceErr == nil || serviceErr.GetPayload() == nil {
+		return codes.Unknown.String()
+	}
+
+	return codes.Code(serviceErr.GetPayload().Code).String()
+}
+
+func setPolicyErrorMessage(serviceErr *organization_service.OrganizationServiceSetResourceControlPolicyDefault) string {
+	if serviceErr == nil {
+		return "unknown error"
+	}
+
+	if payload := serviceErr.GetPayload(); payload != nil && payload.Message != "" {
+		return payload.Message
+	}
+
+	return serviceErr.Error()
 }
 
 // getPolicy calls GetResourceControlPolicy and returns the response payload.
@@ -298,12 +420,12 @@ func policyToModel(p *models.HashicorpCloudResourcemanagerOrganizationGetResourc
 		constraintVals[i] = types.StringValue(c)
 	}
 
-	listVal, _ := types.ListValueFrom(context.Background(), types.StringType, constraintVals)
+	setVal, _ := types.SetValueFrom(context.Background(), types.StringType, constraintVals)
 
 	return resourceControlPolicyModel{
 		ID:                 types.StringValue(p.OrganizationID),
 		OrganizationID:     types.StringValue(p.OrganizationID),
-		EnabledConstraints: listVal,
+		EnabledConstraints: setVal,
 		Etag:               types.StringValue(p.Etag),
 	}
 }
@@ -343,14 +465,14 @@ func validateConstraints(requested []string, available map[string]bool) diag.Dia
 	return diags
 }
 
-// stringListFromTF extracts a []string from a types.List of strings.
-func stringListFromTF(ctx context.Context, list types.List) ([]string, diag.Diagnostics) {
+// stringSetFromTF extracts a []string from a types.Set of strings.
+func stringSetFromTF(ctx context.Context, set types.Set) ([]string, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if list.IsNull() || list.IsUnknown() {
+	if set.IsNull() || set.IsUnknown() {
 		return []string{}, diags
 	}
 	var elems []types.String
-	diags.Append(list.ElementsAs(ctx, &elems, false)...)
+	diags.Append(set.ElementsAs(ctx, &elems, false)...)
 	if diags.HasError() {
 		return nil, diags
 	}
