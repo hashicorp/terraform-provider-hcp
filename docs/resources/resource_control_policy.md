@@ -17,7 +17,7 @@ Manages the organization-level resource control policy constraints for an HCP or
 
 ### Required
 
-- `enabled_constraints` (List of String) The list of constraint IDs to enable for the organization. Each constraint ID must be a recognized constraint returned by ListConstraints.
+- `enabled_constraints` (Set of String) The list of constraint IDs to enable for the organization. Each constraint ID must be a recognized constraint returned by ListConstraints.
 - `organization_id` (String) The ID of the organization to manage the resource control policy for.
 
 ### Read-Only
