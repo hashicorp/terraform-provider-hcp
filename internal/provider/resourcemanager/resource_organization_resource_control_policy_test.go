@@ -334,6 +334,29 @@ func TestSetPolicy_NonConflictFailureReturnsDiagnosticAndDoesNotRetry(t *testing
 	assert.Contains(t, diags[0].Detail(), "internal service failure")
 }
 
+func TestSetPolicy_MissingRPCCodeDefaultsToUnknown(t *testing.T) {
+	var setCalls int32
+
+	r := newTestResourceControlPolicyResource(t, func(w http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, http.MethodPut, req.Method)
+		atomic.AddInt32(&setCalls, 1)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		require.NoError(t, json.NewEncoder(w).Encode(sharedmodels.GoogleRPCStatus{
+			Message: "internal service failure without rpc code",
+		}))
+	})
+
+	diags := r.setPolicy(context.Background(), "org-123", []string{"constraints/a"}, "etag-123")
+	require.True(t, diags.HasError())
+	assert.Equal(t, int32(1), atomic.LoadInt32(&setCalls))
+	assert.Equal(t, "Failed to set organization resource control policy", diags[0].Summary())
+	assert.Contains(t, diags[0].Detail(), codes.Unknown.String())
+	assert.NotContains(t, diags[0].Detail(), codes.OK.String())
+	assert.Contains(t, diags[0].Detail(), "internal service failure without rpc code")
+}
+
 // ---- resource struct satisfies interface ----
 
 func TestResourceOrganizationResourceControlPolicy_ImplementsResource(t *testing.T) {

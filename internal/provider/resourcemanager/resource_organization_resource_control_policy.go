@@ -367,6 +367,10 @@ func setPolicyRPCCode(serviceErr *organization_service.OrganizationServiceSetRes
 		return codes.Unknown.String()
 	}
 
+	if serviceErr.GetPayload().Code == 0 {
+		return codes.Unknown.String()
+	}
+
 	return codes.Code(serviceErr.GetPayload().Code).String()
 }
 
