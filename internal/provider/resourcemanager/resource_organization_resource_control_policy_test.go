@@ -250,6 +250,16 @@ func TestUnrecognizedImportedConstraints_ReturnsSortedUnknowns(t *testing.T) {
 	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
 }
 
+func TestUnrecognizedImportedConstraints_DeduplicatesUnknowns(t *testing.T) {
+	imported := []string{"constraints/z", "constraints/a", "constraints/z", "constraints/a", "constraints/m"}
+	available := map[string]bool{
+		"constraints/m": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
+}
+
 func TestUnrecognizedImportedConstraints_EmptyInputs(t *testing.T) {
 	assert.Empty(t, unrecognizedImportedConstraints(nil, map[string]bool{"constraints/a": true}))
 	assert.Empty(t, unrecognizedImportedConstraints([]string{"constraints/a"}, map[string]bool{}))

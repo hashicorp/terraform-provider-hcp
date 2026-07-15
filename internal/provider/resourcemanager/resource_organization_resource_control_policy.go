@@ -478,11 +478,16 @@ func unrecognizedImportedConstraints(imported []string, available map[string]boo
 	}
 
 	unknown := make([]string, 0)
+	seen := make(map[string]struct{})
 	for _, id := range imported {
 		if id == "" {
 			continue
 		}
 		if !available[id] {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
 			unknown = append(unknown, id)
 		}
 	}
