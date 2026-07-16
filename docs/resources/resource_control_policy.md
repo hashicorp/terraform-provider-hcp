@@ -22,5 +22,4 @@ Manages the organization-level resource control policy constraints for an HCP or
 
 ### Read-Only
 
-- `etag` (String) The etag of the current resource control policy. Used internally for concurrency control.
 - `id` (String) The ID of the resource. Set to the organization ID.
