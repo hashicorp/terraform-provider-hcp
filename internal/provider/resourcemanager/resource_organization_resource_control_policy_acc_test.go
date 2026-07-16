@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
+	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -114,8 +114,11 @@ func newOrganizationResourceControlPolicyFixture(t *testing.T) organizationResou
 		t.Fatal("test provider client is missing organization ID")
 	}
 
-	policy := testAccGetOrganizationResourceControlPolicy(t, orgID)
-	originalConstraints := append([]string{}, policy.EnabledConstraints...)
+	policy := testAccGetOrganizationResourceControlPolicyOptional(t, orgID)
+	originalConstraints := []string{}
+	if policy != nil {
+		originalConstraints = append(originalConstraints, policy.EnabledConstraints...)
+	}
 	sort.Strings(originalConstraints)
 
 	t.Cleanup(func() {
@@ -291,16 +294,38 @@ func testAccSetOrganizationResourceControlPolicy(t *testing.T, orgID string, con
 	t.Helper()
 
 	client := acctest.HCPClients(t)
-	current := testAccGetOrganizationResourceControlPolicy(t, orgID)
+	current := testAccGetOrganizationResourceControlPolicyOptional(t, orgID)
+	etag := ""
+	if current != nil {
+		etag = current.Etag
+	}
 
 	params := organization_service.NewOrganizationServiceSetResourceControlPolicyParamsWithContext(context.Background())
 	params.ID = orgID
 	params.Body = &models.HashicorpCloudResourcemanagerOrganizationServiceSetResourceControlPolicyBody{
 		ConstraintIds: constraintIDs,
-		Etag:          current.Etag,
+		Etag:          etag,
 	}
 
 	if _, err := client.Organization.OrganizationServiceSetResourceControlPolicy(params, nil); err != nil {
 		t.Fatalf("restore resource control policy failed: %v", err)
 	}
+}
+
+func testAccGetOrganizationResourceControlPolicyOptional(t *testing.T, orgID string) *models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse {
+	t.Helper()
+
+	client := acctest.HCPClients(t)
+	params := organization_service.NewOrganizationServiceGetResourceControlPolicyParamsWithContext(context.Background())
+	params.ID = orgID
+
+	res, err := client.Organization.OrganizationServiceGetResourceControlPolicy(params, nil)
+	if err != nil {
+		if serviceErr, ok := err.(*organization_service.OrganizationServiceGetResourceControlPolicyDefault); ok && serviceErr.Code() == 404 {
+			return nil
+		}
+		t.Fatalf("get resource control policy failed: %v", err)
+	}
+
+	return res.GetPayload()
 }
