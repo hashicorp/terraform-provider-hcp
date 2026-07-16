@@ -153,16 +153,6 @@ func TestPolicyToModel_IDMatchesOrgID(t *testing.T) {
 	assert.Equal(t, "org-456", model.OrganizationID.ValueString())
 }
 
-func TestPolicyToModel_EtagPreserved(t *testing.T) {
-	policy := &models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse{
-		EnabledConstraints: []string{},
-		OrganizationID:     "org-1",
-		Etag:               "etag-12345",
-	}
-	model := policyToModel(policy)
-	assert.Equal(t, "etag-12345", model.Etag.ValueString())
-}
-
 func TestPolicyToModel_EmptyConstraints_ProducesEmptyList(t *testing.T) {
 	policy := &models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse{
 		EnabledConstraints: []string{},
@@ -237,11 +227,50 @@ func TestStringListFromTF_EmptyList_ReturnsEmpty(t *testing.T) {
 	assert.Empty(t, got)
 }
 
+// ---- import helpers ----
+
+func TestUnrecognizedImportedConstraints_AllKnown(t *testing.T) {
+	imported := []string{"constraints/a", "constraints/b"}
+	available := map[string]bool{
+		"constraints/a": true,
+		"constraints/b": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Empty(t, got)
+}
+
+func TestUnrecognizedImportedConstraints_ReturnsSortedUnknowns(t *testing.T) {
+	imported := []string{"constraints/z", "constraints/a", "constraints/m"}
+	available := map[string]bool{
+		"constraints/m": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
+}
+
+func TestUnrecognizedImportedConstraints_DeduplicatesUnknowns(t *testing.T) {
+	imported := []string{"constraints/z", "constraints/a", "constraints/z", "constraints/a", "constraints/m"}
+	available := map[string]bool{
+		"constraints/m": true,
+	}
+
+	got := unrecognizedImportedConstraints(imported, available)
+	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
+}
+
+func TestUnrecognizedImportedConstraints_EmptyInputs(t *testing.T) {
+	assert.Empty(t, unrecognizedImportedConstraints(nil, map[string]bool{"constraints/a": true}))
+	assert.Empty(t, unrecognizedImportedConstraints([]string{"constraints/a"}, map[string]bool{}))
+}
+
 // ---- resource struct satisfies interface ----
 
 func TestResourceOrganizationResourceControlPolicy_ImplementsResource(t *testing.T) {
 	var _ resource.Resource = &resourceOrganizationResourceControlPolicy{}
 	var _ resource.ResourceWithConfigure = &resourceOrganizationResourceControlPolicy{}
+	var _ resource.ResourceWithImportState = &resourceOrganizationResourceControlPolicy{}
 }
 
 func TestNewOrganizationResourceControlPolicyResource_NotNil(t *testing.T) {
@@ -261,7 +290,6 @@ func TestResourceSchema_HasExpectedAttributes(t *testing.T) {
 	assert.Contains(t, attrs, "id")
 	assert.Contains(t, attrs, "organization_id")
 	assert.Contains(t, attrs, "enabled_constraints")
-	assert.Contains(t, attrs, "etag")
 }
 
 func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
@@ -274,19 +302,6 @@ func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
 	require.True(t, ok)
 	assert.True(t, orgIDAttr.Required)
 	assert.NotEmpty(t, orgIDAttr.PlanModifiers)
-}
-
-func TestResourceSchema_EtagIsComputed(t *testing.T) {
-	r := &resourceOrganizationResourceControlPolicy{}
-	resp := &resource.SchemaResponse{}
-	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
-	require.False(t, resp.Diagnostics.HasError())
-
-	etagAttr, ok := resp.Schema.Attributes["etag"].(schema.StringAttribute)
-	require.True(t, ok)
-	assert.True(t, etagAttr.Computed)
-	assert.False(t, etagAttr.Required)
-	assert.False(t, etagAttr.Optional)
 }
 
 func TestResourceSchema_EnabledConstraintsIsRequired(t *testing.T) {
