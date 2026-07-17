@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-iam/stable/2019-12-10/client/service_principals_service"
 
@@ -112,6 +113,11 @@ type ServicePrincipal struct {
 	Parent       types.String `tfsdk:"parent"`
 }
 
+const (
+	servicePrincipalMaxAttempts = 4
+	servicePrincipalBackoffBase = 2 * time.Second
+)
+
 func (r *resourceServicePrincipal) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan ServicePrincipal
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -130,7 +136,24 @@ func (r *resourceServicePrincipal) Create(ctx context.Context, req resource.Crea
 		Name: plan.Name.ValueString(),
 	}
 
-	res, err := r.client.ServicePrincipals.ServicePrincipalsServiceCreateServicePrincipal(createParams, nil)
+	var (
+		res *service_principals_service.ServicePrincipalsServiceCreateServicePrincipalOK
+		err error
+	)
+	for attempt := 0; attempt < servicePrincipalMaxAttempts; attempt++ {
+		res, err = r.client.ServicePrincipals.ServicePrincipalsServiceCreateServicePrincipal(createParams, nil)
+		if err == nil {
+			break
+		}
+
+		if !isRetryableServicePrincipalCreateError(err) || attempt == servicePrincipalMaxAttempts-1 {
+			break
+		}
+
+		if !sleepWithContext(ctx, servicePrincipalBackoffBase*time.Duration(1<<attempt)) {
+			break
+		}
+	}
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating service principal", err.Error())
 		return
@@ -173,7 +196,25 @@ func (r *resourceServicePrincipal) Read(ctx context.Context, req resource.ReadRe
 
 	getParams := service_principals_service.NewServicePrincipalsServiceGetServicePrincipalParams()
 	getParams.ResourceName = state.ResourceName.ValueString()
-	res, err := r.client.ServicePrincipals.ServicePrincipalsServiceGetServicePrincipal(getParams, nil)
+
+	var (
+		res *service_principals_service.ServicePrincipalsServiceGetServicePrincipalOK
+		err error
+	)
+	for attempt := 0; attempt < servicePrincipalMaxAttempts; attempt++ {
+		res, err = r.client.ServicePrincipals.ServicePrincipalsServiceGetServicePrincipal(getParams, nil)
+		if err == nil {
+			break
+		}
+
+		if !isRetryableServicePrincipalGetError(err) || attempt == servicePrincipalMaxAttempts-1 {
+			break
+		}
+
+		if !sleepWithContext(ctx, servicePrincipalBackoffBase*time.Duration(1<<attempt)) {
+			break
+		}
+	}
 	if err != nil {
 		var getErr *service_principals_service.ServicePrincipalsServiceGetServicePrincipalDefault
 		if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
@@ -212,7 +253,22 @@ func (r *resourceServicePrincipal) Delete(ctx context.Context, req resource.Dele
 
 	deleteParams := service_principals_service.NewServicePrincipalsServiceDeleteServicePrincipalParams()
 	deleteParams.ResourceName = state.ResourceName.ValueString()
-	_, err := r.client.ServicePrincipals.ServicePrincipalsServiceDeleteServicePrincipal(deleteParams, nil)
+
+	var err error
+	for attempt := 0; attempt < servicePrincipalMaxAttempts; attempt++ {
+		_, err = r.client.ServicePrincipals.ServicePrincipalsServiceDeleteServicePrincipal(deleteParams, nil)
+		if err == nil {
+			return
+		}
+
+		if !isRetryableServicePrincipalDeleteError(err) || attempt == servicePrincipalMaxAttempts-1 {
+			break
+		}
+
+		if !sleepWithContext(ctx, servicePrincipalBackoffBase*time.Duration(1<<attempt)) {
+			break
+		}
+	}
 	if err != nil {
 		var getErr *service_principals_service.ServicePrincipalsServiceDeleteServicePrincipalDefault
 		if errors.As(err, &getErr) && getErr.IsCode(http.StatusNotFound) {
@@ -223,6 +279,69 @@ func (r *resourceServicePrincipal) Delete(ctx context.Context, req resource.Dele
 		resp.Diagnostics.AddError("Error deleting service principal", err.Error())
 		return
 	}
+}
+
+func sleepWithContext(ctx context.Context, d time.Duration) bool {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func isRetryableServicePrincipalCreateError(err error) bool {
+	if isTextConsumerError(err) {
+		return true
+	}
+
+	if isQuotaReachedError(err) {
+		return false
+	}
+
+	var createErr *service_principals_service.ServicePrincipalsServiceCreateServicePrincipalDefault
+	if errors.As(err, &createErr) {
+		return createErr.IsCode(http.StatusTooManyRequests) || createErr.Code() >= 500
+	}
+
+	return false
+}
+
+func isRetryableServicePrincipalGetError(err error) bool {
+	if isTextConsumerError(err) {
+		return true
+	}
+
+	var getErr *service_principals_service.ServicePrincipalsServiceGetServicePrincipalDefault
+	if errors.As(err, &getErr) {
+		return getErr.IsCode(http.StatusTooManyRequests) || getErr.Code() >= 500
+	}
+
+	return false
+}
+
+func isRetryableServicePrincipalDeleteError(err error) bool {
+	if isTextConsumerError(err) {
+		return true
+	}
+
+	var deleteErr *service_principals_service.ServicePrincipalsServiceDeleteServicePrincipalDefault
+	if errors.As(err, &deleteErr) {
+		return deleteErr.IsCode(http.StatusTooManyRequests) || deleteErr.Code() >= 500
+	}
+
+	return false
+}
+
+func isTextConsumerError(err error) bool {
+	return strings.Contains(err.Error(), "TextConsumer")
+}
+
+func isQuotaReachedError(err error) bool {
+	return strings.Contains(strings.ToLower(err.Error()), "quota reached")
 }
 
 func (r *resourceServicePrincipal) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
