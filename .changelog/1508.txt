@@ -1,0 +1,3 @@
+```release-note:improvement
+packer: migrate build-label artifact lookup to the newer SDK flow and align SDK compatibility updates required for the provider.
+```

@@ -15,6 +15,7 @@ func TestAccProjectIamPolicyResource(t *testing.T) {
 	t.Parallel()
 
 	projectName := acctest.RandString(16)
+	spName := acctest.RandString(16)
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
 
@@ -23,7 +24,7 @@ func TestAccProjectIamPolicyResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectIamPolicy(projectName, roleName),
+				Config: testAccProjectIamPolicy(projectName, spName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_project_iam_policy.example", "project_id"),
 					resource.TestCheckResourceAttrSet("hcp_project_iam_policy.example", "etag"),
@@ -39,7 +40,7 @@ func TestAccProjectIamPolicyResource(t *testing.T) {
 				ImportStateVerify:                    true,
 			},
 			{
-				Config: testAccProjectIamPolicy(projectName, roleName2),
+				Config: testAccProjectIamPolicy(projectName, spName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_project_iam_policy.example", "project_id"),
 					resource.TestCheckResourceAttrSet("hcp_project_iam_policy.example", "etag"),
@@ -55,6 +56,7 @@ func TestAccProjectIamBindingResource(t *testing.T) {
 	t.Parallel()
 
 	projectName := acctest.RandString(16)
+	spName := acctest.RandString(16)
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
 
@@ -63,7 +65,7 @@ func TestAccProjectIamBindingResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectIamBinding(projectName, roleName),
+				Config: testAccProjectIamBinding(projectName, spName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_project_iam_binding.example", "project_id"),
 					resource.TestCheckResourceAttrSet("hcp_project_iam_binding.example", "principal_id"),
@@ -71,7 +73,7 @@ func TestAccProjectIamBindingResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectIamBinding(projectName, roleName2),
+				Config: testAccProjectIamBinding(projectName, spName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_project_iam_binding.example", "project_id"),
 					resource.TestCheckResourceAttrSet("hcp_project_iam_binding.example", "principal_id"),
@@ -82,14 +84,14 @@ func TestAccProjectIamBindingResource(t *testing.T) {
 	})
 }
 
-func testAccProjectIamPolicy(projectName, roleName string) string {
+func testAccProjectIamPolicy(projectName, spName, roleName string) string {
 	return fmt.Sprintf(`
 resource "hcp_project" "example" {
 	name = %q
 }
 
 resource "hcp_service_principal" "example" {
-	name = "test-sp"
+	name = %q
 	parent = hcp_project.example.resource_name
 }
 
@@ -108,17 +110,17 @@ resource "hcp_project_iam_policy" "example" {
 	project_id = hcp_project.example.resource_id
 	policy_data = data.hcp_iam_policy.example.policy_data
 }
-`, projectName, roleName)
+`, projectName, spName, roleName)
 }
 
-func testAccProjectIamBinding(projectName, roleName string) string {
+func testAccProjectIamBinding(projectName, spName, roleName string) string {
 	return fmt.Sprintf(`
 resource "hcp_project" "example" {
 	name = %q
 }
 
 resource "hcp_service_principal" "example" {
-	name = "test-sp"
+	name = %q
 	parent = hcp_project.example.resource_name
 }
 
@@ -127,5 +129,5 @@ resource "hcp_project_iam_binding" "example" {
 	principal_id = hcp_service_principal.example.resource_id
 	role = %q
 }
-`, projectName, roleName)
+`, projectName, spName, roleName)
 }

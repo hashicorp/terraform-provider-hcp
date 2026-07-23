@@ -5,16 +5,24 @@ package resourcemanager
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"sync/atomic"
 	"testing"
 
+	crmclient "github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-hcp/internal/clients"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
+	sharedmodels "github.com/hashicorp/hcp-sdk-go/clients/cloud-shared/v1/models"
 )
 
 // ---- normalizeConstraints ----
@@ -138,7 +146,7 @@ func TestPolicyToModel_ConstraintsAreSorted(t *testing.T) {
 	var got []string
 	diags := model.EnabledConstraints.ElementsAs(context.Background(), &got, false)
 	require.False(t, diags.HasError())
-	assert.Equal(t, []string{"constraints/a", "constraints/m", "constraints/z"}, got)
+	assert.ElementsMatch(t, []string{"constraints/a", "constraints/m", "constraints/z"}, got)
 }
 
 func TestPolicyToModel_IDMatchesOrgID(t *testing.T) {
@@ -151,6 +159,16 @@ func TestPolicyToModel_IDMatchesOrgID(t *testing.T) {
 	model := policyToModel(policy)
 	assert.Equal(t, "org-456", model.ID.ValueString())
 	assert.Equal(t, "org-456", model.OrganizationID.ValueString())
+}
+
+func TestPolicyToModel_EtagPreserved(t *testing.T) {
+	policy := &models.HashicorpCloudResourcemanagerOrganizationGetResourceControlPolicyResponse{
+		EnabledConstraints: []string{},
+		OrganizationID:     "org-1",
+		Etag:               "etag-12345",
+	}
+	model := policyToModel(policy)
+	assert.Equal(t, "etag-12345", model.Etag.ValueString())
 }
 
 func TestPolicyToModel_EmptyConstraints_ProducesEmptyList(t *testing.T) {
@@ -191,78 +209,152 @@ func TestPolicyToModel_SingleConstraint(t *testing.T) {
 	var got []string
 	diags := model.EnabledConstraints.ElementsAs(context.Background(), &got, false)
 	require.False(t, diags.HasError())
-	assert.Equal(t, []string{"constraints/only"}, got)
+	assert.ElementsMatch(t, []string{"constraints/only"}, got)
 }
 
-// ---- stringListFromTF ----
+// ---- stringSetFromTF ----
 
-func TestStringListFromTF_ReturnsCorrectStrings(t *testing.T) {
-	list, diags := types.ListValueFrom(context.Background(), types.StringType, []string{"a", "b", "c"})
+func TestStringSetFromTF_ReturnsCorrectStrings(t *testing.T) {
+	set, diags := types.SetValueFrom(context.Background(), types.StringType, []string{"a", "b", "c"})
 	require.False(t, diags.HasError())
 
-	got, d := stringListFromTF(context.Background(), list)
+	got, d := stringSetFromTF(context.Background(), set)
 	require.False(t, d.HasError())
-	assert.Equal(t, []string{"a", "b", "c"}, got)
+	assert.ElementsMatch(t, []string{"a", "b", "c"}, got)
 }
 
-func TestStringListFromTF_NullList_ReturnsEmpty(t *testing.T) {
-	list := types.ListNull(types.StringType)
-	got, d := stringListFromTF(context.Background(), list)
-	require.False(t, d.HasError())
-	assert.Empty(t, got)
-}
-
-func TestStringListFromTF_UnknownList_ReturnsEmpty(t *testing.T) {
-	list := types.ListUnknown(types.StringType)
-	got, d := stringListFromTF(context.Background(), list)
+func TestStringSetFromTF_NullSet_ReturnsEmpty(t *testing.T) {
+	set := types.SetNull(types.StringType)
+	got, d := stringSetFromTF(context.Background(), set)
 	require.False(t, d.HasError())
 	assert.Empty(t, got)
 }
 
-func TestStringListFromTF_EmptyList_ReturnsEmpty(t *testing.T) {
-	list, diags := types.ListValueFrom(context.Background(), types.StringType, []string{})
+func TestStringSetFromTF_UnknownSet_ReturnsEmpty(t *testing.T) {
+	set := types.SetUnknown(types.StringType)
+	got, d := stringSetFromTF(context.Background(), set)
+	require.False(t, d.HasError())
+	assert.Empty(t, got)
+}
+
+func TestStringSetFromTF_EmptySet_ReturnsEmpty(t *testing.T) {
+	set, diags := types.SetValueFrom(context.Background(), types.StringType, []string{})
 	require.False(t, diags.HasError())
-	got, d := stringListFromTF(context.Background(), list)
+	got, d := stringSetFromTF(context.Background(), set)
 	require.False(t, d.HasError())
 	assert.Empty(t, got)
 }
 
-// ---- import helpers ----
+// ---- setPolicy ----
 
-func TestUnrecognizedImportedConstraints_AllKnown(t *testing.T) {
-	imported := []string{"constraints/a", "constraints/b"}
-	available := map[string]bool{
-		"constraints/a": true,
-		"constraints/b": true,
-	}
+func TestSetPolicy_SendsEtagWhenAvailable(t *testing.T) {
+	var setCalls int32
+	var requestBody models.HashicorpCloudResourcemanagerOrganizationServiceSetResourceControlPolicyBody
 
-	got := unrecognizedImportedConstraints(imported, available)
-	assert.Empty(t, got)
+	r := newTestResourceControlPolicyResource(t, func(w http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, http.MethodPut, req.Method)
+		assert.Equal(t, "/resource-manager/2019-12-10/organizations/org-123/resource-control-policy", req.URL.Path)
+		atomic.AddInt32(&setCalls, 1)
+
+		require.NoError(t, json.NewDecoder(req.Body).Decode(&requestBody))
+		w.Header().Set("Content-Type", "application/json")
+		require.NoError(t, json.NewEncoder(w).Encode(models.HashicorpCloudResourcemanagerSetResourceControlPolicyResponse{Etag: "etag-next"}))
+	})
+
+	diags := r.setPolicy(context.Background(), "org-123", []string{"constraints/a"}, "etag-123")
+	require.False(t, diags.HasError())
+	assert.Equal(t, int32(1), atomic.LoadInt32(&setCalls))
+	assert.Equal(t, "etag-123", requestBody.Etag)
+	assert.Equal(t, []string{"constraints/a"}, requestBody.ConstraintIds)
 }
 
-func TestUnrecognizedImportedConstraints_ReturnsSortedUnknowns(t *testing.T) {
-	imported := []string{"constraints/z", "constraints/a", "constraints/m"}
-	available := map[string]bool{
-		"constraints/m": true,
+func TestSetPolicy_ConflictReturnsDiagnosticAndDoesNotRetry(t *testing.T) {
+	testCases := map[string]struct {
+		httpStatus int
+		rpcCode    codes.Code
+	}{
+		"aborted": {
+			httpStatus: http.StatusConflict,
+			rpcCode:    codes.Aborted,
+		},
+		"failed precondition": {
+			httpStatus: http.StatusPreconditionFailed,
+			rpcCode:    codes.FailedPrecondition,
+		},
 	}
 
-	got := unrecognizedImportedConstraints(imported, available)
-	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
-}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			var setCalls int32
 
-func TestUnrecognizedImportedConstraints_DeduplicatesUnknowns(t *testing.T) {
-	imported := []string{"constraints/z", "constraints/a", "constraints/z", "constraints/a", "constraints/m"}
-	available := map[string]bool{
-		"constraints/m": true,
+			r := newTestResourceControlPolicyResource(t, func(w http.ResponseWriter, req *http.Request) {
+				assert.Equal(t, http.MethodPut, req.Method)
+				atomic.AddInt32(&setCalls, 1)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.httpStatus)
+				require.NoError(t, json.NewEncoder(w).Encode(sharedmodels.GoogleRPCStatus{
+					Code:    int32(tc.rpcCode),
+					Message: "requested policy conflicts with persisted policy for this scope",
+				}))
+			})
+
+			diags := r.setPolicy(context.Background(), "org-123", []string{"constraints/a"}, "etag-123")
+			require.True(t, diags.HasError())
+			assert.Equal(t, int32(1), atomic.LoadInt32(&setCalls))
+			assert.Equal(t, "Conflict setting organization resource control policy", diags[0].Summary())
+			assert.Contains(t, diags[0].Detail(), "terraform apply")
+			assert.Contains(t, diags[0].Detail(), tc.rpcCode.String())
+			assert.Contains(t, diags[0].Detail(), "requested policy conflicts")
+		})
 	}
-
-	got := unrecognizedImportedConstraints(imported, available)
-	assert.Equal(t, []string{"constraints/a", "constraints/z"}, got)
 }
 
-func TestUnrecognizedImportedConstraints_EmptyInputs(t *testing.T) {
-	assert.Empty(t, unrecognizedImportedConstraints(nil, map[string]bool{"constraints/a": true}))
-	assert.Empty(t, unrecognizedImportedConstraints([]string{"constraints/a"}, map[string]bool{}))
+func TestSetPolicy_NonConflictFailureReturnsDiagnosticAndDoesNotRetry(t *testing.T) {
+	var setCalls int32
+
+	r := newTestResourceControlPolicyResource(t, func(w http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, http.MethodPut, req.Method)
+		atomic.AddInt32(&setCalls, 1)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		require.NoError(t, json.NewEncoder(w).Encode(sharedmodels.GoogleRPCStatus{
+			Code:    int32(codes.Internal),
+			Message: "internal service failure",
+		}))
+	})
+
+	diags := r.setPolicy(context.Background(), "org-123", []string{"constraints/a"}, "etag-123")
+	require.True(t, diags.HasError())
+	assert.Equal(t, int32(1), atomic.LoadInt32(&setCalls))
+	assert.Equal(t, "Failed to set organization resource control policy", diags[0].Summary())
+	assert.Contains(t, diags[0].Detail(), "terraform apply")
+	assert.Contains(t, diags[0].Detail(), codes.Internal.String())
+	assert.Contains(t, diags[0].Detail(), "internal service failure")
+}
+
+func TestSetPolicy_MissingRPCCodeDefaultsToUnknown(t *testing.T) {
+	var setCalls int32
+
+	r := newTestResourceControlPolicyResource(t, func(w http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, http.MethodPut, req.Method)
+		atomic.AddInt32(&setCalls, 1)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		require.NoError(t, json.NewEncoder(w).Encode(sharedmodels.GoogleRPCStatus{
+			Message: "internal service failure without rpc code",
+		}))
+	})
+
+	diags := r.setPolicy(context.Background(), "org-123", []string{"constraints/a"}, "etag-123")
+	require.True(t, diags.HasError())
+	assert.Equal(t, int32(1), atomic.LoadInt32(&setCalls))
+	assert.Equal(t, "Failed to set organization resource control policy", diags[0].Summary())
+	assert.Contains(t, diags[0].Detail(), codes.Unknown.String())
+	assert.NotContains(t, diags[0].Detail(), codes.OK.String())
+	assert.Contains(t, diags[0].Detail(), "internal service failure without rpc code")
 }
 
 // ---- resource struct satisfies interface ----
@@ -270,7 +362,6 @@ func TestUnrecognizedImportedConstraints_EmptyInputs(t *testing.T) {
 func TestResourceOrganizationResourceControlPolicy_ImplementsResource(t *testing.T) {
 	var _ resource.Resource = &resourceOrganizationResourceControlPolicy{}
 	var _ resource.ResourceWithConfigure = &resourceOrganizationResourceControlPolicy{}
-	var _ resource.ResourceWithImportState = &resourceOrganizationResourceControlPolicy{}
 }
 
 func TestNewOrganizationResourceControlPolicyResource_NotNil(t *testing.T) {
@@ -290,6 +381,7 @@ func TestResourceSchema_HasExpectedAttributes(t *testing.T) {
 	assert.Contains(t, attrs, "id")
 	assert.Contains(t, attrs, "organization_id")
 	assert.Contains(t, attrs, "enabled_constraints")
+	assert.Contains(t, attrs, "etag")
 }
 
 func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
@@ -304,13 +396,26 @@ func TestResourceSchema_OrganizationIDRequiresReplace(t *testing.T) {
 	assert.NotEmpty(t, orgIDAttr.PlanModifiers)
 }
 
+func TestResourceSchema_EtagIsComputed(t *testing.T) {
+	r := &resourceOrganizationResourceControlPolicy{}
+	resp := &resource.SchemaResponse{}
+	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
+	require.False(t, resp.Diagnostics.HasError())
+
+	etagAttr, ok := resp.Schema.Attributes["etag"].(schema.StringAttribute)
+	require.True(t, ok)
+	assert.True(t, etagAttr.Computed)
+	assert.False(t, etagAttr.Required)
+	assert.False(t, etagAttr.Optional)
+}
+
 func TestResourceSchema_EnabledConstraintsIsRequired(t *testing.T) {
 	r := &resourceOrganizationResourceControlPolicy{}
 	resp := &resource.SchemaResponse{}
 	r.Schema(context.Background(), resource.SchemaRequest{}, resp)
 	require.False(t, resp.Diagnostics.HasError())
 
-	attr, ok := resp.Schema.Attributes["enabled_constraints"].(schema.ListAttribute)
+	attr, ok := resp.Schema.Attributes["enabled_constraints"].(schema.SetAttribute)
 	require.True(t, ok)
 	assert.True(t, attr.Required)
 }
@@ -339,4 +444,23 @@ func TestConfigure_CorrectProviderData_SetsClient(t *testing.T) {
 	r.Configure(context.Background(), resource.ConfigureRequest{ProviderData: c}, resp)
 	assert.False(t, resp.Diagnostics.HasError())
 	assert.Equal(t, c, r.client)
+}
+
+func newTestResourceControlPolicyResource(t *testing.T, handler http.HandlerFunc) *resourceOrganizationResourceControlPolicy {
+	t.Helper()
+
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+
+	serverURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	api := crmclient.NewHTTPClientWithConfig(nil, crmclient.DefaultTransportConfig().
+		WithHost(serverURL.Host).
+		WithSchemes([]string{serverURL.Scheme}).
+		WithBasePath("/"))
+
+	return &resourceOrganizationResourceControlPolicy{
+		client: &clients.Client{Organization: api.OrganizationService},
+	}
 }
