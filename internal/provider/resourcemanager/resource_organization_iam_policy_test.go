@@ -14,6 +14,7 @@ import (
 func TestAccOrganizationIamBindingResource(t *testing.T) {
 	t.Parallel()
 
+	spName := acctest.RandString(16)
 	roleName := "roles/contributor"
 	roleName2 := "roles/viewer"
 
@@ -22,14 +23,14 @@ func TestAccOrganizationIamBindingResource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationIamBinding(roleName),
+				Config: testAccOrganizationIamBinding(spName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_organization_iam_binding.example", "principal_id"),
 					resource.TestCheckResourceAttrSet("hcp_organization_iam_binding.example", "role"),
 				),
 			},
 			{
-				Config: testAccOrganizationIamBinding(roleName2),
+				Config: testAccOrganizationIamBinding(spName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_organization_iam_binding.example", "principal_id"),
 					resource.TestCheckResourceAttrSet("hcp_organization_iam_binding.example", "role"),
@@ -39,12 +40,12 @@ func TestAccOrganizationIamBindingResource(t *testing.T) {
 	})
 }
 
-func testAccOrganizationIamBinding(roleName string) string {
+func testAccOrganizationIamBinding(spName, roleName string) string {
 	return fmt.Sprintf(`
 data "hcp_organization" "example" { }
 
 resource "hcp_service_principal" "example" {
-	name = "test-sp"
+	name = %q
 	parent = data.hcp_organization.example.resource_name
 }
 
@@ -52,5 +53,5 @@ resource "hcp_organization_iam_binding" "example" {
 	principal_id = hcp_service_principal.example.resource_id
 	role = %q
 }
-`, roleName)
+`, spName, roleName)
 }
