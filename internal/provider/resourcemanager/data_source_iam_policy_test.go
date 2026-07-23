@@ -17,6 +17,7 @@ import (
 
 func TestAccIAMPolicyDataSource(t *testing.T) {
 	project := acctest.RandString(16)
+	spName := acctest.RandString(16)
 	role1, role2 := "roles/viewer", "roles/admin"
 	var p1, p2 models.HashicorpCloudResourcemanagerPolicy
 
@@ -25,7 +26,7 @@ func TestAccIAMPolicyDataSource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckIAMPolicyConfig(project, role1),
+				Config: testAccCheckIAMPolicyConfig(project, spName, role1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.hcp_iam_policy.example", "policy_data"),
 					testAccIAMPolicyData(t, "data.hcp_iam_policy.example", &p1),
@@ -47,7 +48,7 @@ func TestAccIAMPolicyDataSource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckIAMPolicyConfig(project, role2),
+				Config: testAccCheckIAMPolicyConfig(project, spName, role2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.hcp_iam_policy.example", "policy_data"),
 					testAccIAMPolicyData(t, "data.hcp_iam_policy.example", &p2),
@@ -122,14 +123,14 @@ data "hcp_iam_policy" "example" {
 	})
 }
 
-func testAccCheckIAMPolicyConfig(projectName, roleName string) string {
+func testAccCheckIAMPolicyConfig(projectName, spName, roleName string) string {
 	return fmt.Sprintf(`
 resource "hcp_project" "project" {
   name = %q
 }
 
 resource "hcp_service_principal" "sp" {
-  name = "iam-acc-test"
+	name = %q
   parent = hcp_project.project.resource_name
 }
 
@@ -143,7 +144,7 @@ data "hcp_iam_policy" "example" {
 	}
   ]
 }
-`, projectName, roleName)
+`, projectName, spName, roleName)
 }
 
 func testAccIAMPolicyData(t *testing.T, resourceName string, policy *models.HashicorpCloudResourcemanagerPolicy) resource.TestCheckFunc {
