@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/client/organization_service"
 	"github.com/hashicorp/hcp-sdk-go/clients/cloud-resource-manager/stable/2019-12-10/models"
@@ -40,6 +41,7 @@ type resourceOrganizationResourceControlPolicy struct {
 
 var _ resource.Resource = &resourceOrganizationResourceControlPolicy{}
 var _ resource.ResourceWithConfigure = &resourceOrganizationResourceControlPolicy{}
+var _ resource.ResourceWithImportState = &resourceOrganizationResourceControlPolicy{}
 
 func (r *resourceOrganizationResourceControlPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_resource_control_policy"
@@ -234,11 +236,65 @@ func (r *resourceOrganizationResourceControlPolicy) Update(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
+// Delete implements resource.Resource. Delete semantics for this resource clear
+// all constraints while keeping the organization itself intact.
 func (r *resourceOrganizationResourceControlPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	resp.Diagnostics.AddError(
-		"Delete not supported in PR1",
-		"This initial resource implementation supports create and read only. Please remove the resource from state manually until delete support is added in a follow-up.",
-	)
+	var state resourceControlPolicyModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	orgID := state.OrganizationID.ValueString()
+
+	// Use the etag captured in state at plan time, not a freshly-fetched one.
+	// If the policy was changed out-of-band (e.g. via the UI) between plan and
+	// apply, this etag will be stale and the API will reject the request as a
+	// conflict rather than silently deleting on top of the newer change.
+	resp.Diagnostics.Append(r.setPolicy(ctx, orgID, []string{}, etagFromState(state))...)
+}
+
+// ImportState implements resource.ResourceWithImportState. Import ID is the
+// organization ID.
+func (r *resourceOrganizationResourceControlPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	orgID := strings.TrimSpace(req.ID)
+	if orgID == "" {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			"Import ID must be the organization identifier.",
+		)
+		return
+	}
+
+	policy, diags := r.getPolicy(ctx, orgID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if policy == nil {
+		resp.Diagnostics.AddError(
+			"Resource control policy not found",
+			fmt.Sprintf("No resource control policy was found for organization %q.", orgID),
+		)
+		return
+	}
+
+	// Optional import validation: cross-check imported constraints against the
+	// live constraints list and emit warnings only.
+	available, diags := r.listAllConstraints(ctx, orgID)
+	resp.Diagnostics.Append(diags...)
+	if !resp.Diagnostics.HasError() {
+		unknown := unrecognizedImportedConstraints(policy.EnabledConstraints, available)
+		for _, id := range unknown {
+			resp.Diagnostics.AddWarning(
+				"Imported constraint not in live list",
+				fmt.Sprintf("Constraint %q is present in policy but not returned by ListConstraints. Import continues, but this identifier may be stale or unsupported.", id),
+			)
+		}
+	}
+
+	state := policyToModel(policy)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // ---- helpers ----
@@ -485,4 +541,29 @@ func stringSetFromTF(ctx context.Context, set types.Set) ([]string, diag.Diagnos
 		out[i] = e.ValueString()
 	}
 	return out, diags
+}
+
+// unrecognizedImportedConstraints returns imported constraint IDs that are not
+// present in the current live constraints list.
+func unrecognizedImportedConstraints(imported []string, available map[string]bool) []string {
+	if len(imported) == 0 || len(available) == 0 {
+		return []string{}
+	}
+
+	unknown := make([]string, 0)
+	seen := make(map[string]struct{})
+	for _, id := range imported {
+		if id == "" {
+			continue
+		}
+		if !available[id] {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			unknown = append(unknown, id)
+		}
+	}
+	sort.Strings(unknown)
+	return unknown
 }
