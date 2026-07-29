@@ -17,8 +17,9 @@ import (
 func TestAcc_Packer_BucketResource(t *testing.T) {
 	t.Parallel()
 
-	bucketName := "test-bucket"
-	updatedBucketName := "new-test-bucket"
+	suffix := acctest.RandString(8)
+	bucketName := "test-bucket-" + suffix
+	updatedBucketName := "new-test-bucket-" + suffix
 	var createdAt string
 	var newCreatedAt string
 	// A location is required to upsert the Packer Registry
