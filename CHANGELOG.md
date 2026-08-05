@@ -1,3 +1,10 @@
+## v0.113.0 (Aug 05, 2026)
+
+IMPROVEMENTS:
+
+* Added EU support to HCP status check functionality. [[GH-1447](https://github.com/hashicorp/terraform-provider-hcp/pull/1447)]
+* packer: migrate build-label artifact lookup to the newer SDK flow and align SDK compatibility updates required for the provider. [[GH-1508](https://github.com/hashicorp/terraform-provider-hcp/pull/1508)]
+
 ## v0.112.0 (Jun 11, 2026)
 
 FEATURES:
