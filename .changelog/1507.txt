@@ -1,0 +1,3 @@
+```release-note:improvement
+resourcemanager: add `hcp_resource_control_policy` resource support for managing organization policy constraints with create/read lifecycle.
+```

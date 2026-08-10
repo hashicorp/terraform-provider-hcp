@@ -16,7 +16,9 @@ import (
 func TestAcc_Packer_BucketIamPolicyResource(t *testing.T) {
 	t.Parallel()
 
-	bucketName := "iam-policy-bucket"
+	suffix := acctest.RandString(8)
+	bucketName := "iam-policy-bucket-" + suffix
+	spName := "test-sp-" + suffix
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)
 	roleName := "roles/contributor"
@@ -38,7 +40,7 @@ func TestAcc_Packer_BucketIamPolicyResource(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackerBucketIamPolicy(projectName, roleName, bucketName),
+				Config: testAccPackerBucketIamPolicy(projectName, roleName, bucketName, spName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_policy.example", "resource_name"),
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_policy.example", "policy_data"),
@@ -46,7 +48,7 @@ func TestAcc_Packer_BucketIamPolicyResource(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPackerBucketIamPolicy(projectName, roleName2, bucketName),
+				Config: testAccPackerBucketIamPolicy(projectName, roleName2, bucketName, spName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_policy.example", "resource_name"),
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_policy.example", "etag"),
@@ -61,7 +63,9 @@ func TestAcc_Packer_BucketIamPolicyResource(t *testing.T) {
 func TestAcc_Packer_BucketIamBindingResource(t *testing.T) {
 	t.Parallel()
 
-	bucketName := "iam-binding-bucket"
+	suffix := acctest.RandString(8)
+	bucketName := "iam-binding-bucket-" + suffix
+	spName := "hvs-sp-" + suffix
 	projectID := os.Getenv("HCP_PROJECT_ID")
 	projectName := fmt.Sprintf("project/%s", projectID)
 	roleName := "roles/contributor"
@@ -82,7 +86,7 @@ func TestAcc_Packer_BucketIamBindingResource(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackerBucketIamBinding(projectName, roleName, bucketName),
+				Config: testAccPackerBucketIamBinding(projectName, roleName, bucketName, spName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_binding.example", "resource_name"),
 					resource.TestCheckResourceAttrSet("hcp_packer_bucket_iam_binding.example", "principal_id"),
@@ -93,10 +97,10 @@ func TestAcc_Packer_BucketIamBindingResource(t *testing.T) {
 	})
 }
 
-func testAccPackerBucketIamPolicy(projectName, roleName, bucketName string) string {
+func testAccPackerBucketIamPolicy(projectName, roleName, bucketName, spName string) string {
 	return fmt.Sprintf(`
 resource "hcp_service_principal" "example" {
-	name = "test-sp"
+	name = %q
 	parent = %q
 }
 
@@ -119,13 +123,13 @@ resource "hcp_packer_bucket_iam_policy" "example" {
     resource_name = hcp_packer_bucket.example.resource_name
     policy_data = data.hcp_iam_policy.example.policy_data
 }
-`, projectName, roleName, bucketName)
+`, spName, projectName, roleName, bucketName)
 }
 
-func testAccPackerBucketIamBinding(projectName, roleName, bucketName string) string {
+func testAccPackerBucketIamBinding(projectName, roleName, bucketName, spName string) string {
 	return fmt.Sprintf(`
 resource "hcp_service_principal" "example" {
-	name = "hvs-sp"
+	name = %q
 	parent = %q
 }
 
@@ -138,5 +142,5 @@ resource "hcp_packer_bucket_iam_binding" "example" {
 	principal_id = hcp_service_principal.example.resource_id
 	role         = %q
 }
-`, projectName, bucketName, roleName)
+`, spName, projectName, bucketName, roleName)
 }
