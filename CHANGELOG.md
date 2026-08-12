@@ -1,3 +1,14 @@
+## v0.114.0 (Aug 12, 2026)
+
+IMPROVEMENTS:
+
+* resourcemanager: add `hcp_resource_control_policy` resource support for managing organization policy constraints with create/read lifecycle. [[GH-1507](https://github.com/hashicorp/terraform-provider-hcp/pull/1507)]
+* resourcemanager: add full CRUD, import, and etag-based conflict handling to `hcp_resource_control_policy` resource [[GH-1520](https://github.com/hashicorp/terraform-provider-hcp/pull/1520)]
+
+BUG FIXES:
+
+* security: updates to go modules to patch security vulnerabilities [[GH-1530](https://github.com/hashicorp/terraform-provider-hcp/pull/1530)]
+
 ## v0.113.0 (Aug 05, 2026)
 
 IMPROVEMENTS:
