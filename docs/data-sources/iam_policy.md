@@ -18,10 +18,6 @@ The basic roles can be referenced as follows:
 * `roles/contributor`
 * `roles/viewer`
 
-HCP Vault Secrets specific roles can be referenced as shown below, please see [Documentation](https://developer.hashicorp.com/hcp/docs/hcp/admin/iam/users#project) for more details.
-* `roles/secrets.app-manager`
-* `roles/secrets.app-secret-reader`
-
 
 ## Example Usage
 
