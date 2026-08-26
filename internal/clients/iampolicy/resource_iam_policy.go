@@ -40,8 +40,7 @@ var (
 // NewResourceIamUpdaterFunc, the resource will inherit all functionality needed
 // to allow Terraform to manage the IAM Policy for the resource.
 //
-// The typeName is the type that supports IAM ("project", "organization",
-// "vault_secrets_app", etc).
+// The typeName is the type that supports IAM ("project", "organization", etc).
 
 // parentSpecificSchema should be a schema that includes a MarkdownDescription
 // and any necessary Attributes to target the specific resource ("project_id",

@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/packer"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/resourcemanager"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultradar"
-	"github.com/hashicorp/terraform-provider-hcp/internal/provider/vaultsecrets"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/waypoint"
 	"github.com/hashicorp/terraform-provider-hcp/internal/provider/webhook"
 	"github.com/hashicorp/terraform-provider-hcp/internal/statuspage"
@@ -161,22 +160,6 @@ func (p *ProviderFramework) Resources(ctx context.Context) []func() resource.Res
 		resourcemanager.NewProjectResource,
 		resourcemanager.NewProjectIAMPolicyResource,
 		resourcemanager.NewProjectIAMBindingResource,
-		// Vault Secrets
-		vaultsecrets.NewVaultSecretsAppResource,
-		vaultsecrets.NewVaultSecretsSecretResource,
-		vaultsecrets.NewVaultSecretsAppIAMPolicyResource,
-		vaultsecrets.NewVaultSecretsAppIAMBindingResource,
-		vaultsecrets.NewVaultSecretsIntegrationResource,
-		vaultsecrets.NewVaultSecretsDynamicSecretResource,
-		vaultsecrets.NewVaultSecretsRotatingSecretResource,
-		vaultsecrets.NewVaultSecretsSyncResource,
-		// Vault Secrets Deprecated
-		vaultsecrets.NewVaultSecretsIntegrationAWSResource,
-		vaultsecrets.NewVaultSecretsIntegrationAzureResource,
-		vaultsecrets.NewVaultSecretsIntegrationsConfluentResource,
-		vaultsecrets.NewVaultSecretsIntegrationGCPResource,
-		vaultsecrets.NewVaultSecretsIntegrationMongoDBAtlasResource,
-		vaultsecrets.NewVaultSecretsIntegrationTwilioResource,
 		// IAM
 		iam.NewServicePrincipalResource,
 		iam.NewServicePrincipalKeyResource,
@@ -216,11 +199,6 @@ func (p *ProviderFramework) DataSources(ctx context.Context) []func() datasource
 		resourcemanager.NewProjectDataSource,
 		resourcemanager.NewOrganizationDataSource,
 		resourcemanager.NewIAMPolicyDataSource,
-		// Vault Secrets
-		vaultsecrets.NewVaultSecretsAppDataSource,
-		vaultsecrets.NewVaultSecretsSecretDataSource,
-		vaultsecrets.NewVaultSecretsRotatingSecretDataSource,
-		vaultsecrets.NewVaultSecretsDynamicSecretDataSource,
 		// IAM
 		iam.NewServicePrincipalDataSource,
 		iam.NewGroupDataSource,

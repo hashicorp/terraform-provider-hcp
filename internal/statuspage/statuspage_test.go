@@ -190,14 +190,13 @@ func TestCheckHCPStatus(t *testing.T) {
 			setup: func(t *testing.T) {
 				stubStatusPage(t, regions["us"], []incident{
 					inc("HCP Vault Radar", "identified", testComponent("HCP Vault Radar", "partial_outage", regions["us"])),
-					inc("HCP Vault Secrets", "investigating", testComponent("HCP Vault Secrets", "major_outage", regions["us"])),
 					inc("HCP Vault Dedicated", "investigating", testGroupedComponent("HCP Vault Dedicated", "partial_outage", regions["us"])),
 					inc("Other Service", "investigating", testComponent("Other Service", "major_outage", regions["us"])),
 				})
 			},
 			expectOutage:      true,
 			expectDiagnostics: true,
-			messageContains:   []string{"HCP Vault Radar", "HCP Vault Secrets", "HCP Vault Dedicated (region-name)"},
+			messageContains:   []string{"HCP Vault Radar", "HCP Vault Dedicated (region-name)"},
 			messageExcludes:   []string{"Other Service"},
 			geography:         "us",
 		},
