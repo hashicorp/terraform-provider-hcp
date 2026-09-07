@@ -1,12 +1,12 @@
 module github.com/hashicorp/terraform-provider-hcp
 
-go 1.25.8
+go 1.26.0
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/go-openapi/runtime v0.33.1
-	github.com/go-openapi/strfmt v0.27.0
+	github.com/go-openapi/strfmt v0.27.2
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-uuid v1.0.3
