@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-hcp
 
-go 1.25.8
+go 1.26
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
