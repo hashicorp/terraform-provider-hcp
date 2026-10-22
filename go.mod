@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-hcp
 
-go 1.26
+go 1.26.2
 
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.9.0
-	github.com/hashicorp/hcp-sdk-go v0.175.0
+	github.com/hashicorp/hcp-sdk-go v0.176.0
 	github.com/hashicorp/terraform-plugin-docs v0.20.1
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
