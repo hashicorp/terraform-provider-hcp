@@ -1,3 +1,13 @@
+## v0.115.0 (Oct 22, 2026)
+
+IMPROVEMENTS:
+
+* Update Go version to 1.26. [[GH-1543](https://github.com/hashicorp/terraform-provider-hcp/pull/1543)]
+
+DEPRECATIONS:
+
+* remove references to deprecated service HVS/vault-secrets [[GH-1532](https://github.com/hashicorp/terraform-provider-hcp/pull/1532)]
+
 ## v0.114.0 (Aug 12, 2026)
 
 IMPROVEMENTS:
