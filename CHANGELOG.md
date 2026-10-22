@@ -8,6 +8,10 @@ DEPRECATIONS:
 
 * remove references to deprecated service HVS/vault-secrets [[GH-1532](https://github.com/hashicorp/terraform-provider-hcp/pull/1532)]
 
+BUG FIXES:
+
+* security: updates `golang.org/x/net` to v0.61.0 to patch HTTP/2 security vulnerabilities [[GH-1548](https://github.com/hashicorp/terraform-provider-hcp/pull/1548)]
+
 ## v0.114.0 (Aug 12, 2026)
 
 IMPROVEMENTS:
